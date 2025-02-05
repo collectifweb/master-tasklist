@@ -11,9 +11,13 @@ import {
 } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Filter, Trash2 } from 'lucide-react'
+import { Filter, Trash2, Edit, Search, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/use-toast'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { DateRange } from 'react-day-picker'
 
 type Task = {
   id: number
@@ -36,11 +40,16 @@ type Category = {
   name: string
 }
 
+type SortOption = 'date' | 'coefficient' | 'none'
+
 export default function Home() {
   const { toast } = useToast()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortBy, setSortBy] = useState<SortOption>('none')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const fetchTasks = async () => {
     try {
@@ -150,10 +159,6 @@ export default function Home() {
     }
   }
 
-  const filteredTasks = selectedCategory === 'all' 
-    ? tasks.filter(task => !task.completed)
-    : tasks.filter(task => !task.completed && task.category.id === parseInt(selectedCategory))
-
   const getTaskLevel = (task: Task): number => {
     let level = 0
     let currentTask = task
@@ -164,48 +169,131 @@ export default function Home() {
     return level
   }
 
-  const calculatePriorityClass = (coefficient: number): string => {
-    if (coefficient >= 4) return 'bg-red-100'
-    if (coefficient >= 3) return 'bg-orange-100'
-    if (coefficient >= 2) return 'bg-yellow-100'
-    return 'bg-green-100'
-  }
+  const filteredAndSortedTasks = tasks
+    .filter(task => {
+      // Filter by completion
+      if (task.completed) return false
+      
+      // Filter by category
+      if (selectedCategory !== 'all' && task.category.id !== parseInt(selectedCategory)) return false
+      
+      // Filter by search query
+      if (searchQuery && !task.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
+      
+      // Filter by date range
+      if (dateRange?.from && dateRange?.to) {
+        const taskDate = new Date(task.dueDate)
+        if (taskDate < dateRange.from || taskDate > dateRange.to) return false
+      }
+      
+      return true
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      }
+      if (sortBy === 'coefficient') {
+        return b.coefficient - a.coefficient
+      }
+      return 0
+    })
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">Tâches actives</h1>
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          <Select
-            value={selectedCategory}
-            onValueChange={setSelectedCategory}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrer par catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les catégories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id.toString()}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-4xl font-bold">Tâches actives</h1>
+        </div>
+        
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2 flex-1">
+            <Search className="h-4 w-4" />
+            <Input
+              placeholder="Rechercher une tâche..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrer par catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4" />
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as SortOption)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Trier par" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sans tri</SelectItem>
+                <SelectItem value="date">Date d'échéance</SelectItem>
+                <SelectItem value="coefficient">Coefficient</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[180px]">
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "P", { locale: fr })} -{" "}
+                      {format(dateRange.to, "P", { locale: fr })}
+                    </>
+                  ) : (
+                    format(dateRange.from, "P", { locale: fr })
+                  )
+                ) : (
+                  "Filtrer par date"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       <div className="space-y-4">
-        {filteredTasks.length === 0 ? (
+        {filteredAndSortedTasks.length === 0 ? (
           <Card className="p-6 text-center text-muted-foreground">
-            Aucune tâche active dans cette catégorie
+            Aucune tâche active ne correspond aux critères
           </Card>
         ) : (
-          filteredTasks.map((task) => (
+          filteredAndSortedTasks.map((task) => (
             <Card 
               key={task.id} 
-              className={cn("p-4", calculatePriorityClass(task.coefficient))}
+              className="p-4 bg-white"
               style={{ marginLeft: `${getTaskLevel(task) * 20}px` }}
             >
               <div className="flex items-center justify-between">
@@ -215,34 +303,43 @@ export default function Home() {
                     onCheckedChange={() => toggleTaskCompletion(task.id, task.completed)}
                   />
                   <div>
-                    <h3 className={cn("font-medium", task.completed && "line-through")}>
+                    <h3 className={cn("font-medium text-gray-900", task.completed && "line-through")}>
                       {task.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600">
                       Catégorie: {task.category.name}
                       {task.parent && ` | Parent: ${task.parent.name}`}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600">
                       Échéance: {format(new Date(task.dueDate), "PPP", { locale: fr })}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600">
                       Complexité: {task.complexity} | Priorité: {task.priority} | 
                       Durée: {task.length} | Coefficient: {task.coefficient}
                     </p>
                     {task.children && task.children.length > 0 && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-gray-600">
                         Sous-tâches: {task.children.filter(c => !c.completed).length} actives / {task.children.length} total
                       </p>
                     )}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteTask(task.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.location.href = `/tasks/edit/${task.id}`}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteTask(task.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))
