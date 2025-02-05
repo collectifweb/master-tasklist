@@ -37,11 +37,12 @@ export default function AddTask() {
   const [categories, setCategories] = useState<Category[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [newCategory, setNewCategory] = useState('')
+  const [showNewCategory, setShowNewCategory] = useState(false)
   const [newTask, setNewTask] = useState({
     name: '',
     parentId: '',
     categoryId: '',
-    dueDate: new Date(),
+    dueDate: null as Date | null,
     complexity: 1,
     priority: 1,
     length: 1,
@@ -97,6 +98,12 @@ export default function AddTask() {
       })
     }
   }
+
+  const calculateCoefficient = (complexity: number, priority: number, length: number) => {
+    // Conversion de la priorité selon la formule
+    const priorityValue = 6 - priority; // 5->1, 4->2, 3->3, 2->4, 1->5
+    return 15 - (complexity + length + priorityValue);
+  };
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,7 +165,7 @@ export default function AddTask() {
                 value={newTask.categoryId}
                 onValueChange={(value) => setNewTask({ ...newTask, categoryId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,15 +176,31 @@ export default function AddTask() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input
-                placeholder="Nouvelle catégorie"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-              />
-              <Button type="button" onClick={handleAddCategory}>
-                Ajouter
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowNewCategory(!showNewCategory)}
+                className="px-3"
+              >
+                {showNewCategory ? "−" : "+"}
               </Button>
             </div>
+            {showNewCategory && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  placeholder="Nouvelle catégorie"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="flex-1"
+                />
+                <Button type="button" onClick={() => {
+                  handleAddCategory();
+                  setShowNewCategory(false);
+                }}>
+                  Ajouter
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>
@@ -268,6 +291,16 @@ export default function AddTask() {
             />
             <div className="text-sm text-muted-foreground">
               {['Très courte', 'Courte', 'Moyenne', 'Longue', 'Très longue'][newTask.length - 1]}
+            </div>
+          </div>
+
+          <div className="bg-muted p-4 rounded-lg mb-4">
+            <Label className="mb-2 block">Coefficient calculé</Label>
+            <div className="text-2xl font-semibold">
+              {calculateCoefficient(newTask.complexity, newTask.priority, newTask.length)}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Basé sur la complexité, la priorité et la durée
             </div>
           </div>
 
