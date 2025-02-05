@@ -9,7 +9,27 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Example {
+model Task {
+  id          Int       @id @default(autoincrement())
+  name        String
+  dueDate     DateTime
+  complexity  Int
+  priority    Int
+  length      Int
+  coefficient Int
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  parentId    Int?
+  categoryId  Int
+  parent      Task?     @relation("TaskToTask", fields: [parentId], references: [id])
+  children    Task[]    @relation("TaskToTask")
+  category    Category  @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
   id        Int      @id @default(autoincrement())
+  name      String   @unique
   createdAt DateTime @default(now())
+  tasks     Task[]
 }
