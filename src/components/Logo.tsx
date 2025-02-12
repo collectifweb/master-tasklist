@@ -1,9 +1,9 @@
-import React from 'react';
+import Link from 'next/link'
 
-const Logo: React.FC = () => {
+export default function Logo() {
   return (
-    <div className="text-xl font-bold">Logo</div>
-  );
-};
-
-export default Logo;
+    <Link href="/tasks" className="text-2xl font-bold tracking-tight hover:opacity-90 transition-opacity">
+      MASTER TASKLIST
+    </Link>
+  )
+}

@@ -1,35 +1,16 @@
-import type { AppProps } from 'next/app'
-import '../styles/globals.css';
-import { Toaster } from "@/components/ui/toaster"
-import { useEffect, useState } from 'react';
+import '@/styles/globals.css';
+import type { AppProps } from 'next/app';
 import { Navigation } from '@/components/Navigation';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    // Get the color-scheme value from :root
-    const root = document.documentElement;
-    const computedStyle = getComputedStyle(root);
-    const colorScheme = computedStyle.getPropertyValue('--mode').trim().replace(/"/g, '');
-    if (colorScheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.add('light');
-    }
-    setMounted(true);
-  }, []);
-
-  // Prevent flash while theme loads
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen">
+    <>
       <Navigation />
-      <Component {...pageProps} />
+      <main className="container mx-auto p-4 md:p-8 mb-20 md:mb-0 mt-16 md:mt-0">
+        <Component {...pageProps} />
+      </main>
       <Toaster />
-    </div>
-  )
+    </>
+  );
 }
