@@ -6,7 +6,7 @@ import { Menu, ListTodo, CheckSquare, Plus, Home, FolderTree } from 'lucide-reac
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Logo from './Logo';
 
-export default function Navigation() {
+const Navigation = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -92,4 +92,6 @@ export default function Navigation() {
       </div>
     </>
   );
-}
+};
+
+export { Navigation };
