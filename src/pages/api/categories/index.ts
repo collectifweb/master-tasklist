@@ -1,34 +1,44 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import prisma from '@/lib/prisma'
+import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/lib/prisma';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === 'GET') {
-    try {
-      const categories = await prisma.category.findMany({
-        orderBy: { name: 'asc' },
-      })
-      return res.status(200).json(categories)
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      return res.status(500).json({ error: 'Error fetching categories' })
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    switch (req.method) {
+      case 'GET':
+        const categories = await prisma.category.findMany({
+          include: {
+            _count: {
+              select: { tasks: true }
+            }
+          }
+        });
+
+        const formattedCategories = categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          taskCount: cat._count.tasks
+        }));
+
+        return res.json(formattedCategories);
+
+      case 'POST':
+        const { name } = req.body;
+        if (!name) {
+          return res.status(400).json({ error: 'Name is required' });
+        }
+
+        const newCategory = await prisma.category.create({
+          data: { name },
+        });
+
+        return res.status(201).json(newCategory);
+
+      default:
+        res.setHeader('Allow', ['GET', 'POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
+  } catch (error) {
+    console.error('Categories API Error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  if (req.method === 'POST') {
-    try {
-      const { name } = req.body
-      const category = await prisma.category.create({
-        data: { name },
-      })
-      return res.status(201).json(category)
-    } catch (error) {
-      console.error('Error creating category:', error)
-      return res.status(500).json({ error: 'Error creating category' })
-    }
-  }
-
-  return res.status(405).json({ error: 'Method not allowed' })
 }

@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     complexity: 1,
     priority: 1,
     length: 1,
+    notes: '',
   });
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
         complexity: task.complexity,
         priority: task.priority,
         length: task.length,
+        notes: task.notes || '',
       });
     }
   };
@@ -85,9 +88,11 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
       body: JSON.stringify({ name: newCategory }),
     });
     if (response.ok) {
+      const newCat = await response.json();
       setNewCategory('');
       setShowCategoryInput(false);
       fetchCategories();
+      setFormData({ ...formData, categoryId: newCat.id.toString() });
     }
   };
 
@@ -249,6 +254,17 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           max={5}
           step={1}
           className="my-2"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="notes">Notes (Optionnel)</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="Ajouter des notes pour cette tâche..."
+          className="min-h-[100px]"
         />
       </div>
 

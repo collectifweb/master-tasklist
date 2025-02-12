@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { Pencil, Trash2, RotateCcw } from 'lucide-react';
+import Link from 'next/link';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,27 +83,44 @@ export function TaskList({
     }
   };
 
-  const handleEdit = (taskId: string) => {
-    router.push(`/tasks/edit/${taskId}`);
+  // Organiser les tâches pour que les enfants suivent leurs parents
+  const organizeTasksByParent = (tasksList: Task[]) => {
+    const parentTasks = tasksList.filter(task => !task.parentId);
+    const childTasks = tasksList.filter(task => task.parentId);
+    
+    const organizedTasks: Task[] = [];
+    
+    parentTasks.forEach(parent => {
+      organizedTasks.push(parent);
+      const children = childTasks.filter(child => child.parentId === parent.id);
+      organizedTasks.push(...children);
+    });
+    
+    return organizedTasks;
   };
+
+  const organizedTasks = organizeTasksByParent(tasks);
 
   return (
     <>
       <div className="space-y-4">
-        {tasks.map((task) => (
-          <Card key={task.id} className="p-4">
+        {organizedTasks.map((task) => (
+          <Card key={task.id} className={`p-4 ${task.parentId ? 'ml-8' : ''}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {showComplete && (
                   <Checkbox
                     checked={task.completed}
                     onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
+                    className="text-gray-700"
                   />
                 )}
                 <div>
-                  <h3 className="font-medium">
-                    {task.name}
-                  </h3>
+                  <Link href={`/tasks/edit/${task.id}`} className="hover:underline">
+                    <h3 className="font-medium">
+                      {task.name}
+                    </h3>
+                  </Link>
                   <p className="text-sm text-muted-foreground">
                     {task.category?.name}
                     {task.parent && ` | Parent: ${task.parent.name}`}
@@ -112,9 +130,12 @@ export function TaskList({
                       Due: {format(new Date(task.dueDate), "PPP")}
                     </p>
                   )}
-                  <p className="text-sm text-muted-foreground">
-                    Complexité: {task.complexity} | Priorité: {task.priority} | 
-                    Longueur: {task.length} | Coefficient: {task.coefficient}
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">
+                      Complexité: {task.complexity} | Priorité: {task.priority} | 
+                      Longueur: {task.length} | 
+                    </span>
+                    <span className="font-semibold">Coefficient: {task.coefficient}</span>
                   </p>
                 </div>
               </div>
@@ -123,7 +144,8 @@ export function TaskList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleEdit(task.id.toString())}
+                    className="text-gray-700 hover:text-gray-700 hover:bg-transparent"
+                    onClick={() => router.push(`/tasks/edit/${task.id}`)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -132,6 +154,7 @@ export function TaskList({
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="text-gray-700 hover:text-gray-700 hover:bg-transparent"
                     onClick={() => handleDelete(task.id.toString())}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -141,6 +164,7 @@ export function TaskList({
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="text-gray-700 hover:text-gray-700 hover:bg-transparent"
                     onClick={() => onReopen(task.id.toString())}
                   >
                     <RotateCcw className="h-4 w-4" />

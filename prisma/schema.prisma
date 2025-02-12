@@ -17,6 +17,7 @@ model Task {
   priority    Int
   length      Int
   coefficient Int
+  notes       String?
   completed   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
