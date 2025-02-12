@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -121,8 +122,15 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     }
   };
 
+  const coefficient = ((formData.complexity + formData.length + formData.priority) / 3).toFixed(2);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Badge variant="secondary" className="text-lg px-4 py-1">
+          Coefficient: {coefficient}
+        </Badge>
+      </div>
       <div>
         <Label htmlFor="name">Nom de la tâche</Label>
         <Input
@@ -197,28 +205,40 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
       <div>
         <Label>Date d'échéance (Optionnel)</Label>
-        <Popover>
-          <PopoverTrigger asChild>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.dueDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Choisir une date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={formData.dueDate || undefined}
+                onSelect={(date) => setFormData({ ...formData, dueDate: date })}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {formData.dueDate && (
             <Button
+              type="button"
               variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !formData.dueDate && "text-muted-foreground"
-              )}
+              size="icon"
+              onClick={() => setFormData({ ...formData, dueDate: null })}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Choisir une date</span>}
+              <X className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar
-              mode="single"
-              selected={formData.dueDate || undefined}
-              onSelect={(date) => setFormData({ ...formData, dueDate: date })}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+          )}
+        </div>
       </div>
 
       <div>
