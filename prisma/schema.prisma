@@ -12,7 +12,7 @@ datasource db {
 model Task {
   id          Int       @id @default(autoincrement())
   name        String
-  dueDate     DateTime
+  dueDate     DateTime?
   complexity  Int
   priority    Int
   length      Int
