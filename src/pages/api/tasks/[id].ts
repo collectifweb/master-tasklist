@@ -70,6 +70,21 @@ export default async function handler(
         })
         return res.status(200).json(updatedTask)
       } else {
+        // Calculate coefficient
+        const calculateCoefficient = (priority: number, complexity: number, length: number) => {
+          let priorityValue = 0;
+          switch (priority) {
+            case 5: priorityValue = 1; break;
+            case 4: priorityValue = 2; break;
+            case 3: priorityValue = 3; break;
+            case 2: priorityValue = 4; break;
+            case 1: priorityValue = 5; break;
+          }
+          return 15 - (complexity + length + priorityValue)
+        }
+
+        const coefficient = calculateCoefficient(priority, complexity, length)
+
         // Full task update
         const updatedTask = await prisma.task.update({
           where: { id: taskId },
@@ -79,6 +94,7 @@ export default async function handler(
             complexity,
             priority,
             length,
+            coefficient,
             parentId: parentId || null,
             categoryId,
             notes: notes || null,
