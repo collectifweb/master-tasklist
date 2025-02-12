@@ -43,7 +43,7 @@ export default async function handler(
 
   if (req.method === 'POST') {
     try {
-      const { name, dueDate, complexity, priority, length, parentId, categoryId } = req.body
+      const { name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body
       
       const coefficient = calculateCoefficient(priority, complexity, length)
       
@@ -57,6 +57,7 @@ export default async function handler(
           coefficient,
           parentId: parentId || null,
           categoryId,
+          notes: notes || null,
         },
         include: {
           category: true,
