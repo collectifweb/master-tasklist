@@ -169,7 +169,39 @@ export default function Home() {
     return level
   }
 
-  const filteredAndSortedTasks = tasks
+  // Fonction pour organiser les tâches hiérarchiquement
+  const organizeTasksHierarchically = (tasks: Task[]): Task[] => {
+    const taskMap = new Map(tasks.map(task => [task.id, { ...task, children: [] }]));
+    const rootTasks: Task[] = [];
+
+    tasks.forEach(task => {
+      if (task.parentId === null) {
+        rootTasks.push(taskMap.get(task.id)!);
+      } else {
+        const parent = taskMap.get(task.parentId);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(taskMap.get(task.id)!);
+        }
+      }
+    });
+
+    const flattenHierarchy = (tasks: Task[]): Task[] => {
+      return tasks.reduce((acc: Task[], task) => {
+        acc.push(task);
+        if (task.children && task.children.length > 0) {
+          acc.push(...flattenHierarchy(task.children as Task[]));
+        }
+        return acc;
+      }, []);
+    };
+
+    return flattenHierarchy(rootTasks);
+  };
+
+  const filteredAndSortedTasks = (sortBy === 'none' 
+    ? organizeTasksHierarchically(tasks)
+    : tasks)
     .filter(task => {
       // Filter by completion
       if (task.completed) return false
@@ -293,19 +325,34 @@ export default function Home() {
           filteredAndSortedTasks.map((task) => (
             <Card 
               key={task.id} 
-              className="p-4 bg-white"
+              className="p-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors"
               style={{ marginLeft: `${getTaskLevel(task) * 20}px` }}
+              onClick={(e) => {
+                // Prevent navigation if clicking on buttons or checkbox
+                if (
+                  (e.target as HTMLElement).closest('button') ||
+                  (e.target as HTMLElement).closest('[role="checkbox"]')
+                ) {
+                  return;
+                }
+                window.location.href = `/tasks/edit/${task.id}`;
+              }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <Checkbox
                     checked={task.completed}
                     onCheckedChange={() => toggleTaskCompletion(task.id, task.completed)}
                   />
-                  <div>
-                    <h3 className={cn("font-medium text-gray-900", task.completed && "line-through")}>
-                      {task.name}
-                    </h3>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className={cn("font-medium text-gray-900", task.completed && "line-through")}>
+                        {task.name}
+                      </h3>
+                      <div className="px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
+                        Coef. {task.coefficient}
+                      </div>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Catégorie: {task.category.name}
                       {task.parent && ` | Parent: ${task.parent.name}`}
@@ -315,7 +362,7 @@ export default function Home() {
                     </p>
                     <p className="text-sm text-gray-600">
                       Complexité: {task.complexity} | Priorité: {task.priority} | 
-                      Durée: {task.length} | Coefficient: {task.coefficient}
+                      Durée: {task.length}
                     </p>
                     {task.children && task.children.length > 0 && (
                       <p className="text-sm text-gray-600">

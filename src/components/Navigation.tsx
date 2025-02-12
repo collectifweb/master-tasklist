@@ -13,14 +13,14 @@ const Navigation = () => {
   const isActive = (path: string) => router.pathname === path;
 
   const menuItems = [
-    { href: '/tasks', label: 'Tâches actives', icon: ListTodo },
+    { href: '/', label: 'Tâches actives', icon: ListTodo },
     { href: '/tasks/completed', label: 'Tâches terminées', icon: CheckSquare },
     { href: '/tasks/add', label: 'Nouvelle tâche', icon: Plus },
     { href: '/categories', label: 'Gérer les catégories', icon: FolderTree },
   ];
 
   const mobileMenuItems = [
-    { href: '/tasks', label: 'Tâches actives', icon: ListTodo },
+    { href: '/', label: 'Tâches actives', icon: ListTodo },
     { href: '/tasks/add', label: 'Nouvelle tâche', icon: Plus },
     { href: '/tasks/completed', label: 'Tâches terminées', icon: CheckSquare },
   ];
