@@ -357,9 +357,11 @@ export default function Home() {
                       Catégorie: {task.category.name}
                       {task.parent && ` | Parent: ${task.parent.name}`}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Échéance: {format(new Date(task.dueDate), "PPP", { locale: fr })}
-                    </p>
+                    {task.dueDate && (
+                      <p className="text-sm text-gray-600">
+                        Échéance: {format(new Date(task.dueDate), "PPP", { locale: fr })}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
                       Complexité: {task.complexity} | Priorité: {task.priority} | 
                       Durée: {task.length}

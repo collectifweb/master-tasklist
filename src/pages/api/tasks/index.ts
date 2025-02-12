@@ -2,8 +2,16 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
 
 const calculateCoefficient = (priority: number, complexity: number, length: number) => {
-  let priorityValue = 6 - priority // Convert 1-5 to 5-1
-  return complexity + length + priorityValue
+  // Convert priority 1-5 to 5-1 according to the formula
+  let priorityValue = 0;
+  switch (priority) {
+    case 5: priorityValue = 1; break;
+    case 4: priorityValue = 2; break;
+    case 3: priorityValue = 3; break;
+    case 2: priorityValue = 4; break;
+    case 1: priorityValue = 5; break;
+  }
+  return 15 - (complexity + length + priorityValue)
 }
 
 export default async function handler(
