@@ -137,6 +137,11 @@ export function TaskList({
                     </span>
                     <span className="font-semibold">Coefficient: {task.coefficient}</span>
                   </p>
+                  {task.notes && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Notes: {task.notes}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
