@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { calculateCoefficient } from '@/util/coefficient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,10 +96,6 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
       fetchCategories();
       setFormData({ ...formData, categoryId: newCat.id.toString() });
     }
-  };
-
-  const calculateCoefficient = (complexity: number, length: number, priority: number) => {
-    return ((complexity + length + priority) / 3).toFixed(2);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
