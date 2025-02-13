@@ -46,6 +46,7 @@ export default function AddTask() {
     complexity: 1,
     priority: 1,
     length: 1,
+    notes: '',
   })
 
   const fetchCategories = async () => {
@@ -294,10 +295,20 @@ export default function AddTask() {
             </div>
           </div>
 
+          <div>
+            <Label>Notes (Optionnel)</Label>
+            <textarea
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mt-2"
+              placeholder="Ajoutez des notes supplémentaires ici..."
+              value={newTask.notes}
+              onChange={(e) => setNewTask({ ...newTask, notes: e.target.value })}
+            />
+          </div>
+
           <div className="bg-muted p-4 rounded-lg mb-4">
             <Label className="mb-2 block">Coefficient calculé</Label>
             <div className="text-2xl font-semibold">
-              {calculateCoefficient(newTask.complexity, newTask.priority, newTask.length)}
+              {((newTask.complexity + newTask.priority + newTask.length) / 3).toFixed(2)}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
               Basé sur la complexité, la priorité et la durée
