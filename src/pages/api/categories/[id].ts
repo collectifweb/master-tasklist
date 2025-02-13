@@ -8,6 +8,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid category ID' });
   }
 
+  // Convert string ID to number
+  const categoryId = parseInt(id, 10);
+  if (isNaN(categoryId)) {
+    return res.status(400).json({ error: 'Invalid category ID format' });
+  }
+
   try {
     switch (req.method) {
       case 'PUT':
@@ -17,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const updatedCategory = await prisma.category.update({
-          where: { id },
+          where: { id: categoryId },
           data: { name },
         });
 
@@ -26,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'DELETE':
         // Vérifier si la catégorie est utilisée
         const tasksCount = await prisma.task.count({
-          where: { categoryId: id },
+          where: { categoryId: categoryId },
         });
 
         if (tasksCount > 0) {
@@ -36,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         await prisma.category.delete({
-          where: { id },
+          where: { id: categoryId },
         });
 
         return res.status(204).end();
