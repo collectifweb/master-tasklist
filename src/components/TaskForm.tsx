@@ -97,9 +97,13 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     }
   };
 
+  const calculateCoefficient = (complexity: number, length: number, priority: number) => {
+    return ((complexity + length + priority) / 3).toFixed(2);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const coefficient = 15 - ((formData.complexity + formData.length + formData.priority) / 3);
+    const coefficient = parseFloat(calculateCoefficient(formData.complexity, formData.length, formData.priority));
     
     const taskData = {
       ...formData,
@@ -122,7 +126,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     }
   };
 
-  const coefficient = ((formData.complexity + formData.length + formData.priority) / 3).toFixed(2);
+  const coefficient = calculateCoefficient(formData.complexity, formData.length, formData.priority);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
