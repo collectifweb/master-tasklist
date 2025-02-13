@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
+import { calculateCoefficient } from '@/util/coefficient'
 
 export default async function handler(
   req: NextApiRequest,
@@ -70,18 +71,7 @@ export default async function handler(
         })
         return res.status(200).json(updatedTask)
       } else {
-        // Calculate coefficient
-        const calculateCoefficient = (priority: number, complexity: number, length: number) => {
-          let priorityValue = 0;
-          switch (priority) {
-            case 5: priorityValue = 1; break;
-            case 4: priorityValue = 2; break;
-            case 3: priorityValue = 3; break;
-            case 2: priorityValue = 4; break;
-            case 1: priorityValue = 5; break;
-          }
-          return 15 - (complexity + length + priorityValue)
-        }
+        // Calculate coefficient using shared utility
 
         const coefficient = calculateCoefficient(priority, complexity, length)
 
