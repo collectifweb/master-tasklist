@@ -308,10 +308,10 @@ export default function AddTask() {
           <div className="bg-muted p-4 rounded-lg mb-4">
             <Label className="mb-2 block">Coefficient calculé</Label>
             <div className="text-2xl font-semibold">
-              {((newTask.complexity + newTask.priority + newTask.length) / 3).toFixed(2)}
+              {(15 - (newTask.complexity + newTask.length + (6 - newTask.priority))).toFixed(2)}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              Basé sur la complexité, la priorité et la durée
+              Basé sur la complexité, la priorité (inversée) et la durée
             </div>
           </div>
 
