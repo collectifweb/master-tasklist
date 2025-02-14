@@ -11,11 +11,8 @@ export default function EditTaskPage() {
   };
 
   return (
-    <div>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Modifier la tâche</h1>
-        {id && <TaskForm taskId={id as string} onSuccess={onSuccess} />}
-      </div>
-    </div>
+    <main className="container mx-auto p-4 md:p-8 mb-20 md:mb-0 mt-16 md:mt-0">
+      {id && <TaskForm taskId={id as string} onSuccess={onSuccess} />}
+    </main>
   );
 }
