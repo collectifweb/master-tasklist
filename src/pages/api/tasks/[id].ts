@@ -80,7 +80,7 @@ export default async function handler(
           where: { id: taskId },
           data: {
             name,
-            dueDate: dueDate ? new Date(dueDate) : undefined,
+            dueDate: dueDate ? new Date(dueDate) : null,
             complexity,
             priority,
             length,

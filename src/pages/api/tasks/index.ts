@@ -46,7 +46,7 @@ export default async function handler(
       const task = await prisma.task.create({
         data: {
           name,
-          dueDate: new Date(dueDate),
+          dueDate: dueDate ? new Date(dueDate) : null,
           complexity,
           priority,
           length,
