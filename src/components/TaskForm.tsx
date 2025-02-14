@@ -38,6 +38,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     priority: 1,
     length: 1,
     notes: '',
+    coefficient: 0,
   });
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
         priority: task.priority,
         length: task.length,
         notes: task.notes || '',
+        coefficient: task.coefficient || 0,
       });
     }
   };
@@ -123,13 +125,11 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     }
   };
 
-  const coefficient = calculateCoefficient(formData.complexity, formData.length, formData.priority);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex justify-end mb-4">
         <Badge variant="secondary" className="text-lg px-4 py-1">
-          Coefficient: {coefficient}
+          Coefficient: {taskId ? formData.coefficient : calculateCoefficient(formData.complexity, formData.length, formData.priority)}
         </Badge>
       </div>
       <div>
