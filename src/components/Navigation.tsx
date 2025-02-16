@@ -3,14 +3,18 @@ import { Menu, Plus, CheckSquare } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
+import { useState } from 'react'
+import { useState } from 'react'
 
 export function Navigation() {
+  const [open, setOpen] = useState(false)
+
   const SecondaryMenu = () => (
     <div className="flex flex-col space-y-4">
-      <Link href="/categories" className="text-sm">
+      <Link href="/categories" className="text-sm" onClick={() => setOpen(false)}>
         Gérer les catégories
       </Link>
-      <Link href="/configuration" className="text-sm">
+      <Link href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
     </div>

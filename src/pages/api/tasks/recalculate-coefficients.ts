@@ -30,7 +30,10 @@ export default async function handler(
     // Exécuter toutes les mises à jour
     await prisma.$transaction(updates)
 
-    return res.status(200).json({ message: 'Coefficients recalculés avec succès' })
+    return res.status(200).json({ 
+      message: 'Coefficients recalculés avec succès',
+      count: activeTasks.length
+    })
   } catch (error) {
     console.error('Erreur lors du recalcul des coefficients:', error)
     return res.status(500).json({ message: 'Erreur lors du recalcul des coefficients' })
