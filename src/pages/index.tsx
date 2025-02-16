@@ -237,24 +237,24 @@ export default function Home() {
           <h1 className="text-4xl font-bold">Tâches actives</h1>
         </div>
         
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <Search className="h-4 w-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex items-center gap-2 w-full">
+            <Search className="h-4 w-4 flex-shrink-0" />
             <Input
               placeholder="Rechercher une tâche..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-xs"
+              className="w-full"
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
+          <div className="flex items-center gap-2 w-full">
+            <Filter className="h-4 w-4 flex-shrink-0" />
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filtrer par catégorie" />
               </SelectTrigger>
               <SelectContent>
@@ -268,13 +268,13 @@ export default function Home() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4" />
+          <div className="flex items-center gap-2 w-full">
+            <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
             <Select
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Trier par" />
               </SelectTrigger>
               <SelectContent>
@@ -287,7 +287,7 @@ export default function Home() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[180px]">
+              <Button variant="outline" className="w-full">
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>
@@ -309,7 +309,7 @@ export default function Home() {
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                numberOfMonths={1}
               />
             </PopoverContent>
           </Popover>
