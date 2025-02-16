@@ -20,7 +20,11 @@ export default async function handler(
 
     // Recalculer les coefficients pour chaque tâche
     const updates = activeTasks.map(task => {
-      const newCoefficient = calculateCoefficient(task)
+      const newCoefficient = calculateCoefficient(
+        task.priority,
+        task.complexity,
+        task.length
+      )
       return prisma.task.update({
         where: { id: task.id },
         data: { coefficient: newCoefficient }

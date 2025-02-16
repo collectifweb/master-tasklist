@@ -2,9 +2,19 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function ConfigurationPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [openDialog, setOpenDialog] = useState<string | null>(null)
 
   const handleRecalculateCoefficients = async () => {
     setIsLoading(true)
@@ -28,6 +38,7 @@ export default function ConfigurationPage() {
       })
     } finally {
       setIsLoading(false)
+      setOpenDialog(null)
     }
   }
 
@@ -57,6 +68,17 @@ export default function ConfigurationPage() {
       })
     } finally {
       setIsLoading(false)
+      setOpenDialog(null)
+    }
+  }
+
+  const getPeriodText = (period: string) => {
+    switch (period) {
+      case 'all': return 'toutes les tâches terminées'
+      case '30days': return 'les tâches terminées de plus de 30 jours'
+      case '6months': return 'les tâches terminées de plus de 6 mois'
+      case '1year': return 'les tâches terminées de plus d\'un an'
+      default: return ''
     }
   }
 
@@ -66,45 +88,67 @@ export default function ConfigurationPage() {
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Gestion des coefficients</h2>
-        <Button 
-          onClick={handleRecalculateCoefficients}
-          disabled={isLoading}
-        >
-          Recalculer les coefficients des tâches actives
-        </Button>
+        <Dialog open={openDialog === 'recalculate'} onOpenChange={(open) => setOpenDialog(open ? 'recalculate' : null)}>
+          <DialogTrigger asChild>
+            <Button disabled={isLoading}>
+              Recalculer les coefficients des tâches actives
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmation</DialogTitle>
+              <DialogDescription>
+                Êtes-vous sûr de vouloir recalculer les coefficients de toutes les tâches actives ?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenDialog(null)}>
+                Annuler
+              </Button>
+              <Button onClick={handleRecalculateCoefficients} disabled={isLoading}>
+                Confirmer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Card>
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Suppression des tâches terminées</h2>
         <div className="grid gap-4">
-          <Button 
-            variant="outline"
-            onClick={() => handleDeleteCompleted('all')}
-            disabled={isLoading}
-          >
-            Supprimer toutes les tâches terminées
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => handleDeleteCompleted('30days')}
-            disabled={isLoading}
-          >
-            Supprimer les tâches terminées de plus de 30 jours
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => handleDeleteCompleted('6months')}
-            disabled={isLoading}
-          >
-            Supprimer les tâches terminées de plus de 6 mois
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => handleDeleteCompleted('1year')}
-            disabled={isLoading}
-          >
-            Supprimer les tâches terminées de plus d&apos;un an
-          </Button>
+          {['all', '30days', '6months', '1year'].map((period) => (
+            <Dialog 
+              key={period}
+              open={openDialog === `delete-${period}`} 
+              onOpenChange={(open) => setOpenDialog(open ? `delete-${period}` : null)}
+            >
+              <DialogTrigger asChild>
+                <Button variant="outline" disabled={isLoading}>
+                  Supprimer {getPeriodText(period)}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirmation de suppression</DialogTitle>
+                  <DialogDescription>
+                    Êtes-vous sûr de vouloir supprimer {getPeriodText(period)} ? Cette action est irréversible.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenDialog(null)}>
+                    Annuler
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleDeleteCompleted(period)}
+                    disabled={isLoading}
+                  >
+                    Supprimer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ))}
         </div>
       </Card>
     </div>
