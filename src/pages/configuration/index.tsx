@@ -15,9 +15,10 @@ export default function ConfigurationPage() {
       
       if (!response.ok) throw new Error('Erreur lors du recalcul')
       
+      const data = await response.json()
       toast({
         title: "Succès",
-        description: "Les coefficients ont été recalculés avec succès",
+        description: `Le coefficient de ${data.count} tâches a été recalculé avec succès`,
       })
     } catch (error) {
       toast({
@@ -43,9 +44,10 @@ export default function ConfigurationPage() {
       
       if (!response.ok) throw new Error('Erreur lors de la suppression')
       
+      const data = await response.json()
       toast({
         title: "Succès",
-        description: "Les tâches terminées ont été supprimées avec succès",
+        description: `${data.count} tâches terminées ont été supprimées avec succès`,
       })
     } catch (error) {
       toast({
