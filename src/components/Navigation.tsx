@@ -4,7 +4,6 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
 import { useState } from 'react'
-import { useState } from 'react'
 
 export function Navigation() {
   const [open, setOpen] = useState(false)
@@ -38,7 +37,7 @@ export function Navigation() {
             Nouvelle tâche
           </Link>
         </div>
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
@@ -68,7 +67,7 @@ export function Navigation() {
               <CheckSquare className="h-6 w-6" />
             </Button>
           </Link>
-          <Sheet>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
@@ -88,7 +87,7 @@ export function Navigation() {
         <Link href="/" className="mr-4">
           <Logo />
         </Link>
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
