@@ -105,22 +105,27 @@ export function TaskList({
     <>
       <div className="space-y-4">
         {organizedTasks.map((task) => (
-          <Card key={task.id} className={`p-4 ${task.parentId ? 'ml-8' : ''}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <Card key={task.id} className={`p-4 ${task.parentId ? 'ml-4 md:ml-8' : ''}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-2">
                 {showComplete && (
                   <Checkbox
                     checked={task.completed}
                     onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
-                    className="text-gray-700"
+                    className="text-gray-700 mt-1"
                   />
                 )}
-                <div>
-                  <Link href={`/tasks/edit/${task.id}`} className="hover:underline">
-                    <h3 className="font-medium">
-                      {task.name}
-                    </h3>
-                  </Link>
+                <div className="flex-grow">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <Link href={`/tasks/edit/${task.id}`} className="hover:underline">
+                      <h3 className="font-medium">
+                        {task.name}
+                      </h3>
+                    </Link>
+                    <div className="font-semibold text-sm md:text-right whitespace-nowrap">
+                      Coefficient: {task.coefficient}
+                    </div>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {task.category?.name}
                     {task.parent && ` | Parent: ${task.parent.name}`}
@@ -130,13 +135,13 @@ export function TaskList({
                       Due: {format(new Date(task.dueDate), "PPP")}
                     </p>
                   )}
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">
-                      Complexité: {task.complexity} | Priorité: {task.priority} | 
-                      Longueur: {task.length} | 
-                    </span>
-                    <span className="font-semibold">Coefficient: {task.coefficient}</span>
-                  </p>
+                  <div className="flex flex-col md:flex-row gap-2 text-sm text-muted-foreground mt-1">
+                    <span>Complexité: {task.complexity}</span>
+                    <span className="hidden md:inline">•</span>
+                    <span>Priorité: {task.priority}</span>
+                    <span className="hidden md:inline">•</span>
+                    <span>Longueur: {task.length}</span>
+                  </div>
                   {task.notes && (
                     <p className="text-sm text-muted-foreground mt-2">
                       Notes: {task.notes}
@@ -144,7 +149,7 @@ export function TaskList({
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-end">
                 {showEdit && (
                   <Button
                     variant="ghost"
