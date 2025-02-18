@@ -171,32 +171,42 @@ export default function Home() {
 
   // Fonction pour organiser les tâches hiérarchiquement
   const organizeTasksHierarchically = (tasks: Task[]): Task[] => {
-    const taskMap = new Map(tasks.map(task => [task.id, { ...task, children: [] }]));
-    const rootTasks: Task[] = [];
+    try {
+      const taskMap = new Map(tasks.map(task => [task.id, { ...task, children: [] }]));
+      const rootTasks: Task[] = [];
 
-    tasks.forEach(task => {
-      if (task.parentId === null) {
-        rootTasks.push(taskMap.get(task.id)!);
-      } else {
-        const parent = taskMap.get(task.parentId);
-        if (parent) {
-          if (!parent.children) parent.children = [];
-          parent.children.push(taskMap.get(task.id)!);
+      tasks.forEach(task => {
+        if (!task || typeof task.id === 'undefined') return;
+        
+        if (!task.parentId) {
+          const rootTask = taskMap.get(task.id);
+          if (rootTask) rootTasks.push(rootTask);
+        } else {
+          const parent = taskMap.get(task.parentId);
+          const currentTask = taskMap.get(task.id);
+          if (parent && currentTask) {
+            if (!parent.children) parent.children = [];
+            parent.children.push(currentTask);
+          }
         }
-      }
-    });
+      });
 
-    const flattenHierarchy = (tasks: Task[]): Task[] => {
-      return tasks.reduce((acc: Task[], task) => {
-        acc.push(task);
-        if (task.children && task.children.length > 0) {
-          acc.push(...flattenHierarchy(task.children as Task[]));
-        }
-        return acc;
-      }, []);
-    };
+      const flattenHierarchy = (tasks: Task[]): Task[] => {
+        return tasks.reduce((acc: Task[], task) => {
+          if (!task) return acc;
+          acc.push(task);
+          if (task.children && Array.isArray(task.children) && task.children.length > 0) {
+            acc.push(...flattenHierarchy(task.children as Task[]));
+          }
+          return acc;
+        }, []);
+      };
 
-    return flattenHierarchy(rootTasks);
+      return flattenHierarchy(rootTasks);
+    } catch (error) {
+      console.error('Error organizing tasks:', error);
+      return tasks;
+    }
   };
 
   const filteredAndSortedTasks = (sortBy === 'none' 
