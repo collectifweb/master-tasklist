@@ -23,9 +23,12 @@ model Task {
   updatedAt   DateTime  @updatedAt
   parentId    Int?
   categoryId  Int
-  parent      Task?     @relation("TaskToTask", fields: [parentId], references: [id])
+  parent      Task?     @relation("TaskToTask", fields: [parentId], references: [id], onDelete: SetNull)
   children    Task[]    @relation("TaskToTask")
-  category    Category  @relation(fields: [categoryId], references: [id])
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([parentId])
+  @@index([categoryId])
 }
 
 model Category {
