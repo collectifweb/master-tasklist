@@ -23,17 +23,32 @@ model Task {
   updatedAt   DateTime  @updatedAt
   parentId    Int?
   categoryId  Int       @default(1)
+  userId      String    @db.Uuid
   parent      Task?     @relation("TaskToTask", fields: [parentId], references: [id], onDelete: SetNull)
   children    Task[]    @relation("TaskToTask")
   category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([parentId])
   @@index([categoryId])
+  @@index([userId])
 }
 
 model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
+  userId    String   @db.Uuid
   tasks     Task[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id         String     @id @db.Uuid
+  email      String     @unique
+  createdAt  DateTime   @default(now())
+  tasks      Task[]
+  categories Category[]
 }
