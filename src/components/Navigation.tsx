@@ -1,12 +1,25 @@
 import Link from 'next/link'
-import { Menu, Plus, CheckSquare } from 'lucide-react'
+import { Menu, Plus, CheckSquare, LogOut } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
+import { AuthContext } from '@/contexts/AuthContext'
+import { useRouter } from 'next/router'
 
 export function Navigation() {
+  const { user, signOut } = useContext(AuthContext)
+  const router = useRouter()
+
+  if (!user) {
+    return null
+  }
   const [open, setOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/login')
+  }
 
   const SecondaryMenu = () => (
     <div className="flex flex-col space-y-4">
@@ -16,6 +29,9 @@ export function Navigation() {
       <Link href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
+      <button onClick={handleSignOut} className="text-sm text-left text-destructive">
+        Déconnexion
+      </button>
     </div>
   )
 
