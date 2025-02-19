@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
-const DEMO_USER_ID = '1';
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: {
           id: DEMO_USER_ID,
           email: 'demo@example.com',
-          password: 'demo' // Dans un cas réel, il faudrait hasher le mot de passe
+          password: 'demo123' // Dans un cas réel, il faudrait hasher le mot de passe
         }
       });
     }
