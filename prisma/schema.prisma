@@ -46,8 +46,9 @@ model Category {
 }
 
 model User {
-  id         String     @id @db.Uuid
+  id         String     @id @default(uuid()) @db.Uuid
   email      String     @unique
+  password   String
   createdAt  DateTime   @default(now())
   tasks      Task[]
   categories Category[]

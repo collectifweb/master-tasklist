@@ -1,8 +1,11 @@
 import React, { createContext, useState, ReactNode, useContext, useEffect } from 'react';
-import { createClient } from '@/util/supabase/component';
-import { User } from '@supabase/supabase-js';
-import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from 'next/router';
+import { useToast } from "@/components/ui/use-toast";
+
+interface User {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -24,31 +27,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const supabase = createClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        setUser(session?.user ?? null);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    checkAuth();
   }, []);
 
-  const getUser = async () => {
+  const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const user = await response.json();
+        setUser(user);
+      }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error('Auth check error:', error);
     } finally {
       setInitializing(false);
     }
@@ -56,18 +49,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      router.push('/dashboard');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      const user = await response.json();
+      setUser(user);
+      router.push('/');
       toast({
-        title: "Success",
+        title: "Succès",
         description: "Vous êtes connecté avec succès",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Erreur lors de la connexion",
       });
       throw error;
     }
@@ -75,21 +79,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
-      if (error) throw error;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
       toast({
-        title: "Success",
-        description: "Inscription réussie! Veuillez vous connecter pour continuer.",
+        title: "Succès",
+        description: "Compte créé avec succès! Veuillez vous connecter.",
       });
       router.push('/login');
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Erreur lors de l'inscription",
       });
       throw error;
     }
@@ -97,18 +107,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      router.push('/');
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      router.push('/login');
       toast({
-        title: "Success",
+        title: "Succès",
         description: "Vous êtes déconnecté avec succès",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message,
+        description: "Erreur lors de la déconnexion",
       });
     }
   };
