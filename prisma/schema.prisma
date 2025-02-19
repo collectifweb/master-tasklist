@@ -13,16 +13,16 @@ model Task {
   id          Int       @id @default(autoincrement())
   name        String
   dueDate     DateTime?
-  complexity  Int
-  priority    Int
-  length      Int
-  coefficient Int
+  complexity  Int       @default(1)
+  priority    Int       @default(1)
+  length      Int       @default(1)
+  coefficient Int       @default(1)
   notes       String?
   completed   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   parentId    Int?
-  categoryId  Int
+  categoryId  Int       @default(1)
   parent      Task?     @relation("TaskToTask", fields: [parentId], references: [id], onDelete: SetNull)
   children    Task[]    @relation("TaskToTask")
   category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
