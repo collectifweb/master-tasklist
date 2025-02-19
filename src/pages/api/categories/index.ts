@@ -1,11 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 
+// Utilisateur temporaire pour la démo
+const DEMO_USER_ID = '1'
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     switch (req.method) {
       case 'GET':
         const categories = await prisma.category.findMany({
+          where: {
+            userId: DEMO_USER_ID
+          },
           include: {
             _count: {
               select: { tasks: true }
@@ -28,7 +34,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const newCategory = await prisma.category.create({
-          data: { name },
+          data: { 
+            name,
+            userId: DEMO_USER_ID
+          },
         });
 
         return res.status(201).json(newCategory);
