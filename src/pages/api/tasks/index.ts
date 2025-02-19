@@ -2,6 +2,9 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
 import { calculateCoefficient } from '@/util/coefficient'
 
+// Utilisateur temporaire pour la démo
+const DEMO_USER_ID = '1'
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -9,6 +12,9 @@ export default async function handler(
   if (req.method === 'GET') {
     try {
       const tasks = await prisma.task.findMany({
+        where: {
+          userId: DEMO_USER_ID
+        },
         include: {
           category: true,
           parent: {
@@ -54,6 +60,7 @@ export default async function handler(
           parentId: parentId || null,
           categoryId,
           notes: notes || null,
+          userId: DEMO_USER_ID
         },
         include: {
           category: true,
