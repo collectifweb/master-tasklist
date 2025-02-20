@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+const DEMO_EMAIL = 'demo@example.com';
+const DEMO_PASSWORD = 'demo123';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -19,24 +21,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('Starting data migration process...');
 
   try {
-    // Vérifier si l'utilisateur existe, sinon le créer
-    let user = await prisma.user.findUnique({
-      where: { id: DEMO_USER_ID }
+    // Vérifier si l'utilisateur existe
+    console.log('Checking for existing demo user...');
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: DEMO_USER_ID },
+          { email: DEMO_EMAIL }
+        ]
+      }
     });
 
     if (!user) {
       console.log('Creating demo user account...');
-      const hashedPassword = await bcrypt.hash('demo123', 10);
+      const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10);
       user = await prisma.user.create({
         data: {
           id: DEMO_USER_ID,
-          email: 'demo@example.com',
+          email: DEMO_EMAIL,
           password: hashedPassword
         }
       });
-      console.log('Demo user account created successfully');
+      console.log('Demo user account created successfully:', { id: user.id, email: user.email });
     } else {
-      console.log('Demo user account already exists');
+      console.log('Demo user account already exists:', { id: user.id, email: user.email });
+      
+      // Mettre à jour le mot de passe si nécessaire
+      const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword }
+      });
+      console.log('Demo user password updated');
     }
 
     // Compter les éléments à migrer
@@ -56,10 +72,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId: null
         },
         data: {
-          userId: DEMO_USER_ID
+          userId: user.id
         }
       });
-      console.log(`${categoriesCount} categories migrated successfully`);
+      console.log(`${categoriesCount} categories migrated successfully to user ${user.id}`);
     }
 
     // Mettre à jour toutes les tâches existantes
@@ -69,19 +85,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId: null
         },
         data: {
-          userId: DEMO_USER_ID
+          userId: user.id
         }
       });
-      console.log(`${tasksCount} tasks migrated successfully`);
+      console.log(`${tasksCount} tasks migrated successfully to user ${user.id}`);
     }
 
-    return res.status(200).json({ 
+    // Vérifier les résultats
+    const finalCategoriesCount = await prisma.category.count({
+      where: { userId: user.id }
+    });
+    const finalTasksCount = await prisma.task.count({
+      where: { userId: user.id }
+    });
+
+    const results = {
       message: 'Migration completed successfully',
+      user: { id: user.id, email: user.email },
       stats: {
         categoriesMigrated: categoriesCount,
-        tasksMigrated: tasksCount
+        tasksMigrated: tasksCount,
+        totalCategories: finalCategoriesCount,
+        totalTasks: finalTasksCount
       }
-    });
+    };
+
+    console.log('Migration results:', results);
+    return res.status(200).json(results);
   } catch (error) {
     console.error('Migration error:', error);
     return res.status(500).json({ 
