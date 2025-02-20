@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TaskListProps {
   tasks: Task[];
@@ -38,6 +39,7 @@ export function TaskList({
   onReopen
 }: TaskListProps) {
   const router = useRouter();
+  const { getAuthHeaders } = useAuth();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     taskId: string | null;
@@ -61,9 +63,7 @@ export function TaskList({
     
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ completed: true }),
     });
 
@@ -76,6 +76,7 @@ export function TaskList({
   const handleDelete = async (taskId: string) => {
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
 
     if (response.ok) {
