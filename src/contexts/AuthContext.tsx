@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface User {
   id: string;
   email: string;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   initializing: boolean;
+  getAuthHeaders: () => HeadersInit;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -20,7 +22,8 @@ export const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
-  initializing: true
+  initializing: true,
+  getAuthHeaders: () => ({})
 });
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -33,12 +36,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
+  const getAuthHeaders = () => {
+    if (user?.token) {
+      return {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json'
+      };
+    }
+    return {
+      'Content-Type': 'application/json'
+    };
+  };
+
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setInitializing(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       if (response.ok) {
-        const user = await response.json();
-        setUser(user);
+        const userData = await response.json();
+        setUser({ ...userData, token });
+      } else {
+        localStorage.removeItem('token');
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -60,8 +88,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(error.message);
       }
 
-      const user = await response.json();
-      setUser(user);
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setUser({ ...data.user, token: data.token });
       router.push('/');
       toast({
         title: "Succès",
@@ -107,7 +136,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      localStorage.removeItem('token');
       setUser(null);
       router.push('/login');
       toast({
@@ -130,6 +163,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       signOut,
       initializing,
+      getAuthHeaders
     }}>
       {children}
     </AuthContext.Provider>

@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { DateRange } from 'react-day-picker'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Task = {
   id: number
@@ -44,6 +45,7 @@ type SortOption = 'date' | 'coefficient' | 'none'
 
 export default function Home() {
   const { toast } = useToast()
+  const { getAuthHeaders } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -53,7 +55,9 @@ export default function Home() {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/tasks')
+      const response = await fetch('/api/tasks', {
+        headers: getAuthHeaders()
+      })
       const data = await response.json()
       setTasks(data)
     } catch (error) {
@@ -68,7 +72,9 @@ export default function Home() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      const response = await fetch('/api/categories', {
+        headers: getAuthHeaders()
+      })
       const data = await response.json()
       setCategories(data)
     } catch (error) {
@@ -93,7 +99,10 @@ export default function Home() {
 
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ completed: !completed }),
       })
       if (response.ok) {
@@ -134,6 +143,7 @@ export default function Home() {
 
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders()
       })
       if (response.ok) {
         fetchTasks()

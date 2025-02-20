@@ -2,18 +2,17 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import { serialize } from 'cookie';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ message: 'Méthode non autorisée' });
   }
 
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({ message: 'Champs requis manquants' });
     }
 
     // Find user
@@ -22,38 +21,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Identifiants invalides' });
     }
 
     // Verify password
     const isValid = await compare(password, user.password);
 
     if (!isValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Identifiants invalides' });
     }
 
-    // Create session token
+    // Create JWT token
     const token = sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
 
-    // Set cookie
-    res.setHeader('Set-Cookie', serialize('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    }));
-
+    // Return user data and token
     return res.status(200).json({
-      id: user.id,
-      email: user.email,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ message: 'Error logging in' });
+    return res.status(500).json({ message: 'Erreur lors de la connexion' });
   }
 }

@@ -1,25 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { verify } from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ message: 'Méthode non autorisée' });
   }
 
   try {
-    const token = req.cookies['auth-token'];
-
+    const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      return res.status(401).json({ message: 'Not authenticated' });
+      return res.status(401).json({ message: 'Token manquant' });
     }
 
-    // Verify token
-    const decoded = verify(token, process.env.JWT_SECRET || 'fallback-secret') as { userId: string };
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ message: 'Token invalide' });
+    }
 
-    // Get user
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -27,12 +27,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
 
-    return res.status(200).json(user);
+    return res.json(user);
   } catch (error) {
-    console.error('Auth check error:', error);
-    return res.status(401).json({ message: 'Not authenticated' });
+    console.error('Me API Error:', error);
+    return res.status(500).json({ message: 'Erreur interne du serveur' });
   }
 }
