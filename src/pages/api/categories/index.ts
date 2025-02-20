@@ -1,19 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-
-// UUID fixe pour l'utilisateur de démonstration
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
+import { verifyToken } from '@/lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // Vérifier le token et obtenir l'ID de l'utilisateur
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Token manquant' });
+    }
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
     switch (req.method) {
       case 'GET':
         const categories = await prisma.category.findMany({
           where: {
-            OR: [
-              { userId: DEMO_USER_ID },
-              { userId: null }
-            ]
+            userId: userId
           },
           include: {
             _count: {
@@ -33,13 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'POST':
         const { name } = req.body;
         if (!name) {
-          return res.status(400).json({ error: 'Name is required' });
+          return res.status(400).json({ error: 'Le nom est requis' });
         }
 
         const newCategory = await prisma.category.create({
           data: { 
             name,
-            userId: DEMO_USER_ID
+            userId: userId
           },
         });
 
@@ -51,6 +57,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     console.error('Categories API Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 }
