@@ -1,22 +1,28 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
 import { calculateCoefficient } from '@/util/coefficient'
-
-// UUID fixe pour l'utilisateur de démonstration
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
+import { verifyToken } from '@/lib/auth'
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === 'GET') {
-    try {
+  try {
+    // Vérifier le token et obtenir l'ID de l'utilisateur
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Token manquant' });
+    }
+
+    const userId = await verifyToken(token);
+    if (!userId) {
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
+    if (req.method === 'GET') {
       const tasks = await prisma.task.findMany({
         where: {
-          OR: [
-            { userId: DEMO_USER_ID },
-            { userId: null }
-          ]
+          userId: userId
         },
         include: {
           category: true,
@@ -40,14 +46,9 @@ export default async function handler(
         ],
       })
       return res.status(200).json(tasks)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-      return res.status(500).json({ error: 'Error fetching tasks' })
     }
-  }
 
-  if (req.method === 'POST') {
-    try {
+    if (req.method === 'POST') {
       const { name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body
       
       const coefficient = calculateCoefficient(priority, complexity, length)
@@ -63,7 +64,7 @@ export default async function handler(
           parentId: parentId || null,
           categoryId,
           notes: notes || null,
-          userId: DEMO_USER_ID
+          userId: userId
         },
         include: {
           category: true,
@@ -76,11 +77,11 @@ export default async function handler(
         },
       })
       return res.status(201).json(task)
-    } catch (error) {
-      console.error('Error creating task:', error)
-      return res.status(500).json({ error: 'Error creating task' })
     }
-  }
 
-  return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: 'Méthode non autorisée' })
+  } catch (error) {
+    console.error('Tasks API Error:', error)
+    return res.status(500).json({ error: 'Erreur interne du serveur' })
+  }
 }
