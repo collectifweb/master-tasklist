@@ -67,9 +67,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser({ ...userData, token });
       } else {
         localStorage.removeItem('token');
+        setUser(null);
+        if (!publicRoutes.includes(router.pathname)) {
+          router.push('/login');
+        }
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+      if (!publicRoutes.includes(router.pathname)) {
+        router.push('/login');
+      }
     } finally {
       setInitializing(false);
     }
