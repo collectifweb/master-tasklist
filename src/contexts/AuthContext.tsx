@@ -150,18 +150,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
+      // First clear the local state
       localStorage.removeItem('token');
       setUser(null);
+      
+      // Then try to call the logout endpoint
+      try {
+        await fetch('/api/auth/logout', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        // Ignore any errors from the logout endpoint
+        console.log('Logout endpoint error (ignored):', error);
+      }
+
+      // Always redirect to login
       router.push('/login');
       toast({
         title: "Succès",
         description: "Vous êtes déconnecté avec succès",
       });
     } catch (error: any) {
+      console.error('Signout error:', error);
       toast({
         variant: "destructive",
         title: "Erreur",

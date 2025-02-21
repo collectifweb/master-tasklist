@@ -9,13 +9,31 @@ export default async function handler(
 ) {
   try {
     // Vérifier le token et obtenir l'ID de l'utilisateur
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      console.error('Authorization header missing');
       return res.status(401).json({ error: 'Token manquant' });
     }
 
-    const userId = await verifyToken(token);
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.substring(7) 
+      : authHeader;
+
+    if (!token) {
+      console.error('Token not found in Authorization header');
+      return res.status(401).json({ error: 'Token manquant' });
+    }
+
+    let userId;
+    try {
+      userId = await verifyToken(token);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
     if (!userId) {
+      console.error('User ID not found in token');
       return res.status(401).json({ error: 'Token invalide' });
     }
 
