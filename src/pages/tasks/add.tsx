@@ -51,21 +51,65 @@ export default function AddTask() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
-      const data = await response.json()
-      setCategories(data)
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch('/api/categories', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error('Invalid categories data format:', data);
+        setCategories([]);
+      }
     } catch (error) {
-      console.error('Erreur lors de la récupération des catégories:', error)
+      console.error('Erreur lors de la récupération des catégories:', error);
+      setCategories([]);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les catégories.",
+      });
     }
   }
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/tasks')
-      const data = await response.json()
-      setTasks(data.filter((task: Task) => !task.completed))
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch('/api/tasks', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setTasks(data.filter((task: Task) => !task.completed));
+      } else {
+        console.error('Invalid tasks data format:', data);
+        setTasks([]);
+      }
     } catch (error) {
-      console.error('Erreur lors de la récupération des tâches:', error)
+      console.error('Erreur lors de la récupération des tâches:', error);
+      setTasks([]);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les tâches.",
+      });
     }
   }
 
@@ -77,9 +121,16 @@ export default function AddTask() {
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
       const response = await fetch('/api/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ name: newCategory }),
       })
       if (response.ok) {
@@ -89,6 +140,8 @@ export default function AddTask() {
           title: "Catégorie ajoutée",
           description: "La nouvelle catégorie a été créée avec succès.",
         })
+      } else {
+        throw new Error('Failed to add category');
       }
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la catégorie:', error)
@@ -118,9 +171,16 @@ export default function AddTask() {
     }
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
       const response = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...newTask,
           parentId: newTask.parentId ? parseInt(newTask.parentId) : null,
@@ -133,6 +193,8 @@ export default function AddTask() {
           description: "La nouvelle tâche a été créée avec succès.",
         })
         router.push('/')
+      } else {
+        throw new Error('Failed to add task');
       }
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la tâche:', error)

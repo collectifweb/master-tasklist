@@ -35,9 +35,31 @@ export default function CategoriesPage() {
   const [error, setError] = useState('');
 
   const fetchCategories = async () => {
-    const response = await fetch('/api/categories');
-    const data = await response.json();
-    setCategories(data);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch('/api/categories', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error('Invalid categories data format:', data);
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des catégories:', error);
+      setCategories([]);
+      setError('Impossible de charger les catégories');
+    }
   };
 
   useEffect(() => {
@@ -47,18 +69,28 @@ export default function CategoriesPage() {
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
 
-    const response = await fetch('/api/categories', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: newCategory }),
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: newCategory }),
+      });
 
-    if (response.ok) {
-      setNewCategory('');
-      fetchCategories();
-    } else {
+      if (response.ok) {
+        setNewCategory('');
+        fetchCategories();
+      } else {
+        throw new Error('Failed to add category');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la catégorie:', error);
       setError('Erreur lors de l\'ajout de la catégorie');
     }
   };
@@ -66,33 +98,55 @@ export default function CategoriesPage() {
   const handleUpdateCategory = async () => {
     if (!editingCategory) return;
 
-    const response = await fetch(`/api/categories/${editingCategory.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: editingCategory.name }),
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch(`/api/categories/${editingCategory.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: editingCategory.name }),
+      });
 
-    if (response.ok) {
-      setEditingCategory(null);
-      fetchCategories();
-    } else {
+      if (response.ok) {
+        setEditingCategory(null);
+        fetchCategories();
+      } else {
+        throw new Error('Failed to update category');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la modification de la catégorie:', error);
       setError('Erreur lors de la modification de la catégorie');
     }
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    const response = await fetch(`/api/categories/${categoryId}`, {
-      method: 'DELETE',
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-    if (response.ok) {
-      setDeleteConfirm(null);
-      fetchCategories();
-    } else {
-      const data = await response.json();
-      setError(data.error || 'Erreur lors de la suppression de la catégorie');
+      if (response.ok) {
+        setDeleteConfirm(null);
+        fetchCategories();
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete category');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la catégorie:', error);
+      setError('Erreur lors de la suppression de la catégorie');
     }
   };
 
