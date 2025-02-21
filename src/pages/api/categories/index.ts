@@ -5,14 +5,18 @@ import { verifyToken } from '@/lib/auth';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Vérifier le token et obtenir l'ID de l'utilisateur
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Token manquant' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Missing or invalid Authorization header');
+      return res.status(401).json({ error: 'Token manquant ou invalide' });
     }
 
+    const token = authHeader.split(' ')[1];
     const userId = await verifyToken(token);
+    
     if (!userId) {
-      return res.status(401).json({ error: 'Token invalide' });
+      console.error('Invalid token verification');
+      return res.status(401).json({ error: 'Token invalide ou expiré' });
     }
 
     switch (req.method) {

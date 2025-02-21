@@ -56,19 +56,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = localStorage.getItem('token');
       if (!token) {
         setInitializing(false);
+        if (!publicRoutes.includes(router.pathname)) {
+          router.push('/login');
+        }
         return;
       }
 
       const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: getAuthHeaders()
       });
       
       if (response.ok) {
         const userData = await response.json();
         setUser({ ...userData, token });
       } else {
+        console.error('Auth check failed:', await response.text());
         localStorage.removeItem('token');
         setUser(null);
         if (!publicRoutes.includes(router.pathname)) {
