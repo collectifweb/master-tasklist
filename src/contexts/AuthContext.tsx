@@ -39,9 +39,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const getAuthHeaders = () => {
-    if (user?.token) {
+    const token = localStorage.getItem('token');
+    if (token) {
       return {
-        'Authorization': `Bearer ${user.token}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
     }

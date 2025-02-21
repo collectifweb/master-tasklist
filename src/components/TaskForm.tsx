@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '@/contexts/AuthContext';
 import { calculateCoefficient } from '@/util/coefficient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
+  const { getAuthHeaders } = useContext(AuthContext);
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -50,7 +52,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
   }, [taskId]);
 
   const fetchCategories = async () => {
-    const response = await fetch('/api/categories');
+    const response = await fetch('/api/categories', {
+      headers: getAuthHeaders()
+    });
     if (response.ok) {
       const data = await response.json();
       setCategories(data);
@@ -58,7 +62,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
   };
 
   const fetchTasks = async () => {
-    const response = await fetch('/api/tasks');
+    const response = await fetch('/api/tasks', {
+      headers: getAuthHeaders()
+    });
     if (response.ok) {
       const data = await response.json();
       setTasks(data);
@@ -67,7 +73,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
   const fetchTaskDetails = async () => {
     if (!taskId) return;
-    const response = await fetch(`/api/tasks/${taskId}`);
+    const response = await fetch(`/api/tasks/${taskId}`, {
+      headers: getAuthHeaders()
+    });
     if (response.ok) {
       const task = await response.json();
       setFormData({
@@ -88,7 +96,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     if (!newCategory.trim()) return;
     const response = await fetch('/api/categories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name: newCategory }),
     });
     if (response.ok) {
@@ -116,7 +124,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
 

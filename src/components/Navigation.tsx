@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Menu, Plus, CheckSquare, LogOut } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
 import { useState, useContext } from 'react'
@@ -35,6 +35,22 @@ export function Navigation() {
     </div>
   )
 
+  const SheetWithTitle = () => (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Menu className="h-6 w-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetTitle>Menu</SheetTitle>
+        <div className="mt-8">
+          <SecondaryMenu />
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+
   return (
     <>
       {/* Desktop Navigation */}
@@ -53,18 +69,7 @@ export function Navigation() {
             Nouvelle tâche
           </Link>
         </div>
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <div className="mt-8">
-              <SecondaryMenu />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <SheetWithTitle />
       </nav>
 
       {/* Tablet Navigation */}
@@ -83,18 +88,7 @@ export function Navigation() {
               <CheckSquare className="h-6 w-6" />
             </Button>
           </Link>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <div className="mt-8">
-                <SecondaryMenu />
-              </div>
-            </SheetContent>
-          </Sheet>
+          <SheetWithTitle />
         </div>
       </nav>
 
@@ -103,18 +97,7 @@ export function Navigation() {
         <Link href="/" className="mr-4">
           <Logo />
         </Link>
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <div className="mt-8">
-              <SecondaryMenu />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <SheetWithTitle />
       </nav>
 
       {/* Mobile Bottom Navigation */}
