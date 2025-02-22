@@ -1,16 +1,58 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
 import { calculateCoefficient } from '@/util/coefficient'
+import { verifyToken } from '@/lib/auth'
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { id } = req.query
-  const taskId = parseInt(id as string)
+  try {
+    // Verify authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      console.error('Authorization header missing');
+      return res.status(401).json({ error: 'Token manquant' });
+    }
 
-  if (req.method === 'GET') {
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.substring(7) 
+      : authHeader;
+
+    if (!token) {
+      console.error('Token not found in Authorization header');
+      return res.status(401).json({ error: 'Token manquant' });
+    }
+
+    let userId;
     try {
+      userId = await verifyToken(token);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
+    if (!userId) {
+      console.error('User ID not found in token');
+      return res.status(401).json({ error: 'Token invalide' });
+    }
+
+    const { id } = req.query
+    const taskId = parseInt(id as string)
+
+    // Verify task ownership
+    const taskExists = await prisma.task.findFirst({
+      where: {
+        id: taskId,
+        userId: userId
+      }
+    });
+
+    if (!taskExists) {
+      return res.status(404).json({ error: 'Tâche non trouvée' });
+    }
+
+    if (req.method === 'GET') {
       const task = await prisma.task.findUnique({
         where: { id: taskId },
         include: {
@@ -23,18 +65,10 @@ export default async function handler(
           },
         },
       })
-      if (!task) {
-        return res.status(404).json({ error: 'Task not found' })
-      }
       return res.status(200).json(task)
-    } catch (error) {
-      console.error('Error fetching task:', error)
-      return res.status(500).json({ error: 'Error fetching task' })
     }
-  }
 
-  if (req.method === 'PUT') {
-    try {
+    if (req.method === 'PUT') {
       const { completed, name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body
       
       if (completed !== undefined) {
@@ -52,7 +86,7 @@ export default async function handler(
         
         if (task?.children.some(child => !child.completed)) {
           return res.status(400).json({ 
-            error: 'Cannot complete task: all subtasks must be completed first' 
+            error: 'Impossible de terminer la tâche : toutes les sous-tâches doivent être terminées' 
           })
         }
 
@@ -72,7 +106,6 @@ export default async function handler(
         return res.status(200).json(updatedTask)
       } else {
         // Calculate coefficient using shared utility
-
         const coefficient = calculateCoefficient(priority, complexity, length)
 
         // Full task update
@@ -101,14 +134,9 @@ export default async function handler(
         })
         return res.status(200).json(updatedTask)
       }
-    } catch (error) {
-      console.error('Error updating task:', error)
-      return res.status(500).json({ error: 'Error updating task' })
     }
-  }
 
-  if (req.method === 'DELETE') {
-    try {
+    if (req.method === 'DELETE') {
       // Check if task has children
       const task = await prisma.task.findUnique({
         where: { id: taskId },
@@ -121,19 +149,19 @@ export default async function handler(
 
       if (task?.children.length) {
         return res.status(400).json({ 
-          error: 'Cannot delete task: please delete all subtasks first' 
+          error: 'Impossible de supprimer la tâche : veuillez d\'abord supprimer toutes les sous-tâches' 
         })
       }
 
       await prisma.task.delete({
         where: { id: taskId },
       })
-      return res.status(200).json({ message: 'Task deleted successfully' })
-    } catch (error) {
-      console.error('Error deleting task:', error)
-      return res.status(500).json({ error: 'Error deleting task' })
+      return res.status(200).json({ message: 'Tâche supprimée avec succès' })
     }
-  }
 
-  return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: 'Méthode non autorisée' })
+  } catch (error) {
+    console.error('Tasks API Error:', error)
+    return res.status(500).json({ error: 'Erreur interne du serveur' })
+  }
 }
