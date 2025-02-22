@@ -43,6 +43,10 @@ type Category = {
 
 type SortOption = 'date' | 'coefficient' | 'none'
 
+const getTaskLevel = (task: Task): number => {
+  return task.parentId ? 1 : 0;
+}
+
 export default function Home() {
   const { toast } = useToast()
   const { getAuthHeaders } = useAuth()
@@ -52,6 +56,139 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<SortOption>('none')
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks', {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Erreur lors du chargement des tâches');
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les tâches",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories', {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Erreur lors du chargement des catégories');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les catégories",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchTasks();
+    fetchCategories();
+  }, []);
+
+  const toggleTaskCompletion = async (taskId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: !currentStatus }),
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la mise à jour de la tâche');
+
+      setTasks(tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, completed: !currentStatus }
+          : task
+      ));
+
+      toast({
+        title: "Succès",
+        description: "Statut de la tâche mis à jour",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de la tâche",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteTask = async (taskId: number) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la suppression de la tâche');
+
+      setTasks(tasks.filter(task => task.id !== taskId));
+
+      toast({
+        title: "Succès",
+        description: "Tâche supprimée avec succès",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la tâche",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredAndSortedTasks = tasks
+    .filter((task) => {
+      // Filter by completion status (only show active tasks)
+      if (task.completed) return false;
+
+      // Filter by category
+      if (selectedCategory !== 'all' && task.categoryId.toString() !== selectedCategory) {
+        return false;
+      }
+
+      // Filter by search query
+      if (searchQuery && !task.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      // Filter by date range
+      if (dateRange?.from && dateRange?.to) {
+        const taskDate = new Date(task.dueDate);
+        const from = new Date(dateRange.from);
+        const to = new Date(dateRange.to);
+        if (taskDate < from || taskDate > to) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case 'coefficient':
+          return b.coefficient - a.coefficient;
+        default:
+          return 0;
+      }
+    });
 
   // ... (rest of the functions remain the same)
 
