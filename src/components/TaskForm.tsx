@@ -134,27 +134,28 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
   };
 
   return (
-    <div className="rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-4">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+    <div id="task-form-container" className="task-form-wrapper rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-6">
+      <h2 className="task-form-title text-2xl font-semibold mb-4">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
+      <form onSubmit={handleSubmit} className="task-form space-y-4">
+        <div className="task-name-field">
           <Label htmlFor="name">Nom de la tâche</Label>
           <Input
             id="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
+            className="task-name-input"
           />
         </div>
 
-        <div>
+        <div className="task-category-field">
           <Label htmlFor="category">Catégorie</Label>
-          <div className="flex gap-2">
+          <div className="category-select-container flex gap-2">
             <Select
               value={formData.categoryId}
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full category-select">
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
               <SelectContent>
@@ -169,32 +170,34 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
               type="button"
               variant="outline"
               size="icon"
+              className="add-category-btn"
               onClick={() => setShowCategoryInput(!showCategoryInput)}
             >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
           {showCategoryInput && (
-            <div className="flex gap-2 mt-2">
+            <div className="new-category-input-container flex gap-2 mt-2">
               <Input
                 placeholder="Nouvelle catégorie"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
+                className="new-category-input"
               />
-              <Button type="button" onClick={handleAddCategory}>
+              <Button type="button" onClick={handleAddCategory} className="confirm-new-category-btn">
                 Ajouter
               </Button>
             </div>
           )}
         </div>
 
-        <div>
+        <div className="task-parent-field">
           <Label htmlFor="parent">Tâche parente (Optionnel)</Label>
           <Select
             value={formData.parentId}
             onValueChange={(value) => setFormData({ ...formData, parentId: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="parent-task-select">
               <SelectValue placeholder="Sélectionner une tâche parente" />
             </SelectTrigger>
             <SelectContent>
@@ -209,15 +212,15 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </Select>
         </div>
 
-        <div>
+        <div className="task-due-date-field">
           <Label>Date d'échéance (Optionnel)</Label>
-          <div className="flex gap-2">
+          <div className="due-date-container flex gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "due-date-select w-full justify-start text-left font-normal",
                     !formData.dueDate && "text-muted-foreground"
                   )}
                 >
@@ -231,6 +234,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
                   selected={formData.dueDate || undefined}
                   onSelect={(date) => setFormData({ ...formData, dueDate: date })}
                   initialFocus
+                  className="task-calendar"
                 />
               </PopoverContent>
             </Popover>
@@ -240,6 +244,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
                 variant="outline"
                 size="icon"
                 onClick={() => setFormData({ ...formData, dueDate: null })}
+                className="clear-date-btn"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -247,7 +252,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div>
+        <div className="task-complexity-field">
           <Label>Complexité (1-5)</Label>
           <Slider
             value={[formData.complexity]}
@@ -255,9 +260,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             min={1}
             max={5}
             step={1}
-            className="my-2"
+            className="complexity-slider my-2"
           />
-          <div className="text-sm text-muted-foreground">
+          <div className="complexity-label text-sm text-muted-foreground">
             {formData.complexity === 1 ? "Très simple" :
              formData.complexity === 2 ? "Simple" :
              formData.complexity === 3 ? "Moyen" :
@@ -266,7 +271,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div>
+        <div className="task-priority-field">
           <Label>Priorité (1-5)</Label>
           <Slider
             value={[formData.priority]}
@@ -274,9 +279,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             min={1}
             max={5}
             step={1}
-            className="my-2"
+            className="priority-slider my-2"
           />
-          <div className="text-sm text-muted-foreground">
+          <div className="priority-label text-sm text-muted-foreground">
             {formData.priority === 1 ? "Très basse" :
              formData.priority === 2 ? "Basse" :
              formData.priority === 3 ? "Moyenne" :
@@ -285,7 +290,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div>
+        <div className="task-length-field">
           <Label>Durée (1-5)</Label>
           <Slider
             value={[formData.length]}
@@ -293,9 +298,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             min={1}
             max={5}
             step={1}
-            className="my-2"
+            className="length-slider my-2"
           />
-          <div className="text-sm text-muted-foreground">
+          <div className="length-label text-sm text-muted-foreground">
             {formData.length === 1 ? "Très courte" :
              formData.length === 2 ? "Courte" :
              formData.length === 3 ? "Moyenne" :
@@ -304,32 +309,32 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div>
+        <div className="task-notes-field">
           <Label htmlFor="notes">Notes (Optionnel)</Label>
           <Textarea
             id="notes"
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             placeholder="Ajouter des notes pour cette tâche..."
-            className="min-h-[80px]"
+            className="task-notes-input min-h-[80px]"
           />
         </div>
 
-        <div className="bg-muted p-4 rounded-lg mb-4">
+        <div className="task-coefficient-display bg-muted p-4 rounded-lg mb-4">
           <Label className="mb-2 block">Coefficient calculé</Label>
-          <div className="text-2xl font-semibold">
+          <div className="coefficient-value text-2xl font-semibold">
             {taskId ? formData.coefficient : calculateCoefficient(formData.complexity, formData.length, formData.priority)}
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="coefficient-explanation text-sm text-muted-foreground mt-1">
             Basé sur la complexité, la priorité et la durée
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button type="submit" className="w-full sm:flex-1">
+        <div className="task-form-actions flex flex-col sm:flex-row gap-4">
+          <Button type="submit" className="submit-task-btn w-full sm:flex-1">
             {taskId ? 'Mettre à jour' : 'Ajouter'} la tâche
           </Button>
-          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => window.history.back()}>
+          <Button type="button" variant="outline" className="cancel-task-btn w-full sm:w-auto" onClick={() => window.history.back()}>
             Annuler
           </Button>
         </div>
