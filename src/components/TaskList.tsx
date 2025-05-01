@@ -62,13 +62,18 @@ export function TaskList({
     if (!taskId) return;
     
     const response = await fetch(`/api/tasks/${taskId}`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
+      method: 'PUT',
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ completed: true }),
     });
 
     if (response.ok) {
       onTaskUpdate();
+    } else {
+      console.error('Erreur lors de la complétion de la tâche:', await response.text());
     }
     setConfirmDialog({ isOpen: false, taskId: null, hasChildren: false });
   };

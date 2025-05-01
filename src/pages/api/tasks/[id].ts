@@ -68,7 +68,7 @@ export default async function handler(
       return res.status(200).json(task)
     }
 
-    if (req.method === 'PUT') {
+    if (req.method === 'PUT' || req.method === 'PATCH') {
       const { completed, name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body
       
       if (completed !== undefined) {

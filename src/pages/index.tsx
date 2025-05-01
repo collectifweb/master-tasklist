@@ -99,7 +99,7 @@ export default function Home() {
   const toggleTaskCompletion = async (taskId: number, currentStatus: boolean) => {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
+        method: 'PUT', // Changé de PATCH à PUT
         headers: {
           ...getAuthHeaders(),
           'Content-Type': 'application/json',
@@ -107,7 +107,11 @@ export default function Home() {
         body: JSON.stringify({ completed: !currentStatus }),
       });
 
-      if (!response.ok) throw new Error('Erreur lors de la mise à jour de la tâche');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erreur lors de la mise à jour de la tâche:', errorText);
+        throw new Error('Erreur lors de la mise à jour de la tâche');
+      }
 
       setTasks(tasks.map(task => 
         task.id === taskId 
@@ -120,6 +124,7 @@ export default function Home() {
         description: "Statut de la tâche mis à jour",
       });
     } catch (error) {
+      console.error('Exception:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le statut de la tâche",
