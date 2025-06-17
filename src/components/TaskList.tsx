@@ -160,7 +160,7 @@ export function TaskList({
                     variant="ghost"
                     size="icon"
                     className="task-edit-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
-                    onClick={() => router.push(`/tasks/edit/${task.id}`)}
+                    onClick={() => router.push(`/tasks/edit/${task.id.toString()}`)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
