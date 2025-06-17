@@ -5,16 +5,19 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Vérifier que la requête provient d'un cron job ou d'une source autorisée
-  const authHeader = req.headers.authorization;
-  const cronSecret = process.env.CRON_SECRET;
-  
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Non autorisé' });
-  }
-
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // Vérifier si c'est un cron job Vercel (pour la sécurité des tâches automatiques)
+  const authHeader = req.headers.authorization;
+  const cronSecret = process.env.CRON_SECRET;
+  const isVercelCron = req.headers['user-agent']?.includes('vercel-cron') || 
+                      req.headers['x-vercel-cron'] === '1';
+  
+  // Pour les crons Vercel, vérifier l'authentification
+  if (isVercelCron && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Non autorisé pour cron job' });
   }
 
   try {
@@ -24,17 +27,19 @@ export default async function handler(
     const categoryCount = await prisma.category.count();
     
     // Log pour le monitoring
-    console.log(`Keep-alive ping: ${userCount} users, ${taskCount} tasks, ${categoryCount} categories`);
+    const source = isVercelCron ? 'CRON' : 'MANUAL';
+    console.log(`Keep-alive ping [${source}]: ${userCount} users, ${taskCount} tasks, ${categoryCount} categories`);
     
     return res.status(200).json({ 
       success: true, 
       timestamp: new Date().toISOString(),
+      source: source,
       stats: {
         users: userCount,
         tasks: taskCount,
         categories: categoryCount
       },
-      message: 'Base de données maintenue active'
+      message: `Base de données maintenue active (${source})`
     });
   } catch (error) {
     console.error('Keep-alive error:', error);
