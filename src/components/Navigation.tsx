@@ -22,17 +22,17 @@ export function Navigation() {
   }
 
   const SecondaryMenu = () => (
-    <div className="flex flex-col space-y-4">
-      <Link href="/categories" className="text-sm" onClick={() => setOpen(false)}>
+    <div id="secondary-menu" className="flex flex-col space-y-4">
+      <Link id="categories-link" href="/categories" className="text-sm" onClick={() => setOpen(false)}>
         Gérer les catégories
       </Link>
-      <Link href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
+      <Link id="configuration-link" href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
-      <Link href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
+      <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
         Keep-Alive Admin
       </Link>
-      <button onClick={handleSignOut} className="text-sm text-left text-destructive">
+      <button id="signout-btn" onClick={handleSignOut} className="text-sm text-left text-destructive">
         Déconnexion
       </button>
     </div>
@@ -41,13 +41,13 @@ export function Navigation() {
   const SheetWithTitle = () => (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button id="menu-trigger" variant="ghost" size="icon">
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent>
-        <SheetTitle>Menu</SheetTitle>
-        <div className="mt-8">
+      <SheetContent id="menu-sheet">
+        <SheetTitle id="menu-title">Menu</SheetTitle>
+        <div id="menu-content" className="mt-8">
           <SecondaryMenu />
         </div>
       </SheetContent>
@@ -57,18 +57,18 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-8 py-[17px] text-lg font-medium">
-        <div className="flex items-center space-x-4">
-          <Link href="/" className="mr-4">
+      <nav id="desktop-nav" className="hidden lg:flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-8 py-[17px] text-lg font-medium">
+        <div id="desktop-nav-links" className="flex items-center space-x-4">
+          <Link id="desktop-logo-link" href="/" className="mr-4">
             <Logo />
           </Link>
-          <Link href="/" className="nav-link">
+          <Link id="desktop-active-tasks-link" href="/" className="nav-link">
             Tâches actives
           </Link>
-          <Link href="/tasks/completed" className="nav-link">
+          <Link id="desktop-completed-tasks-link" href="/tasks/completed" className="nav-link">
             Tâches terminées
           </Link>
-          <Link href="/tasks/add" className="nav-link">
+          <Link id="desktop-new-task-link" href="/tasks/add" className="nav-link">
             Nouvelle tâche
           </Link>
         </div>
@@ -76,18 +76,18 @@ export function Navigation() {
       </nav>
 
       {/* Tablet Navigation */}
-      <nav className="hidden md:flex lg:hidden items-center justify-between mb-8 mx-auto max-w-[1400px] px-8">
-        <Link href="/" className="mr-4">
+      <nav id="tablet-nav" className="hidden md:flex lg:hidden items-center justify-between mb-8 mx-auto max-w-[1400px] px-8">
+        <Link id="tablet-logo-link" href="/" className="mr-4">
           <Logo />
         </Link>
-        <div className="flex items-center space-x-4">
-          <Link href="/tasks/add">
-            <Button variant="ghost" size="icon">
+        <div id="tablet-nav-actions" className="flex items-center space-x-4">
+          <Link id="tablet-add-task-link" href="/tasks/add">
+            <Button id="tablet-add-task-btn" variant="ghost" size="icon">
               <Plus className="h-6 w-6" />
             </Button>
           </Link>
-          <Link href="/tasks/completed">
-            <Button variant="ghost" size="icon">
+          <Link id="tablet-completed-tasks-link" href="/tasks/completed">
+            <Button id="tablet-completed-tasks-btn" variant="ghost" size="icon">
               <CheckSquare className="h-6 w-6" />
             </Button>
           </Link>
@@ -96,22 +96,22 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-4">
-        <Link href="/" className="mr-4">
+      <nav id="mobile-nav" className="md:hidden flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-4">
+        <Link id="mobile-logo-link" href="/" className="mr-4">
           <Logo />
         </Link>
         <SheetWithTitle />
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex justify-center space-x-8">
-        <Link href="/tasks/add">
-          <Button variant="ghost" size="icon">
+      <div id="mobile-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex justify-center space-x-8">
+        <Link id="mobile-add-task-link" href="/tasks/add">
+          <Button id="mobile-add-task-btn" variant="ghost" size="icon">
             <Plus className="h-6 w-6" />
           </Button>
         </Link>
-        <Link href="/tasks/completed">
-          <Button variant="ghost" size="icon">
+        <Link id="mobile-completed-tasks-link" href="/tasks/completed">
+          <Button id="mobile-completed-tasks-btn" variant="ghost" size="icon">
             <CheckSquare className="h-6 w-6" />
           </Button>
         </Link>

@@ -135,12 +135,12 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
   return (
     <div id="task-form-container" className="task-form-wrapper rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-6">
-      <h2 className="task-form-title text-2xl font-semibold mb-4">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
-      <form onSubmit={handleSubmit} className="task-form space-y-4">
-        <div className="task-name-field">
+      <h2 id="task-form-title" className="task-form-title text-2xl font-semibold mb-4">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
+      <form id="task-form" onSubmit={handleSubmit} className="task-form space-y-4">
+        <div id="task-name-field" className="task-name-field">
           <Label htmlFor="name">Nom de la tâche</Label>
           <Input
-            id="name"
+            id="task-name-input"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
@@ -148,17 +148,17 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           />
         </div>
 
-        <div className="task-category-field">
+        <div id="task-category-field" className="task-category-field">
           <Label htmlFor="category">Catégorie</Label>
-          <div className="category-select-container flex gap-2">
+          <div id="category-select-container" className="category-select-container flex gap-2">
             <Select
               value={formData.categoryId}
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
             >
-              <SelectTrigger className="w-full category-select">
+              <SelectTrigger id="category-select-trigger" className="w-full category-select">
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent id="category-select-content">
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
@@ -167,6 +167,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
               </SelectContent>
             </Select>
             <Button
+              id="add-category-btn"
               type="button"
               variant="outline"
               size="icon"
@@ -177,30 +178,31 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             </Button>
           </div>
           {showCategoryInput && (
-            <div className="new-category-input-container flex gap-2 mt-2">
+            <div id="new-category-input-container" className="new-category-input-container flex gap-2 mt-2">
               <Input
+                id="new-category-input"
                 placeholder="Nouvelle catégorie"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 className="new-category-input"
               />
-              <Button type="button" onClick={handleAddCategory} className="confirm-new-category-btn">
+              <Button id="confirm-new-category-btn" type="button" onClick={handleAddCategory} className="confirm-new-category-btn">
                 Ajouter
               </Button>
             </div>
           )}
         </div>
 
-        <div className="task-parent-field">
+        <div id="task-parent-field" className="task-parent-field">
           <Label htmlFor="parent">Tâche parente (Optionnel)</Label>
           <Select
             value={formData.parentId}
             onValueChange={(value) => setFormData({ ...formData, parentId: value })}
           >
-            <SelectTrigger className="parent-task-select">
+            <SelectTrigger id="parent-task-select" className="parent-task-select">
               <SelectValue placeholder="Sélectionner une tâche parente" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent id="parent-task-select-content">
               {tasks
                 .filter(task => task.id.toString() !== taskId)
                 .map((task) => (
@@ -212,12 +214,13 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </Select>
         </div>
 
-        <div className="task-due-date-field">
+        <div id="task-due-date-field" className="task-due-date-field">
           <Label>Date d'échéance (Optionnel)</Label>
-          <div className="due-date-container flex gap-2">
+          <div id="due-date-container" className="due-date-container flex gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
+                  id="due-date-select"
                   variant="outline"
                   className={cn(
                     "due-date-select w-full justify-start text-left font-normal",
@@ -228,8 +231,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
                   {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Choisir une date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent id="due-date-popover" className="w-auto p-0">
                 <Calendar
+                  id="task-calendar"
                   mode="single"
                   selected={formData.dueDate || undefined}
                   onSelect={(date) => setFormData({ ...formData, dueDate: date })}
@@ -240,6 +244,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             </Popover>
             {formData.dueDate && (
               <Button
+                id="clear-date-btn"
                 type="button"
                 variant="outline"
                 size="icon"
@@ -252,9 +257,10 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div className="task-complexity-field">
+        <div id="task-complexity-field" className="task-complexity-field">
           <Label>Complexité (1-5)</Label>
           <Slider
+            id="complexity-slider"
             value={[formData.complexity]}
             onValueChange={(value) => setFormData({ ...formData, complexity: value[0] })}
             min={1}
@@ -262,7 +268,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             step={1}
             className="complexity-slider my-2"
           />
-          <div className="complexity-label text-sm text-muted-foreground">
+          <div id="complexity-label" className="complexity-label text-sm text-muted-foreground">
             {formData.complexity === 1 ? "Très simple" :
              formData.complexity === 2 ? "Simple" :
              formData.complexity === 3 ? "Moyen" :
@@ -271,9 +277,10 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div className="task-priority-field">
+        <div id="task-priority-field" className="task-priority-field">
           <Label>Priorité (1-5)</Label>
           <Slider
+            id="priority-slider"
             value={[formData.priority]}
             onValueChange={(value) => setFormData({ ...formData, priority: value[0] })}
             min={1}
@@ -281,7 +288,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             step={1}
             className="priority-slider my-2"
           />
-          <div className="priority-label text-sm text-muted-foreground">
+          <div id="priority-label" className="priority-label text-sm text-muted-foreground">
             {formData.priority === 1 ? "Très basse" :
              formData.priority === 2 ? "Basse" :
              formData.priority === 3 ? "Moyenne" :
@@ -290,9 +297,10 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div className="task-length-field">
+        <div id="task-length-field" className="task-length-field">
           <Label>Durée (1-5)</Label>
           <Slider
+            id="length-slider"
             value={[formData.length]}
             onValueChange={(value) => setFormData({ ...formData, length: value[0] })}
             min={1}
@@ -300,7 +308,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             step={1}
             className="length-slider my-2"
           />
-          <div className="length-label text-sm text-muted-foreground">
+          <div id="length-label" className="length-label text-sm text-muted-foreground">
             {formData.length === 1 ? "Très courte" :
              formData.length === 2 ? "Courte" :
              formData.length === 3 ? "Moyenne" :
@@ -309,10 +317,10 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div className="task-notes-field">
+        <div id="task-notes-field" className="task-notes-field">
           <Label htmlFor="notes">Notes (Optionnel)</Label>
           <Textarea
-            id="notes"
+            id="task-notes-input"
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             placeholder="Ajouter des notes pour cette tâche..."
@@ -320,21 +328,21 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           />
         </div>
 
-        <div className="task-coefficient-display bg-muted p-4 rounded-lg mb-4">
+        <div id="task-coefficient-display" className="task-coefficient-display bg-muted p-4 rounded-lg mb-4">
           <Label className="mb-2 block">Coefficient calculé</Label>
-          <div className="coefficient-value text-2xl font-semibold">
+          <div id="coefficient-value" className="coefficient-value text-2xl font-semibold">
             {taskId ? formData.coefficient : calculateCoefficient(formData.complexity, formData.length, formData.priority)}
           </div>
-          <div className="coefficient-explanation text-sm text-muted-foreground mt-1">
+          <div id="coefficient-explanation" className="coefficient-explanation text-sm text-muted-foreground mt-1">
             Basé sur la complexité, la priorité et la durée
           </div>
         </div>
 
-        <div className="task-form-actions flex flex-col sm:flex-row gap-4">
-          <Button type="submit" className="submit-task-btn w-full sm:flex-1">
+        <div id="task-form-actions" className="task-form-actions flex flex-col sm:flex-row gap-4">
+          <Button id="submit-task-btn" type="submit" className="submit-task-btn w-full sm:flex-1">
             {taskId ? 'Mettre à jour' : 'Ajouter'} la tâche
           </Button>
-          <Button type="button" variant="outline" className="cancel-task-btn w-full sm:w-auto" onClick={() => window.history.back()}>
+          <Button id="cancel-task-btn" type="button" variant="outline" className="cancel-task-btn w-full sm:w-auto" onClick={() => window.history.back()}>
             Annuler
           </Button>
         </div>
