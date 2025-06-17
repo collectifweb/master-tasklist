@@ -57,7 +57,7 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-8">
+      <nav className="hidden lg:flex items-center justify-between mb-8 mx-auto max-w-[1400px] px-8 py-[17px] text-lg font-medium">
         <div className="flex items-center space-x-4">
           <Link href="/" className="mr-4">
             <Logo />
