@@ -7,6 +7,7 @@ import { RefreshCw, Database, Clock } from 'lucide-react'
 type KeepAliveStats = {
   success: boolean
   timestamp: string
+  source: string
   stats: {
     users: number
     tasks: number
@@ -124,6 +125,10 @@ export default function KeepAlivePage() {
               
               <div className="text-sm text-muted-foreground">
                 <strong>Timestamp:</strong> {new Date(lastPing.timestamp).toLocaleString('fr-FR')}
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                <strong>Source:</strong> {lastPing.source}
               </div>
               
               <div className="text-sm">
