@@ -108,55 +108,57 @@ export function TaskList({
 
   return (
     <>
-      <div className="task-list-container space-y-4">
+      <div id="task-list-container" className="task-list-container space-y-4">
         {organizedTasks.map((task) => (
-          <Card key={task.id} className={`task-card p-4 ${task.parentId ? 'task-child ml-4 md:ml-8' : 'task-parent'}`}>
-            <div className="task-content flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="task-main-info flex items-start gap-2">
+          <Card key={task.id} id={`tasklist-card-${task.id}`} className={`task-card p-4 ${task.parentId ? 'task-child ml-4 md:ml-8' : 'task-parent'}`}>
+            <div id={`tasklist-content-${task.id}`} className="task-content flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div id={`tasklist-main-info-${task.id}`} className="task-main-info flex items-start gap-2">
                 {showComplete && (
                   <Checkbox
+                    id={`tasklist-checkbox-${task.id}`}
                     checked={task.completed}
                     onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
                     className="task-checkbox text-gray-700 mt-1"
                   />
                 )}
-                <div className="task-details flex-grow">
-                  <div className="task-header flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <Link href={`/tasks/edit/${task.id}`} className="task-title hover:underline">
-                      <h3 className="font-medium">
+                <div id={`tasklist-details-${task.id}`} className="task-details flex-grow">
+                  <div id={`tasklist-header-${task.id}`} className="task-header flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <Link id={`tasklist-title-link-${task.id}`} href={`/tasks/edit/${task.id}`} className="task-title hover:underline">
+                      <h3 id={`tasklist-name-${task.id}`} className="font-medium">
                         {task.name}
                       </h3>
                     </Link>
-                    <div className="task-coefficient font-semibold text-sm md:text-right whitespace-nowrap">
+                    <div id={`tasklist-coefficient-${task.id}`} className="task-coefficient font-semibold text-sm md:text-right whitespace-nowrap">
                       Coefficient: {task.coefficient}
                     </div>
                   </div>
-                  <p className="task-category text-sm text-muted-foreground">
+                  <p id={`tasklist-category-${task.id}`} className="task-category text-sm text-muted-foreground">
                     {task.category?.name}
                     {task.parent && ` | Parent: ${task.parent.name}`}
                   </p>
                   {task.dueDate && (
-                    <p className="task-due-date text-sm text-muted-foreground">
+                    <p id={`tasklist-due-date-${task.id}`} className="task-due-date text-sm text-muted-foreground">
                       Due: {format(new Date(task.dueDate), "PPP")}
                     </p>
                   )}
-                  <div className="task-metrics flex flex-col md:flex-row gap-2 text-sm text-muted-foreground mt-1">
-                    <span className="task-complexity">Complexité: {task.complexity}</span>
+                  <div id={`tasklist-metrics-${task.id}`} className="task-metrics flex flex-col md:flex-row gap-2 text-sm text-muted-foreground mt-1">
+                    <span id={`tasklist-complexity-${task.id}`} className="task-complexity">Complexité: {task.complexity}</span>
                     <span className="hidden md:inline">•</span>
-                    <span className="task-priority">Priorité: {task.priority}</span>
+                    <span id={`tasklist-priority-${task.id}`} className="task-priority">Priorité: {task.priority}</span>
                     <span className="hidden md:inline">•</span>
-                    <span className="task-length">Longueur: {task.length}</span>
+                    <span id={`tasklist-length-${task.id}`} className="task-length">Longueur: {task.length}</span>
                   </div>
                   {task.notes && (
-                    <p className="task-notes text-sm text-muted-foreground mt-2">
+                    <p id={`tasklist-notes-${task.id}`} className="task-notes text-sm text-muted-foreground mt-2">
                       Notes: {task.notes}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="task-actions flex gap-2 justify-end">
+              <div id={`tasklist-actions-${task.id}`} className="task-actions flex gap-2 justify-end">
                 {showEdit && (
                   <Button
+                    id={`tasklist-edit-btn-${task.id}`}
                     variant="ghost"
                     size="icon"
                     className="task-edit-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
@@ -167,6 +169,7 @@ export function TaskList({
                 )}
                 {showDelete && (
                   <Button
+                    id={`tasklist-delete-btn-${task.id}`}
                     variant="ghost"
                     size="icon"
                     className="task-delete-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
@@ -177,6 +180,7 @@ export function TaskList({
                 )}
                 {showReopen && onReopen && (
                   <Button
+                    id={`tasklist-reopen-btn-${task.id}`}
                     variant="ghost"
                     size="icon"
                     className="task-reopen-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
@@ -197,16 +201,16 @@ export function TaskList({
           setConfirmDialog(prev => ({ ...prev, isOpen }))
         }
       >
-        <AlertDialogContent className="task-confirm-dialog">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation requise</AlertDialogTitle>
-            <AlertDialogDescription>
+        <AlertDialogContent id="task-confirm-dialog" className="task-confirm-dialog">
+          <AlertDialogHeader id="task-confirm-header">
+            <AlertDialogTitle id="task-confirm-title">Confirmation requise</AlertDialogTitle>
+            <AlertDialogDescription id="task-confirm-description">
               Il y a des tâches enfants à cette tâche, êtes-vous sûr de vouloir la compléter ?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="task-dialog-cancel">Annuler</AlertDialogCancel>
-            <AlertDialogAction className="task-dialog-confirm" onClick={() => completeTask(confirmDialog.taskId)}>
+          <AlertDialogFooter id="task-confirm-footer">
+            <AlertDialogCancel id="task-dialog-cancel" className="task-dialog-cancel">Annuler</AlertDialogCancel>
+            <AlertDialogAction id="task-dialog-confirm" className="task-dialog-confirm" onClick={() => completeTask(confirmDialog.taskId)}>
               Je confirme
             </AlertDialogAction>
           </AlertDialogFooter>

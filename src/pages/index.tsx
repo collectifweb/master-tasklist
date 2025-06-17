@@ -199,15 +199,16 @@ export default function Home() {
 
   return (
     <div id="home-page" className="home-container container mx-auto p-4">
-      <div className="home-header flex flex-col gap-4 mb-8">
-        <div className="page-title-container flex justify-between items-center">
-          <h1 className="page-title text-4xl font-bold">Tâches actives</h1>
+      <div id="home-header" className="home-header flex flex-col gap-4 mb-8">
+        <div id="page-title-container" className="page-title-container flex justify-between items-center">
+          <h1 id="page-title" className="page-title text-4xl font-bold">Tâches actives</h1>
         </div>
         
-        <div className="filters-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="search-container flex items-center gap-2 w-full">
-            <Search className="search-icon h-4 w-4 flex-shrink-0" />
+        <div id="filters-container" className="filters-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div id="search-container" className="search-container flex items-center gap-2 w-full">
+            <Search id="search-icon" className="search-icon h-4 w-4 flex-shrink-0" />
             <Input
+              id="search-input"
               placeholder="Rechercher une tâche..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,16 +216,16 @@ export default function Home() {
             />
           </div>
 
-          <div className="category-filter-container flex items-center gap-2 w-full">
-            <Filter className="filter-icon h-4 w-4 flex-shrink-0" />
+          <div id="category-filter-container" className="category-filter-container flex items-center gap-2 w-full">
+            <Filter id="filter-icon" className="filter-icon h-4 w-4 flex-shrink-0" />
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="category-select w-full">
+              <SelectTrigger id="category-select" className="category-select w-full">
                 <SelectValue placeholder="Filtrer par catégorie" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent id="category-select-content">
                 <SelectItem value="all">Toutes les catégories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
@@ -235,16 +236,16 @@ export default function Home() {
             </Select>
           </div>
 
-          <div className="sort-container flex items-center gap-2 w-full">
-            <ArrowUpDown className="sort-icon h-4 w-4 flex-shrink-0" />
+          <div id="sort-container" className="sort-container flex items-center gap-2 w-full">
+            <ArrowUpDown id="sort-icon" className="sort-icon h-4 w-4 flex-shrink-0" />
             <Select
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="sort-select w-full">
+              <SelectTrigger id="sort-select" className="sort-select w-full">
                 <SelectValue placeholder="Trier par" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent id="sort-select-content">
                 <SelectItem value="none">Sans tri</SelectItem>
                 <SelectItem value="date">Date d'échéance</SelectItem>
                 <SelectItem value="coefficient">Coefficient</SelectItem>
@@ -254,7 +255,7 @@ export default function Home() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="date-range-button w-full">
+              <Button id="date-range-button" variant="outline" className="date-range-button w-full">
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>
@@ -269,8 +270,9 @@ export default function Home() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="date-range-popup w-auto p-0" align="start">
+            <PopoverContent id="date-range-popup" className="date-range-popup w-auto p-0" align="start">
               <Calendar
+                id="date-range-calendar"
                 initialFocus
                 mode="range"
                 defaultMonth={dateRange?.from}
@@ -284,15 +286,16 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="tasks-list space-y-4">
+      <div id="tasks-list" className="tasks-list space-y-4">
         {filteredAndSortedTasks.length === 0 ? (
-          <Card className="empty-state p-6 text-center text-muted-foreground">
+          <Card id="empty-state" className="empty-state p-6 text-center text-muted-foreground">
             Aucune tâche active ne correspond aux critères
           </Card>
         ) : (
           filteredAndSortedTasks.map((task) => (
             <Card 
-              key={task.id} 
+              key={task.id}
+              id={`task-card-${task.id}`}
               className={`task-card p-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors ${task.parentId ? 'subtask' : 'parent-task'}`}
               style={{ marginLeft: `${getTaskLevel(task) * 20}px` }}
               onClick={(e) => {
@@ -305,44 +308,46 @@ export default function Home() {
                 window.location.href = `/tasks/edit/${task.id}`;
               }}
             >
-              <div className="task-content flex items-center justify-between">
-                <div className="task-main flex items-center gap-4">
+              <div id={`task-content-${task.id}`} className="task-content flex items-center justify-between">
+                <div id={`task-main-${task.id}`} className="task-main flex items-center gap-4">
                   <Checkbox
+                    id={`task-checkbox-${task.id}`}
                     checked={task.completed}
                     onCheckedChange={() => toggleTaskCompletion(task.id, task.completed)}
                     className="task-checkbox"
                   />
-                  <div className="task-details flex-1">
-                    <div className="task-header flex items-center gap-3">
-                      <h3 className={cn("task-name font-medium text-gray-900", task.completed && "line-through")}>
+                  <div id={`task-details-${task.id}`} className="task-details flex-1">
+                    <div id={`task-header-${task.id}`} className="task-header flex items-center gap-3">
+                      <h3 id={`task-name-${task.id}`} className={cn("task-name font-medium text-gray-900", task.completed && "line-through")}>
                         {task.name}
                       </h3>
-                      <div className="task-coefficient px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
+                      <div id={`task-coefficient-${task.id}`} className="task-coefficient px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
                         Coef. {task.coefficient}
                       </div>
                     </div>
-                    <p className="task-category text-sm text-gray-600">
+                    <p id={`task-category-${task.id}`} className="task-category text-sm text-gray-600">
                       Catégorie: {task.category.name}
                       {task.parent && ` | Parent: ${task.parent.name}`}
                     </p>
                     {task.dueDate && (
-                      <p className="task-due-date text-sm text-gray-600">
+                      <p id={`task-due-date-${task.id}`} className="task-due-date text-sm text-gray-600">
                         Échéance: {format(new Date(task.dueDate), "PPP", { locale: fr })}
                       </p>
                     )}
-                    <p className="task-metrics text-sm text-gray-600">
+                    <p id={`task-metrics-${task.id}`} className="task-metrics text-sm text-gray-600">
                       Complexité: {task.complexity} | Priorité: {task.priority} | 
                       Durée: {task.length}
                     </p>
                     {task.children && task.children.length > 0 && (
-                      <p className="task-children text-sm text-gray-600">
+                      <p id={`task-children-${task.id}`} className="task-children text-sm text-gray-600">
                         Sous-tâches: {task.children.filter(c => !c.completed).length} actives / {task.children.length} total
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="task-actions flex gap-2">
+                <div id={`task-actions-${task.id}`} className="task-actions flex gap-2">
                   <Button
+                    id={`task-edit-btn-${task.id}`}
                     variant="ghost"
                     size="icon"
                     className="task-edit-btn"
@@ -351,6 +356,7 @@ export default function Home() {
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
+                    id={`task-delete-btn-${task.id}`}
                     variant="ghost"
                     size="icon"
                     className="task-delete-btn"
