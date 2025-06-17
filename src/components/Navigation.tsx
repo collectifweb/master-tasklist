@@ -29,6 +29,9 @@ export function Navigation() {
       <Link href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
+      <Link href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
+        Keep-Alive Admin
+      </Link>
       <button onClick={handleSignOut} className="text-sm text-left text-destructive">
         Déconnexion
       </button>
