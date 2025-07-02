@@ -125,12 +125,10 @@ export default function DashboardPage() {
 
   return (
     <div id="dashboard-page" className="container mx-auto p-4 space-y-8">
-      <header id="dashboard-header" className="dashboard-header">
-        <h1 id="welcome-message" className="text-3xl font-bold">
-          Bonjour{username ? ` ${username}` : ''}!
-        </h1>
-        <p id="welcome-subtitle" className="text-muted-foreground">
-          Voici un aperçu de vos tâches.
+      <header id="dashboard-header" className="dashboard-header space-y-2">
+        <h1 className="text-4xl font-bold">Tableau de bord</h1>
+        <p id="welcome-message" className="text-2xl text-muted-foreground">
+          Bonjour{username ? ` ${username}` : ''}, voici un aperçu de vos tâches.
         </p>
       </header>
 

@@ -62,9 +62,7 @@ export function Navigation() {
           <Link id="desktop-logo-link" href="/" className="mr-6">
             <Logo />
           </Link>
-          <Link id="desktop-dashboard-link" href="/" className="nav-link focus-ring">
-            Dashboard
-          </Link>
+
           <Link id="desktop-active-tasks-link" href="/tasks" className="nav-link focus-ring">
             Tâches actives
           </Link>
