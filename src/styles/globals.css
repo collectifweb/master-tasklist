@@ -173,7 +173,7 @@
   }
   
   .dark .task-card:hover {
-    @apply bg-gray-750 border-gray-600;
+    @apply bg-gray-700 border-gray-600;
   }
   
   /* Coefficient Badge Styles */
