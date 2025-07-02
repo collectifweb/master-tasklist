@@ -25,6 +25,7 @@ type Task = {
   id: number
   name: string
   dueDate: string
+  createdAt: string
   complexity: number
   priority: number
   length: number
@@ -66,8 +67,18 @@ export default function ActiveTasksPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [sortBy, setSortBy] = useState<SortOption>('none')
+  const [sortBy, setSortBy] = useState<SortOption>(() => {
+    if (typeof window !== 'undefined') {
+      const savedSortBy = localStorage.getItem('sortBy');
+      return (savedSortBy as SortOption) || 'none';
+    }
+    return 'none';
+  });
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+  useEffect(() => {
+    localStorage.setItem('sortBy', sortBy);
+  }, [sortBy]);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -202,8 +213,8 @@ export default function ActiveTasksPage() {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         case 'coefficient':
           return b.coefficient - a.coefficient;
-        default:
-          return 0;
+        default: // 'none' sorts by most recent
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
 
@@ -258,7 +269,7 @@ export default function ActiveTasksPage() {
                 <SelectValue placeholder="Trier par" />
               </SelectTrigger>
               <SelectContent id="sort-select-content">
-                <SelectItem value="none">Sans tri</SelectItem>
+                <SelectItem value="none">Tâches plus récentes</SelectItem>
                 <SelectItem value="date">Date d'échéance</SelectItem>
                 <SelectItem value="coefficient">Coefficient</SelectItem>
               </SelectContent>
