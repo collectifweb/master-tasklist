@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -15,6 +17,38 @@ import {
 export default function ConfigurationPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState<string | null>(null)
+  const [username, setUsername] = useState("")
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username")
+    if (storedUsername) {
+      setUsername(storedUsername)
+    }
+  }, [])
+
+  const handleSaveUsername = () => {
+    if (username.trim() === "") {
+      toast({
+        title: "Erreur",
+        description: "Le nom d'utilisateur ne peut pas être vide.",
+        variant: "destructive",
+      })
+      return
+    }
+    if (username.length > 50) {
+      toast({
+        title: "Erreur",
+        description: "Le nom d'utilisateur ne peut pas dépasser 50 caractères.",
+        variant: "destructive",
+      })
+      return
+    }
+    localStorage.setItem("username", username)
+    toast({
+      title: "Succès",
+      description: "Nom d'utilisateur enregistré.",
+    })
+  }
 
   const handleRecalculateCoefficients = async () => {
     setIsLoading(true)
@@ -85,6 +119,22 @@ export default function ConfigurationPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-bold mb-6">Configuration</h1>
+
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Nom d'utilisateur</h2>
+        <div className="space-y-2">
+          <Label htmlFor="username">Votre nom</Label>
+          <div className="flex gap-2">
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Entrez votre nom"
+            />
+            <Button onClick={handleSaveUsername}>Enregistrer</Button>
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Gestion des coefficients</h2>

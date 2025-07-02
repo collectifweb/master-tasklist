@@ -40,8 +40,14 @@ export default function DashboardPage() {
   const { user, getAuthHeaders } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
@@ -114,7 +120,7 @@ export default function DashboardPage() {
     <div id="dashboard-page" className="container mx-auto p-4 space-y-8">
       <header id="dashboard-header" className="dashboard-header">
         <h1 id="welcome-message" className="text-3xl font-bold">
-          Bonjour, {user?.email}!
+          Bonjour{username ? ` ${username}` : ''}!
         </h1>
         <p id="welcome-subtitle" className="text-muted-foreground">
           Voici un aperçu de vos tâches.
