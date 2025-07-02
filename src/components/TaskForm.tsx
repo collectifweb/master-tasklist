@@ -134,8 +134,8 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
   };
 
   return (
-    <div id="task-form-container" className="task-form-wrapper rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-6">
-      <h2 id="task-form-title" className="task-form-title text-2xl font-semibold mb-4">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
+    <div id="task-form-container" className="task-form-wrapper rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-6 fade-in">
+      <h2 id="task-form-title" className="task-form-title page-title text-2xl font-semibold mb-6">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
       <form id="task-form" onSubmit={handleSubmit} className="task-form space-y-4">
         <div id="task-name-field" className="task-name-field">
           <Label htmlFor="name">Nom de la tâche</Label>
@@ -330,7 +330,18 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
         <div id="task-coefficient-display" className="task-coefficient-display bg-muted p-4 rounded-lg mb-4">
           <Label className="mb-2 block">Coefficient calculé</Label>
-          <div id="coefficient-value" className="coefficient-value text-2xl font-semibold">
+          <div 
+            id="coefficient-value" 
+            className={cn(
+              "coefficient-value text-3xl font-bold mb-2 px-4 py-2 rounded-lg inline-block",
+              (() => {
+                const coeff = taskId ? formData.coefficient : parseFloat(calculateCoefficient(formData.complexity, formData.length, formData.priority));
+                return coeff > 4 ? "coefficient-excellent" : 
+                       coeff >= 3 ? "coefficient-good" : 
+                       "coefficient-medium";
+              })()
+            )}
+          >
             {taskId ? formData.coefficient : calculateCoefficient(formData.complexity, formData.length, formData.priority)}
           </div>
           <div id="coefficient-explanation" className="coefficient-explanation text-sm text-muted-foreground mt-1">

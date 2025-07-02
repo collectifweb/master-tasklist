@@ -4,6 +4,20 @@
 
 :root {
   --mode: dark;
+  
+  /* Master Tasklist Brand Colors */
+  --mt-blue-primary: #2563EB;
+  --mt-blue-hover: #1D4ED8;
+  --mt-blue-light: #DBEAFE;
+  --mt-green-excellent: #10B981;
+  --mt-orange-good: #F59E0B;
+  --mt-gray-medium: #6B7280;
+  --mt-gray-50: #F8FAFC;
+  --mt-gray-100: #F1F5F9;
+  --mt-gray-200: #E2E8F0;
+  --mt-gray-500: #64748B;
+  --mt-gray-700: #334155;
+  --mt-gray-900: #1E293B;
 }
 
 /* Theme: blue */
@@ -63,11 +77,215 @@
     --radius: 0.5rem
   }
 }
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
+}
+
+/* Master Tasklist Custom Styles */
+@layer components {
+  /* Header Styles */
+  .app-header {
+    @apply bg-white border-b border-gray-200 shadow-sm;
+  }
+  
+  .dark .app-header {
+    @apply bg-gray-900 border-gray-700;
+  }
+  
+  .header-container {
+    @apply max-w-7xl mx-auto;
+  }
+  
+  .header-logo {
+    @apply transition-opacity duration-200;
+  }
+  
+  .header-logo:hover {
+    @apply opacity-80;
+  }
+  
+  /* Logo Styles */
+  .logo-text {
+    @apply text-2xl font-bold tracking-tight;
+    color: var(--mt-blue-primary);
+  }
+  
+  .logo-text:hover {
+    color: var(--mt-blue-hover);
+  }
+  
+  .dark .logo-text {
+    @apply text-blue-400;
+  }
+  
+  /* Navigation Styles */
+  .nav-link {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    color: var(--mt-gray-700);
+  }
+  
+  .nav-link:hover {
+    @apply bg-blue-50;
+    color: var(--mt-blue-primary);
+  }
+  
+  .dark .nav-link {
+    @apply text-gray-300;
+  }
+  
+  .dark .nav-link:hover {
+    @apply bg-gray-800 text-blue-400;
+  }
+  
+  /* Button Harmonization */
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .dark .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-gray-200;
+  }
+  
+  /* Task Card Styles */
+  .task-card {
+    @apply border border-gray-200 rounded-lg transition-all duration-200;
+    background-color: var(--mt-gray-50);
+  }
+  
+  .task-card:hover {
+    @apply shadow-md border-blue-200;
+    background-color: white;
+  }
+  
+  .dark .task-card {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .dark .task-card:hover {
+    @apply bg-gray-750 border-gray-600;
+  }
+  
+  /* Coefficient Badge Styles */
+  .coefficient-excellent {
+    @apply text-white font-semibold;
+    background-color: var(--mt-green-excellent);
+  }
+  
+  .coefficient-good {
+    @apply text-white font-semibold;
+    background-color: var(--mt-orange-good);
+  }
+  
+  .coefficient-medium {
+    @apply text-white font-semibold;
+    background-color: var(--mt-gray-medium);
+  }
+  
+  /* Input Styles */
+  .form-input {
+    @apply border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  }
+  
+  .dark .form-input {
+    @apply bg-gray-800 border-gray-600 text-white;
+  }
+  
+  /* Select Styles */
+  .form-select {
+    @apply border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  }
+  
+  .dark .form-select {
+    @apply bg-gray-800 border-gray-600 text-white;
+  }
+  
+  /* Page Title Styles */
+  .page-title {
+    @apply text-gray-900 font-bold;
+  }
+  
+  .dark .page-title {
+    @apply text-white;
+  }
+  
+  /* Filter Container Styles */
+  .filters-container {
+    @apply bg-white p-4 rounded-lg border border-gray-200 shadow-sm;
+  }
+  
+  .dark .filters-container {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  /* Task Metrics Styles */
+  .task-complexity-1, .task-complexity-2 { color: var(--mt-green-excellent); }
+  .task-complexity-3 { color: var(--mt-orange-good); }
+  .task-complexity-4, .task-complexity-5 { color: var(--mt-gray-medium); }
+  
+  .task-priority-4, .task-priority-5 { color: var(--mt-green-excellent); }
+  .task-priority-3 { color: var(--mt-orange-good); }
+  .task-priority-1, .task-priority-2 { color: var(--mt-gray-medium); }
+  
+  .task-length-1, .task-length-2 { color: var(--mt-green-excellent); }
+  .task-length-3 { color: var(--mt-orange-good); }
+  .task-length-4, .task-length-5 { color: var(--mt-gray-medium); }
+  
+  /* Responsive Design Enhancements */
+  @media (max-width: 768px) {
+    .header-container {
+      @apply px-4;
+    }
+    
+    .logo-text {
+      @apply text-xl;
+    }
+    
+    .page-title {
+      @apply text-2xl;
+    }
+  }
+  
+  /* Focus States for Accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .dark .focus-ring {
+    @apply focus:ring-offset-gray-800;
+  }
+  
+  /* Animation Classes */
+  .fade-in {
+    @apply animate-in fade-in duration-200;
+  }
+  
+  .slide-in {
+    @apply animate-in slide-in-from-bottom-4 duration-300;
+  }
+}
+
+/* Utility Classes for Master Tasklist */
+@layer utilities {
+  .text-mt-blue { color: var(--mt-blue-primary); }
+  .text-mt-blue-hover { color: var(--mt-blue-hover); }
+  .bg-mt-blue { background-color: var(--mt-blue-primary); }
+  .bg-mt-blue-hover { background-color: var(--mt-blue-hover); }
+  .bg-mt-blue-light { background-color: var(--mt-blue-light); }
+  .text-mt-green { color: var(--mt-green-excellent); }
+  .bg-mt-green { background-color: var(--mt-green-excellent); }
+  .text-mt-orange { color: var(--mt-orange-good); }
+  .bg-mt-orange { background-color: var(--mt-orange-good); }
+  .text-mt-gray { color: var(--mt-gray-medium); }
+  .bg-mt-gray { background-color: var(--mt-gray-medium); }
 }
