@@ -7,10 +7,13 @@ import { Undo2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from "@/components/ui/use-toast"
 
+import { cn } from '@/lib/utils';
+
 type Task = {
   id: number
   name: string
   dueDate: string
+  completedAt: string | null
   complexity: number
   priority: number
   length: number
@@ -22,6 +25,16 @@ type Task = {
   parent?: { id: number; name: string } | null
   children?: { id: number; name: string; completed: boolean }[]
 }
+
+const getTaskCardStyles = (coefficient: number | null) => {
+  if (coefficient === null) {
+    return 'bg-card border-l-4 border-border';
+  }
+  if (coefficient >= 10) return 'bg-[var(--coef-excellent-bg)] border-l-4 border-[var(--coef-excellent-border)]';
+  if (coefficient >= 7) return 'bg-[var(--coef-good-bg)] border-l-4 border-[var(--coef-good-border)]';
+  if (coefficient >= 4) return 'bg-[var(--coef-average-bg)] border-l-4 border-[var(--coef-average-border)]';
+  return 'bg-[var(--coef-low-bg)] border-l-4 border-[var(--coef-low-border)]';
+};
 
 export default function CompletedTasks() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -88,36 +101,46 @@ export default function CompletedTasks() {
 
       <div className="space-y-4">
         {tasks.length === 0 ? (
-          <Card className="p-4">
-            <p className="text-center text-muted-foreground">Aucune tâche complétée</p>
+          <Card className="p-6 text-center text-muted-foreground">
+            <p>Aucune tâche complétée pour le moment.</p>
           </Card>
         ) : (
           tasks.map((task) => (
-            <Card key={task.id} className="p-4 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-500">
+            <Card 
+              key={task.id} 
+              className={cn(
+                "p-4 opacity-70 hover:opacity-100 transition-opacity",
+                getTaskCardStyles(task.coefficient)
+              )}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-grow">
+                  <h3 className="font-medium line-through">
                     {task.name}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Catégorie: {task.category.name}
-                    {task.parent && ` | Parent: ${task.parent.name}`}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Terminée le: {format(new Date(task.dueDate), "PPP", { locale: fr })}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Complexité: {task.complexity} | Priorité: {task.priority} | 
-                    Durée: {task.length} | Coefficient: {task.coefficient}
+                  {task.completedAt && (
+                    <p className="text-sm text-muted-foreground">
+                      Terminée le: {format(new Date(task.completedAt), "PPP", { locale: fr })}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    C: {task.complexity} | P: {task.priority} | D: {task.length}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => reopenTask(task.id)}
-                >
-                  <Undo2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-4">
+                  <div className="font-bold text-xl">{task.coefficient}</div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => reopenTask(task.id)}
+                    title="Réouvrir la tâche"
+                  >
+                    <Undo2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))
