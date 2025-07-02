@@ -51,6 +51,12 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     }
   }, [taskId]);
 
+  useEffect(() => {
+    const { priority, complexity, length } = formData;
+    const newCoefficient = calculateCoefficient(priority, complexity, length);
+    setFormData(prev => ({ ...prev, coefficient: newCoefficient }));
+  }, [formData.priority, formData.complexity, formData.length]);
+
   const fetchCategories = async () => {
     const response = await fetch('/api/categories', {
       headers: getAuthHeaders()
@@ -110,13 +116,12 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const coefficient = parseFloat(calculateCoefficient(formData.complexity, formData.length, formData.priority));
     
     const taskData = {
       ...formData,
       parentId: formData.parentId ? parseInt(formData.parentId) : null,
       categoryId: parseInt(formData.categoryId),
-      coefficient,
+      coefficient: formData.coefficient,
     };
 
     const url = taskId ? `/api/tasks/${taskId}` : '/api/tasks';
@@ -329,23 +334,15 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
         </div>
 
         <div id="task-coefficient-display" className="task-coefficient-display bg-muted p-4 rounded-lg mb-4">
-          <Label className="mb-2 block">Coefficient calculé</Label>
+          <Label className="mb-2 block">Coefficient Prévisionnel</Label>
           <div 
             id="coefficient-value" 
-            className={cn(
-              "coefficient-value text-3xl font-bold mb-2 px-4 py-2 rounded-lg inline-block",
-              (() => {
-                const coeff = taskId ? formData.coefficient : parseFloat(calculateCoefficient(formData.complexity, formData.length, formData.priority));
-                return coeff > 4 ? "coefficient-excellent" : 
-                       coeff >= 3 ? "coefficient-good" : 
-                       "coefficient-medium";
-              })()
-            )}
+            className="text-3xl font-bold"
           >
-            {taskId ? formData.coefficient : calculateCoefficient(formData.complexity, formData.length, formData.priority)}
+            {formData.coefficient}
           </div>
           <div id="coefficient-explanation" className="coefficient-explanation text-sm text-muted-foreground mt-1">
-            Basé sur la complexité, la priorité et la durée
+            Le coefficient (1-13) est calculé sur la base de la priorité, de la complexité et de la durée. Un score plus élevé indique une tâche à traiter plus rapidement.
           </div>
         </div>
 
