@@ -12,7 +12,7 @@ import { fr } from 'date-fns/locale';
 type Task = {
   id: number;
   name: string;
-  dueDate: string;
+  dueDate: string | null;
   coefficient: number;
   completed: boolean;
   completedAt: string | null;
@@ -63,7 +63,7 @@ export default function DashboardPage() {
         const weekEnd = endOfWeek(now, { locale: fr });
 
         const activeTasks = tasks.filter(t => !t.completed);
-        const overdueTasks = activeTasks.filter(t => isBefore(parseISO(t.dueDate), now));
+        const overdueTasks = activeTasks.filter(t => t.dueDate && isBefore(parseISO(t.dueDate), now));
         const completedThisWeek = tasks.filter(t => {
           if (!t.completed || !t.completedAt) return false;
           const completedDate = parseISO(t.completedAt);
