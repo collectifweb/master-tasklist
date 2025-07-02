@@ -48,6 +48,17 @@ const getTaskLevel = (task: Task): number => {
   return task.parentId ? 1 : 0;
 }
 
+const getTaskCardStyles = (coefficient: number | null) => {
+  if (coefficient === null) {
+    return 'bg-card border-l-4 border-border';
+  }
+  if (coefficient >= 10) return 'bg-[var(--coef-excellent-bg)] border-l-4 border-[var(--coef-excellent-border)]';
+  if (coefficient >= 7) return 'bg-[var(--coef-good-bg)] border-l-4 border-[var(--coef-good-border)]';
+  if (coefficient >= 4) return 'bg-[var(--coef-average-bg)] border-l-4 border-[var(--coef-average-border)]';
+  return 'bg-[var(--coef-low-bg)] border-l-4 border-[var(--coef-low-border)]';
+};
+
+
 export default function ActiveTasksPage() {
   const { toast } = useToast()
   const { getAuthHeaders } = useAuth()
@@ -297,7 +308,11 @@ export default function ActiveTasksPage() {
             <Card 
               key={task.id}
               id={`task-card-${task.id}`}
-              className={`task-card p-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors ${task.parentId ? 'subtask' : 'parent-task'}`}
+              className={cn(
+                'task-card p-4 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-lg',
+                getTaskCardStyles(task.coefficient),
+                task.parentId ? 'subtask' : 'parent-task'
+              )}
               style={{ marginLeft: `${getTaskLevel(task) * 20}px` }}
               onClick={(e) => {
                 if (
@@ -343,27 +358,14 @@ export default function ActiveTasksPage() {
                   </div>
                 </div>
 
-                <div id={`task-right-col-${task.id}`} className="task-right-col flex flex-col items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div 
-                          id={`task-coefficient-${task.id}`} 
-                          className={cn(
-                            "coefficient-badge",
-                            task.coefficient >= 4 ? "coefficient-excellent" : 
-                            task.coefficient >= 2.5 ? "coefficient-good" : 
-                            "coefficient-medium"
-                          )}
-                        >
-                          {task.coefficient.toFixed(1)}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Coefficient: {task.coefficient.toFixed(2)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                <div id={`task-right-col-${task.id}`} className="task-right-col flex flex-col items-center justify-between gap-2 self-stretch">
+                  <div 
+                    id={`task-coefficient-${task.id}`}
+                    className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center font-bold text-xl shadow-md border border-white/20"
+                    title={`Coefficient: ${task.coefficient}`}
+                  >
+                    {task.coefficient}
+                  </div>
                   <div id={`task-actions-${task.id}`} className="task-actions flex gap-1">
                     <Button
                       id={`task-edit-btn-${task.id}`}
