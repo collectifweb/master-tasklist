@@ -128,8 +128,15 @@ export function TaskList({
                         {task.name}
                       </h3>
                     </Link>
-                    <div id={`tasklist-coefficient-${task.id}`} className="task-coefficient font-semibold text-sm md:text-right whitespace-nowrap">
-                      Coefficient: {task.coefficient}
+                    <div 
+                      id={`tasklist-coefficient-${task.id}`} 
+                      className={`task-coefficient px-3 py-1 rounded-full font-semibold text-sm md:text-right whitespace-nowrap ${
+                        task.coefficient > 4 ? "coefficient-excellent" : 
+                        task.coefficient >= 3 ? "coefficient-good" : 
+                        "coefficient-medium"
+                      }`}
+                    >
+                      Coef. {task.coefficient}
                     </div>
                   </div>
                   <p id={`tasklist-category-${task.id}`} className="task-category text-sm text-muted-foreground">

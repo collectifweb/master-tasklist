@@ -321,7 +321,15 @@ export default function Home() {
                       <h3 id={`task-name-${task.id}`} className={cn("task-name font-medium text-gray-900", task.completed && "line-through")}>
                         {task.name}
                       </h3>
-                      <div id={`task-coefficient-${task.id}`} className="task-coefficient px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
+                      <div 
+                        id={`task-coefficient-${task.id}`} 
+                        className={cn(
+                          "task-coefficient px-3 py-1 rounded-full font-semibold text-sm",
+                          task.coefficient > 4 ? "coefficient-excellent" : 
+                          task.coefficient >= 3 ? "coefficient-good" : 
+                          "coefficient-medium"
+                        )}
+                      >
                         Coef. {task.coefficient}
                       </div>
                     </div>
