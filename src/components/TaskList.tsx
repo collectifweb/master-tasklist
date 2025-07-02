@@ -19,6 +19,39 @@ import {
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Helper function to determine card styling based on coefficient
+const getTaskCardStyles = (coefficient: number | null) => {
+  if (coefficient === null) {
+    // Default style for tasks without a coefficient
+    return {
+      backgroundColor: 'var(--card)',
+      borderLeft: '4px solid var(--border)',
+    };
+  }
+
+  let backgroundColor = 'var(--coef-average-bg)';
+  let borderLeftColor = 'var(--coef-average-border)';
+
+  if (coefficient >= 10) { // Excellent (10-13)
+    backgroundColor = 'var(--coef-excellent-bg)';
+    borderLeftColor = 'var(--coef-excellent-border)';
+  } else if (coefficient >= 7) { // Bon (7-9)
+    backgroundColor = 'var(--coef-good-bg)';
+    borderLeftColor = 'var(--coef-good-border)';
+  } else if (coefficient >= 4) { // Moyen (4-6)
+    backgroundColor = 'var(--coef-average-bg)';
+    borderLeftColor = 'var(--coef-average-border)';
+  } else { // Faible (1-3)
+    backgroundColor = 'var(--coef-low-bg)';
+    borderLeftColor = 'var(--coef-low-border)';
+  }
+
+  return { 
+    backgroundColor, 
+    borderLeft: `4px solid ${borderLeftColor}` 
+  };
+};
+
 interface TaskListProps {
   tasks: Task[];
   onTaskUpdate: () => void;
@@ -109,97 +142,100 @@ export function TaskList({
   return (
     <>
       <div id="task-list-container" className="task-list-container space-y-4">
-        {organizedTasks.map((task) => (
-          <Card key={task.id} id={`tasklist-card-${task.id}`} className={`task-card p-4 ${task.parentId ? 'task-child ml-4 md:ml-8' : 'task-parent'}`}>
-            <div id={`tasklist-content-${task.id}`} className="task-content flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div id={`tasklist-main-info-${task.id}`} className="task-main-info flex items-start gap-2">
-                {showComplete && (
-                  <Checkbox
-                    id={`tasklist-checkbox-${task.id}`}
-                    checked={task.completed}
-                    onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
-                    className="task-checkbox text-gray-700 mt-1"
-                  />
-                )}
-                <div id={`tasklist-details-${task.id}`} className="task-details flex-grow">
-                  <div id={`tasklist-header-${task.id}`} className="task-header flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <Link id={`tasklist-title-link-${task.id}`} href={`/tasks/edit/${task.id}`} className="task-title hover:underline">
-                      <h3 id={`tasklist-name-${task.id}`} className="font-medium">
+        {organizedTasks.map((task) => {
+          const cardStyles = getTaskCardStyles(task.coefficient);
+          return (
+            <Card
+              key={task.id}
+              id={`tasklist-card-${task.id}`}
+              className={`task-card p-4 transition-shadow duration-200 ease-in-out hover:shadow-lg ${task.parentId ? 'ml-4 md:ml-8' : ''}`}
+              style={cardStyles}
+            >
+              <div id={`tasklist-content-${task.id}`} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div id={`tasklist-main-info-${task.id}`} className="flex-grow flex items-start gap-3">
+                  {showComplete && (
+                    <Checkbox
+                      id={`tasklist-checkbox-${task.id}`}
+                      checked={task.completed}
+                      onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
+                      className="mt-1"
+                    />
+                  )}
+                  <div id={`tasklist-details-${task.id}`} className="flex-grow">
+                    <Link id={`tasklist-title-link-${task.id}`} href={`/tasks/edit/${task.id}`} className="hover:underline">
+                      <h3 id={`tasklist-name-${task.id}`} className="font-semibold text-base">
                         {task.name}
                       </h3>
                     </Link>
-                    <div 
-                      id={`tasklist-coefficient-${task.id}`} 
-                      className={`task-coefficient px-3 py-1 rounded-full font-semibold text-sm md:text-right whitespace-nowrap ${
-                        task.coefficient > 4 ? "coefficient-excellent" : 
-                        task.coefficient >= 3 ? "coefficient-good" : 
-                        "coefficient-medium"
-                      }`}
-                    >
-                      Coef. {task.coefficient}
+                    <p id={`tasklist-category-${task.id}`} className="text-sm text-muted-foreground">
+                      {task.category?.name}
+                      {task.parent && ` | Parent: ${task.parent.name}`}
+                    </p>
+                    {task.dueDate && (
+                      <p id={`tasklist-due-date-${task.id}`} className="text-sm text-muted-foreground">
+                        Échéance: {format(new Date(task.dueDate), "PPP")}
+                      </p>
+                    )}
+                    <div id={`tasklist-metrics-${task.id}`} className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
+                      <span id={`tasklist-complexity-${task.id}`}>Complexité: {task.complexity}</span>
+                      <span id={`tasklist-priority-${task.id}`}>Priorité: {task.priority}</span>
+                      <span id={`tasklist-length-${task.id}`}>Durée: {task.length}</span>
                     </div>
+                    {task.notes && (
+                      <p id={`tasklist-notes-${task.id}`} className="text-sm text-muted-foreground mt-2 italic">
+                        &quot;{task.notes}&quot;
+                      </p>
+                    )}
                   </div>
-                  <p id={`tasklist-category-${task.id}`} className="task-category text-sm text-muted-foreground">
-                    {task.category?.name}
-                    {task.parent && ` | Parent: ${task.parent.name}`}
-                  </p>
-                  {task.dueDate && (
-                    <p id={`tasklist-due-date-${task.id}`} className="task-due-date text-sm text-muted-foreground">
-                      Due: {format(new Date(task.dueDate), "PPP")}
-                    </p>
-                  )}
-                  <div id={`tasklist-metrics-${task.id}`} className="task-metrics flex flex-col md:flex-row gap-2 text-sm text-muted-foreground mt-1">
-                    <span id={`tasklist-complexity-${task.id}`} className="task-complexity">Complexité: {task.complexity}</span>
-                    <span className="hidden md:inline">•</span>
-                    <span id={`tasklist-priority-${task.id}`} className="task-priority">Priorité: {task.priority}</span>
-                    <span className="hidden md:inline">•</span>
-                    <span id={`tasklist-length-${task.id}`} className="task-length">Longueur: {task.length}</span>
+                </div>
+
+                <div className="flex flex-col items-end justify-between self-stretch min-w-[70px]">
+                  <div
+                    id={`tasklist-coefficient-${task.id}`}
+                    className="font-bold text-xl"
+                  >
+                    {task.coefficient}
                   </div>
-                  {task.notes && (
-                    <p id={`tasklist-notes-${task.id}`} className="task-notes text-sm text-muted-foreground mt-2">
-                      Notes: {task.notes}
-                    </p>
-                  )}
+                  <div id={`tasklist-actions-${task.id}`} className="flex gap-1 mt-2">
+                    {showEdit && (
+                      <Button
+                        id={`tasklist-edit-btn-${task.id}`}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => router.push(`/tasks/edit/${task.id.toString()}`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {showDelete && (
+                      <Button
+                        id={`tasklist-delete-btn-${task.id}`}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleDelete(task.id.toString())}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {showReopen && onReopen && (
+                      <Button
+                        id={`tasklist-reopen-btn-${task.id}`}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => onReopen(task.id.toString())}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div id={`tasklist-actions-${task.id}`} className="task-actions flex gap-2 justify-end">
-                {showEdit && (
-                  <Button
-                    id={`tasklist-edit-btn-${task.id}`}
-                    variant="ghost"
-                    size="icon"
-                    className="task-edit-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
-                    onClick={() => router.push(`/tasks/edit/${task.id.toString()}`)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-                {showDelete && (
-                  <Button
-                    id={`tasklist-delete-btn-${task.id}`}
-                    variant="ghost"
-                    size="icon"
-                    className="task-delete-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
-                    onClick={() => handleDelete(task.id.toString())}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-                {showReopen && onReopen && (
-                  <Button
-                    id={`tasklist-reopen-btn-${task.id}`}
-                    variant="ghost"
-                    size="icon"
-                    className="task-reopen-btn text-gray-700 hover:text-gray-700 hover:bg-transparent"
-                    onClick={() => onReopen(task.id.toString())}
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       <AlertDialog 
