@@ -314,7 +314,7 @@ export default function ActiveTasksPage() {
                   <Checkbox
                     id={`task-checkbox-${task.id}`}
                     checked={task.completed}
-                    onCheckedChange={() => toggleTaskCompletion(.id, task.completed)}
+                    onCheckedChange={() => toggleTaskCompletion(task.id, task.completed)}
                     className="task-checkbox mt-1"
                   />
                   <div id={`task-details-${task.id}`} className="task-details flex-1">
