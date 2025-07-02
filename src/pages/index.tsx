@@ -11,11 +11,12 @@ import {
 } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Filter, Trash2, Edit, Search, ArrowUpDown } from 'lucide-react'
+import { Filter, Trash2, Edit, Search, ArrowUpDown, BrainCircuit, Zap, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/use-toast'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Calendar } from '@/components/ui/calendar'
 import { DateRange } from 'react-day-picker'
 import { useAuth } from '@/contexts/AuthContext'
@@ -308,70 +309,81 @@ export default function Home() {
                 window.location.href = `/tasks/edit/${task.id}`;
               }}
             >
-              <div id={`task-content-${task.id}`} className="task-content flex items-center justify-between">
-                <div id={`task-main-${task.id}`} className="task-main flex items-center gap-4">
+              <div id={`task-content-${task.id}`} className="task-content flex items-start justify-between gap-4">
+                <div id={`task-main-${task.id}`} className="task-main flex items-start gap-4 flex-grow">
                   <Checkbox
                     id={`task-checkbox-${task.id}`}
                     checked={task.completed}
                     onCheckedChange={() => toggleTaskCompletion(task.id, task.completed)}
-                    className="task-checkbox"
+                    className="task-checkbox mt-1"
                   />
                   <div id={`task-details-${task.id}`} className="task-details flex-1">
-                    <div id={`task-header-${task.id}`} className="task-header flex items-center gap-3">
-                      <h3 id={`task-name-${task.id}`} className={cn("task-name font-medium text-gray-900", task.completed && "line-through")}>
-                        {task.name}
-                      </h3>
-                      <div 
-                        id={`task-coefficient-${task.id}`} 
-                        className={cn(
-                          "task-coefficient px-3 py-1 rounded-full font-semibold text-sm",
-                          task.coefficient > 4 ? "coefficient-excellent" : 
-                          task.coefficient >= 3 ? "coefficient-good" : 
-                          "coefficient-medium"
-                        )}
-                      >
-                        Coef. {task.coefficient}
-                      </div>
-                    </div>
-                    <p id={`task-category-${task.id}`} className="task-category text-sm text-gray-600">
-                      Catégorie: {task.category.name}
-                      {task.parent && ` | Parent: ${task.parent.name}`}
+                    <h3 id={`task-name-${task.id}`} className={cn("task-name font-semibold text-lg text-gray-900 dark:text-gray-100", task.completed && "line-through")}>
+                      {task.name}
+                    </h3>
+                    <p id={`task-category-${task.id}`} className="task-category text-sm text-gray-600 dark:text-gray-400">
+                      {task.category.name}
+                      {task.parent && ` (Parent: ${task.parent.name})`}
                     </p>
                     {task.dueDate && (
-                      <p id={`task-due-date-${task.id}`} className="task-due-date text-sm text-gray-600">
+                      <p id={`task-due-date-${task.id}`} className="task-due-date text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Échéance: {format(new Date(task.dueDate), "PPP", { locale: fr })}
                       </p>
                     )}
-                    <p id={`task-metrics-${task.id}`} className="task-metrics text-sm text-gray-600">
-                      Complexité: {task.complexity} | Priorité: {task.priority} | 
-                      Durée: {task.length}
-                    </p>
+                    <div id={`task-metrics-${task.id}`} className="task-metrics-container">
+                      <MetricIndicator icon={<BrainCircuit size={16} />} label="Complexité" value={task.complexity} />
+                      <MetricIndicator icon={<Zap size={16} />} label="Priorité" value={task.priority} />
+                      <MetricIndicator icon={<Timer size={16} />} label="Durée" value={task.length} />
+                    </div>
                     {task.children && task.children.length > 0 && (
-                      <p id={`task-children-${task.id}`} className="task-children text-sm text-gray-600">
+                      <p id={`task-children-${task.id}`} className="task-children text-sm text-gray-600 dark:text-gray-400 mt-2">
                         Sous-tâches: {task.children.filter(c => !c.completed).length} actives / {task.children.length} total
                       </p>
                     )}
                   </div>
                 </div>
-                <div id={`task-actions-${task.id}`} className="task-actions flex gap-2">
-                  <Button
-                    id={`task-edit-btn-${task.id}`}
-                    variant="ghost"
-                    size="icon"
-                    className="task-edit-btn"
-                    onClick={() => window.location.href = `/tasks/edit/${task.id}`}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    id={`task-delete-btn-${task.id}`}
-                    variant="ghost"
-                    size="icon"
-                    className="task-delete-btn"
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+
+                <div id={`task-right-col-${task.id}`} className="task-right-col flex flex-col items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div 
+                          id={`task-coefficient-${task.id}`} 
+                          className={cn(
+                            "coefficient-badge",
+                            task.coefficient >= 4 ? "coefficient-excellent" : 
+                            task.coefficient >= 2.5 ? "coefficient-good" : 
+                            "coefficient-medium"
+                          )}
+                        >
+                          {task.coefficient.toFixed(1)}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Coefficient: {task.coefficient.toFixed(2)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <div id={`task-actions-${task.id}`} className="task-actions flex gap-1">
+                    <Button
+                      id={`task-edit-btn-${task.id}`}
+                      variant="ghost"
+                      size="icon"
+                      className="task-edit-btn"
+                      onClick={(e) => { e.stopPropagation(); window.location.href = `/tasks/edit/${task.id}`; }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      id={`task-delete-btn-${task.id}`}
+                      variant="ghost"
+                      size="icon"
+                      className="task-delete-btn"
+                      onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -381,3 +393,21 @@ export default function Home() {
     </div>
   )
 }
+
+const MetricIndicator = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: number }) => (
+  <div className="metric-item" aria-label={`${label}: ${value} sur 5`}>
+    <div className="flex items-center gap-2" title={label}>
+      {icon}
+      <span className="sr-only">{label}</span>
+    </div>
+    <div className="metric-dots">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className={cn("dot", i < value ? "dot-filled" : "dot-empty")}
+          title={`${i + 1}`}
+        />
+      ))}
+    </div>
+  </div>
+);
