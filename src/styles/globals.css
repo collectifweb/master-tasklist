@@ -177,18 +177,19 @@
   }
   
   /* Coefficient Badge Styles */
+  .coefficient-badge {
+    @apply flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold text-white shadow-md;
+  }
+
   .coefficient-excellent {
-    @apply text-white font-semibold;
     background-color: var(--mt-green-excellent);
   }
   
   .coefficient-good {
-    @apply text-white font-semibold;
     background-color: var(--mt-orange-good);
   }
   
   .coefficient-medium {
-    @apply text-white font-semibold;
     background-color: var(--mt-gray-medium);
   }
   
@@ -229,17 +230,41 @@
   }
   
   /* Task Metrics Styles */
-  .task-complexity-1, .task-complexity-2 { color: var(--mt-green-excellent); }
-  .task-complexity-3 { color: var(--mt-orange-good); }
-  .task-complexity-4, .task-complexity-5 { color: var(--mt-gray-medium); }
-  
-  .task-priority-4, .task-priority-5 { color: var(--mt-green-excellent); }
-  .task-priority-3 { color: var(--mt-orange-good); }
-  .task-priority-1, .task-priority-2 { color: var(--mt-gray-medium); }
-  
-  .task-length-1, .task-length-2 { color: var(--mt-green-excellent); }
-  .task-length-3 { color: var(--mt-orange-good); }
-  .task-length-4, .task-length-5 { color: var(--mt-gray-medium); }
+  .task-metrics-container {
+    @apply flex flex-col gap-2 mt-3;
+  }
+
+  .metric-item {
+    @apply flex items-center gap-2 text-sm text-gray-600;
+  }
+
+  .dark .metric-item {
+    @apply text-gray-400;
+  }
+
+  .metric-dots {
+    @apply flex items-center gap-1;
+  }
+
+  .dot {
+    @apply w-2.5 h-2.5 rounded-full transition-colors;
+  }
+
+  .dot-filled {
+    @apply bg-gray-400;
+  }
+
+  .dark .dot-filled {
+    @apply bg-gray-500;
+  }
+
+  .dot-empty {
+    @apply bg-gray-200;
+  }
+
+  .dark .dot-empty {
+    @apply bg-gray-700;
+  }
   
   /* Responsive Design Enhancements */
   @media (max-width: 768px) {
