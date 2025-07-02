@@ -32,18 +32,18 @@ const getTaskCardStyles = (coefficient: number | null) => {
   let backgroundColor = 'var(--coef-average-bg)';
   let borderLeftColor = 'var(--coef-average-border)';
 
-  if (coefficient >= 10) { // Excellent (10-13)
-    backgroundColor = 'var(--coef-excellent-bg)';
-    borderLeftColor = 'var(--coef-excellent-border)';
-  } else if (coefficient >= 7) { // Bon (7-9)
-    backgroundColor = 'var(--coef-good-bg)';
-    borderLeftColor = 'var(--coef-good-border)';
-  } else if (coefficient >= 4) { // Moyen (4-6)
-    backgroundColor = 'var(--coef-average-bg)';
-    borderLeftColor = 'var(--coef-average-border)';
-  } else { // Faible (1-3)
+  if (coefficient >= 10) { // Excellent (10-13) -> now Low color (Red)
     backgroundColor = 'var(--coef-low-bg)';
     borderLeftColor = 'var(--coef-low-border)';
+  } else if (coefficient >= 7) { // Bon (7-9) -> remains Good color (Orange)
+    backgroundColor = 'var(--coef-good-bg)';
+    borderLeftColor = 'var(--coef-good-border)';
+  } else if (coefficient >= 4) { // Moyen (4-6) -> now Excellent color (Green)
+    backgroundColor = 'var(--coef-excellent-bg)';
+    borderLeftColor = 'var(--coef-excellent-border)';
+  } else { // Faible (1-3) -> now Average color (Gray)
+    backgroundColor = 'var(--coef-average-bg)';
+    borderLeftColor = 'var(--coef-average-border)';
   }
 
   return { 
