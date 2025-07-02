@@ -30,10 +30,10 @@ const getTaskCardStyles = (coefficient: number | null) => {
   if (coefficient === null) {
     return 'bg-card border-l-4 border-border';
   }
-  if (coefficient >= 10) return 'bg-[var(--coef-excellent-bg)] border-l-4 border-[var(--coef-excellent-border)]';
+  if (coefficient >= 10) return 'bg-[var(--coef-low-bg)] border-l-4 border-[var(--coef-low-border)]';
   if (coefficient >= 7) return 'bg-[var(--coef-good-bg)] border-l-4 border-[var(--coef-good-border)]';
-  if (coefficient >= 4) return 'bg-[var(--coef-average-bg)] border-l-4 border-[var(--coef-average-border)]';
-  return 'bg-[var(--coef-low-bg)] border-l-4 border-[var(--coef-low-border)]';
+  if (coefficient >= 4) return 'bg-[var(--coef-excellent-bg)] border-l-4 border-[var(--coef-excellent-border)]';
+  return 'bg-[var(--coef-average-bg)] border-l-4 border-[var(--coef-average-border)]';
 };
 
 export default function CompletedTasks() {
