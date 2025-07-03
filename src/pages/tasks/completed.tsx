@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Undo2 } from 'lucide-react'
@@ -39,7 +38,6 @@ const getTaskCardStyles = (coefficient: number | null) => {
 
 export default function CompletedTasks() {
   const [tasks, setTasks] = useState<Task[]>([])
-  const [sortBy, setSortBy] = useState('completionDateDesc')
   const { getAuthHeaders } = useAuth()
   const { toast } = useToast()
 
@@ -92,51 +90,22 @@ export default function CompletedTasks() {
     }
   }
 
-  const sortedTasks = [...tasks].sort((a, b) => {
-    if (sortBy === 'completionDateDesc') {
-      return (b.completedAt ? new Date(b.completedAt).getTime() : 0) - (a.completedAt ? new Date(a.completedAt).getTime() : 0);
-    }
-    if (sortBy === 'completionDateAsc') {
-      return (a.completedAt ? new Date(a.completedAt).getTime() : 0) - (b.completedAt ? new Date(b.completedAt).getTime() : 0);
-    }
-    if (sortBy === 'coefficientDesc') {
-      return (b.coefficient ?? 0) - (a.coefficient ?? 0);
-    }
-    if (sortBy === 'coefficientAsc') {
-      return (a.coefficient ?? 0) - (b.coefficient ?? 0);
-    }
-    return 0;
-  });
-
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Tâches complétées</h1>
-        <div className="flex items-center gap-4">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Trier par..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="completionDateDesc">Plus récentes d'abord</SelectItem>
-              <SelectItem value="completionDateAsc">Plus anciennes d'abord</SelectItem>
-              <SelectItem value="coefficientDesc">Coefficient (décroissant)</SelectItem>
-              <SelectItem value="coefficientAsc">Coefficient (croissant)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => window.location.href = '/tasks'}>
-            Retour aux tâches actives
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => window.location.href = '/'}>
+          Retour aux tâches actives
+        </Button>
       </div>
 
       <div className="space-y-4">
-        {sortedTasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <Card className="p-6 text-center text-muted-foreground">
             <p>Aucune tâche complétée pour le moment.</p>
           </Card>
         ) : (
-          sortedTasks.map((task) => (
+          tasks.map((task) => (
             <Card 
               key={task.id} 
               className={cn(
@@ -154,7 +123,7 @@ export default function CompletedTasks() {
                   </p>
                   {task.completedAt && (
                     <p className="text-sm text-muted-foreground">
-                      Terminée le {format(new Date(task.completedAt), "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
+                      Terminée le: {format(new Date(task.completedAt), "PPP", { locale: fr })}
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground mt-1">

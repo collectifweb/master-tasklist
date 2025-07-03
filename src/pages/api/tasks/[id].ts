@@ -92,10 +92,7 @@ export default async function handler(
 
         const updatedTask = await prisma.task.update({
           where: { id: taskId },
-          data: { 
-            completed,
-            completedAt: completed ? new Date() : null,
-          },
+          data: { completed },
           include: {
             category: true,
             parent: {

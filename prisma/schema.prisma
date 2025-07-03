@@ -19,7 +19,6 @@ model Task {
   coefficient Int       @default(1)
   notes       String?
   completed   Boolean   @default(false)
-  completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   parentId    Int?
@@ -33,7 +32,6 @@ model Task {
   @@index([parentId])
   @@index([categoryId])
   @@index([userId])
-  @@index([completedAt])
 }
 
 model Category {
