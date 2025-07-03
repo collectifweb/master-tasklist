@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 import {
   Dialog,
   DialogContent,
@@ -15,18 +16,30 @@ import {
 } from "@/components/ui/dialog"
 
 export default function ConfigurationPage() {
+  const { getAuthHeaders } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState<string | null>(null)
   const [username, setUsername] = useState("")
+  const [isSavingUsername, setIsSavingUsername] = useState(false)
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username")
-    if (storedUsername) {
-      setUsername(storedUsername)
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: getAuthHeaders(),
+        })
+        if (response.ok) {
+          const user = await response.json()
+          setUsername(user.name || "")
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data", error)
+      }
     }
+    fetchUserData()
   }, [])
 
-  const handleSaveUsername = () => {
+  const handleSaveUsername = async () => {
     if (username.trim() === "") {
       toast({
         title: "Erreur",
@@ -43,11 +56,36 @@ export default function ConfigurationPage() {
       })
       return
     }
-    localStorage.setItem("username", username)
-    toast({
-      title: "Succès",
-      description: "Nom d'utilisateur enregistré.",
-    })
+
+    setIsSavingUsername(true)
+    try {
+      const response = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ name: username }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save username")
+      }
+      
+      // Also update localStorage for immediate feedback on other pages
+      localStorage.setItem("username", username)
+
+      toast({
+        title: "Succès",
+        description: "Nom d'utilisateur enregistré.",
+      })
+    } catch (error) {
+      console.error("Failed to save username", error)
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer le nom d'utilisateur.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingUsername(false)
+    }
   }
 
   const handleRecalculateCoefficients = async () => {
@@ -130,8 +168,11 @@ export default function ConfigurationPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Entrez votre nom"
+              disabled={isSavingUsername}
             />
-            <Button onClick={handleSaveUsername}>Enregistrer</Button>
+            <Button onClick={handleSaveUsername} disabled={isSavingUsername}>
+              {isSavingUsername ? "Enregistrement..." : "Enregistrer"}
+            </Button>
           </div>
         </div>
       </Card>
