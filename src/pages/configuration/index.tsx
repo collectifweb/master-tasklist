@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { toast } from "@/components/ui/use-toast"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useTheme } from "@/hooks/useTheme"
+import { Moon, Sun } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +20,7 @@ import {
 
 export default function ConfigurationPage() {
   const { getAuthHeaders } = useAuth()
+  const { theme, toggleTheme, isDark } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState<string | null>(null)
   const [username, setUsername] = useState("")
@@ -174,6 +178,33 @@ export default function ConfigurationPage() {
               {isSavingUsername ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Apparence</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isDark ? (
+              <Moon className="h-5 w-5 text-blue-400" />
+            ) : (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            )}
+            <div>
+              <Label htmlFor="dark-mode" className="text-base font-medium">
+                Mode sombre
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Basculer entre le thème clair et sombre
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="dark-mode"
+            checked={isDark}
+            onCheckedChange={toggleTheme}
+            className="data-[state=checked]:bg-blue-600"
+          />
         </div>
       </Card>
 

@@ -3,9 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --mode: dark;
-  
-  /* Master Tasklist Brand Colors */
+  /* Master Tasklist Brand Colors - Light Mode */
   --mt-blue-primary: #2563EB;
   --mt-blue-hover: #1D4ED8;
   --mt-blue-light: #DBEAFE;
@@ -19,7 +17,22 @@
   --mt-gray-700: #334155;
   --mt-gray-900: #1E293B;
 
-  /* Coefficient Colors */
+  /* Theme Colors - Light Mode */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  
+  --border-color: #E2E8F0;
+  --border-light: #F1F5F9;
+  
+  --primary-blue: #2563EB;
+  --primary-blue-hover: #1D4ED8;
+
+  /* Coefficient Colors - Light Mode */
   --coef-excellent-bg: rgba(16, 185, 129, 0.1);
   --coef-excellent-border: rgba(16, 185, 129, 0.4);
   --coef-good-bg: rgba(245, 158, 11, 0.08);
@@ -28,6 +41,33 @@
   --coef-average-border: rgba(107, 114, 128, 0.3);
   --coef-low-bg: rgba(239, 68, 68, 0.08);
   --coef-low-border: rgba(239, 68, 68, 0.4);
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
+  
+  --border-color: #334155;
+  --border-light: #475569;
+  
+  --primary-blue: #3B82F6;
+  --primary-blue-hover: #2563EB;
+
+  /* Coefficient Colors - Dark Mode */
+  --coef-excellent-bg: rgba(16, 185, 129, 0.15);
+  --coef-excellent-border: rgba(16, 185, 129, 0.5);
+  --coef-good-bg: rgba(245, 158, 11, 0.12);
+  --coef-good-border: rgba(245, 158, 11, 0.5);
+  --coef-average-bg: rgba(107, 114, 128, 0.1);
+  --coef-average-border: rgba(107, 114, 128, 0.4);
+  --coef-low-bg: rgba(239, 68, 68, 0.12);
+  --coef-low-border: rgba(239, 68, 68, 0.5);
 }
 
 /* Theme: blue */
@@ -91,10 +131,13 @@
 @layer base {
   * {
     @apply border-border;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 }
 
@@ -102,11 +145,9 @@
 @layer components {
   /* Header Styles */
   .app-header {
-    @apply bg-white border-b border-gray-200 shadow-sm;
-  }
-  
-  .dark .app-header {
-    @apply bg-gray-900 border-gray-700;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    @apply shadow-sm transition-all duration-300;
   }
   
   .header-container {
@@ -123,103 +164,99 @@
   
   /* Logo Styles */
   .logo-text {
-    @apply text-2xl font-bold tracking-tight;
-    color: var(--mt-blue-primary);
+    @apply text-2xl font-bold tracking-tight transition-colors duration-300;
+    color: var(--primary-blue);
   }
   
   .logo-text:hover {
-    color: var(--mt-blue-hover);
-  }
-  
-  .dark .logo-text {
-    @apply text-blue-400;
+    color: var(--primary-blue-hover);
   }
   
   /* Navigation Styles */
   .nav-link {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    color: var(--mt-gray-700);
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
+    color: var(--text-secondary);
   }
   
   .nav-link:hover {
-    @apply bg-blue-50;
-    color: var(--mt-blue-primary);
-  }
-  
-  .dark .nav-link {
-    @apply text-gray-300;
-  }
-  
-  .dark .nav-link:hover {
-    @apply bg-gray-800 text-blue-400;
+    background-color: var(--bg-tertiary);
+    color: var(--primary-blue);
   }
   
   /* Button Harmonization */
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    background-color: var(--primary-blue);
+    color: white;
+    @apply font-medium px-4 py-2 rounded-lg transition-all duration-300;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-blue-hover);
   }
   
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    @apply font-medium px-4 py-2 rounded-lg transition-all duration-300;
   }
   
-  .dark .btn-secondary {
-    @apply bg-gray-700 hover:bg-gray-600 text-gray-200;
+  .btn-secondary:hover {
+    background-color: var(--bg-tertiary);
   }
   
   /* Task Card Styles */
   .task-card {
-    @apply border border-gray-200 rounded-lg transition-all duration-200;
-    background-color: var(--mt-gray-50);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    @apply rounded-lg transition-all duration-300;
   }
   
   .task-card:hover {
-    @apply shadow-md border-blue-200;
-    background-color: white;
-  }
-  
-  .dark .task-card {
-    @apply bg-gray-800 border-gray-700;
-  }
-  
-  .dark .task-card:hover {
-    @apply bg-gray-700 border-gray-600;
+    background-color: var(--bg-primary);
+    border-color: var(--primary-blue);
+    @apply shadow-md;
   }
   
   /* Input Styles */
   .form-input {
-    @apply border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    @apply rounded-lg px-3 py-2 transition-all duration-300;
   }
   
-  .dark .form-input {
-    @apply bg-gray-800 border-gray-600 text-white;
+  .form-input:focus {
+    border-color: var(--primary-blue);
+    @apply ring-2 ring-opacity-50;
+    ring-color: var(--primary-blue);
   }
   
   /* Select Styles */
   .form-select {
-    @apply border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    @apply rounded-lg px-3 py-2 transition-all duration-300;
   }
   
-  .dark .form-select {
-    @apply bg-gray-800 border-gray-600 text-white;
+  .form-select:focus {
+    border-color: var(--primary-blue);
+    @apply ring-2 ring-opacity-50;
+    ring-color: var(--primary-blue);
   }
   
   /* Page Title Styles */
   .page-title {
-    @apply text-gray-900 font-bold;
-  }
-  
-  .dark .page-title {
-    @apply text-white;
+    color: var(--text-primary);
+    @apply font-bold transition-colors duration-300;
   }
   
   /* Filter Container Styles */
   .filters-container {
-    @apply bg-white p-4 rounded-lg border border-gray-200 shadow-sm;
-  }
-  
-  .dark .filters-container {
-    @apply bg-gray-800 border-gray-700;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    @apply p-4 rounded-lg shadow-sm transition-all duration-300;
   }
   
   /* Task Metrics Styles */
@@ -228,11 +265,8 @@
   }
 
   .metric-item {
-    @apply flex items-center gap-2 text-sm text-gray-600;
-  }
-
-  .dark .metric-item {
-    @apply text-gray-400;
+    @apply flex items-center gap-2 text-sm transition-colors duration-300;
+    color: var(--text-muted);
   }
 
   .metric-dots {
@@ -240,23 +274,16 @@
   }
 
   .dot {
-    @apply w-2.5 h-2.5 rounded-full transition-colors;
+    @apply w-2.5 h-2.5 rounded-full transition-colors duration-300;
   }
 
   .dot-filled {
-    @apply bg-gray-400;
-  }
-
-  .dark .dot-filled {
-    @apply bg-gray-500;
+    color: var(--text-secondary);
+    background-color: var(--text-secondary);
   }
 
   .dot-empty {
-    @apply bg-gray-200;
-  }
-
-  .dark .dot-empty {
-    @apply bg-gray-700;
+    background-color: var(--border-color);
   }
   
   /* Responsive Design Enhancements */
