@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Logo } from "@/components/Logo";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -37,10 +38,11 @@ const LoginPage = () => {
   });
 
   return (
-    <div className="flex min-h-screen bg-background justify-center items-center">
+    <div className="flex flex-col min-h-screen bg-background justify-center items-center space-y-6">
+      <Logo />
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Connexion</CardTitle>
+          <CardTitle className="text-center">Connexion</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={formik.handleSubmit} className="space-y-4">

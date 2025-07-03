@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Logo } from "@/components/Logo";
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -43,10 +44,11 @@ const SignUpPage = () => {
   });
 
   return (
-    <div className="flex min-h-screen bg-background justify-center items-center">
+    <div className="flex flex-col min-h-screen bg-background justify-center items-center space-y-6">
+      <Logo />
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Créer un compte</CardTitle>
+          <CardTitle className="text-center">Créer un compte</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
