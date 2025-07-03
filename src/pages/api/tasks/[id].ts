@@ -69,74 +69,61 @@ export default async function handler(
     }
 
     if (req.method === 'PUT' || req.method === 'PATCH') {
-      const { completed, name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body
-      
-      if (completed !== undefined) {
-        // Check if all children tasks are completed before completing parent
-        const task = await prisma.task.findUnique({
-          where: { id: taskId },
-          include: {
-            children: {
-              select: {
-                completed: true,
-              },
-            },
-          },
-        })
-        
-        if (task?.children.some(child => !child.completed)) {
-          return res.status(400).json({ 
-            error: 'Impossible de terminer la tâche : toutes les sous-tâches doivent être terminées' 
-          })
-        }
+      const { completed, name, dueDate, complexity, priority, length, parentId, categoryId, notes } = req.body;
 
-        const updatedTask = await prisma.task.update({
-          where: { id: taskId },
-          data: { 
-            completed,
-            completedAt: completed ? new Date() : null,
-          },
-          include: {
-            category: true,
-            parent: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        })
-        return res.status(200).json(updatedTask)
-      } else {
-        // Calculate coefficient using shared utility
-        const coefficient = calculateCoefficient(priority, complexity, length)
+      const dataToUpdate: any = {};
 
-        // Full task update
-        const updatedTask = await prisma.task.update({
-          where: { id: taskId },
-          data: {
-            name,
-            dueDate: dueDate ? new Date(dueDate) : null,
-            complexity,
-            priority,
-            length,
-            coefficient,
-            parentId: parentId || null,
-            categoryId,
-            notes: notes || null,
-          },
-          include: {
-            category: true,
-            parent: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        })
-        return res.status(200).json(updatedTask)
+      const existingTask = await prisma.task.findUnique({ where: { id: taskId } });
+      if (!existingTask) {
+        return res.status(404).json({ error: 'Tâche non trouvée' });
       }
+
+      // Use new values if provided, otherwise fall back to existing values for calculation
+      const newPriority = priority !== undefined ? priority : existingTask.priority;
+      const newComplexity = complexity !== undefined ? complexity : existingTask.complexity;
+      const newLength = length !== undefined ? length : existingTask.length;
+      dataToUpdate.coefficient = calculateCoefficient(newPriority, newComplexity, newLength);
+
+      if (name !== undefined) dataToUpdate.name = name;
+      if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
+      if (complexity !== undefined) dataToUpdate.complexity = complexity;
+      if (priority !== undefined) dataToUpdate.priority = priority;
+      if (length !== undefined) dataToUpdate.length = length;
+      if (parentId !== undefined) dataToUpdate.parentId = parentId || null;
+      if (categoryId !== undefined) dataToUpdate.categoryId = categoryId;
+      if (notes !== undefined) dataToUpdate.notes = notes || null;
+
+      if (completed !== undefined) {
+        if (completed) {
+          const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: { children: { select: { completed: true } } },
+          });
+          if (task?.children.some(child => !child.completed)) {
+            return res.status(400).json({
+              error: 'Impossible de terminer la tâche : toutes les sous-tâches doivent être terminées',
+            });
+          }
+        }
+        dataToUpdate.completed = completed;
+        dataToUpdate.completedAt = completed ? new Date() : null;
+      }
+
+      const updatedTask = await prisma.task.update({
+        where: { id: taskId },
+        data: dataToUpdate,
+        include: {
+          category: true,
+          parent: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return res.status(200).json(updatedTask);
     }
 
     if (req.method === 'DELETE') {
