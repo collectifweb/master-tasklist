@@ -33,7 +33,6 @@ model Task {
   @@index([parentId])
   @@index([categoryId])
   @@index([userId])
-  @@index([completedAt])
 }
 
 model Category {
