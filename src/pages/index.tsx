@@ -50,57 +50,28 @@ export default function DashboardPage() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-
     const fetchDashboardData = async () => {
+      if (!user) return;
       setLoading(true);
       try {
         const headers = getAuthHeaders();
-        const [tasksResponse, categoriesResponse] = await Promise.all([
-          fetch('/api/tasks', { headers }),
-          fetch('/api/categories?includeTaskCount=true', { headers }),
-        ]);
+        const response = await fetch('/api/dashboard', { headers });
 
-        if (!tasksResponse.ok || !categoriesResponse.ok) {
-          throw new Error('Failed to fetch data');
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
         }
 
-        const tasks: Task[] = await tasksResponse.json();
-        const categories: Category[] = await categoriesResponse.json();
+        const data = await response.json();
+        setUsername(data.username);
+        setStats(data.stats);
+        
+        // Keep localStorage in sync for other parts of the app that might use it
+        if (data.username) {
+          localStorage.setItem("username", data.username);
+        } else {
+          localStorage.removeItem("username");
+        }
 
-        const now = new Date();
-        const weekStart = startOfWeek(now, { locale: fr });
-        const weekEnd = endOfWeek(now, { locale: fr });
-
-        const activeTasks = tasks.filter(t => !t.completed);
-        const overdueTasks = activeTasks.filter(t => t.dueDate && isBefore(parseISO(t.dueDate), now));
-        const completedThisWeek = tasks.filter(t => {
-          if (!t.completed || !t.completedAt) return false;
-          const completedDate = parseISO(t.completedAt);
-          return completedDate >= weekStart && completedDate <= weekEnd;
-        });
-
-        const topPriorityTasks = [...activeTasks]
-          .sort((a, b) => b.coefficient - a.coefficient)
-          .slice(0, 5);
-
-        const categoryDistribution = categories.map(cat => ({
-          ...cat,
-          _count: {
-            tasks: activeTasks.filter(t => t.categoryId === cat.id).length,
-          },
-        })).filter(cat => cat._count.tasks > 0);
-
-        setStats({
-          activeTasks: activeTasks.length,
-          overdueTasks: overdueTasks.length,
-          completedThisWeek: completedThisWeek.length,
-          topPriorityTasks,
-          categoryDistribution,
-        });
       } catch (error) {
         console.error("Failed to load dashboard data", error);
       } finally {
@@ -108,9 +79,7 @@ export default function DashboardPage() {
       }
     };
 
-    if (user) {
-      fetchDashboardData();
-    }
+    fetchDashboardData();
   }, [user]);
 
   if (loading) {
