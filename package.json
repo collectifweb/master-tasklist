@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "prisma db push --accept-data-loss && next build"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
