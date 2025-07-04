@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: true,
           email: true,
           name: true,
+          displaymode: true,
         },
       });
 
@@ -32,19 +33,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { name } = req.body;
+      const { name, displaymode } = req.body;
 
-      if (typeof name !== 'string') {
-        return res.status(400).json({ message: 'Le nom est requis' });
+      // Validate input
+      const updateData: { name?: string; displaymode?: string } = {};
+      
+      if (name !== undefined) {
+        if (typeof name !== 'string') {
+          return res.status(400).json({ message: 'Le nom doit être une chaîne de caractères' });
+        }
+        updateData.name = name;
+      }
+
+      if (displaymode !== undefined) {
+        if (typeof displaymode !== 'string' || !['light', 'dark'].includes(displaymode)) {
+          return res.status(400).json({ message: 'Le mode d\'affichage doit être "light" ou "dark"' });
+        }
+        updateData.displaymode = displaymode;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: 'Aucune donnée à mettre à jour' });
       }
 
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: { name },
+        data: updateData,
         select: {
           id: true,
           email: true,
           name: true,
+          displaymode: true,
         },
       });
 

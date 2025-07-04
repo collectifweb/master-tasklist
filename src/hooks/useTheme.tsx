@@ -1,19 +1,46 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type Theme = 'light' | 'dark';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('light');
+  const [isLoading, setIsLoading] = useState(true);
+  const { getAuthHeaders } = useAuth();
 
   useEffect(() => {
-    // Vérifier la préférence stockée ou la préférence système
-    const storedTheme = localStorage.getItem('theme') as Theme;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    const initialTheme = storedTheme || (systemPrefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
-  }, []);
+    const fetchUserTheme = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: getAuthHeaders(),
+        });
+        
+        if (response.ok) {
+          const user = await response.json();
+          const userTheme = user.displaymode as Theme;
+          setTheme(userTheme);
+          applyTheme(userTheme);
+        } else {
+          // Fallback to system preference if user not authenticated
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const fallbackTheme = systemPrefersDark ? 'dark' : 'light';
+          setTheme(fallbackTheme);
+          applyTheme(fallbackTheme);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user theme:', error);
+        // Fallback to system preference on error
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const fallbackTheme = systemPrefersDark ? 'dark' : 'light';
+        setTheme(fallbackTheme);
+        applyTheme(fallbackTheme);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserTheme();
+  }, [getAuthHeaders]);
 
   const applyTheme = (newTheme: Theme) => {
     const html = document.documentElement;
@@ -27,17 +54,37 @@ export function useTheme() {
     }
   };
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    applyTheme(newTheme);
+  const updateThemeInDatabase = async (newTheme: Theme) => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ displaymode: newTheme }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update theme in database');
+      }
+    } catch (error) {
+      console.error('Failed to update theme in database:', error);
+      // You might want to show a toast notification here
+    }
   };
 
-  const setThemeMode = (newTheme: Theme) => {
+  const toggleTheme = async () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
     applyTheme(newTheme);
+    await updateThemeInDatabase(newTheme);
+  };
+
+  const setThemeMode = async (newTheme: Theme) => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+    await updateThemeInDatabase(newTheme);
   };
 
   return {
@@ -45,5 +92,6 @@ export function useTheme() {
     toggleTheme,
     setTheme: setThemeMode,
     isDark: theme === 'dark',
+    isLoading,
   };
 }

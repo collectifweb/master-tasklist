@@ -20,11 +20,12 @@ import {
 
 export default function ConfigurationPage() {
   const { getAuthHeaders } = useAuth()
-  const { theme, toggleTheme, isDark } = useTheme()
+  const { theme, toggleTheme, isDark, isLoading: isThemeLoading } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState<string | null>(null)
   const [username, setUsername] = useState("")
   const [isSavingUsername, setIsSavingUsername] = useState(false)
+  const [isSavingTheme, setIsSavingTheme] = useState(false)
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -89,6 +90,26 @@ export default function ConfigurationPage() {
       })
     } finally {
       setIsSavingUsername(false)
+    }
+  }
+
+  const handleThemeToggle = async () => {
+    setIsSavingTheme(true)
+    try {
+      await toggleTheme()
+      toast({
+        title: "Succès",
+        description: `Mode ${isDark ? 'clair' : 'sombre'} activé.`,
+      })
+    } catch (error) {
+      console.error("Failed to save theme", error)
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer la préférence de thème.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingTheme(false)
     }
   }
 
@@ -202,7 +223,8 @@ export default function ConfigurationPage() {
           <Switch
             id="dark-mode"
             checked={isDark}
-            onCheckedChange={toggleTheme}
+            onCheckedChange={handleThemeToggle}
+            disabled={isSavingTheme || isThemeLoading}
             className="data-[state=checked]:bg-blue-600"
           />
         </div>
