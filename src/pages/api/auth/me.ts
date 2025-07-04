@@ -15,59 +15,112 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'GET') {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          displaymode: true,
-        },
-      });
+      try {
+        // Try to get user with displaymode column
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        });
 
-      if (!user) {
-        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        if (!user) {
+          return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Try to get displaymode using raw query
+        let displaymode = 'light';
+        try {
+          const result = await prisma.$queryRaw<Array<{ displaymode: string }>>`
+            SELECT displaymode FROM "User" WHERE id = ${userId}
+          `;
+          if (result.length > 0 && result[0].displaymode) {
+            displaymode = result[0].displaymode;
+          }
+        } catch (error) {
+          // Column doesn't exist yet, use default
+          console.log('displaymode column not found, using default');
+        }
+
+        return res.json({ ...user, displaymode });
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        return res.status(500).json({ message: 'Erreur lors de la récupération de l\'utilisateur' });
       }
-
-      return res.json(user);
     }
 
     if (req.method === 'PUT') {
       const { name, displaymode } = req.body;
 
       // Validate input
-      const updateData: { name?: string; displaymode?: string } = {};
-      
-      if (name !== undefined) {
-        if (typeof name !== 'string') {
-          return res.status(400).json({ message: 'Le nom doit être une chaîne de caractères' });
-        }
-        updateData.name = name;
+      if (name !== undefined && typeof name !== 'string') {
+        return res.status(400).json({ message: 'Le nom doit être une chaîne de caractères' });
       }
 
-      if (displaymode !== undefined) {
-        if (typeof displaymode !== 'string' || !['light', 'dark'].includes(displaymode)) {
-          return res.status(400).json({ message: 'Le mode d\'affichage doit être "light" ou "dark"' });
-        }
-        updateData.displaymode = displaymode;
+      if (displaymode !== undefined && (typeof displaymode !== 'string' || !['light', 'dark'].includes(displaymode))) {
+        return res.status(400).json({ message: 'Le mode d\'affichage doit être "light" ou "dark"' });
       }
 
-      if (Object.keys(updateData).length === 0) {
+      if (name === undefined && displaymode === undefined) {
         return res.status(400).json({ message: 'Aucune donnée à mettre à jour' });
       }
 
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: updateData,
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          displaymode: true,
-        },
-      });
+      try {
+        // Update name if provided
+        if (name !== undefined) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { name },
+          });
+        }
 
-      return res.json(updatedUser);
+        // Update displaymode if provided
+        if (displaymode !== undefined) {
+          try {
+            await prisma.$executeRaw`
+              UPDATE "User" 
+              SET displaymode = ${displaymode}
+              WHERE id = ${userId}
+            `;
+          } catch (error) {
+            console.log('displaymode column not found, skipping update');
+          }
+        }
+
+        // Get updated user data
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        });
+
+        if (!user) {
+          return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Get displaymode
+        let userDisplaymode = 'light';
+        try {
+          const result = await prisma.$queryRaw<Array<{ displaymode: string }>>`
+            SELECT displaymode FROM "User" WHERE id = ${userId}
+          `;
+          if (result.length > 0 && result[0].displaymode) {
+            userDisplaymode = result[0].displaymode;
+          }
+        } catch (error) {
+          console.log('displaymode column not found, using default');
+        }
+
+        return res.json({ ...user, displaymode: userDisplaymode });
+      } catch (error) {
+        console.error('Error updating user:', error);
+        return res.status(500).json({ message: 'Erreur lors de la mise à jour de l\'utilisateur' });
+      }
     }
 
     return res.status(405).json({ message: 'Méthode non autorisée' });
