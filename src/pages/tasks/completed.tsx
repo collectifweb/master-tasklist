@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Undo2 } from 'lucide-react'
+import { Undo2, BrainCircuit, Zap, Timer } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from "@/components/ui/use-toast"
 
@@ -36,6 +36,24 @@ const getTaskCardStyles = (coefficient: number | null) => {
   if (coefficient >= 4) return 'bg-[var(--coef-excellent-bg)] border-l-4 border-[var(--coef-excellent-border)]';
   return 'bg-[var(--coef-average-bg)] border-l-4 border-[var(--coef-average-border)]';
 };
+
+const MetricIndicator = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: number }) => (
+  <div className="metric-item" aria-label={`${label}: ${value} sur 5`}>
+    <div className="flex items-center gap-2" title={label}>
+      {icon}
+      <span className="sr-only">{label}</span>
+    </div>
+    <div className="metric-dots">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className={cn("dot", i < value ? "dot-filled" : "dot-empty")}
+          title={`${i + 1}`}
+        />
+      ))}
+    </div>
+  </div>
+);
 
 export default function CompletedTasks() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -157,9 +175,11 @@ export default function CompletedTasks() {
                       Terminée le {format(new Date(task.completedAt), "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
                     </p>
                   )}
-                  <p className="text-sm text-muted-foreground mt-1">
-                    C: {task.complexity} | P: {task.priority} | D: {task.length}
-                  </p>
+                  <div className="task-metrics-container">
+                    <MetricIndicator icon={<BrainCircuit size={16} />} label="Complexité" value={task.complexity} />
+                    <MetricIndicator icon={<Zap size={16} />} label="Priorité" value={task.priority} />
+                    <MetricIndicator icon={<Timer size={16} />} label="Durée" value={task.length} />
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="font-bold text-xl">{task.coefficient}</div>
