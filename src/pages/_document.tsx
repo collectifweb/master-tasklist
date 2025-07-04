@@ -10,11 +10,11 @@ export default function Document() {
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('theme');
+                  // Fallback to system preference initially
+                  // The actual user preference will be loaded from database by useTheme hook
                   var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var shouldBeDark = theme === 'dark' || (!theme && systemPrefersDark);
                   
-                  if (shouldBeDark) {
+                  if (systemPrefersDark) {
                     document.documentElement.setAttribute('data-theme', 'dark');
                     document.documentElement.classList.add('dark');
                   }
