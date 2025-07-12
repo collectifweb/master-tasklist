@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
 import { AnnouncementNotification } from './AnnouncementNotification'
+import { FeedbackNotification } from './FeedbackNotification'
 import { useState, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { useRouter } from 'next/router'
@@ -32,10 +33,17 @@ export function Navigation() {
       <Link id="configuration-link" href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
+      <Link id="feedback-link" href="/feedback" className="text-sm" onClick={() => setOpen(false)}>
+        Donner une rétroaction
+      </Link>
       {isAdmin() && (
         <>
           <Link id="announcements-admin-link" href="/admin/announcements" className="text-sm" onClick={() => setOpen(false)}>
             Gestion des annonces
+          </Link>
+          <Link id="feedback-admin-link" href="/admin/feedback" className="text-sm flex items-center gap-2" onClick={() => setOpen(false)}>
+            Gestion des retours
+            <FeedbackNotification />
           </Link>
           <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
             Keep-Alive Admin
