@@ -22,6 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           email: true,
           name: true,
           displaymode: true,
+          role: true,
         },
       });
 
@@ -64,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           email: true,
           name: true,
           displaymode: true,
+          role: true,
         },
       });
 

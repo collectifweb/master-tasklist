@@ -6,10 +6,12 @@ import { Logo } from './Logo'
 import { useState, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { useRouter } from 'next/router'
+import { useRole } from '@/hooks/useRole'
 
 export function Navigation() {
   const { user, signOut } = useContext(AuthContext)
   const router = useRouter()
+  const { isAdmin } = useRole()
 
   if (!user) {
     return null
@@ -29,9 +31,11 @@ export function Navigation() {
       <Link id="configuration-link" href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
         Configuration
       </Link>
-      <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
-        Keep-Alive Admin
-      </Link>
+      {isAdmin() && (
+        <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
+          Keep-Alive Admin
+        </Link>
+      )}
       <button id="signout-btn" onClick={handleSignOut} className="text-sm text-left text-destructive">
         Déconnexion
       </button>
