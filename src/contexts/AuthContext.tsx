@@ -75,6 +75,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setToken(storedToken);
 
+      // Si l'utilisateur est déjà défini, pas besoin de refaire l'appel API
+      if (user && user.token === storedToken) {
+        setInitializing(false);
+        return;
+      }
+
       // Ne faire l'appel API que si on n'est pas sur une route publique
       if (!publicRoutes.includes(router.pathname)) {
         const response = await fetch('/api/auth/me', {
@@ -94,6 +100,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(null);
           router.push('/login');
         }
+      } else {
+        // Sur les routes publiques, juste définir le token sans faire d'appel API
+        setInitializing(false);
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -125,6 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser({ ...data.user, token: data.token });
+      setInitializing(false); // Marquer l'initialisation comme terminée
       router.push('/');
       toast({
         title: "Succès",
