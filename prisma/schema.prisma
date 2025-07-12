@@ -86,3 +86,18 @@ model UserAnnouncementRead {
   @@index([userId])
   @@index([announcementId])
 }
+
+model Feedback {
+  id         Int       @id @default(autoincrement())
+  userEmail  String    @map("user_email")
+  type       String    // "Bug", "Suggestion", "Autre"
+  subject    String?
+  message    String
+  status     String    @default("Nouveau") // "Nouveau", "Résolu"
+  createdAt  DateTime  @default(now()) @map("created_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
