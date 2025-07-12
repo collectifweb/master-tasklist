@@ -41,8 +41,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    // Attendre que le router soit prêt avant de vérifier l'auth
+    if (router.isReady) {
+      checkAuth();
+    }
+  }, [router.isReady]);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -72,22 +75,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setToken(storedToken);
 
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setUser({ ...userData, token: storedToken });
-      } else {
-        console.error('Auth check failed:', await response.text());
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
-        if (!publicRoutes.includes(router.pathname)) {
+      // Ne faire l'appel API que si on n'est pas sur une route publique
+      if (!publicRoutes.includes(router.pathname)) {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({ ...userData, token: storedToken });
+        } else {
+          console.error('Auth check failed:', response.status);
+          localStorage.removeItem('token');
+          setToken(null);
+          setUser(null);
           router.push('/login');
         }
       }
