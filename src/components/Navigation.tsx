@@ -3,6 +3,7 @@ import { Menu, Plus, CheckSquare, LogOut } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
+import { AnnouncementNotification } from './AnnouncementNotification'
 import { useState, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { useRouter } from 'next/router'
@@ -33,6 +34,9 @@ export function Navigation() {
       </Link>
       {isAdmin() && (
         <>
+          <Link id="announcements-admin-link" href="/admin/announcements" className="text-sm" onClick={() => setOpen(false)}>
+            Gestion des annonces
+          </Link>
           <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
             Keep-Alive Admin
           </Link>
@@ -82,7 +86,10 @@ export function Navigation() {
             Nouvelle tâche
           </Link>
         </div>
-        <SheetWithTitle />
+        <div className="flex items-center space-x-2">
+          <AnnouncementNotification />
+          <SheetWithTitle />
+        </div>
       </nav>
 
       {/* Tablet Navigation */}
@@ -101,6 +108,7 @@ export function Navigation() {
               <CheckSquare className="h-6 w-6" />
             </Button>
           </Link>
+          <AnnouncementNotification />
           <SheetWithTitle />
         </div>
       </nav>
@@ -110,7 +118,10 @@ export function Navigation() {
         <Link id="mobile-logo-link" href="/" className="mr-4">
           <Logo />
         </Link>
-        <SheetWithTitle />
+        <div className="flex items-center space-x-2">
+          <AnnouncementNotification />
+          <SheetWithTitle />
+        </div>
       </nav>
 
       {/* Mobile Bottom Navigation */}
