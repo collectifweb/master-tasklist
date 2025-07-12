@@ -32,9 +32,14 @@ export function Navigation() {
         Configuration
       </Link>
       {isAdmin() && (
-        <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
-          Keep-Alive Admin
-        </Link>
+        <>
+          <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
+            Keep-Alive Admin
+          </Link>
+          <Link id="debug-user-link" href="/debug-user" className="text-sm" onClick={() => setOpen(false)}>
+            Debug Utilisateur
+          </Link>
+        </>
       )}
       <button id="signout-btn" onClick={handleSignOut} className="text-sm text-left text-destructive">
         Déconnexion
