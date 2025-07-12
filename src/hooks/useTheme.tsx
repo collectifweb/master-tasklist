@@ -1,27 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/router';
 
 export type Theme = 'light' | 'dark';
+
+const publicRoutes = ['/login', '/signup', '/error', '/403'];
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('light');
   const [isLoading, setIsLoading] = useState(true);
-  const { getAuthHeaders } = useAuth();
+  const { getAuthHeaders, user, initializing } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserTheme = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
-          headers: getAuthHeaders(),
-        });
-        
-        if (response.ok) {
-          const user = await response.json();
-          const userTheme = user.displaymode as Theme;
-          setTheme(userTheme);
-          applyTheme(userTheme);
-        } else {
-          // Fallback to system preference if user not authenticated
+        // Sur les routes publiques, utiliser la préférence système
+        if (publicRoutes.includes(router.pathname)) {
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const fallbackTheme = systemPrefersDark ? 'dark' : 'light';
+          setTheme(fallbackTheme);
+          applyTheme(fallbackTheme);
+          setIsLoading(false);
+          return;
+        }
+
+        // Ne faire l'appel API que si l'utilisateur est connecté
+        if (!initializing && user) {
+          const response = await fetch('/api/auth/me', {
+            headers: getAuthHeaders(),
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            const userTheme = userData.displaymode as Theme;
+            setTheme(userTheme);
+            applyTheme(userTheme);
+          } else {
+            // Fallback to system preference if API call fails
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const fallbackTheme = systemPrefersDark ? 'dark' : 'light';
+            setTheme(fallbackTheme);
+            applyTheme(fallbackTheme);
+          }
+        } else if (!initializing) {
+          // Si pas d'utilisateur, utiliser la préférence système
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           const fallbackTheme = systemPrefersDark ? 'dark' : 'light';
           setTheme(fallbackTheme);
@@ -39,8 +62,11 @@ export function useTheme() {
       }
     };
 
-    fetchUserTheme();
-  }, [getAuthHeaders]);
+    // Attendre que le router soit prêt
+    if (router.isReady) {
+      fetchUserTheme();
+    }
+  }, [getAuthHeaders, user, initializing, router.isReady, router.pathname]);
 
   const applyTheme = (newTheme: Theme) => {
     const html = document.documentElement;
@@ -55,6 +81,11 @@ export function useTheme() {
   };
 
   const updateThemeInDatabase = async (newTheme: Theme) => {
+    // Ne pas essayer de mettre à jour la base de données sur les routes publiques
+    if (publicRoutes.includes(router.pathname) || !user) {
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/me', {
         method: 'PUT',

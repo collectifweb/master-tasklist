@@ -62,14 +62,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const checkAuth = async () => {
     try {
+      // Sur les routes publiques, ne pas faire d'appel API du tout
+      if (publicRoutes.includes(router.pathname)) {
+        const storedToken = localStorage.getItem('token');
+        setToken(storedToken);
+        setInitializing(false);
+        return;
+      }
+
       const storedToken = localStorage.getItem('token');
       if (!storedToken) {
         setToken(null);
         setUser(null);
         setInitializing(false);
-        if (!publicRoutes.includes(router.pathname)) {
-          router.push('/login');
-        }
+        router.push('/login');
         return;
       }
 
@@ -81,28 +87,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      // Ne faire l'appel API que si on n'est pas sur une route publique
-      if (!publicRoutes.includes(router.pathname)) {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser({ ...userData, token: storedToken });
-        } else {
-          console.error('Auth check failed:', response.status);
-          localStorage.removeItem('token');
-          setToken(null);
-          setUser(null);
-          router.push('/login');
+      // Faire l'appel API seulement sur les routes protégées
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json'
         }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser({ ...userData, token: storedToken });
       } else {
-        // Sur les routes publiques, juste définir le token sans faire d'appel API
-        setInitializing(false);
+        console.error('Auth check failed:', response.status);
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+        router.push('/login');
       }
     } catch (error) {
       console.error('Auth check error:', error);
