@@ -136,7 +136,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(data.token);
       setUser({ ...data.user, token: data.token });
       setInitializing(false); // Marquer l'initialisation comme terminée
-      router.push('/');
+      
+      // Force une mise à jour immédiate pour s'assurer que le rôle est reconnu
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
+      
       toast({
         title: "Succès",
         description: "Vous êtes connecté avec succès",
