@@ -10,14 +10,10 @@ export default function Document() {
             __html: `
               (function() {
                 try {
-                  // Fallback to system preference initially
+                  // Initialize with light theme by default
                   // The actual user preference will be loaded from database by useTheme hook
-                  var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  
-                  if (systemPrefersDark) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.classList.add('dark');
-                  }
+                  document.documentElement.removeAttribute('data-theme');
+                  document.documentElement.classList.remove('dark');
                 } catch (e) {}
               })();
             `,
