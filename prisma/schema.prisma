@@ -56,4 +56,33 @@ model User {
   createdAt   DateTime   @default(now())
   tasks       Task[]
   categories  Category[]
+  announcementReads UserAnnouncementRead[]
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  category    String   @default("Nouveautés") // "Nouveautés", "Corrections", "Maintenance"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  publishedAt DateTime?
+  updatedAt   DateTime @updatedAt
+  reads       UserAnnouncementRead[]
+
+  @@index([isActive, publishedAt])
+  @@index([category])
+}
+
+model UserAnnouncementRead {
+  id             Int          @id @default(autoincrement())
+  userId         String       @db.Uuid
+  announcementId Int
+  readAt         DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([userId])
+  @@index([announcementId])
 }
