@@ -44,6 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
+        displaymode: user.displaymode,
+        role: user.role,
       }
     });
   } catch (error) {
