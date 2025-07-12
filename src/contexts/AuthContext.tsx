@@ -2,7 +2,7 @@ import React, { createContext, useState, ReactNode, useContext, useEffect } from
 import { useRouter } from 'next/router';
 import { useToast } from "@/components/ui/use-toast";
 
-const publicRoutes = ['/login', '/signup', '/error', '/403', '/debug-user'];
+const publicRoutes = ['/login', '/signup', '/error', '/403'];
 
 interface User {
   id: string;
