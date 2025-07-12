@@ -15,6 +15,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -24,6 +25,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  token: null,
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
@@ -34,6 +36,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
   const { toast } = useToast();
 
@@ -56,8 +59,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) {
+        setToken(null);
+        setUser(null);
         setInitializing(false);
         if (!publicRoutes.includes(router.pathname)) {
           router.push('/login');
@@ -65,16 +70,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
+      setToken(storedToken);
+
       const response = await fetch('/api/auth/me', {
-        headers: getAuthHeaders()
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
         const userData = await response.json();
-        setUser({ ...userData, token });
+        setUser({ ...userData, token: storedToken });
       } else {
         console.error('Auth check failed:', await response.text());
         localStorage.removeItem('token');
+        setToken(null);
         setUser(null);
         if (!publicRoutes.includes(router.pathname)) {
           router.push('/login');
@@ -83,6 +94,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Auth check error:', error);
       localStorage.removeItem('token');
+      setToken(null);
       setUser(null);
       if (!publicRoutes.includes(router.pathname)) {
         router.push('/login');
@@ -107,6 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const data = await response.json();
       localStorage.setItem('token', data.token);
+      setToken(data.token);
       setUser({ ...data.user, token: data.token });
       router.push('/');
       toast({
@@ -155,6 +168,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       // First clear the local state
       localStorage.removeItem('token');
+      setToken(null);
       setUser(null);
       
       // Then try to call the logout endpoint
@@ -187,6 +201,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider value={{
       user,
+      token,
       signIn,
       signUp,
       signOut,

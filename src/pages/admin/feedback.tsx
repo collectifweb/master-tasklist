@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -359,106 +359,16 @@ export default function AdminFeedbackPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setSelectedFeedback(feedback)}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl">
-                                  <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                      {selectedFeedback && getTypeIcon(selectedFeedback.type)} 
-                                      Détails du feedback
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Feedback #{selectedFeedback?.id}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  {selectedFeedback && (
-                                    <div className="space-y-4">
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <label className="text-sm font-medium">Type</label>
-                                          <div className="flex items-center gap-2 mt-1">
-                                            {getTypeIcon(selectedFeedback.type)} {selectedFeedback.type}
-                                          </div>
-                                        </div>
-                                        <div>
-                                          <label className="text-sm font-medium">Statut</label>
-                                          <div className="mt-1">
-                                            {getStatusBadge(selectedFeedback.status)}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <label className="text-sm font-medium">Email</label>
-                                        <div className="mt-1">{selectedFeedback.userEmail}</div>
-                                      </div>
-                                      <div>
-                                        <label className="text-sm font-medium">Sujet</label>
-                                        <div className="mt-1">{selectedFeedback.subject || 'Sans sujet'}</div>
-                                      </div>
-                                      <div>
-                                        <label className="text-sm font-medium">Message</label>
-                                        <div className="mt-1 p-3 bg-muted rounded-md whitespace-pre-wrap">
-                                          {selectedFeedback.message}
-                                        </div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <label className="text-sm font-medium">Date de création</label>
-                                          <div className="mt-1">
-                                            {format(new Date(selectedFeedback.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                                          </div>
-                                        </div>
-                                        {selectedFeedback.resolvedAt && (
-                                          <div>
-                                            <label className="text-sm font-medium">Date de résolution</label>
-                                            <div className="mt-1">
-                                              {format(new Date(selectedFeedback.resolvedAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className="flex gap-2 pt-4">
-                                        {selectedFeedback.status === 'Nouveau' ? (
-                                          <Button
-                                            onClick={() => handleStatusChange(selectedFeedback.id, 'Résolu')}
-                                            disabled={isUpdating}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <CheckCircle className="h-4 w-4" />
-                                            Marquer comme résolu
-                                          </Button>
-                                        ) : (
-                                          <Button
-                                            variant="outline"
-                                            onClick={() => handleStatusChange(selectedFeedback.id, 'Nouveau')}
-                                            disabled={isUpdating}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <RotateCcw className="h-4 w-4" />
-                                            Rouvrir
-                                          </Button>
-                                        )}
-                                        <Button
-                                          variant="destructive"
-                                          onClick={() => handleDelete(selectedFeedback.id)}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                          Supprimer
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </DialogContent>
-                              </Dialog>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedFeedback(feedback);
+                                  setIsDetailOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               {feedback.status === 'Nouveau' ? (
                                 <Button
                                   variant="outline"
@@ -525,6 +435,99 @@ export default function AdminFeedbackPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Dialog pour les détails du feedback */}
+          <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {selectedFeedback && getTypeIcon(selectedFeedback.type)} 
+                  Détails du feedback
+                </DialogTitle>
+                <DialogDescription>
+                  Feedback #{selectedFeedback?.id}
+                </DialogDescription>
+              </DialogHeader>
+              {selectedFeedback && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Type</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        {getTypeIcon(selectedFeedback.type)} {selectedFeedback.type}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Statut</label>
+                      <div className="mt-1">
+                        {getStatusBadge(selectedFeedback.status)}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <div className="mt-1">{selectedFeedback.userEmail}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Sujet</label>
+                    <div className="mt-1">{selectedFeedback.subject || 'Sans sujet'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Message</label>
+                    <div className="mt-1 p-3 bg-muted rounded-md whitespace-pre-wrap">
+                      {selectedFeedback.message}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Date de création</label>
+                      <div className="mt-1">
+                        {format(new Date(selectedFeedback.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                      </div>
+                    </div>
+                    {selectedFeedback.resolvedAt && (
+                      <div>
+                        <label className="text-sm font-medium">Date de résolution</label>
+                        <div className="mt-1">
+                          {format(new Date(selectedFeedback.resolvedAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    {selectedFeedback.status === 'Nouveau' ? (
+                      <Button
+                        onClick={() => handleStatusChange(selectedFeedback.id, 'Résolu')}
+                        disabled={isUpdating}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Marquer comme résolu
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => handleStatusChange(selectedFeedback.id, 'Nouveau')}
+                        disabled={isUpdating}
+                        className="flex items-center gap-2"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Rouvrir
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDelete(selectedFeedback.id)}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </RoleProtection>
