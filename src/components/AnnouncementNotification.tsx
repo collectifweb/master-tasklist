@@ -49,7 +49,7 @@ export function AnnouncementNotification() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const { getAuthHeaders } = useAuth();
+  const { getAuthHeaders, user, initializing } = useAuth();
   const router = useRouter();
 
   const fetchUnreadCount = async () => {
@@ -115,17 +115,20 @@ export function AnnouncementNotification() {
   };
 
   useEffect(() => {
-    fetchUnreadCount();
-    fetchRecentAnnouncements();
-    
-    // Refresh every 5 minutes
-    const interval = setInterval(() => {
+    // Ne faire les appels que si l'auth est complètement initialisée
+    if (!initializing && user) {
       fetchUnreadCount();
       fetchRecentAnnouncements();
-    }, 5 * 60 * 1000);
+      
+      // Refresh every 5 minutes
+      const interval = setInterval(() => {
+        fetchUnreadCount();
+        fetchRecentAnnouncements();
+      }, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }
+  }, [initializing, user]);
 
   const truncateContent = (content: string, maxLength: number = 100) => {
     if (content.length <= maxLength) return content;

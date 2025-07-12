@@ -15,13 +15,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Token manquant' });
     }
 
-    const decoded = verifyToken(token);
-    if (!decoded) {
+    const userId = await verifyToken(token);
+    if (!userId) {
       return res.status(401).json({ error: 'Token invalide' });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
+      where: { id: userId }
     });
 
     if (!user || user.role !== 'admin') {
