@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/lib/prisma'
+import { requireAdmin } from '@/lib/roleAuth'
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,9 +16,32 @@ export default async function handler(
   const isVercelCron = req.headers['user-agent']?.includes('vercel-cron') || 
                       req.headers['x-vercel-cron'] === '1';
   
-  // Pour les crons Vercel, vérifier l'authentification
-  if (isVercelCron && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Non autorisé pour cron job' });
+  // Pour les crons Vercel, vérifier l'authentification avec le secret
+  if (isVercelCron) {
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return res.status(401).json({ error: 'Non autorisé pour cron job' });
+    }
+  } else {
+    // Pour les appels manuels, vérifier que l'utilisateur est admin
+    try {
+      await requireAdmin(req);
+    } catch (error: any) {
+      console.error('Admin auth error:', error);
+      
+      if (error.message === 'Token manquant' || error.message === 'Token invalide') {
+        return res.status(401).json({ error: error.message });
+      }
+      
+      if (error.message === 'Utilisateur non trouvé') {
+        return res.status(404).json({ error: error.message });
+      }
+      
+      if (error.message === 'Permissions insuffisantes') {
+        return res.status(403).json({ error: 'Accès non autorisé - permissions admin requises' });
+      }
+      
+      return res.status(500).json({ error: 'Erreur interne du serveur' });
+    }
   }
 
   try {
