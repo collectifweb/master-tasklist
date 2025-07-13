@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Menu, Plus, CheckSquare, LogOut } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
 import { AnnouncementNotification } from './AnnouncementNotification'
@@ -68,10 +68,9 @@ export function Navigation() {
       </SheetTrigger>
       <SheetContent id="menu-sheet">
         <SheetTitle id="menu-title">Menu</SheetTitle>
-        {/* Ajout d'une description cachée pour l'accessibilité */}
-        <span id="menu-description" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
-          Ouvrez le menu de navigation principal
-        </span>
+        <SheetDescription id="menu-description" className="sr-only">
+          Menu de navigation principal
+        </SheetDescription>
         <div id="menu-content" className="mt-8">
           <SecondaryMenu />
         </div>
