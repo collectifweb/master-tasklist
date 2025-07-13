@@ -57,6 +57,7 @@ export default function AdminFeedbackPage() {
   const fetchFeedbacks = async (page = 1) => {
     try {
       setLoading(true);
+      setError('');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: pagination.limit.toString()
@@ -64,6 +65,12 @@ export default function AdminFeedbackPage() {
 
       if (filters.status) params.append('status', filters.status);
       if (filters.type) params.append('type', filters.type);
+
+      if (!token) {
+        setError("Token d'authentification manquant.");
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch(`/api/feedback?${params}`, {
         headers: {
@@ -76,10 +83,34 @@ export default function AdminFeedbackPage() {
       }
 
       const data = await response.json();
-      setFeedbacks(data.feedbacks);
-      setPagination(data.pagination);
+      if (!data.feedbacks || !data.pagination) {
+        setError("La structure de la réponse du serveur est invalide.");
+        setFeedbacks([]);
+        setPagination({
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0
+        });
+        setLoading(false);
+        return;
+      }
+      setFeedbacks(Array.isArray(data.feedbacks) ? data.feedbacks : []);
+      setPagination({
+        page: typeof data.pagination.page === "number" ? data.pagination.page : 1,
+        limit: typeof data.pagination.limit === "number" ? data.pagination.limit : 10,
+        total: typeof data.pagination.total === "number" ? data.pagination.total : 0,
+        totalPages: typeof data.pagination.totalPages === "number" ? data.pagination.totalPages : 0,
+      });
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Erreur inconnue lors du chargement des feedback");
+      setFeedbacks([]);
+      setPagination({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -89,6 +120,7 @@ export default function AdminFeedbackPage() {
     if (token) {
       fetchFeedbacks();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, filters.status, filters.type]);
 
   const handleStatusChange = async (feedbackId: number, newStatus: string) => {
@@ -172,17 +204,19 @@ export default function AdminFeedbackPage() {
     return <Badge variant="default" className="bg-green-500">Résolu</Badge>;
   };
 
-  const filteredFeedbacks = feedbacks.filter(feedback => {
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      return (
-        feedback.userEmail.toLowerCase().includes(searchLower) ||
-        feedback.subject?.toLowerCase().includes(searchLower) ||
-        feedback.message.toLowerCase().includes(searchLower)
-      );
-    }
-    return true;
-  });
+  const filteredFeedbacks = Array.isArray(feedbacks)
+    ? feedbacks.filter(feedback => {
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          return (
+            feedback.userEmail.toLowerCase().includes(searchLower) ||
+            (feedback.subject?.toLowerCase() ?? '').includes(searchLower) ||
+            feedback.message.toLowerCase().includes(searchLower)
+          );
+        }
+        return true;
+      })
+    : [];
 
   return (
     <RoleProtection requiredRole="admin">
@@ -396,7 +430,7 @@ export default function AdminFeedbackPage() {
                   </Table>
 
                   {/* Pagination */}
-                  {pagination.totalPages > 1 && (
+                  {typeof pagination.totalPages === "number" && pagination.totalPages > 1 && (
                     <div className="mt-6">
                       <Pagination>
                         <PaginationContent>
@@ -442,7 +476,7 @@ export default function AdminFeedbackPage() {
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    {getTypeIcon(selectedFeedback.type)} 
+                    {typeof selectedFeedback.type === "string" ? getTypeIcon(selectedFeedback.type) : ""} 
                     Détails du feedback
                   </DialogTitle>
                   <DialogDescription>
@@ -454,7 +488,7 @@ export default function AdminFeedbackPage() {
                     <div>
                       <label className="text-sm font-medium">Type</label>
                       <div className="flex items-center gap-2 mt-1">
-                        {getTypeIcon(selectedFeedback.type)} {selectedFeedback.type}
+                        {typeof selectedFeedback.type === "string" ? getTypeIcon(selectedFeedback.type) : ""} {selectedFeedback.type}
                       </div>
                     </div>
                     <div>
@@ -482,14 +516,14 @@ export default function AdminFeedbackPage() {
                     <div>
                       <label className="text-sm font-medium">Date de création</label>
                       <div className="mt-1">
-                        {format(new Date(selectedFeedback.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                        {selectedFeedback.createdAt ? format(new Date(selectedFeedback.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr }) : ""}
                       </div>
                     </div>
                     {selectedFeedback.resolvedAt && (
                       <div>
                         <label className="text-sm font-medium">Date de résolution</label>
                         <div className="mt-1">
-                          {format(new Date(selectedFeedback.resolvedAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                          {selectedFeedback.resolvedAt ? format(new Date(selectedFeedback.resolvedAt), 'dd/MM/yyyy à HH:mm', { locale: fr }) : ""}
                         </div>
                       </div>
                     )}
