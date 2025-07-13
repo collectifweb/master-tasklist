@@ -72,8 +72,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const decoded = verifyToken(token);
-      if (!decoded) {
-        return res.status(401).json({ error: 'Token invalide' });
+      if (!decoded || !decoded.userId) {
+        return res.status(401).json({ error: 'Token invalide ou utilisateur non identifié' });
       }
 
       const user = await prisma.user.findUnique({
