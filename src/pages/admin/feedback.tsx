@@ -437,18 +437,18 @@ export default function AdminFeedbackPage() {
           </Card>
 
           {/* Dialog pour les détails du feedback */}
-          <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  {selectedFeedback && getTypeIcon(selectedFeedback.type)} 
-                  Détails du feedback
-                </DialogTitle>
-                <DialogDescription>
-                  Feedback #{selectedFeedback?.id}
-                </DialogDescription>
-              </DialogHeader>
-              {selectedFeedback && (
+          {isDetailOpen && selectedFeedback && (
+            <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    {getTypeIcon(selectedFeedback.type)} 
+                    Détails du feedback
+                  </DialogTitle>
+                  <DialogDescription>
+                    Feedback #{selectedFeedback.id}
+                  </DialogDescription>
+                </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -525,9 +525,9 @@ export default function AdminFeedbackPage() {
                     </Button>
                   </div>
                 </div>
-              )}
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
     </RoleProtection>
