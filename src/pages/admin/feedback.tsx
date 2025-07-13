@@ -68,7 +68,7 @@ export default function AdminFeedbackPage() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const { getAuthHeaders, initializing, token } = useAuth();
+  const { getAuthHeaders } = useAuth();
   const { toast } = useToast();
 
   const fetchFeedbacks = async (
@@ -77,10 +77,6 @@ export default function AdminFeedbackPage() {
     type = selectedType,
     searchValue = search
   ) => {
-    if (initializing || !token) {
-      // Ne rien faire tant que l'auth n'est pas prête
-      return;
-    }
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -202,11 +198,9 @@ export default function AdminFeedbackPage() {
   };
 
   useEffect(() => {
-    if (!initializing && token) {
-      fetchFeedbacks();
-    }
+    fetchFeedbacks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initializing, token]);
+  }, []);
 
   return (
     <RoleProtection requiredRole="admin">
@@ -249,11 +243,7 @@ export default function AdminFeedbackPage() {
           </div>
         </div>
 
-        {initializing ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Chargement de l'authentification...</p>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">Chargement des feedbacks...</p>
           </div>
