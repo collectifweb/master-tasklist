@@ -1,36 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/roleAuth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
-  const feedbackId = parseInt(id as string);
+  try {
+    const { id } = req.query;
+    const feedbackId = parseInt(id as string);
 
-  if (isNaN(feedbackId)) {
-    return res.status(400).json({ error: 'ID de feedback invalide' });
-  }
+    if (isNaN(feedbackId)) {
+      return res.status(400).json({ error: 'ID de feedback invalide' });
+    }
 
-  // Vérifier que l'utilisateur est admin pour toutes les opérations
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) {
-    return res.status(401).json({ error: 'Token manquant' });
-  }
+    // Vérifier que l'utilisateur est admin pour toutes les opérations
+    await requireAdmin(req);
 
-  const decoded = verifyToken(token);
-  if (!decoded) {
-    return res.status(401).json({ error: 'Token invalide' });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: decoded.userId }
-  });
-
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({ error: 'Accès non autorisé' });
-  }
-
-  if (req.method === 'GET') {
-    try {
+    if (req.method === 'GET') {
       const feedback = await prisma.feedback.findUnique({
         where: { id: feedbackId }
       });
@@ -39,14 +23,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'Feedback non trouvé' });
       }
 
-      res.status(200).json(feedback);
+      return res.status(200).json(feedback);
 
-    } catch (error) {
-      console.error('Erreur lors de la récupération du feedback:', error);
-      res.status(500).json({ error: 'Erreur interne du serveur' });
-    }
-  } else if (req.method === 'PATCH') {
-    try {
+    } else if (req.method === 'PATCH') {
       const { status } = req.body;
 
       // Validation du statut
@@ -80,17 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: updateData
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         message: 'Statut du feedback mis à jour avec succès',
         feedback: updatedFeedback
       });
 
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du feedback:', error);
-      res.status(500).json({ error: 'Erreur interne du serveur' });
-    }
-  } else if (req.method === 'DELETE') {
-    try {
+    } else if (req.method === 'DELETE') {
       // Vérifier que le feedback existe
       const existingFeedback = await prisma.feedback.findUnique({
         where: { id: feedbackId }
@@ -105,14 +79,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { id: feedbackId }
       });
 
-      res.status(200).json({ message: 'Feedback supprimé avec succès' });
+      return res.status(200).json({ message: 'Feedback supprimé avec succès' });
 
-    } catch (error) {
-      console.error('Erreur lors de la suppression du feedback:', error);
-      res.status(500).json({ error: 'Erreur interne du serveur' });
+    } else {
+      res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
+      return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error: any) {
+    console.error('Feedback API error:', error);
+    
+    if (error.message === 'Token manquant') {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+    if (error.message === 'Utilisateur non trouvé') {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+    if (error.message === 'Permissions insuffisantes') {
+      return res.status(403).json({ message: 'Accès non autorisé' });
+    }
+
+    return res.status(500).json({ message: 'Erreur serveur' });
   }
 }
