@@ -26,34 +26,73 @@ export function Navigation() {
   }
 
   const SecondaryMenu = () => (
-    <div id="secondary-menu" className="flex flex-col space-y-4">
-      <Link id="categories-link" href="/categories" className="text-sm" onClick={() => setOpen(false)}>
+    <div id="secondary-menu" className="flex flex-col space-y-2">
+      <Link 
+        id="categories-link" 
+        href="/categories" 
+        className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+        onClick={() => setOpen(false)}
+      >
         Gérer les catégories
       </Link>
-      <Link id="configuration-link" href="/configuration" className="text-sm" onClick={() => setOpen(false)}>
+      <Link 
+        id="configuration-link" 
+        href="/configuration" 
+        className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+        onClick={() => setOpen(false)}
+      >
         Configuration
       </Link>
-      <Link id="feedback-link" href="/feedback" className="text-sm" onClick={() => setOpen(false)}>
+      <Link 
+        id="feedback-link" 
+        href="/feedback" 
+        className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+        onClick={() => setOpen(false)}
+      >
         Donner une rétroaction
       </Link>
       {isAdmin() && (
         <>
-          <Link id="announcements-admin-link" href="/admin/announcements" className="text-sm" onClick={() => setOpen(false)}>
+          <Link 
+            id="announcements-admin-link" 
+            href="/admin/announcements" 
+            className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+            onClick={() => setOpen(false)}
+          >
             Gestion des annonces
           </Link>
-          <Link id="feedback-admin-link" href="/admin/feedback" className="text-sm flex items-center gap-2" onClick={() => setOpen(false)}>
+          <Link 
+            id="feedback-admin-link" 
+            href="/admin/feedback" 
+            className="mobile-nav-item text-base flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+            onClick={() => setOpen(false)}
+          >
             Gestion des retours
             <FeedbackNotification />
           </Link>
-          <Link id="keep-alive-link" href="/admin/keep-alive" className="text-sm" onClick={() => setOpen(false)}>
+          <Link 
+            id="keep-alive-link" 
+            href="/admin/keep-alive" 
+            className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+            onClick={() => setOpen(false)}
+          >
             Keep-Alive Admin
           </Link>
-          <Link id="debug-user-link" href="/debug-user" className="text-sm" onClick={() => setOpen(false)}>
+          <Link 
+            id="debug-user-link" 
+            href="/debug-user" 
+            className="mobile-nav-item text-base hover:bg-accent hover:text-accent-foreground rounded-md transition-colors" 
+            onClick={() => setOpen(false)}
+          >
             Debug Utilisateur
           </Link>
         </>
       )}
-      <button id="signout-btn" onClick={handleSignOut} className="text-sm text-left text-destructive">
+      <button 
+        id="signout-btn" 
+        onClick={handleSignOut} 
+        className="mobile-nav-item text-base text-left text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+      >
         Déconnexion
       </button>
     </div>
@@ -62,12 +101,12 @@ export function Navigation() {
   const SheetWithTitle = () => (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button id="menu-trigger" variant="ghost" size="icon">
+        <Button id="menu-trigger" variant="ghost" className="mobile-touch-target p-2">
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent id="menu-sheet">
-        <SheetTitle id="menu-title">Menu</SheetTitle>
+      <SheetContent id="menu-sheet" className="w-[300px] sm:w-[400px]">
+        <SheetTitle id="menu-title" className="text-lg font-semibold">Menu</SheetTitle>
         <SheetDescription id="menu-description" className="sr-only">
           Menu de navigation principal
         </SheetDescription>
@@ -136,17 +175,27 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div id="mobile-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex justify-center space-x-8 shadow-lg">
-        <Link id="mobile-add-task-link" href="/tasks/add">
-          <Button id="mobile-add-task-btn" variant="ghost" size="icon" className="focus-ring">
-            <Plus className="h-6 w-6" />
-          </Button>
-        </Link>
-        <Link id="mobile-completed-tasks-link" href="/tasks/completed">
-          <Button id="mobile-completed-tasks-btn" variant="ghost" size="icon" className="focus-ring">
-            <CheckSquare className="h-6 w-6" />
-          </Button>
-        </Link>
+      <div id="mobile-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t mobile-bottom-nav">
+        <div className="flex justify-center items-center px-4 py-3 space-x-12">
+          <Link id="mobile-add-task-link" href="/tasks/add" className="flex flex-col items-center space-y-1">
+            <Button id="mobile-add-task-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
+              <Plus className="h-6 w-6" />
+            </Button>
+            <span className="text-xs text-muted-foreground">Nouvelle</span>
+          </Link>
+          <Link id="mobile-tasks-link" href="/tasks" className="flex flex-col items-center space-y-1">
+            <Button id="mobile-tasks-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
+              <CheckSquare className="h-6 w-6" />
+            </Button>
+            <span className="text-xs text-muted-foreground">Actives</span>
+          </Link>
+          <Link id="mobile-completed-tasks-link" href="/tasks/completed" className="flex flex-col items-center space-y-1">
+            <Button id="mobile-completed-tasks-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
+              <CheckSquare className="h-6 w-6 opacity-60" />
+            </Button>
+            <span className="text-xs text-muted-foreground">Terminées</span>
+          </Link>
+        </div>
       </div>
     </>
   )

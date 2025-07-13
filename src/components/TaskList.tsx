@@ -151,86 +151,85 @@ export function TaskList({
               className={`task-card p-4 transition-shadow duration-200 ease-in-out hover:shadow-lg ${task.parentId ? 'ml-4 md:ml-8' : ''}`}
               style={cardStyles}
             >
-              <div id={`tasklist-content-${task.id}`} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div id={`tasklist-main-info-${task.id}`} className="flex-grow flex items-start gap-3">
+              <div id={`tasklist-content-${task.id}`} className="flex flex-col gap-4">
+                <div id={`tasklist-main-info-${task.id}`} className="flex items-start gap-3">
                   {showComplete && (
                     <Checkbox
                       id={`tasklist-checkbox-${task.id}`}
                       checked={task.completed}
                       onCheckedChange={() => handleComplete(task.id.toString(), task.children?.length > 0)}
-                      className="mt-1"
+                      className="mt-1 mobile-touch-target"
                     />
                   )}
                   <div id={`tasklist-details-${task.id}`} className="flex-grow">
-                    <Link id={`tasklist-title-link-${task.id}`} href={`/tasks/edit/${task.id}`} className="hover:underline">
-                      <h3 id={`tasklist-name-${task.id}`} className="font-semibold text-base">
+                    <Link id={`tasklist-title-link-${task.id}`} href={`/tasks/edit/${task.id}`} className="hover:underline mobile-swipe-area block">
+                      <h3 id={`tasklist-name-${task.id}`} className="font-semibold text-base md:text-lg leading-6">
                         {task.name}
                       </h3>
                     </Link>
-                    <p id={`tasklist-category-${task.id}`} className="text-sm text-muted-foreground">
+                    <p id={`tasklist-category-${task.id}`} className="text-sm md:text-base text-muted-foreground mt-1">
                       {task.category?.name}
                       {task.parent && ` | Parent: ${task.parent.name}`}
                     </p>
                     {task.dueDate && (
-                      <p id={`tasklist-due-date-${task.id}`} className="text-sm text-muted-foreground">
+                      <p id={`tasklist-due-date-${task.id}`} className="text-sm md:text-base text-muted-foreground mt-1">
                         Échéance: {format(new Date(task.dueDate), "PPP")}
                       </p>
                     )}
-                    <div id={`tasklist-metrics-${task.id}`} className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
+                    <div id={`tasklist-metrics-${task.id}`} className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm md:text-base text-muted-foreground mt-3">
                       <span id={`tasklist-complexity-${task.id}`}>Complexité: {task.complexity}</span>
                       <span id={`tasklist-priority-${task.id}`}>Priorité: {task.priority}</span>
                       <span id={`tasklist-length-${task.id}`}>Durée: {task.length}</span>
                     </div>
                     {task.notes && (
-                      <p id={`tasklist-notes-${task.id}`} className="text-sm text-muted-foreground mt-2 italic">
+                      <p id={`tasklist-notes-${task.id}`} className="text-sm md:text-base text-muted-foreground mt-3 italic">
                         &quot;{task.notes}&quot;
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div className="flex flex-col items-end justify-between self-stretch min-w-[70px]">
                   <div
                     id={`tasklist-coefficient-${task.id}`}
-                    className="font-bold text-xl"
+                    className="font-bold text-2xl md:text-3xl min-w-[50px] text-center"
                   >
                     {task.coefficient}
                   </div>
-                  <div id={`tasklist-actions-${task.id}`} className="flex gap-1 mt-2">
-                    {showEdit && (
-                      <Button
-                        id={`tasklist-edit-btn-${task.id}`}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => router.push(`/tasks/edit/${task.id.toString()}`)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {showDelete && (
-                      <Button
-                        id={`tasklist-delete-btn-${task.id}`}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleDelete(task.id.toString())}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {showReopen && onReopen && (
-                      <Button
-                        id={`tasklist-reopen-btn-${task.id}`}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onReopen(task.id.toString())}
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                </div>
+
+                {/* Mobile Action Buttons Row */}
+                <div id={`tasklist-actions-${task.id}`} className="flex gap-3 justify-end pt-2 border-t border-border/50">
+                  {showEdit && (
+                    <Button
+                      id={`tasklist-edit-btn-${task.id}`}
+                      variant="ghost"
+                      className="mobile-action-btn flex items-center gap-2 text-sm"
+                      onClick={() => router.push(`/tasks/edit/${task.id.toString()}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="hidden sm:inline">Modifier</span>
+                    </Button>
+                  )}
+                  {showDelete && (
+                    <Button
+                      id={`tasklist-delete-btn-${task.id}`}
+                      variant="ghost"
+                      className="mobile-action-btn flex items-center gap-2 text-sm text-destructive"
+                      onClick={() => handleDelete(task.id.toString())}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Supprimer</span>
+                    </Button>
+                  )}
+                  {showReopen && onReopen && (
+                    <Button
+                      id={`tasklist-reopen-btn-${task.id}`}
+                      variant="ghost"
+                      className="mobile-action-btn flex items-center gap-2 text-sm"
+                      onClick={() => onReopen(task.id.toString())}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      <span className="hidden sm:inline">Rouvrir</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

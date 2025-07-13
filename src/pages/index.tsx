@@ -93,87 +93,99 @@ export default function DashboardPage() {
   const totalTasksInCategoryDistribution = stats.categoryDistribution.reduce((acc, cat) => acc + cat._count.tasks, 0);
 
   return (
-    <div id="dashboard-page" className="container mx-auto p-4 space-y-8">
-      <header id="dashboard-header" className="dashboard-header space-y-2">
-        <h1 className="text-4xl font-bold">Tableau de bord</h1>
-        <p id="welcome-message" className="text-2xl text-muted-foreground">
+    <div id="dashboard-page" className="mobile-container mx-auto mobile-spacing-y pb-20 md:pb-8">
+      <header id="dashboard-header" className="dashboard-header mobile-spacing-y">
+        <h1 className="text-2xl md:text-4xl font-bold">Tableau de bord</h1>
+        <p id="welcome-message" className="text-lg md:text-2xl text-muted-foreground leading-relaxed">
           Bonjour{username ? ` ${username}` : ''}, voici un aperçu de vos tâches.
         </p>
       </header>
 
       <section id="quick-actions" className="quick-actions">
-        <div className="flex gap-4">
-          <Button asChild><Link href="/tasks/add">Nouvelle Tâche</Link></Button>
-          <Button asChild variant="secondary"><Link href="/tasks">Voir les tâches actives</Link></Button>
-          <Button asChild variant="outline"><Link href="/tasks/completed">Voir les tâches terminées</Link></Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button asChild className="mobile-btn-primary">
+            <Link href="/tasks/add">Nouvelle Tâche</Link>
+          </Button>
+          <Button asChild variant="secondary" className="mobile-btn-secondary">
+            <Link href="/tasks">Voir les tâches actives</Link>
+          </Button>
+          <Button asChild variant="outline" className="mobile-btn-secondary">
+            <Link href="/tasks/completed">Voir les tâches terminées</Link>
+          </Button>
         </div>
       </section>
 
-      <section id="metrics-grid" className="metrics-grid grid gap-4 md:grid-cols-3">
-        <Card id="active-tasks-card">
-          <CardHeader>
-            <CardTitle>Tâches Actives</CardTitle>
+      <section id="metrics-grid" className="metrics-grid grid gap-4 mobile-grid-1 md:grid-cols-3">
+        <Card id="active-tasks-card" className="mobile-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Tâches Actives</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{stats.activeTasks}</p>
+          <CardContent className="pt-0">
+            <p className="text-3xl md:text-4xl font-bold">{stats.activeTasks}</p>
           </CardContent>
         </Card>
-        <Card id="overdue-tasks-card">
-          <CardHeader>
-            <CardTitle>Tâches en Retard</CardTitle>
+        <Card id="overdue-tasks-card" className="mobile-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Tâches en Retard</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-destructive">{stats.overdueTasks}</p>
+          <CardContent className="pt-0">
+            <p className="text-3xl md:text-4xl font-bold text-destructive">{stats.overdueTasks}</p>
           </CardContent>
         </Card>
-        <Card id="completed-week-card">
-          <CardHeader>
-            <CardTitle>Terminées cette semaine</CardTitle>
+        <Card id="completed-week-card" className="mobile-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Terminées cette semaine</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-green-600">{stats.completedThisWeek}</p>
+          <CardContent className="pt-0">
+            <p className="text-3xl md:text-4xl font-bold text-green-600">{stats.completedThisWeek}</p>
           </CardContent>
         </Card>
       </section>
 
-      <section id="priority-tasks-section" className="grid gap-8 md:grid-cols-2">
-        <Card id="priority-tasks-card">
-          <CardHeader>
-            <CardTitle>Tâches Prioritaires</CardTitle>
+      <section id="priority-tasks-section" className="grid gap-6 mobile-grid-1 md:grid-cols-2">
+        <Card id="priority-tasks-card" className="mobile-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Tâches Prioritaires</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
+          <CardContent className="pt-0">
+            <ul className="space-y-3">
               {stats.topPriorityTasks.map(task => (
                 <li 
                   key={task.id} 
                   className={cn(
-                    "flex items-center justify-between p-3 rounded-lg",
+                    "mobile-list-item flex items-center justify-between rounded-lg transition-colors",
                     getPriorityTaskStyles(task.coefficient)
                   )}
                 >
-                  <Link href={`/tasks/edit/${task.id}`} className="font-medium hover:underline">
+                  <Link 
+                    href={`/tasks/edit/${task.id}`} 
+                    className="font-medium hover:underline text-base leading-6 flex-1 mobile-swipe-area"
+                  >
                     {task.name}
                   </Link>
-                  <span className="font-bold text-lg">{task.coefficient}</span>
+                  <span className="font-bold text-xl md:text-2xl ml-3">{task.coefficient}</span>
                 </li>
               ))}
             </ul>
           </CardContent>
         </Card>
 
-        <Card id="category-distribution-card">
-          <CardHeader>
-            <CardTitle>Répartition par Catégorie</CardTitle>
+        <Card id="category-distribution-card" className="mobile-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Répartition par Catégorie</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <ul className="space-y-4">
               {stats.categoryDistribution.map(cat => (
                 <li key={cat.id}>
-                  <div className="flex justify-between mb-1">
-                    <span className="font-medium">{cat.name}</span>
-                    <span className="text-muted-foreground">{cat._count.tasks} tâches</span>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium text-base">{cat.name}</span>
+                    <span className="text-muted-foreground text-base">{cat._count.tasks} tâches</span>
                   </div>
-                  <Progress value={(cat._count.tasks / totalTasksInCategoryDistribution) * 100} />
+                  <Progress 
+                    value={(cat._count.tasks / totalTasksInCategoryDistribution) * 100} 
+                    className="h-3"
+                  />
                 </li>
               ))}
             </ul>
