@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/roleAuth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    try {
+  try {
+    if (req.method === 'POST') {
       const { userEmail, type, subject, message } = req.body;
 
       // Validation des données
@@ -54,50 +54,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       });
 
-      res.status(201).json({ 
+      return res.status(201).json({ 
         message: 'Feedback envoyé avec succès',
         id: feedback.id 
       });
 
-    } catch (error) {
-      console.error('Erreur lors de la création du feedback:', error);
-      res.status(500).json({ error: 'Erreur interne du serveur' });
-    }
-  } else if (req.method === 'GET') {
-    try {
+    } else if (req.method === 'GET') {
       // Vérifier que l'utilisateur est admin
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!token) {
-        return res.status(401).json({ error: 'Token manquant' });
-      }
-
-      const decoded = verifyToken(token);
-      if (!decoded || !decoded.userId) {
-        return res.status(401).json({ error: 'Token invalide ou utilisateur non identifié' });
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.userId }
-      });
-
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: 'Accès non autorisé' });
-      }
+      await requireAdmin(req);
 
       // Paramètres de pagination et filtres
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const status = req.query.status as string;
-      const type = req.query.type as string;
-      const skip = (page - 1) * limit;
+      const { page = '1', limit = '10', status, type, search } = req.query;
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const skip = (pageNum - 1) * limitNum;
 
       // Construire les filtres
       const where: any = {};
-      if (status && ['Nouveau', 'Résolu'].includes(status)) {
+      if (status && status !== 'all' && ['Nouveau', 'Résolu'].includes(status as string)) {
         where.status = status;
       }
-      if (type && ['Bug', 'Suggestion', 'Autre'].includes(type)) {
+      if (type && type !== 'all' && ['Bug', 'Suggestion', 'Autre'].includes(type as string)) {
         where.type = type;
+      }
+      if (search) {
+        where.OR = [
+          { userEmail: { contains: search as string, mode: 'insensitive' } },
+          { subject: { contains: search as string, mode: 'insensitive' } },
+          { message: { contains: search as string, mode: 'insensitive' } }
+        ];
       }
 
       // Récupérer les feedback avec pagination
@@ -106,27 +91,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where,
           orderBy: { createdAt: 'desc' },
           skip,
-          take: limit
+          take: limitNum
         }),
         prisma.feedback.count({ where })
       ]);
 
-      res.status(200).json({
+      return res.status(200).json({
         feedbacks,
         pagination: {
-          page,
-          limit,
+          page: pageNum,
+          limit: limitNum,
           total,
-          totalPages: Math.ceil(total / limit)
+          totalPages: Math.ceil(total / limitNum)
         }
       });
 
-    } catch (error) {
-      console.error('Erreur lors de la récupération des feedback:', error);
-      res.status(500).json({ error: 'Erreur interne du serveur' });
+    } else {
+      res.setHeader('Allow', ['GET', 'POST']);
+      return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error: any) {
+    console.error('Feedback API error:', error);
+    
+    if (error.message === 'Token manquant') {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+    if (error.message === 'Utilisateur non trouvé') {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+    if (error.message === 'Permissions insuffisantes') {
+      return res.status(403).json({ message: 'Accès non autorisé' });
+    }
+
+    return res.status(500).json({ message: 'Erreur serveur' });
   }
 }
