@@ -45,7 +45,11 @@ const getCategoryColor = (category: string) => {
   }
 };
 
-export function AnnouncementNotification() {
+interface AnnouncementNotificationProps {
+  iconSize?: string;
+}
+
+export function AnnouncementNotification({ iconSize = "h-6 w-6" }: AnnouncementNotificationProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -144,7 +148,7 @@ export function AnnouncementNotification() {
           size="icon"
           className="relative"
         >
-          <Bell className="h-6 w-6" />
+          <Bell className={iconSize} />
           {unreadCount > 0 && (
             <Badge
               id="unread-count-badge"

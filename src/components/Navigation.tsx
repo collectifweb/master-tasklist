@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Menu, Plus, CheckSquare, LogOut } from 'lucide-react'
+import { Menu, Plus, CheckSquare, LogOut, NotebookPen } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
@@ -102,7 +102,7 @@ export function Navigation() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button id="menu-trigger" variant="ghost" className="mobile-touch-target p-2">
-          <Menu className="h-6 w-6" />
+          <Menu className="h-8 w-8 md:h-6 md:w-6" />
         </Button>
       </SheetTrigger>
       <SheetContent id="menu-sheet" className="w-[300px] sm:w-[400px]">
@@ -169,7 +169,7 @@ export function Navigation() {
           <Logo />
         </Link>
         <div className="flex items-center space-x-2">
-          <AnnouncementNotification />
+          <AnnouncementNotification iconSize="h-8 w-8" />
           <SheetWithTitle />
         </div>
       </nav>
@@ -179,19 +179,19 @@ export function Navigation() {
         <div className="flex justify-center items-center px-4 py-3 space-x-12">
           <Link id="mobile-add-task-link" href="/tasks/add" className="flex flex-col items-center space-y-1">
             <Button id="mobile-add-task-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
-              <Plus className="h-6 w-6" />
+              <Plus className="h-8 w-8" />
             </Button>
             <span className="text-xs text-muted-foreground">Nouvelle</span>
           </Link>
           <Link id="mobile-tasks-link" href="/tasks" className="flex flex-col items-center space-y-1">
             <Button id="mobile-tasks-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
-              <CheckSquare className="h-6 w-6" />
+              <NotebookPen className="h-8 w-8" />
             </Button>
             <span className="text-xs text-muted-foreground">Actives</span>
           </Link>
           <Link id="mobile-completed-tasks-link" href="/tasks/completed" className="flex flex-col items-center space-y-1">
             <Button id="mobile-completed-tasks-btn" variant="ghost" className="mobile-touch-target p-3 rounded-full">
-              <CheckSquare className="h-6 w-6 opacity-60" />
+              <CheckSquare className="h-8 w-8 opacity-60" />
             </Button>
             <span className="text-xs text-muted-foreground">Terminées</span>
           </Link>
