@@ -1,43 +1,65 @@
-# Codev Template
+# Master Tasklist
 
-This is a Codev template project that includes:
+Application web de gestion de tâches permettant de prioriser intelligemment son travail grâce à une combinaison de **complexité**, **priorité** et **durée**. Le calcul du coefficient pondéré met en avant les tâches rapides, simples et urgentes pour aider à prendre des décisions plus rapidement.
 
-1. Next.js with Pages Router
-2. Tailwind CSS Framework
-3. Context for global state management
+## Fonctionnalités clés
 
-## Features
+- Tableau de bord synthétique (tâches actives, en retard, terminées dans la semaine, répartition par catégorie).
+- Formulaire de création/édition riche (catégories, tâches parentes, sliders de priorité/complexité/durée, notes).
+- Authentification JWT avec pages de connexion/inscription.
+- API Next.js (Pages Router) et base de données Postgres via Prisma.
+- Interfaces responsive avec Tailwind CSS et composants Shadcn UI.
 
-- **Next.js Pages Router**: Utilizes the traditional routing system of Next.js for easy navigation and page management.
-- **Tailwind CSS**: A utility-first CSS framework that provides low-level utility classes to build custom designs quickly and efficiently.
-- **Context API**: Implements React's Context API for efficient global state management.
+## Pile technologique
 
-## Getting Started
+- [Next.js](https://nextjs.org/) 14 (Pages Router)
+- [React](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- [Prisma ORM](https://www.prisma.io/) + PostgreSQL
+- Authentification JWT (`jsonwebtoken`, `bcryptjs`)
+- Composants Radix UI, Formik/React Hook Form, date-fns, etc.
 
-1. Clone this repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Run the development server:
-   ```
-   npm run dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+## Prérequis
 
-## Project Structure
+- Node.js 20.x (nvm recommandé)
+- pnpm (Corepack activé) ou npm ≥ 10
+- Accès à une base PostgreSQL (Supabase, Railway, local…)
 
-- `pages/`: Contains all the pages of the application
-- `components/`: Reusable React components
-- `contexts/`: Global state management using Context API
-- `hooks/`: Custom React hooks
-- `styles/`: Global style (global.css)
-- `utils/`: Utility functions and helpers
+## Configuration
 
-## Learn More
+1. Duplique `.env.example` (si présent) ou crée un `.env` à la racine :
 
-To learn more about the technologies used in this template, check out the following resources:
+   ```dotenv
+   DATABASE_URL="postgresql://user:password@host:5432/db?schema=public"
+   DIRECT_URL="postgresql://user:password@host:5432/db?schema=public"
+   JWT_SECRET="change-me"
+   MIGRATION_API_KEY="dev-migration-key"
+   CRON_SECRET="dev-cron-secret"
+   NEXT_PUBLIC_CO_DEV_ENV="http://localhost:3000"
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [React Context API](https://reactjs.org/docs/context.html)
+Ajoute les clés Supabase, Resend ou autres services si tu les utilises. Ne versionne pas ce fichier.
+
+2. Installe les dépendances :
+pnpm install
+# ou npm install
+
+3. Initialise la base :
+pnpm prisma db push
+# ou pnpm prisma migrate deploy si tu utilises des migrations
+
+4.(Optionnel) Charger des données de démonstration :
+curl -X POST http://localhost:3000/api/migrate-data \
+  -H "X-Migration-Key: dev-migration-key"
+
+Lancer l’application en localLancer l’application en local
+pnpm dev
+# puis ouvre http://localhost:3000
+
+Tests et lint :
+pnpm lint
+
+Contribution
+Fork ou clone (git clone https://github.com/collectifweb/master-tasklist.git).
+Crée une branche (git checkout -b feature/ma-fonctionnalite).
+Commits (git commit -m "feat: …").
+Push et ouvre une Pull Request.
