@@ -139,10 +139,10 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
   };
 
   return (
-    <div id="task-form-container" className="task-form-wrapper mobile-container rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-2xl mx-auto p-4 md:p-6 fade-in">
-      <h2 id="task-form-title" className="task-form-title page-title text-xl md:text-2xl font-semibold mb-6">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
-      <form id="task-form" onSubmit={handleSubmit} className="task-form mobile-spacing-y">
-        <div id="task-name-field" className="mobile-form-field">
+    <div id="task-form-container" className="task-form-wrapper mobile-container rounded-[calc(var(--radius))] border-border border bg-card text-card-foreground shadow max-w-3xl mx-auto px-6 py-8 md:px-12 md:py-12 fade-in">
+      <h2 id="task-form-title" className="task-form-title page-title text-xl md:text-2xl font-semibold mb-8 md:mb-10">{taskId ? 'Modifier la tâche' : 'Nouvelle Tâche'}</h2>
+      <form id="task-form" onSubmit={handleSubmit} className="task-form space-y-6 md:space-y-8">
+        <div id="task-name-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label htmlFor="name" className="mobile-form-label">Nom de la tâche</Label>
           <Input
             id="task-name-input"
@@ -153,9 +153,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           />
         </div>
 
-        <div id="task-category-field" className="mobile-form-field">
+        <div id="task-category-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label htmlFor="category" className="mobile-form-label">Catégorie</Label>
-          <div id="category-select-container" className="flex flex-col sm:flex-row gap-2">
+          <div id="category-select-container" className="flex flex-col sm:flex-row gap-3 md:gap-4">
             <Select
               value={formData.categoryId}
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
@@ -183,7 +183,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
             </Button>
           </div>
           {showCategoryInput && (
-            <div id="new-category-input-container" className="flex flex-col sm:flex-row gap-2 mt-3">
+            <div id="new-category-input-container" className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-3">
               <Input
                 id="new-category-input"
                 placeholder="Nouvelle catégorie"
@@ -203,7 +203,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           )}
         </div>
 
-        <div id="task-parent-field" className="mobile-form-field">
+        <div id="task-parent-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label htmlFor="parent" className="mobile-form-label">Tâche parente (Optionnel)</Label>
           <Select
             value={formData.parentId}
@@ -224,9 +224,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </Select>
         </div>
 
-        <div id="task-due-date-field" className="mobile-form-field">
+        <div id="task-due-date-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label className="mobile-form-label">Date d'échéance (Optionnel)</Label>
-          <div id="due-date-container" className="flex flex-col sm:flex-row gap-2">
+          <div id="due-date-container" className="flex flex-col sm:flex-row gap-3 md:gap-4">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -267,9 +267,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div id="task-complexity-field" className="mobile-form-field">
+        <div id="task-complexity-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label className="mobile-form-label">Complexité (1-5)</Label>
-          <div className="px-2">
+          <div className="px-2 md:px-4 pt-1 md:pt-2">
             <Slider
               id="complexity-slider"
               value={[formData.complexity]}
@@ -289,9 +289,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div id="task-priority-field" className="mobile-form-field">
+        <div id="task-priority-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label className="mobile-form-label">Priorité (1-5)</Label>
-          <div className="px-2">
+          <div className="px-2 md:px-4 pt-1 md:pt-2">
             <Slider
               id="priority-slider"
               value={[formData.priority]}
@@ -311,9 +311,9 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div id="task-length-field" className="mobile-form-field">
+        <div id="task-length-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label className="mobile-form-label">Durée (1-5)</Label>
-          <div className="px-2">
+          <div className="px-2 md:px-4 pt-1 md:pt-2">
             <Slider
               id="length-slider"
               value={[formData.length]}
@@ -333,7 +333,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div id="task-notes-field" className="mobile-form-field">
+        <div id="task-notes-field" className="mobile-form-field space-y-3 md:space-y-4">
           <Label htmlFor="notes" className="mobile-form-label">Notes (Optionnel)</Label>
           <Textarea
             id="task-notes-input"
@@ -344,7 +344,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           />
         </div>
 
-        <div id="task-coefficient-display" className="bg-muted p-4 md:p-6 rounded-lg mb-4">
+        <div id="task-coefficient-display" className="bg-muted p-5 md:p-8 rounded-lg">
           <Label className="mobile-form-label mb-3 block">Coefficient Prévisionnel</Label>
           <div 
             id="coefficient-value" 
@@ -357,7 +357,7 @@ export function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           </div>
         </div>
 
-        <div id="task-form-actions" className="flex flex-col gap-3 pt-4">
+        <div id="task-form-actions" className="flex flex-col gap-4 md:gap-5 pt-6">
           <Button id="submit-task-btn" type="submit" className="mobile-btn-primary w-full">
             {taskId ? 'Mettre à jour' : 'Ajouter'} la tâche
           </Button>

@@ -93,8 +93,8 @@ export default function DashboardPage() {
   const totalTasksInCategoryDistribution = stats.categoryDistribution.reduce((acc, cat) => acc + cat._count.tasks, 0);
 
   return (
-    <div id="dashboard-page" className="mobile-container mx-auto mobile-spacing-y pb-20 md:pb-8">
-      <header id="dashboard-header" className="dashboard-header mobile-spacing-y">
+    <div id="dashboard-page" className="mobile-container mx-auto max-w-6xl space-y-8 md:space-y-12 pb-20 md:pb-12">
+      <header id="dashboard-header" className="dashboard-header space-y-3 md:space-y-4">
         <h1 className="text-2xl md:text-4xl font-bold">Tableau de bord</h1>
         <p id="welcome-message" className="text-lg md:text-2xl text-muted-foreground leading-relaxed">
           Bonjour{username ? ` ${username}` : ''}, voici un aperçu de vos tâches.
@@ -102,7 +102,7 @@ export default function DashboardPage() {
       </header>
 
       <section id="quick-actions" className="quick-actions">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 md:gap-5">
           <Button asChild className="mobile-btn-primary">
             <Link href="/tasks/add">Nouvelle Tâche</Link>
           </Button>
@@ -115,45 +115,45 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section id="metrics-grid" className="metrics-grid grid gap-4 mobile-grid-1 md:grid-cols-3">
+      <section id="metrics-grid" className="metrics-grid grid gap-6 md:gap-8 mobile-grid-1 md:grid-cols-3">
         <Card id="active-tasks-card" className="mobile-card">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base md:text-lg">Tâches Actives</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-2 md:pt-4">
             <p className="text-3xl md:text-4xl font-bold">{stats.activeTasks}</p>
           </CardContent>
         </Card>
         <Card id="overdue-tasks-card" className="mobile-card">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base md:text-lg">Tâches en Retard</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-2 md:pt-4">
             <p className="text-3xl md:text-4xl font-bold text-destructive">{stats.overdueTasks}</p>
           </CardContent>
         </Card>
         <Card id="completed-week-card" className="mobile-card">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base md:text-lg">Terminées cette semaine</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-2 md:pt-4">
             <p className="text-3xl md:text-4xl font-bold text-green-600">{stats.completedThisWeek}</p>
           </CardContent>
         </Card>
       </section>
 
-      <section id="priority-tasks-section" className="grid gap-6 mobile-grid-1 md:grid-cols-2">
+      <section id="priority-tasks-section" className="grid gap-7 md:gap-8 mobile-grid-1 md:grid-cols-2">
         <Card id="priority-tasks-card" className="mobile-card">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base md:text-lg">Tâches Prioritaires</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ul className="space-y-3">
+          <CardContent className="pt-2 md:pt-4">
+            <ul className="space-y-4 md:space-y-5">
               {stats.topPriorityTasks.map(task => (
                 <li 
                   key={task.id} 
                   className={cn(
-                    "mobile-list-item flex items-center justify-between rounded-lg transition-colors",
+                    "mobile-list-item flex items-center justify-between rounded-lg px-4 py-3 md:px-6 md:py-4 transition-colors",
                     getPriorityTaskStyles(task.coefficient)
                   )}
                 >
@@ -171,14 +171,14 @@ export default function DashboardPage() {
         </Card>
 
         <Card id="category-distribution-card" className="mobile-card">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-base md:text-lg">Répartition par Catégorie</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <ul className="space-y-4">
+          <CardContent className="pt-2 md:pt-4">
+            <ul className="space-y-5">
               {stats.categoryDistribution.map(cat => (
-                <li key={cat.id}>
-                  <div className="flex justify-between mb-2">
+                <li key={cat.id} className="space-y-3 md:space-y-4">
+                  <div className="flex justify-between">
                     <span className="font-medium text-base">{cat.name}</span>
                     <span className="text-muted-foreground text-base">{cat._count.tasks} tâches</span>
                   </div>
