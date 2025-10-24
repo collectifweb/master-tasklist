@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/roleAuth';
+import { sendFeedbackNotificationEmail } from '@/lib/emailit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -52,6 +53,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           message: message.trim(),
           status: 'Nouveau'
         }
+      });
+
+      const notificationRecipient =
+        process.env.FEEDBACK_NOTIFICATION_EMAIL || 'info@le-caribou.ca';
+      const fromAddress =
+        process.env.EMAILIT_FROM || 'Master Tasklist <no-reply@le-caribou.ca>';
+
+      const emailSubject = subject
+        ? `[Feedback] ${subject}`
+        : `[Feedback] ${type} reçu`;
+
+      const emailBody = `
+        <h1>Nouveau feedback reçu</h1>
+        <p><strong>Type :</strong> ${type}</p>
+        ${subject ? `<p><strong>Sujet :</strong> ${subject}</p>` : ''}
+        <p><strong>Email expéditeur :</strong> ${userEmail}</p>
+        <p><strong>Message :</strong></p>
+        <pre style="background:#f4f4f4;padding:12px;border-radius:6px;font-family:monospace;white-space:pre-wrap;">${message.trim()}</pre>
+        <p style="margin-top:24px;font-size:12px;color:#6b7280;">Cet email a été généré automatiquement par Master Tasklist.</p>
+      `;
+
+      await sendFeedbackNotificationEmail({
+        from: fromAddress,
+        to: notificationRecipient,
+        subject: emailSubject,
+        html: emailBody,
+        replyTo: userEmail,
       });
 
       return res.status(201).json({ 

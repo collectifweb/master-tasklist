@@ -9,6 +9,7 @@ Application web de gestion de tâches permettant de prioriser intelligemment son
 - Authentification JWT avec pages de connexion/inscription.
 - API Next.js (Pages Router) et base de données Postgres via Prisma.
 - Interfaces responsive avec Tailwind CSS et composants Shadcn UI.
+- Notifications email lors de la réception d’un feedback utilisateur (via EmailIt).
 
 ## Pile technologique
 
@@ -17,7 +18,7 @@ Application web de gestion de tâches permettant de prioriser intelligemment son
 - [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
 - [Prisma ORM](https://www.prisma.io/) + PostgreSQL
 - Authentification JWT (`jsonwebtoken`, `bcryptjs`)
-- Composants Radix UI, Formik/React Hook Form, date-fns, etc.
+- Composants Radix UI, React Hook Form, date-fns, etc.
 
 ## Prérequis
 
@@ -36,30 +37,73 @@ Application web de gestion de tâches permettant de prioriser intelligemment son
    MIGRATION_API_KEY="dev-migration-key"
    CRON_SECRET="dev-cron-secret"
    NEXT_PUBLIC_CO_DEV_ENV="http://localhost:3000"
+   EMAILIT_API_KEY="sk_live_xxx"              # clé API EmailIt
+   EMAILIT_FROM="Master Tasklist <no-reply@le-caribou.ca>"
+   FEEDBACK_NOTIFICATION_EMAIL="info@le-caribou.ca"
+   ```
 
-Ajoute les clés Supabase, Resend ou autres services si tu les utilises. Ne versionne pas ce fichier.
+   Ajoute les éventuelles clés Supabase, Resend ou services tiers utilisés. **Ne versionne jamais ce fichier.**
 
 2. Installe les dépendances :
-pnpm install
-# ou npm install
+
+   ```bash
+   pnpm install
+   # ou npm install
+   ```
 
 3. Initialise la base :
-pnpm prisma db push
-# ou pnpm prisma migrate deploy si tu utilises des migrations
 
-4.(Optionnel) Charger des données de démonstration :
-curl -X POST http://localhost:3000/api/migrate-data \
-  -H "X-Migration-Key: dev-migration-key"
+   ```bash
+   pnpm prisma db push
+   # ou pnpm prisma migrate deploy si tu utilises des migrations
+   ```
 
-Lancer l’application en localLancer l’application en local
+4. (Optionnel) Charger des données de démonstration :
+
+   ```bash
+   curl -X POST http://localhost:3000/api/migrate-data \
+     -H "X-Migration-Key: dev-migration-key"
+   ```
+
+## Lancer l’application en local
+
+```bash
 pnpm dev
 # puis ouvre http://localhost:3000
+```
 
 Tests et lint :
-pnpm lint
 
-Contribution
-Fork ou clone (git clone https://github.com/collectifweb/master-tasklist.git).
-Crée une branche (git checkout -b feature/ma-fonctionnalite).
-Commits (git commit -m "feat: …").
-Push et ouvre une Pull Request.
+```bash
+pnpm lint
+```
+
+## Déploiement (Railway ou autre)
+
+1. Publie ton code sur GitHub (`main`).
+2. Sur Railway :
+   - Crée un projet “Next.js”.
+   - Connecte le repo GitHub.
+   - Configure les variables d’environnement (mêmes valeurs que ton `.env`).
+   - Fournis une base PostgreSQL Railway ou garde Supabase via `DATABASE_URL`.
+   - Commandes par défaut : build `pnpm install && pnpm build`, start `pnpm start`.
+3. Pour cPanel/serveur Node : installe Node 20, clone le repo, mets à jour `.env`, exécute `pnpm install`, `pnpm build`, puis `pnpm start` derrière un process manager (PM2/Passenger) avec proxy.
+
+## Notifications email
+
+Les feedbacks envoyés via `/api/feedback` génèrent un email HTML adressé à `FEEDBACK_NOTIFICATION_EMAIL` via l’API [EmailIt](https://docs.emailit.com/). Assure-toi :
+
+- d’avoir un domaine d’envoi validé chez EmailIt,
+- de définir `EMAILIT_API_KEY` et `EMAILIT_FROM`,
+- d’adapter le destinataire si besoin.
+
+En cas d’erreur côté EmailIt, l’envoi est simplement journalisé dans les logs serveur.
+
+## Contribution
+
+1. Fork ou clone (`git clone https://github.com/collectifweb/master-tasklist.git`).
+2. Crée une branche (`git checkout -b feature/ma-fonctionnalite`).
+3. Commits (`git commit -m "feat: …"`).
+4. Push et ouvre une Pull Request.
+
+Pense à ajouter une licence si tu souhaites préciser les conditions d’utilisation du projet.
