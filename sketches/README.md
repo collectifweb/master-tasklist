@@ -1,9 +1,10 @@
 # Laboratoire de direction — Quêtes du foyer
 
-Quatre prototypes interactifs explorent des systèmes de motivation réellement différents tout en conservant le même cœur fonctionnel: tâches réelles, score explicable, tris Priorité / Longueur / Difficulté, ajout, édition et accomplissement.
+Cinq prototypes interactifs conservent le même cœur fonctionnel: tâches réelles, score explicable, tris Priorité / Longueur / Difficulté, ajout, édition et accomplissement. Le cinquième réunit les apprentissages validés par Alex.
 
 | Direction | Promesse émotionnelle | Boucle dominante | Signature | Risque principal |
 |---|---|---|---|---|
+| Colonie Orée | Développer et défendre un monde vivant grâce aux actions réelles | Ferme agro-tech, ressources, événements, Bastion narratif | Impulsion vectorielle vers le monde | Économie ou gestion trop envahissante |
 | Le Conseil du Foyer | Donner du sens et construire une histoire | Quêtes, Renom, chapitres, domaine | Sceau d’accomplissement | Trop de vocabulaire ou de systèmes RPG |
 | Le Potager des Quêtes | Avancer calmement et voir pousser le résultat | Cultures, parcelles, saisons, récoltes | Mise en terre | Univers trop doux ou perçu comme enfantin |
 | Vecteur | Ressentir de l’élan et enchaîner rapidement | Missions, score d’élan, secteurs, niveaux | Balayage vectoriel | Surcharge visuelle ou biais vers les microtâches |
@@ -20,9 +21,9 @@ Pour chaque prototype:
 5. Visiter la vue de progression secondaire.
 6. Vérifier lequel donne réellement envie de revenir demain.
 
-## Recommandation de départ
+## Direction actuellement retenue
 
-Le meilleur produit final pourrait emprunter la structure adulte et durable du Conseil du Foyer, la bienveillance du Potager, l’efficacité instantanée de Vecteur et la tension ponctuelle des expéditions du Bastion. Le choix demandé ici porte surtout sur le monde qui doit dominer; les meilleures mécaniques secondaires pourront ensuite être intégrées sans produire un collage visuel.
+Colonie Orée reprend la direction visuelle de Vecteur, la boucle de gestion du Potager et la défense mystérieuse du Bastion. Elle sert maintenant de tranche verticale pour valider le vrai jeu avant la construction de production.
 
 ## Ouverture
 

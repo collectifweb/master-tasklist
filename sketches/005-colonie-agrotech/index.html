@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111817">
+  <meta name="description" content="Tranche verticale locale de Colonie Orée, gestion de quêtes et colonie agro-tech.">
+  <title>Colonie Orée — Quêtes du foyer</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true" width="0" height="0">
+    <symbol id="i-today" viewBox="0 0 24 24"><path d="M4 5.5h16v14H4zM8 3v5m8-5v5M4 9.5h16M8 13h3v3H8z"/></symbol>
+    <symbol id="i-quests" viewBox="0 0 24 24"><path d="m4 7 2.2 2.2L10 5.4M12.5 7H20M4 15l2.2 2.2 3.8-3.8m2.5 1.6H20"/></symbol>
+    <symbol id="i-farm" viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6M3 11l9-7 9 7"/><path d="M7 10h2m6 0h2"/></symbol>
+    <symbol id="i-bastion" viewBox="0 0 24 24"><path d="M4 21V9h4V5h3v4h2V5h3v4h4v12M8 9v12m8-12v12M3 21h18M10 21v-5a2 2 0 0 1 4 0v5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.2-10.2-3.3-3.3L5 15.7 4 20ZM13.8 6.8l3.4 3.4"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m13.5 2-8 12h6.2l-.9 8 8-12h-6.2l.9-8Z"/></symbol>
+    <symbol id="i-material" viewBox="0 0 24 24"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></symbol>
+    <symbol id="i-reputation" viewBox="0 0 24 24"><path d="M12 3 15 9l6 .9-4.5 4.4 1.1 6.2L12 17.6l-5.6 2.9 1.1-6.2L3 9.9 9 9l3-6Z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1h11l-2 3 2 3H5"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M5 18a8 8 0 1 1 14 0M12 12l4-3M8 18h8"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M5.2 7.5A8 8 0 1 1 4 14M5 3v5h5"/></symbol>
+    <symbol id="i-seed" viewBox="0 0 24 24"><path d="M12 21v-9M12 15c-4 0-7-2-7-6 4 0 7 2 7 6Zm0-3c0-4 2.5-7 7-7 0 4-2.5 7-7 7Z"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4.5 4.5 0 0 0-6 6L3 18l3 3 5.5-5.5a4.5 4.5 0 0 0 6-6l-3 3-3-3 3-3Z"/></symbol>
+    <symbol id="i-build" viewBox="0 0 24 24"><path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-6h6v6"/><path d="M4 9h16"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5.2-3.4 9-8 11-4.6-2-8-5.8-8-11V5l8-3Z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v18H7.5A3.5 3.5 0 0 0 4 23V5.5ZM20 5.5A3.5 3.5 0 0 0 16.5 2H13v18h3.5A3.5 3.5 0 0 1 20 23V5.5Z"/></symbol>
+    <symbol id="i-larva" viewBox="0 0 24 24"><path d="M8 18c-2.8 0-5-2-5-4.5S5.2 9 8 9h8c2.8 0 5 2 5 4.5S18.8 18 16 18H8Z"/><path d="M8 9c-1.5-2-1-4 1-5m7 5c1.5-2 1-4-1-5M8 12h.01M12 12h.01M16 12h.01M9 18v3m6-3v3"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#today" data-nav="today" aria-label="Colonie Orée, aller à Aujourd’hui">
+        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <path d="M4 33 14 9l7 17 6-11 13 18M4 37h36"/>
+          <path class="brand-seed" d="M22 27v-8m0 3c-3.5 0-5.5-1.7-5.5-4.7 3.5 0 5.5 1.7 5.5 4.7Zm0-3c0-3 2-5 5.5-5 0 3-2 5-5.5 5Z"/>
+        </svg>
+        <span><strong>Colonie Orée</strong><small id="day-label">Jour 1 · cycle 01</small></span>
+      </a>
+
+      <div class="resource-bar" aria-label="Ressources de la colonie">
+        <div class="resource energy" data-resource="energy"><svg><use href="#i-bolt"/></svg><span><b id="resource-energy">16</b><small>Énergie</small></span></div>
+        <div class="resource materials" data-resource="materials"><svg><use href="#i-material"/></svg><span><b id="resource-materials">12</b><small>Matériaux</small></span></div>
+        <div class="resource reputation" data-resource="reputation"><svg><use href="#i-reputation"/></svg><span><b id="resource-reputation">0</b><small>Réputation</small></span></div>
+      </div>
+    </header>
+
+    <nav class="primary-nav" aria-label="Navigation principale">
+      <button type="button" class="nav-item is-active" data-view-target="today" aria-current="page">
+        <svg><use href="#i-today"/></svg><span>Aujourd’hui</span>
+      </button>
+      <button type="button" class="nav-item" data-view-target="quests">
+        <svg><use href="#i-quests"/></svg><span>Quêtes</span>
+      </button>
+      <button type="button" class="nav-item" data-view-target="colony">
+        <svg><use href="#i-farm"/></svg><span>Colonie</span>
+      </button>
+      <button type="button" class="nav-item" data-view-target="bastion">
+        <svg><use href="#i-bastion"/></svg><span>Bastion</span>
+      </button>
+    </nav>
+
+    <main id="main-content">
+      <section class="view is-active" id="view-today" data-view="today" aria-labelledby="today-title">
+        <div class="view-intro">
+          <div>
+            <h1 id="today-title">Garder l’Orée en mouvement</h1>
+            <p id="today-summary">Une action réelle alimente la prochaine décision de la colonie.</p>
+          </div>
+          <button class="button button-secondary add-task-button" type="button">
+            <svg><use href="#i-plus"/></svg><span>Ajouter une quête</span>
+          </button>
+        </div>
+
+        <section class="event-panel" id="event-panel" aria-labelledby="event-title" hidden>
+          <div class="event-illustration" aria-hidden="true">
+            <svg viewBox="0 0 190 120"><path class="event-ground" d="M4 102c35-16 62-7 91-16 31-9 50-2 91 16"/><path class="event-leaf" d="M50 83c5-29 22-46 50-52-1 29-17 49-50 52Zm42 4c18-23 40-28 67-18-17 25-41 31-67 18Z"/><g class="larvae"><path d="M56 75c-14 0-21-8-21-16s7-15 21-15h27c14 0 21 7 21 15s-7 16-21 16H56Z"/><path d="M45 44c-5-9-2-17 7-22m43 22c5-9 2-17-7-22"/><circle cx="56" cy="56" r="2"/><circle cx="70" cy="56" r="2"/><circle cx="84" cy="56" r="2"/></g></svg>
+          </div>
+          <div class="event-copy">
+            <h2 id="event-title">Larves cendrées</h2>
+            <div class="status-line threat"><svg><use href="#i-larva"/></svg>Décision requise</div>
+            <p>Le vent a déposé une ponte sur les cultures. Les tâches restent intactes; seule la ferme de démonstration est en jeu.</p>
+          </div>
+          <div class="event-options" id="event-options"></div>
+        </section>
+
+        <div class="today-layout master-detail">
+          <div class="master-pane">
+            <div class="section-heading">
+              <div><h2>Prochaine action</h2><p>Classée par recommandation, pas par récompense.</p></div>
+              <button class="text-button" id="score-help" type="button" aria-expanded="false" aria-controls="score-explanation"><svg><use href="#i-info"/></svg>Calcul</button>
+            </div>
+            <div id="score-explanation" class="score-explanation" hidden>
+              <strong>Score = priorité 55 % + brièveté 25 % + facilité 20 %.</strong>
+              <span>Les gains dépendent uniquement de la longueur et de la difficulté.</span>
+            </div>
+            <article class="prime-task" id="prime-task"></article>
+
+            <div class="section-heading compact-heading">
+              <div><h2>À portée</h2><p id="quick-count">Autres quêtes ouvertes</p></div>
+            </div>
+            <div class="task-list compact" id="quick-task-list"></div>
+          </div>
+
+          <aside class="detail-pane today-detail" aria-label="État de la colonie">
+            <div class="panorama-shell mini-panorama">
+              <div class="panorama-heading">
+                <div><h2>Ferme de l’Orée</h2><p id="weather-line">Vent clair · production stable</p></div>
+                <button type="button" class="icon-button" data-go-colony aria-label="Ouvrir la colonie"><svg><use href="#i-arrow"/></svg></button>
+              </div>
+              <div class="farm-panorama" data-panorama aria-label="Panorama animé de la ferme agro-tech">
+                <svg viewBox="0 0 720 330" role="img" aria-labelledby="farm-title farm-desc">
+                  <title id="farm-title">Ferme agro-tech de la Colonie Orée</title>
+                  <desc id="farm-desc">Champs en terrasses, modules agricoles, éolienne et Bastion sous un ciel parcouru de cendres.</desc>
+                  <defs>
+                    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#18343a"/><stop offset="1" stop-color="#234c49"/></linearGradient>
+                    <linearGradient id="soil" x1="0" x2="1"><stop stop-color="#273b32"/><stop offset="1" stop-color="#172821"/></linearGradient>
+                    <linearGradient id="glass" x1="0" x2="1"><stop stop-color="#57e3e4" stop-opacity=".2"/><stop offset="1" stop-color="#d8ff45" stop-opacity=".08"/></linearGradient>
+                  </defs>
+                  <rect width="720" height="330" fill="url(#sky)"/>
+                  <circle class="sun" cx="586" cy="74" r="33"/>
+                  <g class="ash-stream"><path d="M-40 65C105 15 198 86 341 46S566 40 770 5"/><path d="M-60 111c173-51 267 13 407-19s257-12 433-59"/></g>
+                  <path class="horizon" d="M0 178 92 124l60 28 89-82 78 72 74-45 89 59 73-50 165 78v146H0Z"/>
+                  <path class="field" d="M0 224c119-52 232-59 345-27 114 32 220 23 375-21v154H0Z"/>
+                  <g class="terraces"><path d="M0 253c146-48 253-43 365-9 115 35 222 15 355-22"/><path d="M0 284c142-39 258-32 371 2 102 30 218 17 349-15"/><path d="M26 317c116-24 236-15 348 10"/></g>
+                  <g class="greenhouse" transform="translate(80 174)"><path d="M0 71h154L128 8H28L0 71Z" fill="url(#glass)"/><path d="M0 71 28 8h100l26 63M28 8l49 63 51-63M18 48h126"/></g>
+                  <g class="hub" transform="translate(315 157)"><path d="M0 88V27L54 0l58 27v61Z"/><path d="M23 88V52h33v36M72 37h21v20H72Z"/><path class="hub-light" d="M15 31h8v8h-8zM86 68h8v8h-8z"/></g>
+                  <g class="windmill" transform="translate(525 128)"><path d="M48 130 56 52h12l10 78M61 54v-7"/><g class="rotor"><circle cx="61" cy="45" r="6"/><path d="m61 45 3-42 8 34-11 8Zm0 0 40 13-35-4-5-9Zm0 0-30 31 23-30 7-1Zm0 0L37 10l28 28-4 7Z"/></g></g>
+                  <g class="bastion-silhouette" transform="translate(628 118)"><path d="M3 100V34h17V17h13v17h12V9h15v25h18v66M0 100h82M25 100V70h31v30"/></g>
+                  <g class="crop-lines"><path d="M176 256c13-20 27-21 40-2m-28 13c13-20 27-21 40-2m-11 15c13-20 27-21 40-2M69 287c12-18 24-19 36-2m-18 15c12-18 24-19 36-2"/></g>
+                  <path class="scan-line" d="M0 205h720"/>
+                </svg>
+                <div class="panorama-status"><span><i class="status-dot"></i>Réseau agricole en ligne</span><span id="panorama-output">1 culture en croissance</span></div>
+              </div>
+            </div>
+
+            <div class="day-controls">
+              <div><strong id="cycle-label">Cycle 01</strong><span>La simulation est locale et déterministe.</span></div>
+              <button class="button button-primary" id="advance-day" type="button"><svg><use href="#i-arrow"/></svg>Avancer d’un jour</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-quests" data-view="quests" aria-labelledby="quests-title" hidden>
+        <div class="view-intro">
+          <div><h1 id="quests-title">Registre des quêtes</h1><p>Une copie locale des tâches réelles, modifiable sans toucher aux données source.</p></div>
+          <button class="button button-primary add-task-button" type="button"><svg><use href="#i-plus"/></svg>Ajouter</button>
+        </div>
+
+        <div class="quests-layout master-detail">
+          <div class="master-pane">
+            <div class="quest-toolbar">
+              <label class="search-field"><span>Rechercher</span><input id="task-search" type="search" placeholder="Inventaire, ferme, réparation…"></label>
+              <label><span>Trier</span><select id="task-sort">
+                <option value="score">Recommandation</option>
+                <option value="priority">Priorité</option>
+                <option value="length">Longueur</option>
+                <option value="difficulty">Difficulté</option>
+              </select></label>
+              <label><span>État</span><select id="task-status-filter"><option value="todo">Ouvertes</option><option value="done">Terminées</option><option value="all">Toutes</option></select></label>
+            </div>
+            <div class="task-list" id="all-task-list"></div>
+          </div>
+          <aside class="detail-pane task-detail-pane" id="task-detail-pane" aria-live="polite"></aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-colony" data-view="colony" aria-labelledby="colony-title" hidden>
+        <div class="view-intro">
+          <div><h1 id="colony-title">Ferme de l’Orée</h1><p>Planter, attendre, récolter. Les décisions coûtent de vraies ressources de jeu.</p></div>
+          <button class="button button-secondary" id="colony-advance-day" type="button"><svg><use href="#i-arrow"/></svg>Avancer d’un jour</button>
+        </div>
+
+        <div class="colony-layout master-detail">
+          <div class="master-pane">
+            <div class="panorama-shell large-panorama" id="colony-panorama-mount"></div>
+            <div class="section-heading"><div><h2>Trois parcelles</h2><p>Une culture mûrit après deux jours simulés.</p></div></div>
+            <div class="plot-grid" id="plot-grid"></div>
+          </div>
+          <aside class="detail-pane colony-detail">
+            <section class="system-panel">
+              <div class="panel-head"><div><h2>Infrastructures</h2><p>Construire avec l’effort converti en ressources.</p></div><svg><use href="#i-build"/></svg></div>
+              <div class="build-list" id="build-list"></div>
+            </section>
+            <section class="system-panel simulation-tools">
+              <div class="panel-head"><div><h2>Simulation</h2><p>Le rechargement conserve le sandbox local.</p></div><svg><use href="#i-reset"/></svg></div>
+              <button class="button button-danger" id="reset-sandbox" type="button"><svg><use href="#i-reset"/></svg>Réinitialiser le sandbox</button>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-bastion" data-view="bastion" aria-labelledby="bastion-title" hidden>
+        <div class="view-intro">
+          <div><h1 id="bastion-title">Bastion des lisières</h1><p>Trois secteurs défendent la ferme et dissimulent une archive plus ancienne que la colonie.</p></div>
+          <div class="integrity-badge" id="integrity-badge"><svg><use href="#i-shield"/></svg><span><b id="integrity-value">72</b><small>Intégrité / 100</small></span></div>
+        </div>
+
+        <div class="bastion-layout master-detail">
+          <div class="master-pane">
+            <div class="bastion-map" role="img" aria-label="Carte topographique des trois secteurs du Bastion">
+              <svg viewBox="0 0 720 540" aria-hidden="true">
+                <defs><pattern id="topo" width="86" height="56" patternUnits="userSpaceOnUse"><path d="M-10 38C14 8 53 9 92 36M-18 49c28-35 73-37 116-5"/></pattern></defs>
+                <rect width="720" height="540" fill="url(#topo)"/>
+                <path class="ridge" d="M45 421c79-64 94-195 210-221 90-20 101 64 189 39 78-22 116-119 230-109"/>
+                <path class="wall-line" d="m117 404 85-151 103 35 88-114 113 48 102 149-93 82-153-24-115 49Z"/>
+                <path class="inner-wall" d="m202 253 45 225m58-190 57 141m31-255 122 279M117 404l491-33"/>
+              </svg>
+              <button class="sector-node is-selected" type="button" data-sector="gate" style="--x:25%;--y:71%"><span>Porte agricole</span><small>Opérationnelle</small></button>
+              <button class="sector-node" type="button" data-sector="tower" style="--x:55%;--y:38%"><span>Tour météo</span><small>Instable</small></button>
+              <button class="sector-node is-locked" type="button" data-sector="archives" style="--x:78%;--y:68%"><span>Archives enfouies</span><small>Scellées</small></button>
+              <div class="map-caption"><span>Relief vectoriel · relevé local</span><span id="bastion-map-status">Secteur 1 / 3</span></div>
+            </div>
+          </div>
+          <aside class="detail-pane bastion-detail">
+            <section class="sector-detail" id="sector-detail"></section>
+            <section class="narrative-fragment">
+              <div class="status-line"><svg><use href="#i-book"/></svg>Fragment · Le premier sillon</div>
+              <blockquote>« Sous la troisième assise, ils n’ont pas trouvé des fondations, mais des racines minérales orientées vers le nord. Quelqu’un cultivait déjà la cendre avant nous. »</blockquote>
+              <p>La suite s’ouvre lorsque la Réputation atteint 3 et que la Tour météo est stabilisée.</p>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="task-dialog" aria-labelledby="task-dialog-title">
+    <form id="task-form" novalidate>
+      <div class="dialog-head"><div><h2 id="task-dialog-title">Nouvelle quête</h2><p>Modification locale au prototype.</p></div><button type="button" class="icon-button close-dialog" aria-label="Fermer"><svg><use href="#i-x"/></svg></button></div>
+      <div class="dialog-body">
+        <label class="field-wide"><span>Intitulé</span><textarea id="form-task" rows="3" required placeholder="Décrire une action concrète"></textarea><small class="field-error" id="form-task-error"></small></label>
+        <div class="form-grid">
+          <label><span>Domaine</span><select id="form-domain"><option>Maison</option><option>Administratif</option><option>Professionnel</option><option>Ferme</option><option>Jardin</option><option>Terrain</option><option>Véhicule</option></select></label>
+          <label><span>État</span><select id="form-status"><option value="todo">Ouverte</option><option value="done">Terminée</option></select></label>
+          <label><span>Priorité <output id="form-priority-output">5</output>/10</span><input id="form-priority" type="range" min="1" max="10" value="5"></label>
+          <label><span>Longueur <output id="form-length-output">3</output>/10</span><input id="form-length" type="range" min="1" max="10" value="3"></label>
+          <label class="field-wide"><span>Difficulté <output id="form-difficulty-output">3</output>/10</span><input id="form-difficulty" type="range" min="1" max="10" value="3"></label>
+        </div>
+      </div>
+      <div class="dialog-actions"><button class="button button-secondary close-dialog" type="button">Annuler</button><button class="button button-primary" type="submit" id="save-task">Ajouter la quête</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-dialog-title">
+    <form method="dialog">
+      <div class="dialog-head"><div><h2 id="reset-dialog-title">Réinitialiser le sandbox ?</h2><p>Les tâches sources ne seront pas touchées.</p></div><button type="submit" value="cancel" class="icon-button" aria-label="Fermer"><svg><use href="#i-x"/></svg></button></div>
+      <div class="dialog-body"><p>Cette action restaure les ressources, les parcelles, le Bastion et la copie locale des quêtes.</p></div>
+      <div class="dialog-actions"><button class="button button-secondary" type="submit" value="cancel">Conserver</button><button class="button button-danger" id="confirm-reset" type="submit" value="default">Réinitialiser</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"><svg><use href="#i-check"/></svg><div><strong id="toast-title"></strong><span id="toast-message"></span></div></div>
+  <div class="reward-flight" id="reward-flight" aria-hidden="true"></div>
+  <div class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
