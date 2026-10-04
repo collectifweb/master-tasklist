@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Laboratoire de direction — Quêtes du foyer</title>
+<style>
+:root{--paper:#e8eeeb;--ink:#171918;--muted:#55605a;--line:#b9c2bd;--surface:#f7faf8;--signal:#2d5b49;--focus:#9d4f22;--shadow:0 16px 30px rgba(30,34,31,.15)}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,a{font:inherit}
+button{color:inherit}
+::selection{background:#d7c6a0;color:#171918}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.shell{min-height:100dvh;display:grid;grid-template-rows:auto 1fr}
+header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px clamp(18px,3vw,42px);border-bottom:1px solid var(--line);background:rgba(242,240,234,.96);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.mark{width:28px;height:36px;display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.05rem,2.2vw,1.55rem);font-weight:600;letter-spacing:-.025em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-note{color:var(--muted);font-size:.82rem;text-align:right;max-width:31ch}
+.workspace{display:grid;grid-template-columns:minmax(270px,340px) minmax(0,1fr);min-height:0}
+.rail{border-right:1px solid var(--line);padding:22px;overflow:auto;background:#eceae3}
+.intro{margin:0 0 20px;color:var(--muted);max-width:33ch}
+.intro strong{color:var(--ink)}
+.directions{display:grid;gap:10px}
+.direction{width:100%;text-align:left;border:1px solid transparent;background:transparent;padding:14px 14px 15px;cursor:pointer;min-height:92px;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.direction:hover{background:rgba(255,255,255,.46);border-color:var(--line)}
+.direction[aria-selected="true"]{background:var(--surface);border-color:var(--ink);box-shadow:0 5px 18px rgba(30,34,31,.08)}
+.direction:active{transform:translateY(1px)}
+.direction-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.direction-name{font-weight:760;letter-spacing:-.01em}
+.direction-code{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.76rem}
+.direction p{margin:7px 0 0;color:var(--muted);font-size:.86rem}
+.legend{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.legend h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;margin:0 0 11px}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 10px;font-size:.8rem;color:var(--muted)}
+.legend dt{font-weight:700;color:var(--ink)}
+.stage{min-width:0;padding:clamp(14px,2.2vw,30px);display:grid;grid-template-rows:auto minmax(520px,1fr);gap:14px}
+.stage-bar{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+.stage-copy{min-width:0}
+.stage-title{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.35rem,2.3vw,2rem);letter-spacing:-.035em;margin:0}
+.stage-description{margin:5px 0 0;color:var(--muted);max-width:72ch;font-size:.9rem}
+.actions{display:flex;align-items:center;gap:8px;flex:none}
+.actions button,.actions a{min-height:44px;border:1px solid var(--ink);background:var(--surface);padding:9px 13px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.actions button:hover,.actions a:hover{background:var(--ink);color:var(--surface)}
+.actions svg{width:17px;height:17px}
+.viewport-toggle{display:inline-flex;border:1px solid var(--line);background:var(--surface)}
+.viewport-toggle button{border:0;border-right:1px solid var(--line);background:transparent;min-width:44px;min-height:44px;display:grid;place-items:center;cursor:pointer}
+.viewport-toggle button:last-child{border-right:0}
+.viewport-toggle button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.viewport-toggle svg{width:18px;height:18px}
+.preview-field{min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);background:#cfd8d3;padding:clamp(10px,2vw,24px)}
+.device{width:100%;height:100%;min-height:520px;background:#fff;border:1px solid #71746e;box-shadow:var(--shadow)}
+.device[data-viewport="phone"]{width:min(390px,100%);height:min(780px,calc(100dvh - 190px));border-radius:24px;overflow:hidden}
+.device[data-viewport="tablet"]{width:min(820px,100%);height:min(820px,calc(100dvh - 190px));border-radius:14px;overflow:hidden}
+.device[data-viewport="wide"]{width:100%;height:100%;border-radius:0;overflow:hidden}
+iframe{border:0;width:100%;height:100%;display:block;background:#fff}
+.mobile-picker{display:none}
+@media (max-width:900px){
+  header{position:relative}.header-note{display:none}
+  .workspace{display:block}.rail{border-right:0;border-bottom:1px solid var(--line);padding:12px;position:sticky;top:0;z-index:15;overflow:visible}
+  .intro,.directions,.legend{display:none}.mobile-picker{display:block;width:100%;min-height:48px;border:1px solid var(--ink);background:var(--surface);padding:0 13px;font:inherit}
+  .stage{padding:12px;grid-template-rows:auto minmax(580px,1fr)}.stage-bar{align-items:flex-start}.stage-description{font-size:.84rem}.actions>a{display:none}
+  .preview-field{padding:8px}.device[data-viewport="phone"]{height:760px}.device[data-viewport="tablet"],.device[data-viewport="wide"]{height:780px}
+}
+@media (max-width:560px){
+  header{padding:13px 14px}.mark{width:32px;height:32px}h1{font-size:1rem}
+  .stage-bar{display:grid}.actions{justify-content:space-between}.viewport-toggle{flex:1}.viewport-toggle button{flex:1}
+  .stage-title{font-size:1.42rem}.stage{grid-template-rows:auto minmax(650px,1fr)}.device[data-viewport]{width:100%;height:720px;border-radius:0}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h16M4 12h10M4 17.5h7"/><path d="m16.5 15 3 2.5-3 2.5z"/></svg></span>
+    <h1>Laboratoire de direction — Quêtes du foyer</h1>
+  </div>
+  <div class="header-note">Deux itérations unifiées et quatre explorations, avec les mêmes tâches réelles.</div>
+</header>
+<div class="workspace">
+  <aside class="rail" aria-label="Directions proposées">
+    <p class="intro"><strong>Essaie chaque prototype.</strong> Trie une liste, modifie une tâche et termine-en une avant de choisir.</p>
+    <select class="mobile-picker" id="mobile-picker" aria-label="Choisir une direction"></select>
+    <div class="directions" id="directions"></div>
+    <section class="legend">
+      <h2>Axes de comparaison</h2>
+      <dl><dt>RPG</dt><dd>profondeur et récit</dd><dt>Cozy</dt><dd>constance sans pression</dd><dt>Arcade</dt><dd>vitesse et énergie</dd><dt>Roguelite</dt><dd>tension et progression</dd></dl>
+    </section>
+  </aside>
+  <main class="stage">
+    <div class="stage-bar">
+      <div class="stage-copy">
+        <h2 class="stage-title" id="stage-title"></h2>
+        <p class="stage-description" id="stage-description"></p>
+      </div>
+      <div class="actions">
+        <div class="viewport-toggle" aria-label="Largeur d’aperçu">
+          <button type="button" data-viewport="phone" aria-pressed="true" title="Téléphone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 18.5h4"/></svg></button>
+          <button type="button" data-viewport="tablet" aria-pressed="false" title="Tablette"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2.5" width="16" height="19" rx="2"/><circle cx="12" cy="18.5" r=".7" fill="currentColor"/></svg></button>
+          <button type="button" data-viewport="wide" aria-pressed="false" title="Pleine largeur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="19" height="13" rx="1.5"/><path d="M8 21h8M12 17.5V21"/></svg></button>
+        </div>
+        <a id="open-link" href="#" target="_blank" rel="noopener">Ouvrir<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg></a>
+      </div>
+    </div>
+    <div class="preview-field">
+      <div class="device" id="device" data-viewport="phone"><iframe id="preview" title="Prototype interactif"></iframe></div>
+    </div>
+  </main>
+</div>
+</div>
+<script>
+const concepts=[
+ {id:'living',name:'Orée vivante',code:'Jeu de ferme interactif',path:'006-oree-vivante/index.html',description:'La carte est l’accueil: ferme blocky manipulable, construction sur grille, objectifs racontés, Bastion intégré et Réputation expliquée.'},
+ {id:'colony',name:'Colonie Orée',code:'Direction unifiée',path:'005-colonie-agrotech/index.html',description:'L’interface Vecteur devient un véritable jeu de gestion: ferme agro-tech, trois ressources, événements récupérables et Bastion narratif.'},
+ {id:'rpg',name:'Le Conseil du Foyer',code:'RPG / quête',path:'001-conseil-du-foyer/index.html',description:'Un journal de campagne adulte où les tâches deviennent des quêtes, le Renom mesure le chemin parcouru et un sceau marque chaque victoire réelle.'},
+ {id:'cozy',name:'Le Potager des Quêtes',code:'Cozy / farming',path:'002-potager-des-quetes/index.html',description:'Une ferme apaisante qui pousse grâce au travail accompli, sans série punitive ni entretien virtuel obligatoire.'},
+ {id:'arcade',name:'Vecteur',code:'Arcade / sci-fi',path:'003-vecteur/index.html',description:'Une interface vive et précise centrée sur le meilleur prochain choix, les combos d’action et une progression vectorielle.'},
+ {id:'rogue',name:'Le Bastion des Cendres',code:'Dark fantasy / roguelite',path:'004-bastion-des-cendres/index.html',description:'Des expéditions courtes, des reliques et un bastion restauré, avec une tension visuelle maîtrisée et des tâches toujours lisibles.'}
+];
+const directions=document.getElementById('directions');
+const picker=document.getElementById('mobile-picker');
+const frame=document.getElementById('preview');
+const device=document.getElementById('device');
+const title=document.getElementById('stage-title');
+const description=document.getElementById('stage-description');
+const openLink=document.getElementById('open-link');
+let active=0;
+concepts.forEach((concept,index)=>{
+ const button=document.createElement('button');
+ button.type='button';button.className='direction';button.dataset.index=index;button.setAttribute('aria-selected',index===0?'true':'false');
+ button.innerHTML=`<span class="direction-top"><span class="direction-name">${concept.name}</span><span class="direction-code">${concept.code}</span></span><p>${concept.description}</p>`;
+ button.addEventListener('click',()=>select(index));directions.appendChild(button);
+ const option=document.createElement('option');option.value=index;option.textContent=`${concept.name} — ${concept.code}`;picker.appendChild(option);
+});
+picker.addEventListener('change',()=>select(Number(picker.value)));
+function select(index){active=index;const concept=concepts[index];title.textContent=concept.name;description.textContent=concept.description;frame.src=concept.path;frame.title=`Prototype ${concept.name}`;openLink.href=concept.path;picker.value=String(index);[...directions.children].forEach((el,i)=>el.setAttribute('aria-selected',i===index?'true':'false'));}
+document.querySelectorAll('[data-viewport]').forEach(button=>button.addEventListener('click',()=>{const viewport=button.dataset.viewport;device.dataset.viewport=viewport;document.querySelectorAll('[data-viewport]').forEach(item=>item.setAttribute('aria-pressed',item===button?'true':'false'));}));
+select(0);
+</script>
+</body>
+</html>

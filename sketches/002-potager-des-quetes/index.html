@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2eddf">
+  <title>Le Potager des Quêtes</title>
+  <style>
+    :root {
+      --cream: #f2eddf;
+      --paper: #fbf8ee;
+      --paper-strong: #fffdf6;
+      --ink: #25342d;
+      --muted: #536158;
+      --sage: #6f8065;
+      --sage-deep: #425846;
+      --sage-pale: #dce4d4;
+      --sky: #a9c8d3;
+      --sky-pale: #e3f0f2;
+      --soil: #765744;
+      --soil-deep: #4f392e;
+      --soil-pale: #e8d9c8;
+      --ochre: #c99348;
+      --rust: #a65538;
+      --line: rgba(50, 65, 55, .16);
+      --shadow: 0 16px 46px rgba(72, 58, 42, .11);
+      --shadow-small: 0 6px 20px rgba(72, 58, 42, .09);
+      --radius: 18px;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: Aptos, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255,255,255,.78), transparent 32rem),
+        linear-gradient(180deg, #eee7d6 0, var(--cream) 18rem, #efe9db 100%);
+      font: 16px/1.45 var(--sans);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button, input, select, textarea { font: inherit; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    svg { display: block; }
+    h1, h2, h3, p { margin-top: 0; }
+    .sr-only {
+      position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    :focus-visible { outline: 3px solid #26738a; outline-offset: 3px; }
+    .icon { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .app-shell { min-height: 100vh; padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+    .rail { display: none; }
+    .topbar {
+      height: 66px; padding: 0 17px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--line); background: rgba(247,243,232,.86); backdrop-filter: blur(14px);
+      position: sticky; top: 0; z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark {
+      width: 39px; height: 39px; color: var(--sage-deep); border: 1px solid rgba(66,88,70,.28);
+      background: var(--paper); border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 4px rgba(111,128,101,.08);
+    }
+    .brand-mark svg { width: 25px; height: 25px; }
+    .brand-copy strong { font: 700 18px/1.05 var(--serif); letter-spacing: -.2px; display: block; }
+    .brand-copy span { color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; display: block; margin-top: 3px; }
+    .day-seal {
+      width: 43px; height: 43px; border-radius: 13px; background: var(--sky-pale); border: 1px solid rgba(63,102,112,.22);
+      display: grid; place-content: center; text-align: center; color: #355d68;
+    }
+    .day-seal b { font: 700 17px/1 var(--serif); }
+    .day-seal small { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+    main { width: min(100%, 1180px); margin: 0 auto; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .content { padding: 18px 15px 30px; }
+
+    .eyebrow { color: var(--sage-deep); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; margin-bottom: 5px; }
+    .page-intro { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin: 0 2px 14px; }
+    .page-intro h1 { font: 700 clamp(28px, 7vw, 42px)/1.05 var(--serif); letter-spacing: -.035em; margin-bottom: 4px; }
+    .page-intro p { color: var(--muted); margin: 0; font-size: 14px; }
+    .weather-note { display: none; align-items: center; gap: 8px; color: #3e6874; padding: 8px 11px; background: var(--sky-pale); border: 1px solid rgba(63,102,112,.18); border-radius: 999px; font-size: 13px; white-space: nowrap; }
+
+    .harvest-board {
+      position: relative; overflow: hidden; border: 1px solid rgba(73,91,70,.19); background: var(--paper);
+      border-radius: 22px; padding: 15px; box-shadow: var(--shadow-small); margin-bottom: 17px;
+    }
+    .harvest-board::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .25;
+      background-image: linear-gradient(rgba(67,83,68,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(67,83,68,.06) 1px, transparent 1px);
+      background-size: 23px 23px;
+    }
+    .harvest-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .harvest-head h2 { font: 700 19px/1.15 var(--serif); margin: 0; }
+    .harvest-head p { color: var(--muted); font-size: 12px; margin: 3px 0 0; }
+    .harvest-count { font: 700 13px/1 var(--sans); color: var(--sage-deep); background: var(--sage-pale); padding: 8px 10px; border-radius: 999px; white-space: nowrap; }
+    .field-progress { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .furrow {
+      height: 53px; border-radius: 12px 12px 15px 15px; background: linear-gradient(145deg, #8b6952, var(--soil));
+      border: 1px solid rgba(64,42,28,.18); position: relative; overflow: hidden; box-shadow: inset 0 -8px 12px rgba(54,34,22,.12);
+    }
+    .furrow::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 11px; height: 1px; background: rgba(255,255,255,.14); transform: rotate(-5deg); }
+    .furrow .seed { width: 7px; height: 7px; border-radius: 50%; background: #d9bb72; position: absolute; left: calc(50% - 3px); bottom: 14px; box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+    .furrow .sprout { position: absolute; width: 28px; height: 34px; left: calc(50% - 14px); bottom: 12px; transform-origin: bottom center; }
+    .furrow .sprout::before, .furrow .sprout::after { content: ""; position: absolute; background: #93ad72; border: 1px solid rgba(44,79,49,.22); }
+    .furrow .sprout::before { width: 13px; height: 9px; border-radius: 12px 1px 12px 1px; left: 2px; top: 7px; transform: rotate(17deg); }
+    .furrow .sprout::after { width: 13px; height: 9px; border-radius: 1px 12px 1px 12px; right: 1px; top: 1px; transform: rotate(-13deg); }
+    .furrow .stem { position: absolute; height: 27px; width: 2px; background: #58734f; left: 13px; top: 5px; transform: rotate(3deg); }
+    .furrow.grown .seed { display: none; }
+    .furrow.grown .sprout { animation: grow .42s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes grow { from { transform: scale(.1); opacity: 0; } }
+
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 2px 9px; }
+    .section-heading h2 { margin: 0; font: 700 22px/1.15 var(--serif); }
+    .section-heading p { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+    .text-button { min-height: 44px; border: 0; background: transparent; color: var(--sage-deep); font-weight: 750; padding: 8px 4px; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(66,88,70,.32); text-underline-offset: 4px; }
+
+    .sort-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 11px; margin-inline: -2px; }
+    .sort-row::-webkit-scrollbar { display: none; }
+    .sort-chip {
+      min-height: 44px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; background: rgba(251,248,238,.78);
+      padding: 0 14px; color: var(--muted); cursor: pointer; font-weight: 700; font-size: 13px; transition: .18s ease;
+    }
+    .sort-chip[aria-pressed="true"] { background: var(--sage-deep); color: #fff; border-color: var(--sage-deep); }
+    .sort-chip:hover { border-color: var(--sage); transform: translateY(-1px); }
+
+    .quest-list { display: grid; gap: 10px; }
+    .quest-card {
+      background: var(--paper-strong); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px;
+      box-shadow: 0 3px 0 rgba(96,79,54,.03); display: grid; grid-template-columns: 45px minmax(0,1fr) auto;
+      gap: 11px; align-items: center; position: relative; overflow: hidden; transition: .2s ease;
+    }
+    .quest-card:hover { border-color: rgba(66,88,70,.34); box-shadow: var(--shadow-small); transform: translateY(-1px); }
+    .quest-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--accent, var(--sage)); }
+    .quest-card.done { opacity: .68; background: #eef0e7; }
+    .quest-card.done .quest-title { text-decoration: line-through; text-decoration-color: var(--sage); }
+    .quest-check {
+      width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(72,88,68,.26); background: var(--paper);
+      display: grid; place-items: center; cursor: pointer; color: var(--sage-deep); transition: .18s ease; position: relative;
+    }
+    .quest-check:hover { background: var(--sage-pale); transform: scale(1.04); }
+    .quest-check svg { width: 23px; height: 23px; }
+    .quest-check .check-path { opacity: 0; }
+    .done .quest-check { background: var(--sage-deep); color: white; border-color: var(--sage-deep); }
+    .done .quest-check .seed-path { opacity: 0; }
+    .done .quest-check .check-path { opacity: 1; }
+    .quest-body { min-width: 0; }
+    .quest-kicker { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+    .recommendation { font-size: 11px; letter-spacing: .035em; font-weight: 850; color: var(--accent-text, var(--sage-deep)); }
+    .domain { font-size: 11px; color: var(--muted); }
+    .domain::before { content: "·"; margin-right: 6px; color: #a09c8e; }
+    .quest-title { font: 700 16px/1.27 var(--serif); margin: 0 0 7px; letter-spacing: -.01em; }
+    .quest-meta { display: flex; gap: 7px; flex-wrap: wrap; color: var(--muted); font-size: 11px; }
+    .meta-piece { display: inline-flex; gap: 4px; align-items: center; }
+    .meta-piece svg { width: 14px; height: 14px; }
+    .score-button {
+      width: 51px; min-height: 51px; border: 0; border-radius: 14px; background: var(--sky-pale); color: #365d67; cursor: pointer;
+      display: grid; place-content: center; text-align: center; padding: 4px; transition: .18s ease;
+    }
+    .score-button:hover { background: #cee3e7; transform: translateY(-1px); }
+    .score-button b { font: 800 17px/1 var(--serif); }
+    .score-button span { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; margin-top: 4px; }
+    .card-actions { display: none; }
+    .quest-card:hover .card-actions, .quest-card:focus-within .card-actions { display: block; position: absolute; top: 6px; right: 69px; }
+    .edit-mini { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); display: grid; place-items: center; cursor: pointer; color: var(--muted); }
+    .edit-mini:hover { color: var(--ink); background: white; }
+
+    .primary-button, .secondary-button, .danger-button {
+      min-height: 46px; border-radius: 13px; padding: 0 16px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .primary-button { color: white; background: var(--sage-deep); border: 1px solid var(--sage-deep); box-shadow: 0 6px 14px rgba(58,80,62,.17); }
+    .primary-button:hover { background: #344b39; transform: translateY(-1px); }
+    .secondary-button { color: var(--ink); background: var(--paper); border: 1px solid var(--line); }
+    .secondary-button:hover { border-color: var(--sage); background: white; }
+    .danger-button { color: var(--rust); background: transparent; border: 1px solid rgba(166,85,56,.25); }
+
+    .fab {
+      position: fixed; right: 17px; bottom: calc(88px + env(safe-area-inset-bottom)); z-index: 16; width: 56px; height: 56px;
+      border-radius: 50%; border: 1px solid rgba(40,65,45,.24); color: white; background: var(--sage-deep); box-shadow: 0 12px 28px rgba(57,78,60,.3);
+      display: grid; place-items: center; cursor: pointer; transition: .18s ease;
+    }
+    .fab:hover { transform: translateY(-2px) rotate(2deg); background: #344b39; }
+    .fab svg { width: 25px; height: 25px; }
+
+    .bottom-nav {
+      position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; height: calc(70px + env(safe-area-inset-bottom));
+      padding: 5px 7px env(safe-area-inset-bottom); background: rgba(251,248,238,.94); backdrop-filter: blur(18px);
+      border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4,1fr);
+    }
+    .nav-button { min-height: 58px; border: 0; background: transparent; border-radius: 13px; color: var(--muted); display: grid; place-content: center; justify-items: center; gap: 2px; cursor: pointer; font-size: 11px; font-weight: 750; }
+    .nav-button svg { width: 23px; height: 23px; }
+    .nav-button[aria-current="page"] { color: var(--sage-deep); background: var(--sage-pale); }
+
+    .toolbar { display: grid; grid-template-columns: 1fr auto; gap: 9px; margin-bottom: 14px; }
+    .search-box { position: relative; }
+    .search-box svg { position: absolute; left: 13px; top: 14px; width: 19px; height: 19px; color: var(--muted); }
+    .search-box input, .select-control {
+      width: 100%; height: 48px; border-radius: 13px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    }
+    .search-box input { padding: 0 13px 0 41px; }
+    .select-control { padding: 0 35px 0 13px; min-width: 120px; }
+    .filter-strip { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+    .filter-strip::-webkit-scrollbar { display: none; }
+    .filter-chip { min-height: 42px; white-space: nowrap; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); padding: 0 12px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .filter-chip[aria-pressed="true"] { color: var(--sage-deep); border-color: var(--sage); background: var(--sage-pale); }
+    .result-count { color: var(--muted); font-size: 13px; margin: -2px 2px 10px; }
+
+    .farm-layout { display: grid; gap: 14px; }
+    .farm-card, .journal-card, .almanac-card {
+      border: 1px solid var(--line); background: var(--paper); border-radius: 20px; padding: 16px; box-shadow: var(--shadow-small);
+    }
+    .farm-card h2, .journal-card h2, .almanac-card h2 { font: 700 22px/1.15 var(--serif); margin-bottom: 5px; }
+    .farm-card > p, .journal-card > p, .almanac-card > p { color: var(--muted); font-size: 13px; }
+    .garden-scene {
+      position: relative; min-height: 356px; border-radius: 18px; overflow: hidden; border: 1px solid rgba(61,91,73,.2);
+      background: linear-gradient(#afd0dc 0 34%, #d8dfbd 34% 44%, #73835e 44% 100%); margin-top: 14px;
+    }
+    .garden-scene::before { content: ""; position: absolute; width: 80px; height: 80px; border-radius: 50%; top: 25px; right: 28px; background: rgba(255,246,191,.7); box-shadow: 0 0 0 12px rgba(255,246,191,.12); }
+    .horizon { position: absolute; left: -5%; right: -5%; top: 30%; height: 26%; background: #879770; clip-path: polygon(0 72%, 9% 43%, 20% 58%, 31% 24%, 44% 68%, 59% 33%, 71% 56%, 83% 25%, 100% 62%, 100% 100%, 0 100%); opacity: .85; }
+    .garden-plots { position: absolute; left: 6%; right: 6%; bottom: 7%; top: 47%; display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr); gap: 8px; transform: perspective(500px) rotateX(5deg); }
+    .plot {
+      position: relative; border: 0; border-radius: 10px; cursor: pointer; background:
+        repeating-linear-gradient(100deg, transparent 0 12px, rgba(40,26,17,.12) 13px 15px), linear-gradient(145deg,#8b6750,#6a4836);
+      box-shadow: inset 0 0 0 1px rgba(59,39,28,.23), 0 4px 0 rgba(61,48,34,.18); min-height: 62px; overflow: hidden;
+    }
+    .plot:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .plot .crop { position: absolute; inset: 5px; display: grid; grid-template-columns: repeat(3,1fr); align-items: center; justify-items: center; }
+    .crop-leaf { width: 18px; height: 24px; position: relative; }
+    .crop-leaf::before, .crop-leaf::after { content: ""; position: absolute; width: 12px; height: 17px; background: var(--leaf, #8eaa70); border: 1px solid rgba(43,72,43,.28); }
+    .crop-leaf::before { border-radius: 12px 2px 12px 2px; transform: rotate(-20deg); left: 1px; top: 4px; }
+    .crop-leaf::after { border-radius: 2px 12px 2px 12px; transform: rotate(20deg); right: 0; top: 1px; }
+    .plot.locked { filter: saturate(.4); }
+    .plot.locked::after { content: ""; position: absolute; width: 20px; height: 18px; border: 2px solid rgba(245,237,219,.75); border-radius: 4px; left: calc(50% - 11px); top: calc(50% - 5px); box-shadow: 0 -9px 0 -4px rgba(245,237,219,.75); }
+    .farm-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+    .farm-stat { background: rgba(220,228,212,.55); border-radius: 13px; padding: 10px 8px; text-align: center; }
+    .farm-stat b { display: block; font: 700 20px/1 var(--serif); }
+    .farm-stat span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+    .plot-detail { min-height: 112px; margin-top: 11px; border-top: 1px dashed var(--line); padding-top: 12px; }
+    .plot-detail strong { font-family: var(--serif); }
+    .plot-detail p { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+
+    .rule-list { list-style: none; padding: 0; margin: 12px 0 0; }
+    .rule-list li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; padding: 11px 0; border-top: 1px solid var(--line); }
+    .rule-list b { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--sky-pale); color: #3d6570; font-family: var(--serif); }
+    .rule-list strong { display: block; font-size: 14px; }
+    .rule-list span { color: var(--muted); font-size: 12px; }
+
+    .journal-list { display: grid; gap: 0; margin-top: 12px; }
+    .journal-entry { display: grid; grid-template-columns: 33px 1fr; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line); }
+    .journal-stem { position: relative; display: grid; justify-content: center; }
+    .journal-stem::after { content: ""; position: absolute; top: 26px; bottom: -13px; width: 1px; background: var(--line); }
+    .journal-entry:last-child .journal-stem::after { display: none; }
+    .journal-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--sage-pale); color: var(--sage-deep); display: grid; place-items: center; }
+    .journal-dot svg { width: 16px; height: 16px; }
+    .journal-entry h3 { font: 700 15px/1.3 var(--serif); margin-bottom: 4px; }
+    .journal-entry p { color: var(--muted); font-size: 12px; margin: 0; }
+    .journal-entry time { color: var(--sage-deep); font-weight: 800; }
+
+    dialog {
+      border: 0; padding: 8px; border-radius: 22px; color: var(--ink); background: var(--paper-strong); width: min(92vw, 540px);
+      box-shadow: 0 28px 90px rgba(42,34,25,.34); max-height: 90vh;
+    }
+    dialog::backdrop { background: rgba(34,43,36,.47); backdrop-filter: blur(3px); }
+    .modal-head { padding: 18px 18px 13px; display: flex; align-items: start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { font: 700 25px/1.1 var(--serif); margin: 0; }
+    .modal-head p { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+    .icon-button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); display: grid; place-items: center; cursor: pointer; flex: 0 0 auto; }
+    .icon-button:hover { background: var(--sage-pale); }
+    .modal-body { padding: 16px 18px 6px; overflow-y: auto; }
+    .field { display: grid; gap: 6px; margin-bottom: 14px; }
+    .field label, .range-label { font-size: 13px; font-weight: 800; }
+    .field input, .field textarea, .field select {
+      width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: #fffef9; color: var(--ink); padding: 11px 12px;
+    }
+    .field textarea { min-height: 85px; resize: vertical; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .range-wrap { border: 1px solid var(--line); border-radius: 13px; padding: 10px 11px; background: #fffef9; }
+    .range-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 6px; }
+    .range-top output { color: var(--sage-deep); font-weight: 850; }
+    input[type="range"] { accent-color: var(--sage-deep); width: 100%; min-height: 28px; }
+    .calculated-score { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--sky-pale); color: #355d68; margin-bottom: 13px; font-size: 13px; }
+    .calculated-score b { font: 800 22px/1 var(--serif); }
+    .modal-actions { padding: 14px 18px 18px; display: flex; justify-content: flex-end; gap: 9px; border-top: 1px solid var(--line); }
+    .score-explain { padding: 0 18px 19px; }
+    .score-formula { background: var(--sky-pale); border-radius: 16px; padding: 15px; margin-bottom: 13px; color: #345864; }
+    .score-formula b { font: 700 20px/1.2 var(--serif); display: block; margin-bottom: 5px; }
+    .score-breakdown { display: grid; gap: 7px; }
+    .score-line { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--line); padding: 7px 0; font-size: 13px; }
+    .score-line:last-child { border: 0; font-weight: 850; }
+
+    .toast {
+      position: fixed; z-index: 60; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px);
+      width: min(calc(100% - 30px), 430px); background: var(--soil-deep); color: #fff8e8; border-radius: 14px; padding: 12px 13px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .22s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%,0); pointer-events: auto; }
+    .toast p { margin: 0; font-size: 13px; }
+    .toast button { min-height: 38px; border: 0; color: #f2d9a5; background: transparent; font-weight: 850; cursor: pointer; }
+
+    .empty-state { padding: 32px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 17px; background: rgba(251,248,238,.55); }
+    .empty-state svg { margin: 0 auto 10px; width: 34px; height: 34px; color: var(--sage); }
+
+    @media (min-width: 700px) {
+      .app-shell { padding: 0 0 0 92px; }
+      .rail {
+        display: flex; position: fixed; z-index: 31; left: 0; top: 0; bottom: 0; width: 92px; background: #e7e4d5; border-right: 1px solid var(--line);
+        padding: 17px 8px; flex-direction: column; align-items: center;
+      }
+      .rail-brand { width: 50px; height: 50px; border-radius: 50%; background: var(--paper); color: var(--sage-deep); display: grid; place-items: center; border: 1px solid var(--line); margin-bottom: 24px; }
+      .rail-brand svg { width: 31px; height: 31px; }
+      .rail-brand > div { display: none; }
+      .rail-nav { display: grid; gap: 8px; width: 100%; }
+      .rail .nav-button { min-height: 64px; }
+      .topbar { padding-inline: 28px; }
+      .brand-copy strong { font-size: 20px; }
+      .bottom-nav { display: none; }
+      .fab { bottom: 25px; right: 28px; }
+      .content { padding: 26px 28px 46px; }
+      .weather-note { display: flex; }
+      .harvest-board { padding: 18px; }
+      .quest-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .quest-card.featured { grid-column: 1 / -1; }
+      .farm-layout { grid-template-columns: minmax(0,1.45fr) minmax(250px,.65fr); }
+      .journal-card { padding: 22px; }
+      .toolbar { grid-template-columns: minmax(280px,1fr) 180px; }
+      .field-progress { gap: 8px; }
+      .furrow { height: 60px; }
+      .toast { bottom: 26px; }
+    }
+
+    @media (min-width: 1040px) {
+      .app-shell { padding-left: 222px; }
+      .rail { width: 222px; align-items: stretch; padding: 24px 18px; }
+      .rail-brand { width: auto; height: auto; border: 0; background: transparent; border-radius: 0; display: flex; gap: 11px; justify-content: flex-start; margin-bottom: 30px; }
+      .rail-brand > div { display: block; }
+      .rail-brand svg { width: 38px; height: 38px; padding: 6px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); }
+      .rail-brand span { display: block; font: 700 18px/1.1 var(--serif); }
+      .rail-brand small { display: block; color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: .07em; margin-top: 4px; }
+      .rail .nav-button { grid-template-columns: 29px 1fr; justify-items: start; align-items: center; place-content: center start; padding: 0 15px; gap: 10px; font-size: 14px; }
+      .rail .nav-button svg { width: 22px; }
+      .topbar { display: none; }
+      .content { padding-top: 36px; }
+      .desktop-today-grid { display: grid; grid-template-columns: minmax(0,1fr) 316px; gap: 18px; align-items: start; }
+      .desktop-side { display: block !important; }
+      .mobile-harvest { display: none; }
+      .harvest-board { margin: 0; }
+      .quest-list { grid-template-columns: 1fr; }
+      .quest-card.featured { grid-column: auto; }
+      .fab { right: 34px; }
+    }
+
+    @media (max-width: 380px) {
+      .content { padding-inline: 11px; }
+      .quest-card { grid-template-columns: 43px minmax(0,1fr) 47px; padding: 11px 9px; gap: 8px; }
+      .score-button { width: 47px; }
+      .quest-title { font-size: 15px; }
+      .field-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 14C8 14 5 11.5 5 7c4 0 7 2.2 7 7Z"/><path d="M12 11c0-4 2.7-7 7-7 0 4.2-2.6 7-7 7Z"/></symbol>
+    <symbol id="i-today" viewBox="0 0 24 24"><path d="M5 11.5C5 7.5 7.8 5 12 5s7 2.5 7 6.5V20H5v-8.5Z"/><path d="M8 5V3m8 2V3M8 12h8M9 16h.01M13 16h.01M17 16h.01"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m4 6 .8.8L6.4 5M4 12l.8.8 1.6-1.8M4 18l.8.8 1.6-1.8"/></symbol>
+    <symbol id="i-farm" viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/><path d="M4 9 2.5 7.5M20 9l1.5-1.5M12 5V2"/></symbol>
+    <symbol id="i-journal" viewBox="0 0 24 24"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V3Z"/><path d="M8 7h7M8 11h7M8 15h4M5 18.5A2.5 2.5 0 0 1 7.5 16H19"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-seed" viewBox="0 0 24 24"><path class="seed-path" d="M16.5 8.5c2.3 2.3 2 5.8-.2 8s-5.7 2.5-8 .2-2-5.8.2-8 5.7-2.5 8-.2Z"/><path class="seed-path" d="M8.5 16.5c1.8-4.1 4.4-6.8 8-8"/><path class="check-path" d="m6.5 12.5 3.7 3.7L18 8.4"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-mountain" viewBox="0 0 24 24"><path d="m3 19 6-10 4 6 2-3 6 7H3Z"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6 21V4m0 1h10l-2 3 2 3H6"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.8 7.5 3 3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 6.1 6 11a6 6 0 0 1-12 0c0-4.9 6-11 6-11Z"/><path d="M9 15a3 3 0 0 0 3 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="rail" aria-label="Navigation principale">
+      <div class="rail-brand" aria-label="Le Potager des Quêtes">
+        <svg class="icon"><use href="#i-sprout"/></svg>
+        <div><span>Le Potager</span><small>des Quêtes</small></div>
+      </div>
+      <nav class="rail-nav">
+        <button class="nav-button" data-view="today" aria-current="page"><svg class="icon"><use href="#i-today"/></svg><span>Aujourd’hui</span></button>
+        <button class="nav-button" data-view="quests"><svg class="icon"><use href="#i-list"/></svg><span>Quêtes</span></button>
+        <button class="nav-button" data-view="farm"><svg class="icon"><use href="#i-farm"/></svg><span>Ferme</span></button>
+        <button class="nav-button" data-view="journal"><svg class="icon"><use href="#i-journal"/></svg><span>Journal</span></button>
+      </nav>
+    </aside>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><svg class="icon"><use href="#i-sprout"/></svg></div>
+        <div class="brand-copy"><strong>Le Potager des Quêtes</strong><span>Almanach personnel</span></div>
+      </div>
+      <div class="day-seal" aria-label="Dimanche 4 octobre"><b>04</b><small>Oct.</small></div>
+    </header>
+
+    <main>
+      <section class="view active" id="view-today" aria-labelledby="today-title">
+        <div class="content">
+          <div class="page-intro">
+            <div><div class="eyebrow">Dimanche 4 octobre · Semaine 40</div><h1 id="today-title">La récolte du jour</h1><p>Choisis une planche. Le reste peut attendre.</p></div>
+            <div class="weather-note"><svg class="icon"><use href="#i-sun"/></svg><span>Énergie douce · 3 quêtes conseillées</span></div>
+          </div>
+
+          <div class="desktop-today-grid">
+            <div>
+              <div class="section-heading">
+                <div><h2>À cultiver maintenant</h2><p>Une sélection selon l’utilité, le temps et l’effort.</p></div>
+                <button class="text-button" data-view-jump="quests">Tout voir</button>
+              </div>
+              <div class="sort-row" aria-label="Trier les recommandations">
+                <button class="sort-chip" data-sort="score" aria-pressed="true">Score</button>
+                <button class="sort-chip" data-sort="priority" aria-pressed="false">Priorité</button>
+                <button class="sort-chip" data-sort="length" aria-pressed="false">Longueur</button>
+                <button class="sort-chip" data-sort="difficulty" aria-pressed="false">Difficulté</button>
+              </div>
+              <div class="quest-list" id="today-list"></div>
+            </div>
+
+            <aside class="desktop-side" style="display:none">
+              <div class="harvest-board" aria-labelledby="plot-progress-title">
+                <div class="harvest-head">
+                  <div><h2 id="plot-progress-title">Parcelle du jour</h2><p>Chaque quête mise en terre fait lever un semis.</p></div>
+                  <span class="harvest-count"><span id="daily-done">2</span> / 6</span>
+                </div>
+                <div class="field-progress" id="field-progress" aria-label="Deux quêtes sur six accomplies"></div>
+              </div>
+              <div class="almanac-card" style="margin-top:14px">
+                <h2>Le bon rendement</h2>
+                <p>Le score ne mesure pas ta valeur. Il sert seulement à repérer les tâches utiles et faciles à lancer.</p>
+                <button class="text-button" id="open-score-guide">Voir comment le score pousse</button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="harvest-board mobile-harvest" style="margin-top:17px">
+            <div class="harvest-head">
+              <div><h2>Parcelle du jour</h2><p>Chaque quête mise en terre fait lever un semis.</p></div>
+              <span class="harvest-count"><span class="daily-done-copy">2</span> / 6</span>
+            </div>
+            <div class="field-progress field-progress-copy" aria-label="Deux quêtes sur six accomplies"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-quests" aria-labelledby="quests-title">
+        <div class="content">
+          <div class="page-intro"><div><div class="eyebrow">Le garde-manger</div><h1 id="quests-title">Toutes les quêtes</h1><p>Trouve une tâche à la mesure du moment.</p></div></div>
+          <div class="toolbar">
+            <label class="search-box"><span class="sr-only">Rechercher une quête</span><svg class="icon"><use href="#i-search"/></svg><input id="quest-search" type="search" placeholder="Rechercher une quête…"></label>
+            <label><span class="sr-only">Trier les quêtes</span><select class="select-control" id="all-sort"><option value="score">Score</option><option value="priority">Priorité</option><option value="length">Longueur</option><option value="difficulty">Difficulté</option><option value="recent">Plus récentes</option></select></label>
+          </div>
+          <div class="filter-strip" aria-label="Filtrer par domaine" id="domain-filters"></div>
+          <p class="result-count" id="result-count"></p>
+          <div class="quest-list" id="all-quests"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-farm" aria-labelledby="farm-title">
+        <div class="content">
+          <div class="page-intro"><div><div class="eyebrow">Progression durable</div><h1 id="farm-title">La ferme</h1><p>Un paysage façonné uniquement par le travail réellement accompli.</p></div></div>
+          <div class="farm-layout">
+            <div class="farm-card">
+              <div class="eyebrow">Parcelle du chemin creux · Niveau 3</div>
+              <h2>Jardin des travaux accomplis</h2>
+              <p>Sélectionne une planche pour consulter ce qui y pousse.</p>
+              <div class="garden-scene" role="group" aria-label="Neuf planches cultivables">
+                <div class="horizon"></div>
+                <div class="garden-plots" id="garden-plots"></div>
+              </div>
+              <div class="farm-stats"><div class="farm-stat"><b id="farm-harvest">10</b><span>Récoltes</span></div><div class="farm-stat"><b>3</b><span>Domaines</span></div><div class="farm-stat"><b id="farm-score">128</b><span>Rendement</span></div></div>
+            </div>
+            <aside class="almanac-card">
+              <h2>Ce qui fait grandir la ferme</h2>
+              <ul class="rule-list">
+                <li><b>1</b><div><strong>Terminer une quête</strong><span>Fait pousser une culture, sans action artificielle.</span></div></li>
+                <li><b>3</b><div><strong>Entretenir l’élan</strong><span>Trois jours actifs ouvrent une nouvelle planche.</span></div></li>
+                <li><b>6</b><div><strong>Finir la parcelle</strong><span>Six quêtes donnent une récolte d’almanach.</span></div></li>
+              </ul>
+              <div class="plot-detail" id="plot-detail"><strong>Planche des aromates</strong><p>Herbes et laitues — nourries par les petites tâches terminées en mai.</p><button class="secondary-button" id="water-button"><svg class="icon"><use href="#i-drop"/></svg>Arroser la planche</button></div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-journal" aria-labelledby="journal-title">
+        <div class="content">
+          <div class="page-intro"><div><div class="eyebrow">Traces du travail réel</div><h1 id="journal-title">Le journal</h1><p>Les récoltes passées, sans points inventés.</p></div></div>
+          <div class="journal-card">
+            <h2>Octobre 2026</h2><p>Les dernières quêtes mises en terre.</p>
+            <div class="journal-list" id="journal-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <button class="fab" id="add-task" aria-label="Ajouter une quête"><svg class="icon"><use href="#i-plus"/></svg></button>
+
+    <nav class="bottom-nav" aria-label="Navigation principale mobile">
+      <button class="nav-button" data-view="today" aria-current="page"><svg class="icon"><use href="#i-today"/></svg><span>Aujourd’hui</span></button>
+      <button class="nav-button" data-view="quests"><svg class="icon"><use href="#i-list"/></svg><span>Quêtes</span></button>
+      <button class="nav-button" data-view="farm"><svg class="icon"><use href="#i-farm"/></svg><span>Ferme</span></button>
+      <button class="nav-button" data-view="journal"><svg class="icon"><use href="#i-journal"/></svg><span>Journal</span></button>
+    </nav>
+  </div>
+
+  <dialog id="task-dialog" aria-labelledby="task-dialog-title">
+    <form id="task-form" method="dialog">
+      <div class="modal-head"><div><h2 id="task-dialog-title">Nouvelle quête</h2><p>Une intention claire donne de meilleures récoltes.</p></div><button class="icon-button" type="button" data-close="task-dialog" aria-label="Fermer"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="task-id">
+        <div class="field"><label for="task-name">Quête</label><textarea id="task-name" required placeholder="Ex. Appeler la clinique pour confirmer le rendez-vous"></textarea></div>
+        <div class="field"><label for="task-domain">Domaine</label><select id="task-domain"><option>Maison</option><option>Professionnel</option><option>Administratif</option><option>Jardin</option><option>Ferme</option><option>Terrain</option><option>Véhicule</option></select></div>
+        <div class="field-grid">
+          <div class="range-wrap"><div class="range-top"><label for="task-priority">Priorité</label><output id="priority-output">5 / 10</output></div><input id="task-priority" type="range" min="1" max="10" value="5"></div>
+          <div class="range-wrap"><div class="range-top"><label for="task-length">Longueur</label><output id="length-output">3 · 45 min</output></div><input id="task-length" type="range" min="1" max="9" value="3"></div>
+        </div>
+        <div class="range-wrap" style="margin-top:10px;margin-bottom:13px"><div class="range-top"><label for="task-difficulty">Difficulté</label><output id="difficulty-output">3 / 10</output></div><input id="task-difficulty" type="range" min="1" max="10" value="3"></div>
+        <div class="calculated-score"><span>Rendement estimé<br><small>priorité + brièveté + facilité</small></span><b id="form-score">126</b></div>
+      </div>
+      <div class="modal-actions"><button class="danger-button" id="delete-task" type="button" hidden>Supprimer</button><span style="flex:1"></span><button class="secondary-button" type="button" data-close="task-dialog">Annuler</button><button class="primary-button" type="submit">Enregistrer</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="score-dialog" aria-labelledby="score-title">
+    <div class="modal-head"><div><h2 id="score-title">Un score qui s’explique</h2><p>Plus haut signifie « bon prochain choix », pas « tâche plus noble ».</p></div><button class="icon-button" type="button" data-close="score-dialog" aria-label="Fermer"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="score-explain">
+      <div class="score-formula"><b>Priorité × 10 + brièveté × 4 + facilité × 3</b><span>Brièveté = 10 − longueur · Facilité = 10 − difficulté</span></div>
+      <div class="score-breakdown" id="score-breakdown"></div>
+      <p style="color:var(--muted);font-size:12px;margin:13px 0 0">Le score reste un conseil. Tu peux toujours choisir autrement selon ton énergie ou les circonstances.</p>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><p id="toast-message">Quête mise en terre.</p><button id="toast-action">Annuler</button></div>
+
+  <script>
+    const initialTasks = [
+      {id:'task-1747108122-3', task:'Préparer les repas de la semaine', difficulty:9, length:9, priority:8, domain:'Professionnel', status:'todo', created:'2026-05-12'},
+      {id:'task-1747108122-5', task:'Réparer une poignée', difficulty:2, length:2, priority:4, domain:'Maison', status:'todo', created:'2026-05-12'},
+      {id:'task-1747108122-6', task:'Classer les documents', difficulty:5, length:7, priority:5, domain:'Professionnel', status:'todo', created:'2026-05-12'},
+      {id:'task-1778886311-1', task:'Planifier une sortie familiale', difficulty:5, length:5, priority:5, domain:'Véhicule', status:'todo', created:'2026-05-15'},
+      {id:'task-1747708800-2', task:'Laver les fenêtres', difficulty:3, length:5, priority:6, domain:'Ferme', status:'todo', created:'2026-05-19'},
+      {id:'task-1779979205-1', task:'Nettoyer le véhicule', difficulty:2, length:1, priority:6, domain:'Professionnel', status:'todo', created:'2026-05-28'},
+      {id:'task-1779979205-2', task:'Réparer une clôture', difficulty:2, length:1, priority:6, domain:'Professionnel', status:'todo', created:'2026-05-28'},
+      {id:'task-1781266134-1', task:'Trier les photos', difficulty:3, length:2, priority:6, domain:'Maison', status:'todo', created:'2026-06-12'},
+      {id:'task-20260714-1', task:'Faire l’inventaire des outils', detail:'Compter les outils du garage, noter ceux à remplacer, puis compléter la liste des achats.', difficulty:3, length:3, priority:8, domain:'Administratif', status:'todo', created:'2026-07-14'},
+      {id:'task-20261003-1', task:'Nettoyer la terrasse', difficulty:7, length:6, priority:8, domain:'Maison', status:'todo', created:'2026-10-03'},
+      {id:'task-20261003-2', task:'Comparer des protections courantes', difficulty:8, length:7, priority:7, domain:'Terrain', status:'todo', created:'2026-10-03'},
+      {id:'task-20261003-3', task:'Préparer les affaires scolaires', difficulty:1, length:1, priority:5, domain:'Maison', status:'todo', created:'2026-10-03'},
+      {id:'task-20261003-4', task:"Planifier le budget mensuel", detail:'Noter les dépenses fixes et prévoir une marge pour les imprévus.', difficulty:7, length:5, priority:7, domain:'Maison', status:'todo', created:'2026-10-03'},
+      {id:'task-20261003-5', task:'Entretenir le vélo', detail:'Gonfler les pneus, graisser la chaîne, puis vérifier les freins avant la prochaine sortie.', difficulty:4, length:4, priority:6, domain:'Maison', status:'todo', created:'2026-10-03'},
+      {id:'done-1', task:"Donner les vêtements inutilisés", difficulty:2, length:2, priority:5, domain:'Jardin', status:'done', created:'2026-05-19'},
+      {id:'done-2', task:'Vérifier les détecteurs de fumée', difficulty:3, length:3, priority:7, domain:'Jardin', status:'done', created:'2026-05-27'},
+      {id:'done-3', task:'Organiser le garde-manger', difficulty:2, length:2, priority:7, domain:'Jardin', status:'done', created:'2026-05-27'},
+      {id:'done-4', task:"Prendre un rendez-vous", difficulty:2, length:2, priority:6, domain:'Jardin', status:'done', created:'2026-05-27'},
+      {id:'done-5', task:'Préparer le recyclage', difficulty:5, length:4, priority:7, domain:'Maison', status:'done', created:'2026-06-12'}
+    ];
+
+    let tasks = initialTasks.map(t => ({...t}));
+    let todayDone = 2;
+    let currentSort = 'score';
+    let activeDomain = 'Tous';
+    let lastChanged = null;
+    const lengths = {1:'10 min',2:'20 min',3:'45 min',4:'1 h',5:'2 h',6:'Demi-journée',7:'1 journée',8:'Plusieurs jours',9:'Projet'};
+    const accents = {Administratif:['#a27d44','#755724'], Professionnel:['#557589','#365b6c'], Maison:['#8a705a','#604938'], Jardin:['#73845d','#4d623f'], Ferme:['#9c724c','#704c31'], Terrain:['#6e7652','#505936'], Véhicule:['#8c6458','#68453c']};
+    const recommendations = [
+      {id:'task-20260714-1', label:'À faire d’abord'},
+      {id:'task-20261003-3', label:'Victoire rapide'},
+      {id:'task-20261003-1', label:'Grand chantier'}
+    ];
+
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+    const score = t => Math.round(t.priority * 10 + (10 - t.length) * 4 + (10 - t.difficulty) * 3);
+    const esc = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const icon = id => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+
+    function sortTasks(list, key) {
+      return [...list].sort((a,b) => {
+        if (key === 'length' || key === 'difficulty') return a[key] - b[key];
+        if (key === 'recent') return b.created.localeCompare(a.created);
+        if (key === 'priority') return b.priority - a.priority;
+        return score(b) - score(a);
+      });
+    }
+
+    function cardTemplate(t, recommendation='') {
+      const [accent, accentText] = accents[t.domain] || accents.Maison;
+      return `<article class="quest-card ${t.status === 'done' ? 'done' : ''}" data-id="${esc(t.id)}" style="--accent:${accent};--accent-text:${accentText}">
+        <button class="quest-check" aria-label="${t.status === 'done' ? 'Réactiver' : 'Mettre en terre'} : ${esc(t.task)}" title="${t.status === 'done' ? 'Réactiver la quête' : 'Mettre en terre'}">${icon('seed')}</button>
+        <div class="quest-body">
+          <div class="quest-kicker">${recommendation ? `<span class="recommendation">${esc(recommendation)}</span>` : ''}<span class="domain">${esc(t.domain)}</span></div>
+          <h3 class="quest-title">${esc(t.task)}</h3>
+          <div class="quest-meta"><span class="meta-piece">${icon('flag')}Priorité ${t.priority}</span><span class="meta-piece">${icon('clock')}${lengths[t.length]}</span><span class="meta-piece">${icon('mountain')}Effort ${t.difficulty}</span></div>
+        </div>
+        <button class="score-button" aria-label="Expliquer le score ${score(t)} de ${esc(t.task)}"><b>${score(t)}</b><span>score</span></button>
+        <div class="card-actions"><button class="edit-mini" aria-label="Modifier ${esc(t.task)}">${icon('edit')}</button></div>
+      </article>`;
+    }
+
+    function renderToday() {
+      const picked = recommendations.map(r => ({...tasks.find(t => t.id === r.id), recommendation:r.label})).filter(t => t.id);
+      const sorted = sortTasks(picked, currentSort);
+      $('#today-list').innerHTML = sorted.map(t => cardTemplate(t, t.recommendation)).join('');
+      bindCards($('#today-list'));
+    }
+
+    function renderAll() {
+      const q = $('#quest-search')?.value.trim().toLocaleLowerCase('fr') || '';
+      let list = tasks.filter(t => t.status !== 'done');
+      if (activeDomain !== 'Tous') list = list.filter(t => t.domain === activeDomain);
+      if (q) list = list.filter(t => `${t.task} ${t.detail || ''} ${t.domain}`.toLocaleLowerCase('fr').includes(q));
+      list = sortTasks(list, $('#all-sort')?.value || 'score');
+      $('#result-count').textContent = `${list.length} quête${list.length > 1 ? 's' : ''} à cultiver`;
+      $('#all-quests').innerHTML = list.length ? list.map(t => cardTemplate(t)).join('') : `<div class="empty-state">${icon('sprout')}Aucune quête ne pousse dans ce filtre.</div>`;
+      bindCards($('#all-quests'));
+    }
+
+    function renderDomains() {
+      const domains = ['Tous', ...new Set(tasks.filter(t => t.status !== 'done').map(t => t.domain))];
+      $('#domain-filters').innerHTML = domains.map(d => `<button class="filter-chip" data-domain="${esc(d)}" aria-pressed="${d === activeDomain}">${esc(d)}</button>`).join('');
+      $$('.filter-chip').forEach(btn => btn.addEventListener('click', () => { activeDomain = btn.dataset.domain; renderDomains(); renderAll(); }));
+    }
+
+    function bindCards(root) {
+      $$('.quest-card', root).forEach(card => {
+        const id = card.dataset.id;
+        $('.quest-check', card).addEventListener('click', () => toggleTask(id));
+        $('.score-button', card).addEventListener('click', () => openScore(id));
+        $('.edit-mini', card).addEventListener('click', () => openTaskDialog(id));
+      });
+    }
+
+    function toggleTask(id) {
+      const t = tasks.find(x => x.id === id); if (!t) return;
+      const wasDone = t.status === 'done';
+      t.status = wasDone ? 'todo' : 'done';
+      todayDone = Math.max(0, Math.min(6, todayDone + (wasDone ? -1 : 1)));
+      lastChanged = {id, wasDone};
+      renderEverything();
+      showToast(wasDone ? 'Quête remise en culture.' : `« ${t.task} » mise en terre.`, true);
+    }
+
+    function renderField() {
+      const make = () => Array.from({length:6}, (_,i) => `<div class="furrow ${i < todayDone ? 'grown' : ''}" aria-hidden="true"><span class="seed"></span>${i < todayDone ? '<span class="sprout"><i class="stem"></i></span>' : ''}</div>`).join('');
+      $('#field-progress').innerHTML = make();
+      $$('.field-progress-copy').forEach(el => el.innerHTML = make());
+      $('#daily-done').textContent = todayDone;
+      $$('.daily-done-copy').forEach(el => el.textContent = todayDone);
+      $('#field-progress').setAttribute('aria-label', `${todayDone} quêtes sur 6 accomplies`);
+    }
+
+    function openScore(id) {
+      const t = tasks.find(x => x.id === id); if (!t) return;
+      $('#score-title').textContent = `Score ${score(t)} · ${t.task}`;
+      const p = t.priority * 10, b = (10-t.length)*4, f = (10-t.difficulty)*3;
+      $('#score-breakdown').innerHTML = `<div class="score-line"><span>Priorité ${t.priority} × 10</span><b>${p}</b></div><div class="score-line"><span>Brièveté (10 − ${t.length}) × 4</span><b>${b}</b></div><div class="score-line"><span>Facilité (10 − ${t.difficulty}) × 3</span><b>${f}</b></div><div class="score-line"><span>Rendement conseillé</span><b>${score(t)}</b></div>`;
+      $('#score-dialog').showModal();
+    }
+
+    function openTaskDialog(id='') {
+      const t = tasks.find(x => x.id === id);
+      $('#task-dialog-title').textContent = t ? 'Modifier la quête' : 'Nouvelle quête';
+      $('#task-id').value = t?.id || '';
+      $('#task-name').value = t?.task || '';
+      $('#task-domain').value = t?.domain || 'Maison';
+      $('#task-priority').value = t?.priority || 5;
+      $('#task-length').value = t?.length || 3;
+      $('#task-difficulty').value = t?.difficulty || 3;
+      $('#delete-task').hidden = !t;
+      updateFormScore();
+      $('#task-dialog').showModal();
+      requestAnimationFrame(() => $('#task-name').focus());
+    }
+
+    function updateFormScore() {
+      const t = {priority:+$('#task-priority').value, length:+$('#task-length').value, difficulty:+$('#task-difficulty').value};
+      $('#priority-output').value = `${t.priority} / 10`;
+      $('#length-output').value = `${t.length} · ${lengths[t.length]}`;
+      $('#difficulty-output').value = `${t.difficulty} / 10`;
+      $('#form-score').textContent = score(t);
+    }
+
+    function saveTask(event) {
+      event.preventDefault();
+      const id = $('#task-id').value;
+      const values = {task:$('#task-name').value.trim(), domain:$('#task-domain').value, priority:+$('#task-priority').value, length:+$('#task-length').value, difficulty:+$('#task-difficulty').value};
+      if (!values.task) return;
+      if (id) Object.assign(tasks.find(t => t.id === id), values);
+      else tasks.unshift({id:`local-${Date.now()}`, ...values, status:'todo', created:'2026-10-04'});
+      $('#task-dialog').close();
+      renderEverything();
+      showToast(id ? 'Quête mise à jour.' : 'Nouvelle quête semée.', false);
+    }
+
+    function deleteTask() {
+      const id = $('#task-id').value; if (!id) return;
+      tasks = tasks.filter(t => t.id !== id);
+      $('#task-dialog').close(); renderEverything(); showToast('Quête retirée de la planche.', false);
+    }
+
+    let toastTimer;
+    function showToast(message, undo) {
+      clearTimeout(toastTimer);
+      $('#toast-message').textContent = message;
+      $('#toast-action').hidden = !undo;
+      $('#toast').classList.add('show');
+      toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4200);
+    }
+
+    function undoLast() {
+      if (!lastChanged) return;
+      const t = tasks.find(x => x.id === lastChanged.id);
+      if (t) { t.status = lastChanged.wasDone ? 'done' : 'todo'; todayDone += lastChanged.wasDone ? 1 : -1; }
+      lastChanged = null; $('#toast').classList.remove('show'); renderEverything();
+    }
+
+    function changeView(name) {
+      $$('.view').forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
+      $$('[data-view]').forEach(b => b.setAttribute('aria-current', b.dataset.view === name ? 'page' : 'false'));
+      document.title = `${name === 'today' ? 'Aujourd’hui' : name === 'quests' ? 'Quêtes' : name === 'farm' ? 'Ferme' : 'Journal'} · Le Potager des Quêtes`;
+      window.scrollTo({top:0, behavior:'smooth'});
+      if (name === 'quests') requestAnimationFrame(() => $('#quest-search').focus({preventScroll:true}));
+    }
+
+    function renderFarm() {
+      const plotInfo = [
+        ['Planche des aromates','Herbes et laitues — nourries par les petites tâches terminées en mai.','#8eaa70',true],
+        ['Rang des courges','Une récolte franche pour une tâche menée jusqu’au bout.','#7f9664',true],
+        ['Carré des réparations','Les gestes précis font pousser des feuillages solides.','#6f9272',true],
+        ['Jardin du foyer','Les travaux de maison prennent racine ici.','#9aaa6e',true],
+        ['Sillon professionnel','Les projets patients deviennent une culture de fond.','#72918a',true],
+        ['Bande administrative','Les petites démarches libèrent beaucoup d’espace.','#a79a6e',true],
+        ['Planche nouvelle','Mets encore une quête en terre pour la cultiver.','#81966c',todayDone >= 3],
+        ['Terre en repos','Cette planche s’ouvre après trois jours actifs.','#81966c',false],
+        ['Verger à venir','Une future saison de progression.','#81966c',false]
+      ];
+      $('#garden-plots').innerHTML = plotInfo.map((p,i) => `<button class="plot ${p[3] ? '' : 'locked'}" data-plot="${i}" aria-label="${esc(p[0])}${p[3] ? '' : ', verrouillée'}">${p[3] ? `<span class="crop" style="--leaf:${p[2]}">${'<i class="crop-leaf"></i>'.repeat(6)}</span>` : ''}</button>`).join('');
+      $$('.plot').forEach(btn => btn.addEventListener('click', () => {
+        const p = plotInfo[+btn.dataset.plot];
+        $('#plot-detail').innerHTML = `<strong>${esc(p[0])}</strong><p>${esc(p[1])}</p>${p[3] ? `<button class="secondary-button" id="water-button">${icon('drop')}Arroser la planche</button>` : '<span style="font-size:12px;color:var(--muted)">Continue les quêtes réelles pour ouvrir cette terre.</span>'}`;
+        $('#water-button')?.addEventListener('click', waterPlot);
+      }));
+      $('#farm-harvest').textContent = tasks.filter(t => t.status === 'done').length + todayDone;
+      $('#farm-score').textContent = Math.round(tasks.filter(t => t.status === 'done').reduce((sum,t) => sum + score(t),0) / Math.max(1,tasks.filter(t => t.status === 'done').length));
+      $('#water-button')?.addEventListener('click', waterPlot);
+    }
+
+    function waterPlot(e) {
+      e.currentTarget.innerHTML = `${icon('check')}Planche arrosée`;
+      e.currentTarget.disabled = true;
+      showToast('Arrosage noté pour aujourd’hui.', false);
+    }
+
+    function renderJournal() {
+      const done = tasks.filter(t => t.status === 'done').slice(-8).reverse();
+      $('#journal-list').innerHTML = done.map((t,i) => `<article class="journal-entry"><div class="journal-stem"><span class="journal-dot">${icon('sprout')}</span></div><div><h3>${esc(t.task)}</h3><p><time>${i === 0 && t.id.startsWith('task-') ? 'Aujourd’hui' : 'Saison passée'}</time> · ${esc(t.domain)} · rendement ${score(t)}</p></div></article>`).join('');
+    }
+
+    function renderEverything() { renderToday(); renderDomains(); renderAll(); renderField(); renderFarm(); renderJournal(); }
+
+    $$('[data-view]').forEach(btn => btn.addEventListener('click', () => changeView(btn.dataset.view)));
+    $$('[data-view-jump]').forEach(btn => btn.addEventListener('click', () => changeView(btn.dataset.viewJump)));
+    $$('.sort-chip').forEach(btn => btn.addEventListener('click', () => { currentSort = btn.dataset.sort; $$('.sort-chip').forEach(x => x.setAttribute('aria-pressed', x === btn)); renderToday(); }));
+    $('#quest-search').addEventListener('input', renderAll);
+    $('#all-sort').addEventListener('change', renderAll);
+    $('#add-task').addEventListener('click', () => openTaskDialog());
+    $('#task-form').addEventListener('submit', saveTask);
+    $('#delete-task').addEventListener('click', deleteTask);
+    ['task-priority','task-length','task-difficulty'].forEach(id => $(`#${id}`).addEventListener('input', updateFormScore));
+    $$('[data-close]').forEach(btn => btn.addEventListener('click', () => $(`#${btn.dataset.close}`).close()));
+    $('#open-score-guide').addEventListener('click', () => openScore('task-20260714-1'));
+    $('#toast-action').addEventListener('click', undoLast);
+    $$('dialog').forEach(dialog => dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); }));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('.toast.show').forEach(t => t.classList.remove('show')); });
+
+    renderEverything();
+  </script>
+</body>
+</html>
