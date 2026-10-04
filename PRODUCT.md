@@ -60,6 +60,10 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - Les aléas ont des conséquences virtuelles réelles mais récupérables: récoltes perdues, bâtiments endommagés ou délais supplémentaires. Ils ne suppriment jamais une tâche, une donnée réelle ou une progression permanente.
 - Économie confirmée à trois ressources: énergie pour les actions immédiates, matériaux pour construire et réparer, réputation pour les déblocages, relations et chapitres narratifs.
 - Le jeu doit convenir aux visites de quelques secondes comme aux sessions stratégiques plus longues, sans obliger Alex à consacrer une durée quotidienne fixe.
+- Le futurisme doit être réconcilié avec la ferme par un monde agro-futuriste cohérent, plus chaleureux et incarné. Éviter qu’une interface sci-fi sombre paraisse simplement posée par-dessus un jeu agricole.
+- Le storytelling doit expliquer dès les premières minutes ce que le joueur gère, pourquoi la Colonie existe, ce qu’est le Bastion, quels sont les objectifs immédiats et à long terme, et comment la Réputation fait progresser le monde et le récit.
+- La ferme doit devenir un véritable espace de jeu manipulable, inspiré de Township et Blocky Farm: carte visible, éléments cliquables, placement de bâtiments et décorations, parcelles développées progressivement et obstacles à contrer avec les ressources gagnées.
+- Le laboratoire et l’application restent temporairement sans mot de passe HTTP. Un système de connexion par code unique devra remplacer cette protection avant la mise en production définitive.
 
 ## Evidence on Hand
 

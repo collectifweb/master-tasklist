@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T00:00:00-04:00",
+  "title": "Design System: Orée vivante",
+  "extensions": {
+    "colorMeta": {
+      "sage-deep": { "role": "primary", "displayName": "Sauge d’autonomie", "canonical": "#3f6047", "tonalRamp": ["#17231a", "#26392b", "#3f6047", "#5f8067", "#82a189", "#a8c2ac", "#d0ddcf", "#f0f5ed"] },
+      "solar-glass": { "role": "secondary", "displayName": "Verre solaire", "canonical": "#58a9a4", "tonalRamp": ["#15302f", "#24514f", "#2d7473", "#58a9a4", "#7fc1bc", "#acd9d3", "#d4ebe7", "#f0f8f6"] },
+      "soil": { "role": "tertiary", "displayName": "Terre de l’Orée", "canonical": "#aa6c43", "tonalRamp": ["#321d12", "#56301f", "#75472f", "#aa6c43", "#c38c65", "#d9ae8d", "#ead0ba", "#f8eee5"] },
+      "paper": { "role": "neutral", "displayName": "Papier récolte", "canonical": "#fff8e8", "tonalRamp": ["#2e2a21", "#575044", "#827868", "#ada18d", "#d0c5af", "#eadfca", "#f7edd9", "#fff8e8"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Titre blocky", "purpose": "Objectifs, feuilles et onboarding." },
+      "body": { "displayName": "Corps opératoire", "purpose": "Gestion fréquente et narration courte." },
+      "label": { "displayName": "Étiquette d’état", "purpose": "Catégories, progression et états fonctionnels." }
+    },
+    "shadows": [
+      { "name": "object-map", "value": "drop-shadow(8px 12px 5px rgba(66,43,25,.25))", "purpose": "Détacher les bâtiments de la grille." },
+      { "name": "panel-raised", "value": "0 16px 30px rgba(78,53,31,.22)", "purpose": "Feuilles, onboarding et dialogues." },
+      { "name": "hud-light", "value": "0 8px 24px rgba(81,59,31,.12)", "purpose": "Barre de ressources et HUD." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "Caméra, feuilles et confirmations." },
+      { "name": "camera", "value": "380ms", "purpose": "Zoom, rotation et recentrage." },
+      { "name": "sheet", "value": "320ms", "purpose": "Feuille mobile et inspecteur." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "700px" },
+      { "name": "wide", "value": "1050px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action principale tactile de la ferme.",
+      "html": "<button class=\"ds-button-primary\">Planter · 3 Énergie</button>",
+      "css": ".ds-button-primary{min-height:44px;padding:9px 13px;border:1px solid #3f6047;border-radius:12px;color:#fff8e8;background:#3f6047;font:850 16px/1.2 Aptos,Segoe UI,system-ui,sans-serif}.ds-button-primary:hover{filter:brightness(1.06)}.ds-button-primary:focus-visible{outline:3px solid #153f3f;outline-offset:3px}"
+    },
+    {
+      "name": "Resource Control",
+      "kind": "custom",
+      "description": "Ressource tactile avec valeur, icône et explication contextuelle.",
+      "html": "<button class=\"ds-resource\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m13.2 2-8 12h6.1l-.7 8 8.1-12h-6.2l.7-8Z\"/></svg><b>12</b><span>Énergie</span></button>",
+      "css": ".ds-resource{min-height:45px;padding:5px 8px;border:1px solid rgba(54,74,56,.17);border-radius:13px;display:grid;grid-template-columns:21px auto;align-items:center;column-gap:6px;color:#936313;background:rgba(255,255,255,.56);text-align:left}.ds-resource svg{grid-row:1/3;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9}.ds-resource b{color:#273026;font:900 16px/1 Trebuchet MS,sans-serif}.ds-resource span{color:#5f6756;font:700 11px/1 Aptos,Segoe UI,system-ui,sans-serif}.ds-resource:focus-visible{outline:3px solid #153f3f;outline-offset:3px}"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "description": "Navigation mobile constante à quatre actions.",
+      "html": "<nav class=\"ds-nav\"><button class=\"is-active\">Ferme</button><button>Quêtes</button><button>Construire</button><button>Bastion</button></nav>",
+      "css": ".ds-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px 7px;border-top:1px solid rgba(58,65,48,.2);background:#fffaf0}.ds-nav button{min-height:58px;border:0;border-radius:13px;color:#5f6756;background:transparent;font:850 11px/1 Aptos,Segoe UI,system-ui,sans-serif}.ds-nav button.is-active{color:#fff;background:#3f6047}.ds-nav button:focus-visible{outline:3px solid #153f3f;outline-offset:2px}"
+    },
+    {
+      "name": "Warm Panel",
+      "kind": "card",
+      "refersTo": "panel-warm",
+      "description": "Panneau lisible au-dessus de la carte.",
+      "html": "<section class=\"ds-panel\"><strong>Maintenant</strong><p>Accomplir une quête réelle</p></section>",
+      "css": ".ds-panel{padding:12px;border:1px solid rgba(58,65,48,.2);border-radius:17px;color:#273026;background:rgba(255,248,232,.95);box-shadow:0 9px 24px rgba(79,50,24,.18)}.ds-panel strong{color:#3f6047;font:900 11px/1 Aptos,Segoe UI,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}.ds-panel p{margin:5px 0 0;color:#273026;font:850 15px/1.2 Aptos,Segoe UI,system-ui,sans-serif}"
+    },
+    {
+      "name": "Map Control",
+      "kind": "button",
+      "description": "Commande carrée explicite de caméra.",
+      "html": "<button class=\"ds-map-control\" aria-label=\"Recentrer\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m3 11 9-7 9 7M5 10v10h14V10m-9 10v-6h4v6\"/></svg></button>",
+      "css": ".ds-map-control{width:44px;height:44px;padding:0;border:1px solid rgba(60,71,49,.25);border-radius:13px;display:grid;place-items:center;color:#273026;background:#fff8e2;box-shadow:0 7px 17px rgba(75,50,29,.15)}.ds-map-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}.ds-map-control:focus-visible{outline:3px solid #153f3f;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La lisière réparée",
+    "overview": "Un matin clair après la tempête où bois blond, terre ocre, sauge et verre solaire réparent ensemble une colonie agricole. La carte reste l’objet principal et les panneaux standards servent à agir vite.",
+    "keyCharacteristics": [
+      "Carte isométrique continue avant toute vue de registre.",
+      "Palette claire, agricole et patinée.",
+      "Contrôles tactiles explicites et inspecteur tablette.",
+      "Profondeur compacte par blocs et ombres dirigées."
+    ],
+    "rules": [
+      { "name": "The Ember Reserve Rule", "body": "La braise indique une menace, une casse ou une action risquée.", "section": "colors" },
+      { "name": "The Living Ground Rule", "body": "Une grande région de l’écran appartient toujours au monde.", "section": "colors" },
+      { "name": "The Working Label Rule", "body": "Les capitales compactes nomment une fonction ou un état, jamais un ornement vide.", "section": "typography" }
+    ],
+    "dos": [
+      "Do laisser la carte dominer le premier viewport mobile.",
+      "Do associer chaque dépense à un résultat visible dans le monde.",
+      "Do garder Ferme, Bastion et Réputation expliqués en langage direct."
+    ],
+    "donts": [
+      "Don't revenir à un fond charbon ou au cyan néon omniprésent.",
+      "Don't transformer la carte en illustration passive.",
+      "Don't cacher une action essentielle derrière un geste sans bouton équivalent."
+    ]
+  }
+}

@@ -1,9 +1,10 @@
 # Laboratoire de direction — Quêtes du foyer
 
-Cinq prototypes interactifs conservent le même cœur fonctionnel: tâches réelles, score explicable, tris Priorité / Longueur / Difficulté, ajout, édition et accomplissement. Le cinquième réunit les apprentissages validés par Alex.
+Six prototypes interactifs conservent le même cœur fonctionnel: tâches réelles, score explicable, tris Priorité / Longueur / Difficulté, ajout, édition et accomplissement. Les deux derniers réunissent progressivement les apprentissages validés par Alex.
 
 | Direction | Promesse émotionnelle | Boucle dominante | Signature | Risque principal |
 |---|---|---|---|---|
+| Orée vivante | Habiter, construire et comprendre une ferme visible | Carte blocky, placement, objectifs et histoire | Ressources matérialisées dans le monde | Carte ou tutoriel trop envahissant |
 | Colonie Orée | Développer et défendre un monde vivant grâce aux actions réelles | Ferme agro-tech, ressources, événements, Bastion narratif | Impulsion vectorielle vers le monde | Économie ou gestion trop envahissante |
 | Le Conseil du Foyer | Donner du sens et construire une histoire | Quêtes, Renom, chapitres, domaine | Sceau d’accomplissement | Trop de vocabulaire ou de systèmes RPG |
 | Le Potager des Quêtes | Avancer calmement et voir pousser le résultat | Cultures, parcelles, saisons, récoltes | Mise en terre | Univers trop doux ou perçu comme enfantin |
@@ -23,7 +24,7 @@ Pour chaque prototype:
 
 ## Direction actuellement retenue
 
-Colonie Orée reprend la direction visuelle de Vecteur, la boucle de gestion du Potager et la défense mystérieuse du Bastion. Elle sert maintenant de tranche verticale pour valider le vrai jeu avant la construction de production.
+Orée vivante devient la direction active. Elle conserve la gestion des tâches de Colonie Orée, mais transforme la ferme en carte manipulable, réconcilie le futurisme et l’agriculture, et explique les objectifs, le Bastion et la Réputation dès l’onboarding.
 
 ## Ouverture
 
