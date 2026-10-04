@@ -1,9 +1,9 @@
 ---
 name: Orée vivante
-description: Jeu de ferme blocky, chaleureux et agro-futuriste alimenté par des quêtes réelles.
+description: Jeu de ferme blocky, chaleureux et agro-futuriste avec quêtes CRUD, construction directe et incidents physiques.
 colors:
   ink: "#273026"
-  ink-soft: "#5f6756"
+  ink-soft: "#4f5848"
   paper: "#fff8e8"
   cream: "#f7e7bd"
   sunlight: "#f3c879"
@@ -27,7 +27,7 @@ typography:
     lineHeight: 1.45
   label:
     fontFamily: "Aptos, Segoe UI, system-ui, sans-serif"
-    fontSize: "0.7rem"
+    fontSize: "0.75rem"
     fontWeight: 900
     letterSpacing: "0.08em"
 rounded:
@@ -63,6 +63,8 @@ components:
 
 Orée vivante transforme une interface de tâches en lieu habité : un matin clair après la tempête, où bois blond, terre ocre, sauge et verre solaire réparent ensemble une colonie agricole. La carte reste l’objet principal; les panneaux standards servent à agir vite sans déguiser les contrôles en instruments fictifs.
 
+La passe corrective rend cette promesse opératoire : la profondeur suit `row + col`, la sélection et son libellé dominent toujours la scène, la tablette réserve un vrai panneau latéral, et le mobile compacte ses deux docks sans réduire la carte. Le registre de quêtes est un CRUD local complet; la construction accepte toucher, clavier et glisser-déposer.
+
 L’expression vient du volume blocky, de la lumière chaude, des silhouettes agricoles et d’un seul geste signature : les ressources gagnées quittent la tâche et rejoignent physiquement le monde. L’orange braise reste réservé aux dommages et menaces.
 
 **Key Characteristics:**
@@ -70,6 +72,7 @@ L’expression vient du volume blocky, de la lumière chaude, des silhouettes ag
 - Palette claire, agricole et patinée plutôt que sci-fi sombre.
 - Contrôles tactiles explicites, feuilles mobiles et inspecteur latéral tablette.
 - Profondeur compacte par blocs, ombres dirigées et plans superposés.
+- Incidents déterministes matérialisés sur la carte et conséquences toujours récupérables.
 
 ## Colors
 
@@ -118,7 +121,7 @@ La palette est complète et fonctionnelle : la terre et la sauge portent le mond
 
 Mobile d’abord. À 390 × 844, la barre de ressources précède une carte de 58dvh; objectif, personnage, contrôles et tâche recommandée flottent aux quatre bords sans remplacer la carte. La navigation et le chapitre suivent dans une zone basse stable.
 
-À partir de 700 px, le panneau inférieur devient inspecteur latéral, la navigation et le chapitre forment un module fixe à droite, et la carte utilise toute la hauteur restante. Les cibles interactives restent à 44 px minimum. Les espacements suivent principalement 6, 8, 12, 18 et 24 px.
+À partir de 700 px, l’inspecteur réserve 42 % de la largeur (390 px maximum) au lieu de recouvrir la carte. La navigation et le chapitre restent dans la zone de jeu; la tâche conseillée remonte au-dessus d’eux. Les cibles interactives restent à 44 px minimum. Les espacements suivent principalement 6, 8, 12, 18 et 24 px.
 
 ## Elevation & Depth
 
@@ -155,15 +158,39 @@ Les contrôles utilisent des angles adoucis de 12 à 17 px; les feuilles mobiles
 ### Carte isométrique
 - Grille de losanges sans ligne globale visible.
 - Chaque entité est un bouton sémantique superposé à sa case.
+- Profondeur de base : `100 + row + col`; sélection et fantôme : `3000`.
+- Le libellé sélectionné reste visible au-dessus de l’objet et contre-roté avec la caméra.
 - Zoom, rotation et recentrage existent toujours comme boutons, même si le déplacement direct est disponible.
 - Le mode construction révèle validité, invalidité et fantôme de placement par motif, contour et libellé.
+
+### Registre de quêtes
+- Ajout et édition dans un dialogue standard avec titre, domaine, priorité, durée et effort.
+- Actions Modifier et Supprimer toujours explicites; suppression confirmée.
+- Recommandation recalculée à chaque mutation locale.
+- Titre conseillé en casse normale, limité visuellement à deux lignes.
+
+### Confiance
+- Libellé public : **Confiance**, jamais Réputation dans l’interface.
+- Règle unique : `+1` à la première quête terminée du jour.
+- Toujours montrer la valeur actuelle, le prochain seuil et le bénéfice concret.
+
+### Construction
+- Guide visible : Choisir → Placer → Confirmer.
+- Miniatures construites avec les mêmes volumes isométriques que la carte.
+- Toucher séquentiel, drag/drop avec fantôme aimanté, rotation et confirmation.
+- Une seule case tabulable en mode; aucune tuile dans la tabulation hors mode.
+
+### Incidents
+- Jour 2 : irrigation bouchée; jour 3 : insectes; jour 4 : Tour instable.
+- Chaque incident conserve un marqueur physique tant qu’il est actif ou contenu.
+- Option payante sans conséquence et option gratuite avec conséquence récupérable.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** laisser la carte dominer le premier viewport mobile.
 - **Do** associer chaque dépense à un résultat visible dans le monde.
-- **Do** garder Ferme, Bastion et Réputation expliqués en langage direct.
+- **Do** garder Ferme, Bastion et Confiance expliqués en langage direct.
 - **Do** réserver les animations fortes à la complétion, la construction et le signal météo.
 
 ### Don't:

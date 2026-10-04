@@ -273,9 +273,9 @@ export const SOURCE_TASKS = Object.freeze([
 ]);
 
 export const RESOURCE_HELP = Object.freeze({
-  energy: { title: 'Énergie', text: 'Sert à planter, intervenir et répondre immédiatement aux incidents.' },
-  materials: { title: 'Matériaux', text: 'Servent à construire, améliorer et réparer les installations.' },
-  reputation: { title: 'Réputation', text: 'Confiance cumulative. Elle ne se dépense pas et ouvre personnages, secteurs et chapitres.' }
+  energy: { title: 'Énergie', text: 'Pour agir tout de suite.' },
+  materials: { title: 'Matériaux', text: 'Pour construire et réparer.' },
+  confidence: { title: 'Confiance', text: 'La première quête terminée chaque jour donne +1. À 3 : codes de la Tour.' }
 });
 
 export const BUILDABLES = Object.freeze({
@@ -296,15 +296,21 @@ export const BASE_ENTITIES = Object.freeze([
 ]);
 
 export const INITIAL_STATE = Object.freeze({
-  version: 3,
+  version: 4,
   day: 1,
-  resources: { energy: 12, materials: 22, reputation: 1 },
+  resources: { energy: 12, materials: 22, confidence: 1 },
   tasks: SOURCE_TASKS,
   mission: { taskId: null, startedAt: null },
   selectedTaskId: 'task-20261004-2',
   entities: BASE_ENTITIES,
   placed: [],
   unlockedCells: [],
+  confidenceDays: [],
+  incidents: {
+    irrigation: { day: 2, status: 'dormant', consequence: null },
+    insects: { day: 3, status: 'dormant', consequence: null },
+    towerShock: { day: 4, status: 'dormant', consequence: null }
+  },
   chapter: { taskCompleted: false, planted: false, towerInspected: false, towerStable: false, weatherSignal: false },
   onboardingComplete: false,
   onboardingStep: 0,
@@ -315,7 +321,7 @@ export const CHAPTER_STEPS = Object.freeze([
   { key: 'taskCompleted', title: 'Remettre l’Orée en mouvement', detail: 'Terminer une quête réelle.' },
   { key: 'planted', title: 'Semer malgré la cendre', detail: 'Planter une parcelle pour 3 Énergie.' },
   { key: 'towerInspected', title: 'Le signal incomplet', detail: 'Inspecter la Tour météo instable.' },
-  { key: 'reputation', title: 'Faire ses preuves', detail: 'Atteindre 3 Réputation.' },
+  { key: 'confidence', title: 'Gagner la confiance', detail: 'Atteindre 3 Confiance.' },
   { key: 'towerStable', title: 'Stabiliser la Tour', detail: 'Dépenser 6 Énergie et 12 Matériaux.' },
   { key: 'weatherSignal', title: 'Le signal météo', detail: 'Émettre le premier relevé vers la vallée.' }
 ]);
