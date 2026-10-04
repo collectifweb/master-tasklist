@@ -1,0 +1,112 @@
+[
+  {
+    "id": "example-001",
+    "task": "Ranger l’entrée",
+    "domain": "Maison",
+    "difficulty": 2,
+    "length": 3,
+    "priority": 5,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-002",
+    "task": "Arroser les plantes",
+    "domain": "Terrain",
+    "difficulty": 3,
+    "length": 4,
+    "priority": 6,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-003",
+    "task": "Préparer les repas de la semaine",
+    "domain": "Enfants",
+    "difficulty": 4,
+    "length": 5,
+    "priority": 7,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-004",
+    "task": "Nettoyer le réfrigérateur",
+    "domain": "Véhicule",
+    "difficulty": 5,
+    "length": 1,
+    "priority": 8,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-005",
+    "task": "Réparer une poignée",
+    "domain": "Administratif",
+    "difficulty": 1,
+    "length": 2,
+    "priority": 9,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-006",
+    "task": "Classer les documents",
+    "domain": "Maison",
+    "difficulty": 2,
+    "length": 3,
+    "priority": 2,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-007",
+    "task": "Vérifier la pression des pneus",
+    "domain": "Terrain",
+    "difficulty": 3,
+    "length": 4,
+    "priority": 3,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-008",
+    "task": "Planifier une sortie familiale",
+    "domain": "Enfants",
+    "difficulty": 4,
+    "length": 5,
+    "priority": 4,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-009",
+    "task": "Donner les vêtements inutilisés",
+    "domain": "Véhicule",
+    "difficulty": 5,
+    "length": 1,
+    "priority": 5,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  },
+  {
+    "id": "example-010",
+    "task": "Laver les fenêtres",
+    "domain": "Administratif",
+    "difficulty": 1,
+    "length": 2,
+    "priority": 6,
+    "status": "todo",
+    "created": "2026-01-01",
+    "deadline": null
+  }
+]

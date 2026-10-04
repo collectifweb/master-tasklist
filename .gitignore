@@ -1,5 +1,13 @@
+# Données réelles et état propre à l’hébergement
+tasks.json
+PUBLIC_URL.txt
 .remote-sync-hash
 .remote-sync.lock
+
+# Captures locales pouvant contenir des données de test privées
+sketches/**/review/*.png
+
+# Outils et états locaux
 .agents/
 .claude/
 .codex/
