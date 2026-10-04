@@ -1,0 +1,7 @@
+.remote-sync-hash
+.remote-sync.lock
+.agents/
+.claude/
+.codex/
+.impeccable/review/
+.impeccable/live/

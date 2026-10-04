@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111a20">
+  <title>Le Bastion des Cendres — Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #0b1115;
+      --deep: #10181e;
+      --slate: #172229;
+      --slate-2: #1d2a32;
+      --slate-3: #273640;
+      --line: #3b4a51;
+      --line-soft: rgba(221, 213, 192, .13);
+      --ivory: #eee8d8;
+      --ivory-dim: #b9b4a7;
+      --ash: #858f91;
+      --ember: #dd7042;
+      --ember-light: #ff9b61;
+      --copper: #b57a4e;
+      --gold: #d2a762;
+      --sage: #7f9c84;
+      --danger: #c86a5d;
+      --shadow: 0 16px 42px rgba(0,0,0,.28);
+      --radius: 16px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--ink); scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: linear-gradient(150deg, rgba(255,255,255,.018) 0 1px, transparent 1px 9px), var(--deep);
+      color: var(--ivory);
+      font: 16px/1.45 Aptos, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(255,155,97,.72);
+      outline-offset: 3px;
+    }
+    button:disabled { opacity: .42; cursor: not-allowed; }
+    .icon { width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    .shell { width: min(100%, 1060px); margin: 0 auto; min-height: 100vh; padding-bottom: calc(96px + var(--safe-bottom)); }
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      min-height: 70px; padding: 11px 16px;
+      background: linear-gradient(180deg, rgba(11,17,21,.98), rgba(16,24,30,.93));
+      border-bottom: 1px solid var(--line-soft);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark {
+      position: relative; display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 43px;
+      border: 1px solid rgba(210,167,98,.55); border-radius: 50%; color: var(--gold);
+      background: radial-gradient(circle, rgba(221,112,66,.22), rgba(221,112,66,.02) 62%);
+      box-shadow: inset 0 0 0 4px rgba(11,17,21,.6);
+    }
+    .brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: var(--gold); opacity: .62; }
+    .brand-mark::before { width: 1px; height: 49px; }
+    .brand-mark::after { width: 49px; height: 1px; }
+    .brand-mark .icon { width: 25px; height: 25px; stroke-width: 1.55; }
+    .brand-copy { min-width: 0; }
+    .eyebrow { color: var(--copper); font-size: .69rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .brand-name { margin-top: 1px; font-family: Georgia, "Times New Roman", serif; font-size: 1.06rem; font-weight: 700; letter-spacing: .025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .level-chip { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 9px; border: 1px solid var(--line-soft); border-radius: 12px; background: rgba(255,255,255,.025); }
+    .level-rune { display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid rgba(221,112,66,.45); transform: rotate(45deg); color: var(--ember-light); background: rgba(221,112,66,.08); }
+    .level-rune span { transform: rotate(-45deg); font-family: Georgia, serif; font-weight: 800; font-size: .8rem; }
+    .level-copy { display: none; color: var(--ivory-dim); font-size: .73rem; line-height: 1.2; }
+    .level-copy strong { display: block; color: var(--ivory); font-size: .79rem; }
+
+    main { padding: 16px; }
+    .view { display: none; animation: view-in .28s ease both; }
+    .view.active { display: block; }
+    @keyframes view-in { from { opacity: 0; transform: translateY(5px); } }
+    .date-line { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
+    .date-line h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.72rem, 6vw, 2.4rem); line-height: 1.03; letter-spacing: -.025em; }
+    .date-line p { margin: 5px 0 0; color: var(--ivory-dim); font-size: .9rem; }
+    .weathered-rule { width: 48px; height: 1px; margin-bottom: 7px; background: linear-gradient(90deg, var(--ember), transparent); }
+
+    .card { border: 1px solid var(--line-soft); border-radius: var(--radius); background: linear-gradient(150deg, rgba(31,44,52,.92), rgba(22,33,40,.94)); box-shadow: var(--shadow); }
+    .daily-ember { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 13px 14px; margin-bottom: 14px; box-shadow: none; }
+    .ember-orb { position: relative; display: grid; place-items: center; width: 42px; height: 42px; color: var(--ember-light); border-radius: 50%; background: radial-gradient(circle at 50% 58%, rgba(255,155,97,.22), transparent 62%); }
+    .ember-orb::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(221,112,66,.36); border-radius: 50%; }
+    .ember-orb .icon { width: 26px; height: 26px; }
+    .daily-copy { min-width: 0; }
+    .daily-label { display: flex; justify-content: space-between; gap: 8px; color: var(--ivory-dim); font-size: .75rem; }
+    .daily-label strong { color: var(--ivory); font-size: .84rem; }
+    .progress { position: relative; overflow: hidden; height: 7px; margin-top: 8px; border-radius: 99px; background: rgba(0,0,0,.3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
+    .progress > span { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a94d32, var(--ember-light)); transition: width .4s cubic-bezier(.2,.8,.2,1); }
+    .daily-gain { text-align: right; color: var(--ember-light); font-size: .78rem; font-weight: 800; }
+    .daily-gain span { display: block; margin-top: 2px; color: var(--ash); font-size: 11px; font-weight: 600; }
+
+    .recommended { position: relative; overflow: hidden; padding: 17px; margin-bottom: 18px; border-color: rgba(181,122,78,.46); }
+    .recommended::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 1px; background: var(--copper); }
+    .recommended::after { content: ""; position: absolute; width: 170px; height: 170px; right: -90px; top: -95px; border: 1px solid rgba(210,167,98,.14); transform: rotate(45deg); }
+    .rec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+    .kicker { display: flex; align-items: center; gap: 7px; color: var(--copper); font-size: .72rem; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+    .kicker .icon { width: 16px; height: 16px; }
+    .score-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 9px; border: 1px solid rgba(210,167,98,.32); border-radius: 11px; color: var(--gold); background: rgba(210,167,98,.07); cursor: pointer; }
+    .score-button strong { font-size: 1.04rem; }
+    .score-button span { color: var(--ivory-dim); font-size: .7rem; }
+    .recommended h2 { position: relative; z-index: 1; max-width: 760px; margin: 0 0 9px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.24rem, 5vw, 1.75rem); line-height: 1.19; font-weight: 700; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 15px; }
+    .tag { display: inline-flex; align-items: center; gap: 5px; min-height: 29px; padding: 4px 8px; border: 1px solid var(--line-soft); border-radius: 8px; color: var(--ivory-dim); background: rgba(0,0,0,.12); font-size: .74rem; }
+    .tag .icon { width: 14px; height: 14px; }
+    .rec-actions { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 10px 14px; border: 1px solid transparent; border-radius: 11px; font-weight: 800; cursor: pointer; transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #181411; background: linear-gradient(180deg, #e48a56, #c6673c); box-shadow: 0 9px 24px rgba(194,87,48,.2); }
+    .btn-primary:hover { background: linear-gradient(180deg, #f09962, #d07143); }
+    .btn-quiet { border-color: var(--line-soft); color: var(--ivory-dim); background: rgba(255,255,255,.025); }
+    .btn-quiet:hover { color: var(--ivory); border-color: rgba(221,213,192,.3); }
+    .btn-danger { border-color: rgba(200,106,93,.4); color: #f1c2bb; background: rgba(200,106,93,.1); }
+    .btn-icon { width: 46px; padding: 0; }
+
+    .score-panel { display: none; position: relative; z-index: 2; margin-top: 13px; padding: 12px; border: 1px solid rgba(210,167,98,.24); border-radius: 11px; background: rgba(8,13,17,.54); }
+    .score-panel.open { display: block; animation: expand .2s ease both; }
+    @keyframes expand { from { opacity: 0; transform: translateY(-4px); } }
+    .score-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); color: var(--ivory-dim); font-size: .79rem; }
+    .score-row:last-child { border: 0; color: var(--ivory); font-weight: 800; }
+    .score-row b { color: var(--ivory); }
+
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 21px 0 11px; }
+    .section-heading h2 { margin: 0; font-size: 1.02rem; letter-spacing: .02em; }
+    .section-heading small { color: var(--ash); }
+    .text-button { min-height: 44px; padding: 6px 3px; border: 0; color: var(--copper); background: none; font-size: .79rem; font-weight: 800; cursor: pointer; }
+
+    .dispositions { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+    .disposition { min-height: 74px; padding: 10px 8px; border: 1px solid var(--line-soft); border-radius: 12px; color: var(--ivory-dim); background: rgba(255,255,255,.022); text-align: left; cursor: pointer; }
+    .disposition .icon { display: block; margin-bottom: 8px; color: var(--copper); }
+    .disposition span { display: block; font-size: .76rem; font-weight: 800; line-height: 1.15; }
+    .disposition small { display: none; color: var(--ash); font-size: 11px; }
+    .disposition.active { color: var(--ivory); border-color: rgba(221,112,66,.62); background: linear-gradient(150deg, rgba(221,112,66,.14), rgba(221,112,66,.04)); }
+
+    .quest-list { display: grid; gap: 9px; }
+    .quest { position: relative; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 11px; align-items: center; min-height: 88px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 14px; background: linear-gradient(145deg, rgba(31,44,52,.75), rgba(22,33,40,.79)); transition: border-color .16s ease, transform .16s ease, background .16s ease; }
+    .quest:hover { border-color: rgba(221,213,192,.26); background: linear-gradient(145deg, rgba(38,52,61,.82), rgba(25,36,43,.86)); }
+    .quest.selected { border-color: rgba(221,112,66,.62); box-shadow: inset 3px 0 0 var(--ember); }
+    .quest.done { opacity: .5; }
+    .select-quest { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 11px; color: var(--ash); background: rgba(0,0,0,.13); cursor: pointer; }
+    .quest.selected .select-quest { border-color: var(--ember); color: var(--ember-light); background: rgba(221,112,66,.13); }
+    .quest-main { min-width: 0; }
+    .quest-main h3 { margin: 0 0 7px; color: var(--ivory); font-size: .92rem; line-height: 1.25; font-weight: 730; }
+    .quest-meta { display: flex; flex-wrap: wrap; gap: 5px 10px; color: var(--ash); font-size: .7rem; }
+    .quest-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .quest-meta .icon { width: 13px; height: 13px; }
+    .quest-score { align-self: stretch; display: grid; align-content: center; justify-items: center; width: 42px; border-left: 1px solid var(--line-soft); color: var(--gold); font-size: .87rem; font-weight: 900; }
+    .quest-score small { display: block; color: var(--ash); font-size: .57rem; font-weight: 700; text-transform: uppercase; }
+    .quest-menu { position: absolute; inset: 4px 50px auto auto; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 8px; color: var(--ash); background: transparent; cursor: pointer; opacity: .6; }
+    .quest-menu:hover { opacity: 1; color: var(--ivory); background: rgba(255,255,255,.05); }
+    .empty { padding: 30px 18px; border: 1px dashed var(--line); border-radius: 14px; color: var(--ash); text-align: center; }
+
+    .fab { position: fixed; z-index: 35; right: max(17px, calc((100vw - 1060px)/2 + 17px)); bottom: calc(78px + var(--safe-bottom)); display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 17px; border: 1px solid rgba(255,180,124,.45); border-radius: 16px; color: #17120f; background: linear-gradient(180deg, #ee9a63, #ca673d); box-shadow: 0 14px 34px rgba(0,0,0,.42); font-weight: 900; cursor: pointer; }
+    .fab .icon { width: 22px; height: 22px; }
+
+    .bottom-nav { position: fixed; z-index: 40; left: 50%; bottom: 0; width: min(100%, 1060px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4,1fr); padding: 5px 8px calc(5px + var(--safe-bottom)); border-top: 1px solid rgba(221,213,192,.13); background: rgba(11,17,21,.96); backdrop-filter: blur(18px); }
+    .nav-item { position: relative; display: grid; place-items: center; gap: 2px; min-height: 58px; padding: 5px 2px; border: 0; border-radius: 10px; color: #8f999b; background: transparent; font-size: 11px; font-weight: 760; cursor: pointer; }
+    .nav-item .icon { width: 21px; height: 21px; }
+    .nav-item.active { color: var(--ivory); }
+    .nav-item.active::before { content: ""; position: absolute; top: 0; width: 25px; height: 2px; border-radius: 2px; background: var(--ember); }
+
+    .expedition-bar { position: fixed; z-index: 38; left: 50%; bottom: calc(73px + var(--safe-bottom)); width: min(calc(100% - 28px), 650px); transform: translate(-50%, 130%); display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 10px 10px 14px; border: 1px solid rgba(221,112,66,.46); border-radius: 15px; background: rgba(23,34,41,.97); box-shadow: 0 16px 40px rgba(0,0,0,.46); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+    .expedition-bar.show { transform: translate(-50%, 0); }
+    .expedition-copy strong { display: block; font-size: .86rem; }
+    .expedition-copy small { color: var(--ash); }
+    .expedition-bar .btn { min-height: 44px; padding: 8px 12px; font-size: .8rem; }
+    .expedition-bar.active-run { border-color: rgba(210,167,98,.6); }
+
+    .page-head { margin-bottom: 18px; }
+    .page-head h1 { margin: 4px 0 4px; font: 700 clamp(1.75rem, 6vw, 2.5rem)/1.05 Georgia, serif; }
+    .page-head p { margin: 0; max-width: 650px; color: var(--ivory-dim); }
+    .toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-bottom: 14px; }
+    .search-box { position: relative; }
+    .search-box .icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ash); }
+    .field, .search-box input { width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 11px; color: var(--ivory); background: rgba(8,13,17,.36); }
+    .search-box input { padding-left: 42px; }
+    .field::placeholder, .search-box input::placeholder { color: #9aa3a4; }
+    select.field { cursor: pointer; }
+
+    .bastion-stage { position: relative; overflow: hidden; min-height: 260px; padding: 22px 18px; border-color: rgba(210,167,98,.26); background: linear-gradient(180deg, rgba(26,38,45,.84), rgba(12,19,24,.96)); }
+    .bastion-stage::before { content: ""; position: absolute; left: 50%; bottom: -75px; width: 300px; height: 160px; transform: translateX(-50%); border: 1px solid rgba(210,167,98,.17); border-radius: 50%; box-shadow: 0 -30px 90px rgba(221,112,66,.08); }
+    .fortress { position: relative; width: 210px; height: 135px; margin: 18px auto 10px; filter: drop-shadow(0 18px 16px rgba(0,0,0,.36)); }
+    .tower, .keep, .wall { position: absolute; bottom: 0; background: linear-gradient(100deg, #303b3f, #202b31); border: 1px solid #465257; }
+    .tower { width: 43px; height: 83px; }
+    .tower.left { left: 8px; }
+    .tower.right { right: 8px; }
+    .tower::before, .keep::before { content: ""; position: absolute; left: -1px; top: -11px; width: 100%; height: 12px; background: repeating-linear-gradient(90deg, #354146 0 8px, transparent 8px 13px); border-left: 1px solid #465257; border-right: 1px solid #465257; }
+    .keep { left: 50%; width: 86px; height: 112px; transform: translateX(-50%); }
+    .wall { left: 28px; right: 28px; height: 59px; }
+    .gate { position: absolute; z-index: 2; left: 50%; bottom: -1px; width: 26px; height: 40px; transform: translateX(-50%); border: 1px solid #6c5a45; border-bottom: 0; border-radius: 14px 14px 0 0; background: radial-gradient(circle at 50% 90%, rgba(255,128,72,.36), rgba(11,17,21,.9) 70%); }
+    .window { position: absolute; z-index: 3; width: 5px; height: 10px; background: var(--ember); box-shadow: 0 0 8px rgba(221,112,66,.65); }
+    .window.w1 { left: 26px; bottom: 43px; }.window.w2 { right: 26px; bottom: 43px; }.window.w3 { left: 50%; top: 34px; transform: translateX(-50%); }
+    .bastion-title { position: relative; z-index: 2; text-align: center; }
+    .bastion-title h2 { margin: 0; font-family: Georgia, serif; font-size: 1.35rem; }
+    .bastion-title p { margin: 5px 0; color: var(--ash); font-size: .82rem; }
+    .rune-meter { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; margin: 16px 0 4px; padding: 13px; border: 1px solid var(--line-soft); border-radius: 12px; background: rgba(0,0,0,.18); }
+    .rune-target { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid rgba(221,112,66,.44); color: var(--ember-light); transform: rotate(45deg); background: rgba(221,112,66,.08); }
+    .rune-target .icon { width: 27px; height: 27px; transform: rotate(-45deg); }
+    .rune-copy strong { display: block; }
+    .rune-copy small { color: var(--ash); }
+    .rune-count { color: var(--gold); font-weight: 900; }
+    .upgrade-grid { display: grid; gap: 10px; margin-top: 12px; }
+    .upgrade { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; min-height: 84px; padding: 13px; border: 1px solid var(--line-soft); border-radius: 13px; background: rgba(255,255,255,.024); }
+    .upgrade-lock { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 12px; color: var(--ash); }
+    .upgrade.available .upgrade-lock { color: var(--gold); border-color: rgba(210,167,98,.4); background: rgba(210,167,98,.07); }
+    .upgrade h3 { margin: 0 0 3px; font-size: .9rem; }
+    .upgrade p { margin: 0; color: var(--ash); font-size: 13px; }
+    .upgrade-cost { color: var(--ivory-dim); font-size: 12px; font-weight: 800; }
+
+    .codex-grid { display: grid; gap: 12px; }
+    .codex-card { padding: 16px; }
+    .codex-card h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 10px; font: 700 1.12rem Georgia, serif; }
+    .codex-card h2 .icon { color: var(--copper); }
+    .codex-card p, .codex-card li { color: var(--ivory-dim); font-size: .83rem; }
+    .codex-card ul { margin: 0; padding-left: 20px; }
+    .legend { display: grid; gap: 7px; }
+    .legend-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: .8rem; }
+    .legend-row:last-child { border: 0; }
+    .legend-row strong { color: var(--gold); }
+    .legend-row span { color: var(--ivory-dim); }
+
+    .modal-backdrop { position: fixed; z-index: 80; inset: 0; display: none; align-items: end; justify-content: center; padding: 12px; background: rgba(2,5,7,.74); backdrop-filter: blur(5px); }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(100%, 610px); max-height: calc(100vh - 24px); overflow: auto; padding: 18px; border: 1px solid rgba(221,213,192,.2); border-radius: 19px 19px 14px 14px; background: #18242b; box-shadow: 0 24px 70px rgba(0,0,0,.6); animation: modal-in .24s ease both; }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(20px); } }
+    .modal-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 17px; }
+    .modal h2 { margin: 0; font: 700 1.42rem Georgia, serif; }
+    .modal-head p { margin: 3px 0 0; color: var(--ash); font-size: .78rem; }
+    .close-modal { min-width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--line-soft); border-radius: 11px; color: var(--ivory-dim); background: rgba(255,255,255,.03); cursor: pointer; }
+    .form-grid { display: grid; gap: 13px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { display: grid; gap: 6px; color: var(--ivory-dim); font-size: .76rem; font-weight: 760; }
+    textarea.field { min-height: 94px; resize: vertical; }
+    .range-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
+    input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--ember); cursor: pointer; }
+    .range-value { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; color: var(--gold); background: rgba(0,0,0,.17); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    .toast { position: fixed; z-index: 100; left: 50%; bottom: calc(90px + var(--safe-bottom)); width: min(calc(100% - 28px), 500px); transform: translate(-50%, 160%); display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 12px; border: 1px solid rgba(127,156,132,.45); border-radius: 14px; color: var(--ivory); background: rgba(19,29,34,.98); box-shadow: 0 16px 50px rgba(0,0,0,.5); opacity: 0; visibility: hidden; pointer-events: none; transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .2s ease, visibility 0s linear .3s; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+    .toast .icon { color: #9bb59f; }
+    .toast strong { display: block; font-size: .83rem; }
+    .toast small { color: var(--ash); }
+    .toast button { min-height: 44px; border: 0; color: var(--ember-light); background: transparent; font-weight: 850; cursor: pointer; }
+    .flying-ember { position: fixed; z-index: 120; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #ffb36f; border-radius: 50%; color: #ffd0a6; background: #d75f35; pointer-events: none; transition: transform .72s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+
+    @media (min-width: 600px) {
+      .topbar { padding-inline: 24px; }
+      main { padding: 23px 24px; }
+      .level-copy { display: block; }
+      .disposition { display: grid; grid-template-columns: auto 1fr; column-gap: 9px; align-content: center; min-height: 68px; padding: 10px 12px; }
+      .disposition .icon { grid-row: 1/3; margin: 0; align-self: center; }
+      .disposition small { display: block; margin-top: 2px; }
+      .quest { min-height: 82px; padding: 13px 14px; }
+      .upgrade-grid, .codex-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .modal-backdrop { align-items: center; }
+      .modal { border-radius: 19px; }
+    }
+    @media (min-width: 850px) {
+      .today-grid { display: grid; grid-template-columns: minmax(0,1.23fr) minmax(310px,.77fr); gap: 18px; align-items: start; }
+      .today-side { position: sticky; top: 91px; }
+      .today-side .section-heading:first-child { margin-top: 0; }
+      .quest-list { gap: 10px; }
+      .bastion-layout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(320px,.9fr); gap: 16px; }
+      .upgrade-grid { grid-template-columns: 1fr; margin-top: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="sr-only" aria-hidden="true" width="0" height="0">
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M13.4 2.6c.5 3-1.7 4.2-2.8 6.1-1-1.2-1.2-2.4-.7-3.8-3.7 2.6-5.2 6-4 9.8A6.4 6.4 0 0 0 12 19.4a6.3 6.3 0 0 0 6.3-6.5c-.1-3.8-2.7-7.4-4.9-10.3Z"/><path d="M12.2 11.1c.2 1.8-1.4 2.5-1.6 3.8-.2 1.3.6 2.5 1.9 2.6 1.6.2 2.7-1 2.6-2.5-.1-1.7-1.4-2.9-2.9-3.9Z"/></symbol>
+    <symbol id="i-rune" viewBox="0 0 24 24"><path d="m12 2 7 7-7 13L5 9l7-7Z"/><path d="m8.6 8.2 6.8 7.6M15.2 8.1 9.4 15.8"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.7 8.3-2.1 5.3-5.3 2.1 2.1-5.3 5.3-2.1Z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.3 2"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m13.3 2-8 12h6.2l-.8 8 8-12h-6.2l.8-8Z"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1h10l-1.7 3L15 11H5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h10M9 12h10M9 18h10"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></symbol>
+    <symbol id="i-fort" viewBox="0 0 24 24"><path d="M4 21V9h4V5h3v4h2V5h3v4h4v12M8 9v12m8-12v12M3 21h18"/><path d="M10 21v-5a2 2 0 0 1 4 0v5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v17H7.5A3.5 3.5 0 0 0 4 22V5.5ZM20 5.5A3.5 3.5 0 0 0 16.5 2H13v17h3.5A3.5 3.5 0 0 1 20 22V5.5Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5.5 9.5V21h13V9.5"/><path d="M9 21v-6h6v6"/></symbol>
+    <symbol id="i-sword" viewBox="0 0 24 24"><path d="m14 4 6-2-2 6L8 18l-4 2 2-4L16 6"/><path d="m10 14 4 4M6.5 12.5l5 5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10.6-10.6a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"/><path d="m14.4 6.8 2.8 2.8"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5.2-3.4 9-8 11-4.6-2-8-5.8-8-11V5l8-3Z"/><path d="m8.6 12 2.2 2.2 4.8-5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 3h6l1 4H8l1-4ZM6 7l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-flame"></use></svg></div>
+        <div class="brand-copy">
+          <div class="eyebrow">Quêtes du foyer</div>
+          <div class="brand-name">Le Bastion des Cendres</div>
+        </div>
+      </div>
+      <div class="level-chip" aria-label="Niveau 7, Gardien du seuil">
+        <div class="level-rune"><span>VII</span></div>
+        <div class="level-copy"><strong>Gardien du seuil</strong>niveau 7</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" data-view="today" aria-labelledby="today-title">
+        <div class="date-line">
+          <div><div class="weathered-rule"></div><h1 id="today-title">Aujourd’hui</h1><p>Dimanche 4 octobre · le foyer attend</p></div>
+        </div>
+
+        <div class="daily-ember card" aria-label="Braise quotidienne : 2 quêtes sur 4">
+          <div class="ember-orb"><svg class="icon"><use href="#i-flame"></use></svg></div>
+          <div class="daily-copy">
+            <div class="daily-label"><strong>Braise quotidienne</strong><span id="daily-count">2 / 4 quêtes</span></div>
+            <div class="progress"><span id="daily-progress" style="width:50%"></span></div>
+          </div>
+          <div class="daily-gain" id="daily-gain">+14<span>braises</span></div>
+        </div>
+
+        <div class="today-grid">
+          <div>
+            <article class="recommended card" id="recommended-card">
+              <div class="rec-head">
+                <div class="kicker"><svg class="icon"><use href="#i-compass"></use></svg>Prochaine quête conseillée</div>
+                <button class="score-button" id="score-toggle" aria-expanded="false" aria-controls="score-panel"><strong>82</strong><span>indice</span></button>
+              </div>
+              <h2>Faire l’inventaire des outils</h2>
+              <div class="tags">
+                <span class="tag"><svg class="icon"><use href="#i-home"></use></svg>Administratif</span>
+                <span class="tag"><svg class="icon"><use href="#i-flag"></use></svg>Priorité 8</span>
+                <span class="tag"><svg class="icon"><use href="#i-clock"></use></svg>30–45 min</span>
+                <span class="tag"><svg class="icon"><use href="#i-bolt"></use></svg>Énergie modérée</span>
+              </div>
+              <div class="rec-actions">
+                <button class="btn btn-primary complete-rec"><svg class="icon"><use href="#i-check"></use></svg>Marquer accomplie</button>
+                <button class="btn btn-quiet btn-icon edit-rec" aria-label="Modifier cette quête"><svg class="icon"><use href="#i-edit"></use></svg></button>
+              </div>
+              <div class="score-panel" id="score-panel">
+                <div class="score-row"><span><b>Priorité 8</b> × 5</span><strong>40</strong></div>
+                <div class="score-row"><span>Brièveté (10 − longueur 3) × 4</span><strong>28</strong></div>
+                <div class="score-row"><span>Facilité (10 − difficulté 3) × 2</span><strong>14</strong></div>
+                <div class="score-row"><span>Indice de recommandation</span><strong>82 / 100</strong></div>
+              </div>
+            </article>
+
+            <div class="section-heading"><h2>Quêtes à portée</h2><small id="visible-count">6 disponibles</small></div>
+            <div class="quest-list" id="today-list"></div>
+          </div>
+
+          <aside class="today-side">
+            <div class="section-heading"><h2>Ma disposition</h2><button class="text-button" id="clear-filter">Tout voir</button></div>
+            <div class="dispositions" role="group" aria-label="Filtres rapides">
+              <button class="disposition" data-filter="quick"><svg class="icon"><use href="#i-clock"></use></svg><span>10 min</span><small>frappe rapide</small></button>
+              <button class="disposition" data-filter="low"><svg class="icon"><use href="#i-bolt"></use></svg><span>Énergie faible</span><small>sans résistance</small></button>
+              <button class="disposition" data-filter="priority"><svg class="icon"><use href="#i-flag"></use></svg><span>Prioritaire</span><small>ce qui presse</small></button>
+            </div>
+
+            <div class="section-heading"><h2>Conseil du Codex</h2></div>
+            <div class="codex-card card" style="box-shadow:none">
+              <h2><svg class="icon"><use href="#i-shield"></use></svg>Garder l’élan</h2>
+              <p style="margin:0">Une expédition de deux petites quêtes produit souvent plus d’élan qu’un siège trop ambitieux. Choisis jusqu’à trois actions cohérentes.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" data-view="quests" aria-labelledby="quests-title">
+        <div class="page-head"><div class="weathered-rule"></div><h1 id="quests-title">Quêtes</h1><p>Toutes les obligations du foyer, classées sans masquer leur coût réel.</p></div>
+        <div class="toolbar">
+          <label class="search-box"><span class="sr-only">Rechercher une quête</span><svg class="icon"><use href="#i-search"></use></svg><input id="quest-search" type="search" placeholder="Chercher dans les quêtes"></label>
+          <label><span class="sr-only">Trier</span><select class="field" id="quest-sort"><option value="score">Indice</option><option value="priority">Priorité</option><option value="short">Durée</option></select></label>
+        </div>
+        <div class="quest-list" id="all-list"></div>
+      </section>
+
+      <section class="view" data-view="bastion" aria-labelledby="bastion-title-page">
+        <div class="page-head"><div class="weathered-rule"></div><h1 id="bastion-title-page">Bastion</h1><p>La forteresse grandit en silence. Chaque pierre atteste d’une tâche réelle, jamais d’un geste inventé pour le jeu.</p></div>
+        <div class="bastion-layout">
+          <div class="bastion-stage card">
+            <div class="bastion-title"><h2>La Cour des Veilleurs</h2><p>Enceinte II · 4 pierres avant le prochain renfort</p></div>
+            <div class="fortress" aria-label="Silhouette du bastion en progression">
+              <div class="wall"></div><div class="tower left"></div><div class="tower right"></div><div class="keep"></div><div class="gate"></div>
+              <i class="window w1"></i><i class="window w2"></i><i class="window w3"></i>
+            </div>
+            <div class="rune-meter">
+              <div class="rune-target" id="rune-target"><svg class="icon"><use href="#i-rune"></use></svg></div>
+              <div class="rune-copy"><strong>Rune du Foyer</strong><small>Chargée par les quêtes accomplies</small><div class="progress"><span id="rune-progress" style="width:63%"></span></div></div>
+              <div class="rune-count" id="rune-count">38 / 60</div>
+            </div>
+          </div>
+          <div class="upgrade-grid">
+            <article class="upgrade available"><div class="upgrade-lock"><svg class="icon"><use href="#i-flame"></use></svg></div><div><h3>Brasero de veille</h3><p>Révèle une disposition conseillée au début du jour.</p></div><span class="upgrade-cost">45 braises</span></article>
+            <article class="upgrade"><div class="upgrade-lock"><svg class="icon"><use href="#i-lock"></use></svg></div><div><h3>Atelier du seuil</h3><p>Se dévoile lorsque l’enceinte atteint le rang III.</p></div><span class="upgrade-cost">Rang III</span></article>
+            <article class="upgrade"><div class="upgrade-lock"><svg class="icon"><use href="#i-lock"></use></svg></div><div><h3>Tour des longues veilles</h3><p>Trace les projets difficiles sans les transformer en corvées artificielles.</p></div><span class="upgrade-cost">Rang IV</span></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="codex" aria-labelledby="codex-title">
+        <div class="page-head"><div class="weathered-rule"></div><h1 id="codex-title">Codex</h1><p>Les règles sont visibles. Le Bastion ne manipule ni la priorité, ni l’effort.</p></div>
+        <div class="codex-grid">
+          <article class="codex-card card"><h2><svg class="icon"><use href="#i-info"></use></svg>Indice de quête</h2><div class="legend"><div class="legend-row"><strong>50 %</strong><span>Priorité déclarée</span></div><div class="legend-row"><strong>30 %</strong><span>Brièveté de l’action</span></div><div class="legend-row"><strong>20 %</strong><span>Facilité d’exécution</span></div></div></article>
+          <article class="codex-card card"><h2><svg class="icon"><use href="#i-flame"></use></svg>Braises</h2><p>Une quête terminée produit de 4 à 18 braises selon son indice et son effort. La série quotidienne ajoute seulement un léger bonus : elle ne doit jamais inciter à découper artificiellement le travail.</p></article>
+          <article class="codex-card card"><h2><svg class="icon"><use href="#i-sword"></use></svg>Expéditions</h2><p>Regroupe de une à trois quêtes avant de commencer. C’est un engagement court et réversible, pas un mode qui cache le reste de la liste.</p></article>
+          <article class="codex-card card"><h2><svg class="icon"><use href="#i-fort"></use></svg>Progression</h2><p>Le Bastion est un témoin secondaire. Il ne bloque aucune fonction de gestion et ne fabrique aucune obligation pour accélérer sa construction.</p></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button class="fab" id="add-task"><svg class="icon"><use href="#i-plus"></use></svg><span>Nouvelle quête</span></button>
+
+  <div class="expedition-bar" id="expedition-bar" aria-live="polite">
+    <div class="expedition-copy"><strong id="expedition-title">1 quête choisie</strong><small id="expedition-detail">Jusqu’à 3 pour une expédition</small></div>
+    <button class="btn btn-primary" id="launch-expedition"><svg class="icon"><use href="#i-sword"></use></svg>Lancer</button>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navigation principale">
+    <button class="nav-item active" data-target="today"><svg class="icon"><use href="#i-flame"></use></svg><span>Aujourd’hui</span></button>
+    <button class="nav-item" data-target="quests"><svg class="icon"><use href="#i-list"></use></svg><span>Quêtes</span></button>
+    <button class="nav-item" data-target="bastion"><svg class="icon"><use href="#i-fort"></use></svg><span>Bastion</span></button>
+    <button class="nav-item" data-target="codex"><svg class="icon"><use href="#i-book"></use></svg><span>Codex</span></button>
+  </nav>
+
+  <div class="modal-backdrop" id="task-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <form class="modal" id="task-form">
+      <div class="modal-head"><div><h2 id="modal-title">Nouvelle quête</h2><p>Le jeu suit le travail. Il ne le déguise pas.</p></div><button type="button" class="close-modal" aria-label="Fermer"><svg class="icon"><use href="#i-x"></use></svg></button></div>
+      <div class="form-grid">
+        <label>Intitulé de la quête<textarea class="field" id="form-title" required placeholder="Décrire une action concrète"></textarea></label>
+        <div class="form-row">
+          <label>Domaine<select class="field" id="form-domain"><option>Maison</option><option>Administratif</option><option>Professionnel</option><option>Jardin</option><option>Ferme</option><option>Terrain</option><option>Véhicule</option></select></label>
+          <label>Échéance<input class="field" id="form-deadline" type="date"></label>
+        </div>
+        <div class="form-row">
+          <label>Priorité<div class="range-line"><input id="form-priority" type="range" min="1" max="10" value="5"><output class="range-value" for="form-priority">5</output></div></label>
+          <label>Durée<div class="range-line"><input id="form-length" type="range" min="1" max="10" value="3"><output class="range-value" for="form-length">3</output></div></label>
+        </div>
+        <label>Difficulté / énergie<div class="range-line"><input id="form-difficulty" type="range" min="1" max="10" value="3"><output class="range-value" for="form-difficulty">3</output></div></label>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn btn-quiet" id="delete-task" hidden><svg class="icon"><use href="#i-trash"></use></svg>Retirer</button><button type="button" class="btn btn-quiet close-modal">Annuler</button><button type="submit" class="btn btn-primary">Sceller la quête</button></div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><svg class="icon"><use href="#i-shield"></use></svg><div><strong id="toast-title">Quête accomplie</strong><small id="toast-detail">+8 braises vers la Rune du Foyer</small></div><button id="undo">Annuler</button></div>
+
+  <script>
+    const initialTasks = [
+      {id:'q-inventaire', title:'Faire l’inventaire des outils', difficulty:3, length:3, priority:8, domain:'Administratif'},
+      {id:'q-terrasse', title:'Nettoyer la terrasse', difficulty:7, length:6, priority:8, domain:'Maison'},
+      {id:'q-protections', title:'Comparer des protections courantes', difficulty:8, length:7, priority:7, domain:'Terrain'},
+      {id:'q-scolaire', title:'Préparer les affaires scolaires', difficulty:1, length:1, priority:5, domain:'Maison'},
+      {id:'q-budget', title:"Planifier le budget mensuel", difficulty:7, length:5, priority:7, domain:'Maison'},
+      {id:'q-velo', title:'Entretenir le vélo', difficulty:4, length:4, priority:6, domain:'Maison'},
+      {id:'q-vehicule', title:'Nettoyer le véhicule', difficulty:2, length:1, priority:6, domain:'Professionnel'},
+      {id:'q-cloture', title:'Réparer une clôture', difficulty:2, length:1, priority:6, domain:'Professionnel'},
+      {id:'q-photos', title:'Trier les photos', difficulty:3, length:2, priority:6, domain:'Maison'},
+      {id:'q-fenetres', title:'Laver les fenêtres', difficulty:3, length:5, priority:6, domain:'Ferme'},
+      {id:'q-sortie', title:'Planifier une sortie familiale', difficulty:5, length:5, priority:5, domain:'Véhicule'},
+      {id:'q-repas', title:'Préparer les repas de la semaine', difficulty:9, length:9, priority:8, domain:'Professionnel'}
+    ];
+
+    let tasks = initialTasks.map(t => ({...t, done:false}));
+    let selected = new Set();
+    let currentFilter = null;
+    let editingId = null;
+    let expeditionActive = false;
+    let lastCompleted = null;
+    let dailyDone = 2;
+    let runeCharge = 38;
+    let toastTimer;
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const icon = id => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"></use></svg>`;
+    const score = t => Math.min(100, t.priority * 5 + (10 - t.length) * 4 + (10 - t.difficulty) * 2);
+    const duration = n => n <= 1 ? '≈ 10 min' : n <= 2 ? '15–25 min' : n <= 4 ? '30–60 min' : n <= 6 ? '1–2 h' : 'longue';
+    const energy = n => n <= 3 ? 'faible' : n <= 6 ? 'modérée' : 'forte';
+
+    function questMarkup(t) {
+      const isSelected = selected.has(t.id);
+      return `<article class="quest ${isSelected ? 'selected' : ''}" data-id="${t.id}">
+        <button class="select-quest" aria-pressed="${isSelected}" aria-label="${isSelected ? 'Retirer de' : 'Ajouter à'} l’expédition">${icon(isSelected ? 'check' : 'sword')}</button>
+        <div class="quest-main"><h3>${escapeHtml(t.title)}</h3><div class="quest-meta"><span>${icon('home')}${t.domain}</span><span>${icon('flag')}priorité ${t.priority}</span><span>${icon('clock')}${duration(t.length)}</span><span>${icon('bolt')}${energy(t.difficulty)}</span></div></div>
+        <button class="quest-menu" aria-label="Modifier ${escapeHtml(t.title)}">${icon('edit')}</button>
+        <div class="quest-score"><small>indice</small>${score(t)}</div>
+      </article>`;
+    }
+
+    function escapeHtml(value) { const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
+
+    function filteredToday() {
+      let result = tasks.filter(t => !t.done && t.id !== 'q-inventaire');
+      if (currentFilter === 'quick') result = result.filter(t => t.length <= 1);
+      if (currentFilter === 'low') result = result.filter(t => t.difficulty <= 3);
+      if (currentFilter === 'priority') result = result.filter(t => t.priority >= 7);
+      return result.sort((a,b) => score(b)-score(a)).slice(0, 6);
+    }
+
+    function renderToday() {
+      const list = filteredToday();
+      $('#today-list').innerHTML = list.length ? list.map(questMarkup).join('') : '<div class="empty">Aucune quête ne répond à cette disposition.</div>';
+      $('#visible-count').textContent = `${list.length} disponible${list.length > 1 ? 's' : ''}`;
+      bindQuestEvents($('#today-list'));
+    }
+
+    function renderAll() {
+      const q = $('#quest-search').value.trim().toLowerCase();
+      const sort = $('#quest-sort').value;
+      let list = tasks.filter(t => !t.done && t.title.toLowerCase().includes(q));
+      list.sort((a,b) => sort === 'priority' ? b.priority-a.priority : sort === 'short' ? a.length-b.length : score(b)-score(a));
+      $('#all-list').innerHTML = list.length ? list.map(questMarkup).join('') : '<div class="empty">Aucune quête trouvée dans le registre.</div>';
+      bindQuestEvents($('#all-list'));
+    }
+
+    function bindQuestEvents(root) {
+      root.querySelectorAll('.select-quest').forEach(btn => btn.addEventListener('click', () => {
+        const id = btn.closest('.quest').dataset.id;
+        if (expeditionActive && selected.has(id)) completeTask(id, btn);
+        else toggleSelection(id);
+      }));
+      root.querySelectorAll('.quest-menu').forEach(btn => btn.addEventListener('click', () => openModal(btn.closest('.quest').dataset.id)));
+    }
+
+    function render() { renderToday(); renderAll(); updateExpedition(); }
+
+    function toggleSelection(id) {
+      if (selected.has(id)) selected.delete(id);
+      else if (selected.size < 3) selected.add(id);
+      else showToast('Expédition complète', 'Trois quêtes maximum pour garder un cap réaliste.', false);
+      render();
+    }
+
+    function updateExpedition() {
+      const bar = $('#expedition-bar');
+      const count = selected.size;
+      if (!count) expeditionActive = false;
+      bar.classList.toggle('show', count > 0);
+      bar.classList.toggle('active-run', expeditionActive);
+      $('#expedition-title').textContent = expeditionActive ? 'Expédition en cours' : count ? `${count} quête${count > 1 ? 's' : ''} choisie${count > 1 ? 's' : ''}` : 'Aucune quête choisie';
+      $('#expedition-detail').textContent = expeditionActive ? 'Touchez une rune cochée pour accomplir' : count < 3 ? `Encore ${3-count} place${3-count > 1 ? 's' : ''}` : 'Compagnie au complet';
+      $('#launch-expedition').innerHTML = expeditionActive ? `${icon('check')}En marche` : `${icon('sword')}Lancer`;
+      $('#launch-expedition').disabled = expeditionActive;
+    }
+
+    $('#launch-expedition').addEventListener('click', () => {
+      if (!selected.size) return;
+      const names = tasks.filter(t => selected.has(t.id)).map(t => t.title);
+      expeditionActive = true;
+      updateExpedition();
+      showToast('Expédition scellée', names.length === 1 ? 'Une quête. Un cap net.' : `${names.length} quêtes regroupées sans masquer le reste.`, false);
+    });
+
+    $$('.disposition').forEach(btn => btn.addEventListener('click', () => {
+      const next = btn.dataset.filter;
+      currentFilter = currentFilter === next ? null : next;
+      $$('.disposition').forEach(b => b.classList.toggle('active', b.dataset.filter === currentFilter));
+      renderToday();
+    }));
+    $('#clear-filter').addEventListener('click', () => { currentFilter = null; $$('.disposition').forEach(b => b.classList.remove('active')); renderToday(); });
+
+    $('#score-toggle').addEventListener('click', () => {
+      const panel = $('#score-panel'); const open = !panel.classList.contains('open');
+      panel.classList.toggle('open', open); $('#score-toggle').setAttribute('aria-expanded', open);
+    });
+
+    function completeTask(id, origin) {
+      const task = tasks.find(t => t.id === id);
+      if (!task || task.done) return;
+      task.done = true; selected.delete(id);
+      const gain = Math.max(4, Math.round(score(task) / 10));
+      dailyDone = Math.min(4, dailyDone + 1); runeCharge = Math.min(60, runeCharge + gain);
+      lastCompleted = {id, gain};
+      animateEmber(origin || document.body);
+      updateProgress(); render();
+      if (id === 'q-inventaire') $('#recommended-card').style.display = 'none';
+      showToast('Quête accomplie', `+${gain} braises vers la Rune du Foyer`, true);
+    }
+
+    function updateProgress() {
+      $('#daily-count').textContent = `${dailyDone} / 4 quêtes`;
+      $('#daily-progress').style.width = `${dailyDone/4*100}%`;
+      $('#daily-gain').innerHTML = `+${14 + Math.max(0,dailyDone-2)*8}<span>braises</span>`;
+      $('#rune-count').textContent = `${runeCharge} / 60`;
+      $('#rune-progress').style.width = `${runeCharge/60*100}%`;
+    }
+
+    function animateEmber(origin) {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const start = origin.getBoundingClientRect();
+      const targetEl = $('.daily-ember .ember-orb');
+      const target = targetEl.getBoundingClientRect();
+      const ember = document.createElement('div'); ember.className = 'flying-ember'; ember.innerHTML = icon('flame');
+      ember.style.left = `${start.left + start.width/2 - 16}px`; ember.style.top = `${start.top + start.height/2 - 16}px`; document.body.appendChild(ember);
+      requestAnimationFrame(() => { ember.style.transform = `translate(${target.left + target.width/2 - (start.left + start.width/2)}px, ${target.top + target.height/2 - (start.top + start.height/2)}px) scale(.35)`; ember.style.opacity = '.15'; });
+      setTimeout(() => ember.remove(), 800);
+    }
+
+    $('.complete-rec').addEventListener('click', e => completeTask('q-inventaire', e.currentTarget));
+    $('.edit-rec').addEventListener('click', () => openModal('q-inventaire'));
+
+    function showToast(title, detail, canUndo) {
+      clearTimeout(toastTimer); $('#toast-title').textContent = title; $('#toast-detail').textContent = detail; $('#undo').hidden = !canUndo; $('#toast').classList.add('show');
+      toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 5200);
+    }
+
+    $('#undo').addEventListener('click', () => {
+      if (!lastCompleted) return;
+      const task = tasks.find(t => t.id === lastCompleted.id); if (task) task.done = false;
+      dailyDone = Math.max(0, dailyDone - 1); runeCharge = Math.max(0, runeCharge - lastCompleted.gain);
+      if (lastCompleted.id === 'q-inventaire') $('#recommended-card').style.display = '';
+      lastCompleted = null; updateProgress(); render(); $('#toast').classList.remove('show');
+    });
+
+    function openModal(id = null) {
+      editingId = id; const task = tasks.find(t => t.id === id);
+      $('#modal-title').textContent = task ? 'Modifier la quête' : 'Nouvelle quête';
+      $('#form-title').value = task?.title || '';
+      $('#form-domain').value = task?.domain || 'Maison';
+      $('#form-deadline').value = '';
+      $('#form-priority').value = task?.priority || 5;
+      $('#form-length').value = task?.length || 3;
+      $('#form-difficulty').value = task?.difficulty || 3;
+      $('#delete-task').hidden = !task;
+      syncRanges(); $('#task-modal').classList.add('open'); document.body.style.overflow = 'hidden';
+      setTimeout(() => $('#form-title').focus(), 50);
+    }
+
+    function closeModal() { $('#task-modal').classList.remove('open'); document.body.style.overflow = ''; editingId = null; }
+    $('#add-task').addEventListener('click', () => openModal());
+    $$('.close-modal').forEach(btn => btn.addEventListener('click', closeModal));
+    $('#task-modal').addEventListener('click', e => { if (e.target === $('#task-modal')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#task-modal').classList.contains('open')) closeModal(); });
+
+    function syncRanges() { ['priority','length','difficulty'].forEach(k => { const el = $(`#form-${k}`); el.nextElementSibling.value = el.value; }); }
+    ['priority','length','difficulty'].forEach(k => $(`#form-${k}`).addEventListener('input', syncRanges));
+
+    $('#task-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const payload = {title:$('#form-title').value.trim(), domain:$('#form-domain').value, priority:+$('#form-priority').value, length:+$('#form-length').value, difficulty:+$('#form-difficulty').value};
+      if (!payload.title) return;
+      const wasEditing = Boolean(editingId);
+      if (editingId) Object.assign(tasks.find(t => t.id === editingId), payload);
+      else tasks.unshift({id:`local-${Date.now()}`, ...payload, done:false});
+      closeModal(); render(); showToast(wasEditing ? 'Quête reforgée' : 'Quête ajoutée', 'Modification locale au prototype, sans écriture réseau.', false);
+    });
+
+    $('#delete-task').addEventListener('click', () => {
+      if (!editingId) return;
+      tasks = tasks.filter(t => t.id !== editingId); selected.delete(editingId); closeModal(); render(); showToast('Quête retirée', 'Le registre local a été mis à jour.', false);
+    });
+
+    $('#quest-search').addEventListener('input', renderAll);
+    $('#quest-sort').addEventListener('change', renderAll);
+
+    $$('.nav-item').forEach(btn => btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      $$('.nav-item').forEach(b => b.classList.toggle('active', b === btn));
+      $$('.view').forEach(v => v.classList.toggle('active', v.dataset.view === target));
+      $('#add-task').style.display = target === 'bastion' || target === 'codex' ? 'none' : '';
+      scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    }));
+
+    render();
+  </script>
+</body>
+</html>
