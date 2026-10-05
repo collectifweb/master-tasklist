@@ -149,7 +149,9 @@ test('remballer une quête terminée en v1 : l’annulation porte le quartier de
   const v1 = { key: 'reward:t1:1', at: T0, day: '2026-10-06', type: 'reward', taskId: 't1', occurrence: 1, pe: 10, energy: 3, materials: 5, lueur: { sector: 'archives', amount: 7.5 }, filLibre: 2.5 };
   const rev = buildReverseEntry([v1], 't1', 1, plusHours(T0, 1));
   assert.equal(rev.quartier, 'mairie');
-  assert.equal(rev.energy, -3);
+  // décision du lot 3 : un gain v1 n'a jamais été versé au stock v2, on n'en reprend ni Énergie ni Matériaux
+  assert.ok(rev.energy === 0 && rev.materials === 0, `${rev.energy}, ${rev.materials}`);
+  assert.equal(rev.pe, -10);
   assert.equal('lueur' in rev, false);
 });
 

@@ -70,6 +70,13 @@ export function quartierOfEntry(entry) {
   return quartierOfSector(entry.lueur && entry.lueur.sector);
 }
 
+/**
+ * Entrée écrite par la v1 : seules les entrées v1 portent `filLibre` (toutes : gains, étapes, bonus, annulations,
+ * Avis) et la v2 n'en écrit jamais, pas même sur un bonus sans quartier (« Bon fil »). Leur Énergie et leurs Matériaux
+ * n'ont jamais été versés au stock v2 : la migration repart du stock de départ (state.js).
+ */
+export const isV1Entry = (entry) => !!entry && typeof entry === 'object' && Object.hasOwn(entry, 'filLibre');
+
 /** Totaux d'une journée de jeu à partir du registre (la référence des plafonds). */
 export function dayTotals(ledger, day) {
   const t = { pe: 0, energy: 0, materials: 0, alreadyDone: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
@@ -142,7 +149,10 @@ export function canReverse(ledger, taskId, occurrence, now) {
   return hoursBetween(reward.at, now) < REVERSE_WINDOW_HOURS;
 }
 
-/** Entrée `reverse` : annule (montants négatifs) le gain de complétion, des étapes et du « Bon fil ». Jour = jour du gain annulé. */
+/**
+ * Entrée `reverse` : annule (montants négatifs) le gain de complétion, des étapes et du « Bon fil ». Jour = jour du gain
+ * annulé. Une part écrite en v1 (isV1Entry) ne rend ni Énergie ni Matériaux ; le quartier perd la tâche comme d'habitude.
+ */
 export function buildReverseEntry(ledger, taskId, occurrence, now) {
   const key = reverseKey(taskId, occurrence);
   const reward = findEntry(ledger, rewardKey(taskId, occurrence));
@@ -152,13 +162,15 @@ export function buildReverseEntry(ledger, taskId, occurrence, now) {
     ...occurrenceEntries(ledger, taskId, occurrence),
     ...ledger.filter((e) => e.type === 'bonus' && e.bonus === 'bon-fil' && e.taskId === taskId && e.day === reward.day),
   ];
-  const sum = (f) => round2(parts.reduce((s, e) => s + f(e), 0));
+  const sum = (f, list = parts) => round2(list.reduce((s, e) => s + f(e), 0));
+  // une part payée en v1 n'a jamais été versée au stock v2 : on n'en reprend ni l'Énergie ni les Matériaux
+  const inStock = parts.filter((e) => !isV1Entry(e));
   return {
     key, at: toISO(now), day: reward.day, type: 'reverse', taskId, occurrence,
     reverses: parts.map((e) => e.key), // clés annulées : l'état s'en sert pour retirer ce qui a vraiment été appliqué
     pe: -sum((e) => e.pe || 0),
-    energy: -sum((e) => e.energy || 0),
-    materials: -sum((e) => e.materials || 0),
+    energy: -sum((e) => e.energy || 0, inStock),
+    materials: -sum((e) => e.materials || 0, inStock),
     quartier: quartierOfEntry(reward),
   };
 }

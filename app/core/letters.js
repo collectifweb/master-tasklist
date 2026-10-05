@@ -65,6 +65,19 @@ export function morningLetter(lettres, tasks, game, now, { prenom } = {}) {
   return out([...cands].sort((a, b) => (shown[a.id] < shown[b.id] ? -1 : shown[a.id] > shown[b.id] ? 1 : 0))[0], false);
 }
 
+/**
+ * Lettre de passage à la v2 (`lettres.passage`) : seulement à une partie convertie depuis la v1 (`game.migratedAt`),
+ * jamais à une partie neuve, et une seule fois (notée par markLetterShown comme les autres). options : { prenom }.
+ * Renvoie { id, kind: 'passage', lignes, questId: null, seen: false } ou null.
+ */
+export function passageLetter(lettres, game, { prenom } = {}) {
+  const l = lettres?.passage?.[0];
+  if (!l || !game?.migratedAt || (game.letters ?? {})[l.id]) return null;
+  const lignes = (l.texte ?? []).map((t) => fillText(t, { prenom: prenom || null }));
+  if (!lignes.length || lignes.some((x) => x === null)) return null;
+  return { id: l.id, kind: 'passage', lignes, questId: null, seen: false };
+}
+
 /** Note la lettre montrée aujourd'hui (params.id). */
 export function markLetterShown(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);

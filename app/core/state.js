@@ -38,6 +38,9 @@ export function createInitialState(now) {
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 
+/** Partie enregistrée en version 1 (sans champ `version`, c'est aussi une partie v1) ; une partie absente n'en est pas une. */
+export const isV1State = (raw) => !!isObj(raw) && !(Number(raw.version) >= STATE_VERSION);
+
 // Les valeurs brutes l'emportent ; les clés manquantes reçoivent la valeur par défaut ; les clés inconnues sont gardées.
 // Un type brut qui ne correspond pas au défaut (null, chaîne ou tableau là où un objet est attendu ; autre chose qu'un
 // tableau là où un tableau est attendu) est un état abîmé : on reprend la valeur par défaut.
@@ -66,7 +69,8 @@ const V1_KEYS = ['resources', 'caps', 'lueur', 'filLibre', 'lisiereDays', 'weeks
  *   les bilans des semaines finies sont recomptés depuis le registre (remballées exclues) ; une tâche au statut
  *   `done` qui n'a aucune entrée au registre (ni gain de quête ni étape) compte une fois pour son quartier, sans
  *   Énergie ni Matériaux (décision d'Alex du 5 octobre 2026). Relevé du temps, jours vus (lastSeenDay, lastOpenDay,
- *   lastReturnDay), lettres montrées et clés inconnues sont gardés.
+ *   lastReturnDay), lettres montrées et clés inconnues sont gardés. Une partie v1 reçoit `migratedAt` (instant de la
+ *   conversion) ; une partie absente, non.
  * ctx = { tasks, ledger } (liste normalisée, registre complet ou hydraté) : lus, jamais modifiés ; sans eux, rien
  * n'est recompté. `now` est requis pour une partie v1 ou absente. Idempotente : une partie convertie est en v2 et
  * un 2e appel ne la change plus.
@@ -83,6 +87,7 @@ export function migrateState(raw, now, { tasks = [], ledger = [] } = {}) {
   for (const k of V1_KEYS) delete kept[k];
   const g = merge(createInitialState(now), kept);
   g.version = STATE_VERSION;
+  if (isObj(raw)) g.migratedAt = toISO(now); // partie v1 convertie (lettre de passage) ; une partie absente est neuve
   g.quartiers = recountQuartiers(tasks, ledger);
   g.bilans = bilansPasses(tasks, g, ledger, now);
   return g;
@@ -105,5 +110,25 @@ function recountQuartiers(tasks, ledger) {
     out[quartierOfEntry(e) ?? (byId.has(id) ? quartierOfTask(byId.get(id)) : PLACE_ID)] += 1;
   }
   for (const t of tasks) if (t.status === 'done' && !known.has(String(t.id))) out[quartierOfTask(t)] += 1;
+  return out;
+}
+
+// Gestes de jeu de la v1 sans équivalent en v2 (bible §13) : écartés de la file, et nommés au joueur.
+export const V1_GAME_GESTURES = ['souffler', 'build', 'sow', 'harvest', 'storeReserve', 'shareHarvest', 'lightBrasero', 'liftVeil', 'directFil'];
+
+/**
+ * File d'attente hors ligne de la v1 (`oree.queue.v1`) → v2, une seule fois au démarrage. `known(name)` : l'action
+ * existe en v2. Gardés : les gestes connus (quêtes, bonus, tenue) avec leur opId, nom, paramètres et instant ; le corps
+ * calculé en v1 et les compteurs d'essais sont jetés (le cœur v2 recalcule l'effet à l'envoi), et l'entrée est marquée
+ * `v1: true` (son opId a pu être appliqué par la v1). Écartés : les gestes de jeu v1 (`dropped`, pour le message) et la
+ * tenue v1 sans équivalent (moments d'histoire vus), sans rien dire. Fonction pure.
+ */
+export function convertQueueV1(queue, known) {
+  const out = { queue: [], dropped: [] };
+  for (const e of Array.isArray(queue) ? queue : []) {
+    if (!isObj(e) || typeof e.name !== 'string' || typeof e.opId !== 'string' || !e.opId) continue;
+    if (known(e.name)) out.queue.push({ opId: e.opId, name: e.name, params: isObj(e.params) ? e.params : {}, at: e.at, v1: true });
+    else if (V1_GAME_GESTURES.includes(e.name)) out.dropped.push(e.name);
+  }
   return out;
 }

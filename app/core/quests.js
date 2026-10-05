@@ -20,6 +20,7 @@ import {
 } from './ledger.js';
 import { applyEntry } from './economy.js';
 import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
+import { migrateState, isV1State } from './state.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -519,5 +520,16 @@ export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   if (!ctx.game.lastSeenDay || ctx.day > ctx.game.lastSeenDay) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   tidySeances(ctx);
+  return ctx.result();
+}
+
+/**
+ * Tenue : la partie lue sur le serveur est encore en version 1 (`game` = partie brute, pas celle déjà convertie pour
+ * l'affichage) → la partie convertie part dans un game.set ; l'API garde alors une copie de la partie v1. Ni tâche ni
+ * registre touchés. Sans effet sur une partie déjà en v2 ou absente (une partie neuve s'enregistre au premier geste).
+ */
+export function migrateGame(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  if (isV1State(game)) ctx.game = migrateState(game, now, { tasks, ledger });
   return ctx.result();
 }

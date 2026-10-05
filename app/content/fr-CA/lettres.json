@@ -157,5 +157,17 @@
       "id": "retour.08",
       "texte": ["Allô!", "Pendant que t’étais ailleurs, une famille de mésanges s’est installée sur le toit de l’Atelier. Elles paient pas de loyer. Je les laisse faire."]
     }
+  ],
+  "passage": [
+    {
+      "id": "passage.v2",
+      "texte": [
+        "Allô, {prenom}.",
+        "J’ai changé les pancartes pendant la nuit. Au village, on compte maintenant quatre choses : l’Énergie, les Matériaux, la Nourriture et les Habitants.",
+        "La Lueur et le Fil libre, c’est fini. Je les ai rangés au hangar. Ils prenaient pas de place.",
+        "Tes quêtes se rangent dans six quartiers : les Champs, l’Atelier, la Mairie, l’École, le Garage et la Place du village. Celles que t’as déjà finies y sont comptées.",
+        "L’Énergie et les Matériaux repartent du stock de départ. Pour le reste, rien de perdu. J’ai recompté."
+      ]
+    }
   ]
 }
