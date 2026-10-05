@@ -125,13 +125,17 @@ Référence : `docs/BIBLE-JEU.md` (v2 validée le 5 octobre 2026), §14, ligne �
 
 ### Lot 1 — Le cœur v2 (logique seule, vérifiée par `node --test`)
 Pour le joueur : rien de visible, rien n'est déployé.
-- [ ] Six quartiers : Champs, Atelier, Mairie, École, Garage, Place du village. Les anciens secteurs y sont reliés.
-- [ ] Partie en version 2 : Énergie, Matériaux, Nourriture, Habitants, tâches par quartier, bâtiments, parcelles, premiers pas, bilans. Départ : 10 Énergie, 20 Matériaux, 5 Nourriture.
-- [ ] Gains : mêmes formules par tâche ; le registre note le quartier au lieu de la Lueur et du Fil libre.
-- [ ] Rang selon les habitants, niveaux de quartier (5, 15, 30, 60, 100 tâches), avec « encore N » pour l'affichage.
-- [ ] Migration de la partie : Énergie et Matériaux repartent du stock de départ ; quartiers et bilans recomptés depuis le registre ; relevé du temps gardé.
-- [ ] Retrait de Lueur, Fil libre, Souffler, Confiance, Avis et chapitres. Le passage du temps quitte le module des Avis.
-- [ ] Tests : environ 80 des 241 tests du cœur changent (estimation de l'agent) ; nouveaux tests du village et de la migration (recompte, une seule fois, aucune tâche touchée).
+- [x] Six quartiers : Champs, Atelier, Mairie, École, Garage, Place du village. Les anciens secteurs y sont reliés.
+- [x] Partie en version 2 : Énergie, Matériaux, Nourriture, Habitants, tâches par quartier, bâtiments, parcelles, premiers pas, bilans. Départ : 10 Énergie, 20 Matériaux, 5 Nourriture.
+- [x] Gains : mêmes formules par tâche ; le registre note le quartier au lieu de la Lueur et du Fil libre.
+- [x] Rang selon les habitants, niveaux de quartier (5, 15, 30, 60, 100 tâches), avec « encore N » pour l'affichage.
+- [x] Migration de la partie : Énergie et Matériaux repartent du stock de départ ; quartiers et bilans recomptés depuis le registre ; relevé du temps gardé.
+- [x] Retrait de Lueur, Fil libre, Souffler, Confiance, Avis et chapitres. Le passage du temps quitte le module des Avis.
+- [x] Tests : environ 80 des 241 tests du cœur changent (estimation de l'agent) ; nouveaux tests du village et de la migration (recompte, une seule fois, aucune tâche touchée).
+- *Fait le 5 octobre (commits 4439d39, e2a4a65, 6f76623, puis les niveaux sans fin). 231 tests sur 231 : 192 du cœur, 39 de l'API inchangés ; relancés par moi après l'agent. `core/build.js` retiré aussi (il agissait sur des parties de l'état v1 qui n'existent plus) : le lot 4 réécrit les constructions. Le passage du temps vit maintenant dans `core/quests.js`. Un test vérifie que la migration lit la liste et le registre sans jamais les modifier.*
+- *Niveaux de quartier sans fin : après 100 tâches, un niveau tous les 50 (choix fidèle au « jeu sans fin » demandé par Alex).*
+- *Pour le lot 3 : remballer, dans les 24 h après la bascule, une quête payée en v1 retire la tâche du quartier, mais pas l'Énergie ni les Matériaux, qui n'ont jamais été versés au stock v2. Et `migrateState` doit recevoir la liste et le registre (`js/store.js:73`), sinon les quartiers repartent à zéro.*
+- *L'app ne se charge plus tant que le lot 2 n'est pas fait : une dizaine de modules de l'interface importent des noms retirés. Relevé de l'agent, à reprendre au lot 2.*
 
 ### Lot 2 — L'interface au nouveau vocabulaire
 Pour le joueur : la barre montre Énergie, Matériaux, Nourriture, Habitants ; les quartiers portent leurs nouveaux noms ; « jeton d'accès » devient « code d'accès », « Plan accessible » devient « Carte en liste », « L'Orée veille » devient « Tout est enregistré, à demain », « Finir la visite » disparaît.
