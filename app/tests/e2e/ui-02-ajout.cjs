@@ -30,7 +30,8 @@ L.runScenario('2. ajout rapide', async ({ R, srv, newPage, shot }) => {
     R.check('created au format AAAA-MM-JJ', /^\d{4}-\d{2}-\d{2}$/.test(added.created));
   }
   R.check('les autres quêtes sont intactes', JSON.stringify(after.filter((t) => t !== added && t.task !== 'Tondre la pelouse du devant')) === JSON.stringify(before));
-  R.check('bonus d’ajout au registre', srv.ledger().some((e) => e.bonus === 'ajout'));
+  // même opération, mais l'API écrit le registre après tasks.json : on l'attend
+  R.check('bonus d’ajout au registre', await L.waitFor(() => srv.ledger().some((e) => e.bonus === 'ajout'), 5000));
   // présente après rechargement
   await page.reload();
   await L.ready(page);

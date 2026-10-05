@@ -304,7 +304,7 @@ function endVisit() {
 function openPlan() {
   if (!worldPlan) return;
   const c = ctx();
-  worldPlan.render(c.game, c.tasks);
+  worldPlan.render(c.game, c.tasks, c.ledger);
   openSheet($('#dlg-plan'));
   worldPlan.focus();
 }
