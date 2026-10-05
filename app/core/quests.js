@@ -22,6 +22,7 @@ import { applyEntry } from './economy.js';
 import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
 import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
+import { produireEolienne } from './batiments.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -232,6 +233,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   const entry = buildRewardEntry({ task: t, occurrence: occ, pe: net, alreadyDone }, ctx.ledger, now);
   if (entry) ctx.append(entry, alreadyDone ? 'deja-faite' : 'quete');
   else ctx.events.push({ type: 'sans-gain', taskId: t.id, reason: 'deja-recompensee' });
+  if (entry) produireEolienne(ctx); // la première quête payée du jour fait tourner l'éolienne (une fois par jour)
 
   if (entry && wasTop3) {
     const bonus = buildBonusEntry('bon-fil', ctx.ledger, now, { taskId: t.id });

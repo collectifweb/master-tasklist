@@ -102,6 +102,21 @@ export const LANDMARKS = [
   { id: 'convoi', model: 'caisse', sector: 'garage', r: 1, c: 4, h: 1, w: 1 },
 ];
 
+/**
+ * Emplacements des bâtiments du joueur (core/batiments.js) : un par bâtiment possible, dans l'ordre des identifiants
+ * (chalet-1, chalet-2…). Emprise en grille comme les repères. Un emplacement vide reste visible : chalet vide, atelier
+ * abîmé, vieux quai, ou piquets d'un chantier possible. Le quai est posé sur le lac, au bout de la route avant.
+ */
+export const EMPLACEMENTS = {
+  chalet: [{ r: 4.2, c: 4.2, h: 1.2, w: 1.2 }, { r: 4.2, c: 6.7, h: 1.2, w: 1.2 }, { r: 3, c: 1, h: 1.6, w: 1.6 }],
+  parcelle: [{ r: 8.2, c: 2.5, h: 1.6, w: 1.6 }, { r: 8.2, c: 0.5, h: 1.6, w: 1.6 }, { r: 10.2, c: 2.5, h: 1.6, w: 1.6 }],
+  atelier: [{ r: 9, c: 9, h: 1, w: 2 }],
+  serre: [{ r: 10.2, c: 0.3, h: 1.5, w: 1.9 }],
+  eolienne: [{ r: 2.6, c: 10.4, h: 1, w: 1 }],
+  grenier: [{ r: 1, c: 8, h: 2, w: 2 }],
+  quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true }],
+};
+
 /** Objets-reflets : ancre de content/fr-CA/ancres.json → objet de la carte. Par défaut, le repère du quartier. */
 export const ANCHOR_OBJECT = {
   glaciere: 'glaciere', garage: 'etabli', cloture: 'cloture-c1', poubelle: 'caisse:0',
