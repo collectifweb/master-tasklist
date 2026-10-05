@@ -52,14 +52,20 @@ const crops = () => ({ courge: 0, patate: 0, ble: 0 });
 
 // Potager : garde-manger (12 récoltes au plus), Réserve d'hiver (courges, 6 au plus), compteurs cumulés pour les objectifs.
 function initialGarden() {
-  return { pantry: crops(), reserve: 0, sown: crops(), harvested: crops(), reserved: 0 };
+  // wateredDay : dernier jour de jeu où la lisière a arrosé les cultures (une seule fois par jour, même après un remballage)
+  return { pantry: crops(), reserve: 0, sown: crops(), harvested: crops(), reserved: 0, wateredDay: null };
 }
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 
 // Les valeurs brutes l'emportent ; les clés manquantes reçoivent la valeur par défaut ; les clés inconnues sont gardées.
+// Un type brut qui ne correspond pas au défaut (null, chaîne ou tableau là où un objet est attendu ; autre chose qu'un
+// tableau là où un tableau est attendu) est un état abîmé : on reprend la valeur par défaut.
 function merge(defaults, raw) {
-  if (!isObj(defaults) || !isObj(raw)) return raw === undefined ? defaults : raw;
+  if (Array.isArray(defaults)) return Array.isArray(raw) ? raw : defaults;
+  if (isObj(defaults)) {
+    if (!isObj(raw)) return defaults;
+  } else return raw === undefined ? defaults : raw;
   const out = { ...raw };
   for (const k of Object.keys(defaults)) {
     out[k] = k in raw && raw[k] !== undefined ? merge(defaults[k], raw[k]) : structuredClone(defaults[k]);

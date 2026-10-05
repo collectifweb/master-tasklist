@@ -34,7 +34,7 @@ export const AVIS_HELD_MATERIALS = 15;
 export const VEIL_CELLS = 2;
 export const VEIL_DAYS = 3;
 export const VEIL_LIFT_ENERGY = 1;
-/** Absent : aucune visite les 2 jours de jeu qui précèdent l'Avis (au moins 48 h avant 4 h le matin de l'Avis). */
+/** Absent : plus de 2 jours de jeu entre la dernière visite et la résolution de l'Avis (un retour tardif compte aussi). */
 export const ABSENT_DAYS = 2;
 
 export const avisKey = (id) => `avis:${id}`;
@@ -124,11 +124,11 @@ export function liftVeil(tasks, game, ledger, params, now) {
   return ctx.result();
 }
 
-// Prochain Avis à annoncer aujourd'hui, ou null. Jamais pendant la trêve des Fêtes.
+// Prochain Avis à annoncer aujourd'hui, ou null. Jamais pendant la trêve des Fêtes : ni annoncé un jour de trêve, ni tombant un jour de trêve.
 function nextAvis(g, today) {
   for (const def of Object.values(AVIS)) {
     if (g.avis.history.some((h) => h.id === def.id) || g.chapter.number !== def.chapter) continue;
-    if (daysBetween(g.chapter.startDay, today) + 1 < def.announceDay || isTruce(addDays(today, def.lead))) continue;
+    if (daysBetween(g.chapter.startDay, today) + 1 < def.announceDay || isTruce(today) || isTruce(addDays(today, def.lead))) continue;
     return def;
   }
   return null;
@@ -163,10 +163,12 @@ export function advanceTime(tasks, game, ledger, params, now) {
   const cur = g.avis.current;
   if (cur && today >= cur.day) {
     const prep = avisPreparation(g, ctx.ledger, cur);
-    const absent = !prevSeen || prevSeen <= addDays(cur.day, -(ABSENT_DAYS + 1));
+    // absent : jamais vu, ou plus de 2 jours sans visite à la résolution (un long retour ne fait donc jamais tomber de voile)
+    const absent = !prevSeen || daysBetween(prevSeen, today) > ABSENT_DAYS;
     const result = prep.total >= cur.force ? 'tenu' : absent ? 'absent' : 'voile';
     g.avis.history.push({ id: cur.id, day: cur.day, resolvedOn: today, result, force: cur.force, preparation: prep.total });
     g.avis.current = null;
+    // Résolu = figé : une quête remballée après la résolution ne reprend pas les 15 ▣ ni le voile (aucune perte, voulu).
     if (result === 'tenu') {
       g.garden.reserve = 0; // la réserve a servi à tenir
       if (!hasKey(ctx.ledger, avisKey(cur.id))) {
@@ -192,7 +194,7 @@ export function advanceTime(tasks, game, ledger, params, now) {
     }
   }
 
-  g.lastSeenDay = today;
+  if (!prevSeen || today > prevSeen) g.lastSeenDay = today; // ne recule jamais (file hors ligne rejouée en retard)
   ctx.game = g;
   ctx.events.push(...events);
   if (entry) ctx.append(entry, 'avis');

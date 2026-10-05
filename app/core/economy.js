@@ -33,7 +33,7 @@ export function stageName(stage) {
 
 /** Passe au palier de plafond suivant. Renvoie l'état inchangé s'il n'y en a plus. */
 export function raiseCap(game, resource) {
-  const steps = CAP_STEPS[resource];
+  const steps = Object.hasOwn(CAP_STEPS, resource) ? CAP_STEPS[resource] : null;
   if (!steps) throw new Error('Ressource inconnue : ' + resource);
   const next = steps.find((s) => s > game.caps[resource]);
   if (next === undefined) return game;
@@ -62,7 +62,7 @@ function growPlots(g) {
   const veiled = (g.avis?.veils ?? []).some((v) => v.sector === 'champs' && v.cells > 0);
   for (const p of g.plots) {
     if (!p.crop) continue; // parcelle vide
-    const need = CROP_STAGES[p.crop] ?? 1;
+    const need = Object.hasOwn(CROP_STAGES, p.crop) ? CROP_STAGES[p.crop] : 1;
     p.stage = Math.min(need, (p.stage || 0) + (veiled ? 0.5 : 1));
   }
 }
@@ -111,7 +111,7 @@ function applyReversal(g, entry, events) {
   g.resources.energy = Math.max(0, round1(g.resources.energy - remove.energy));
   g.resources.materials = Math.max(0, round1(g.resources.materials - remove.materials));
   const sector = entry.lueur && entry.lueur.sector;
-  if (sector in g.lueur) g.lueur[sector] = Math.max(0, round2(g.lueur[sector] - remove.lueur));
+  if (Object.hasOwn(g.lueur, sector)) g.lueur[sector] = Math.max(0, round2(g.lueur[sector] - remove.lueur));
   g.filLibre = Math.max(0, round2(g.filLibre - remove.filLibre));
 }
 
@@ -138,7 +138,7 @@ export function applyEntry(game, entry, now) {
     const m = addResource(g, 'materials', entry.materials || 0);
     const surplus = (e.surplus > 0 ? e.surplus : 0) + (m.surplus > 0 ? m.surplus : 0);
     if (surplus > 0) events.push({ type: 'surplus', energy: round1(e.surplus), materials: round1(m.surplus), filLibre: round2(surplus / SURPLUS_PER_FIL) });
-    if (entry.lueur && entry.lueur.sector in g.lueur) {
+    if (entry.lueur && Object.hasOwn(g.lueur, entry.lueur.sector)) {
       g.lueur[entry.lueur.sector] = Math.max(0, round2(g.lueur[entry.lueur.sector] + (entry.lueur.amount || 0)));
     }
     g.filLibre = Math.max(0, round2(g.filLibre + (entry.filLibre || 0)));
@@ -166,7 +166,8 @@ export function applyEntry(game, entry, now) {
       if (g.daily.day === day) g.daily.lisiere = true;
       g.lisiereDays.push(day);
       g.resources.confidence += 1;
-      growPlots(g);
+      // arrosage une seule fois par jour de jeu : remballer puis refaire une quête le même jour ne fait pas repousser
+      if (g.garden && g.garden.wateredDay !== day) { growPlots(g); g.garden.wateredDay = day; }
       events.push({ type: 'lisiere-allumee', day });
       const ws = weekStart(day);
       const inWeek = g.lisiereDays.filter((d) => d >= ws && d <= addDays(ws, 6)).length;
@@ -215,7 +216,7 @@ export function applyEntries(game, entries, now) {
 
 /** Dépense du Fil libre : l'ajoute à la Lueur du secteur choisi. */
 export function directFilLibre(game, sectorId, amount) {
-  if (!(sectorId in game.lueur)) throw new Error('Secteur inconnu : ' + sectorId);
+  if (!Object.hasOwn(game.lueur, sectorId)) throw new Error('Secteur inconnu : ' + sectorId);
   if (!(amount > 0) || amount > game.filLibre) throw new Error('Pas assez de Fil libre.');
   const g = structuredClone(game);
   g.filLibre = round2(g.filLibre - amount);
@@ -238,7 +239,8 @@ export function chapterStatus(game, now) {
   };
 }
 
-/** Ouvre le chapitre suivant : +2 Confiance, ouvre son secteur (la Lueur gardée sous la cendre perce d'un coup). */
+/** OBSOLÈTE : ignore les objectifs de chapitres.json (utilisé seulement par world/demo.js) ; le jeu passe par syncChapter.
+ * Ouvre le chapitre suivant : +2 Confiance, ouvre son secteur (la Lueur gardée sous la cendre perce d'un coup). */
 export function advanceChapter(game, now) {
   const st = chapterStatus(game, now);
   if (!st.canAdvance) throw new Error("Le chapitre ne peut pas encore s'ouvrir.");

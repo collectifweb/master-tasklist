@@ -116,13 +116,13 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 
 | Module | Rôle |
 |---|---|
-| `build.js` | Catalogue `BUILDABLES` des chapitres 1 et 2 (Tour 20 ▣ + 6 ⚡, tunnel 15 ▣, établi 25 ▣ + 6 ⚡, parcelle 10 ▣, érable 5 ▣ ×3, clôture 3 ▣, lanterne 8 ▣), `build`, potager (`sow`, `harvest`, `storeReserve`), `souffler` (8 ⚡ → +5 Fil libre), `payCost`, `isBuilt`. Emplacements bornés par `BUILD_SLOT_COUNT` et `MAX_PLOTS`, qui suivent `world/layout.js` (vérifié par un test). |
+| `build.js` | Catalogue `BUILDABLES` des chapitres 1 et 2 (Tour 20 ▣ + 6 ⚡, tunnel 15 ▣, établi 25 ▣ + 6 ⚡, parcelle 10 ▣, érable 5 ▣ ×3, clôture 3 ▣, lanterne 8 ▣), `build`, potager (`sow`, `harvest`, `storeReserve`, `shareHarvest`), `souffler` (8 ⚡ → +5 Fil libre), `payCost`, `isBuilt`. Emplacements bornés par `BUILD_SLOT_COUNT` et `MAX_PLOTS`, qui suivent `world/layout.js` (vérifié par un test). |
 | `avis.js` | Avis (`AVIS`), activité et Force, Préparation détaillée (`avisPreparation`, `avisStatus` pour la jauge), `lightBrasero`, `liftVeil`, et **`advanceTime`** : lève les voiles expirés, résout l'Avis du jour, annonce le suivant, retient les objectifs et termine le chapitre (`syncChapter`), note `lastSeenDay`. Idempotente : rejouée avec le même instant, elle ne fait rien. |
 | `chapters.js` | `evalCondition` (types de `chapitres.json`), `chapterProgress`, `syncChapter` (s'appuie sur `chapterStatus`/`advanceChapter` d'`economy.js`), `storyMoments` (3 moments d'histoire par jour au plus, lignes filtrées par leur `si`), `markStorySeen`. |
-| `letters.js` | `morningLetter` (matin, sans quête, retour ; `{quete}` = quête n° 1 ; sans prénom, « , {prenom} » disparaît ; pas de répétition sur 7 jours), `markLetterShown`, `fillText`. |
+| `letters.js` | `morningLetter` (matin, sans quête, retour ; `{quete}` = quête n° 1 ; sans prénom, « , {prenom} » et « {prenom}, » disparaissent ; pas de répétition sur 7 jours), `markLetterShown`, `fillText`. |
 | `recycling.js` | `weeklyReview` : bilan de la semaine (heures estimées par domaine, quêtes, jours de lisière, `ratioJeuQuetes: null` tant que le temps de jeu n'est pas mesuré) et quêtes ouvertes depuis plus de 60 jours (archivage par `archiveQuest`). |
 
-**Ordre d'appel côté interface.** À l'ouverture : `openApp`, puis `advanceTime` (avec `chapitres`). Au changement de jour de jeu, et après une action qui peut atteindre un objectif (quête terminée, construction, récolte, réserve, Fil libre dirigé) : `advanceTime`. Histoire : `storyMoments` → affichage → `markStorySeen({ ids })`. Lettre : `morningLetter` → affichage → `markLetterShown({ id })`. `advanceChapter` ne s'appelle plus directement : il ignore les objectifs.
+**Ordre d'appel côté interface.** À l'ouverture : `openApp`, puis `advanceTime` (avec `chapitres`). Au changement de jour de jeu, et après une action qui peut atteindre un objectif (quête terminée, construction, récolte, réserve, Fil libre dirigé) : `advanceTime`. Histoire : `storyMoments` → affichage → `markStorySeen({ ids })`. Lettre : `morningLetter` → affichage → `markLetterShown({ id })`. `advanceChapter` ne s'appelle plus directement : il est obsolète, ignore les objectifs et ne sert qu'à `world/demo.js`.
 
 **Nouvelles clés de `game`** (complétées par `migrateState` sur un état plus ancien) :
 
@@ -130,12 +130,12 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 |---|---|
 | `plots` | `[{ id, slot, crop: 'courge' \| 'patate' \| 'ble' \| null, stage }]` ; la parcelle `parcelle-1` existe dès le départ, `crop: null` = vide ; `stage` peut valoir x,5 sous un voile |
 | `placements` | `[{ id, model, sector, state? }]` ; repères fixes : `{ id: 'tour', state: 'reparee' }`, `{ id: 'etabli', state: 'construit' }` ; sinon `id` = `{model}-{n}` |
-| `garden` | `{ pantry: { courge, patate, ble }, reserve, sown: {…}, harvested: {…}, reserved }` (garde-manger 12 au plus, réserve 6 au plus, compteurs cumulés pour les objectifs) |
+| `garden` | `{ pantry: { courge, patate, ble }, reserve, sown: {…}, harvested: {…}, reserved, wateredDay }` (garde-manger 12 au plus, réserve 6 au plus, compteurs cumulés pour les objectifs ; `wateredDay` : dernier jour de jeu arrosé) |
 | `avis` | `{ current: { id, sector, day, announcedOn, base, force, activity, braseros } \| null, history: [{ id, day, resolvedOn, result, force, preparation }], veils: [{ avis, sector, cells, since, until }] }` |
 | `chapter.objectives` | `{ idObjectif: jour atteint }` (un objectif atteint le reste) |
 | `story` | `{ seen: [ids], day, count }` |
 | `letters` | `{ idLettre: dernier jour montré }` |
-| `lastSeenDay` | dernier jour de jeu où `advanceTime` a tourné |
+| `lastSeenDay` | dernier jour de jeu où `advanceTime` a tourné ; ne recule jamais |
 
 **Registre** : `avis:{id}` (Avis tenu, `type: 'avis'`, 15 ▣). Dépenses, semis, récoltes, réserve et Souffler n'écrivent rien au registre : ils ne font que dépenser ou convertir ce qui a déjà été gagné.
 
@@ -143,7 +143,14 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 - Activité d'un Avis = part des jours allumés sur les 28 jours avant l'annonce (depuis le début si la partie est plus jeune), rapportée à 4 jours sur 7. Force fixée à l'annonce : la jauge ne bouge que du côté Préparation.
 - Premier gel : annoncé au 5e jour du chapitre 2 (au plus tôt), 7 jours d'avance, Champs visés, base 24. Défenses : Tour +4 (tous les Avis), tunnel +6 (Avis des Champs), d'après la simulation.
 - Quêtes de la fenêtre : finies entre le jour de l'annonce et la veille de l'Avis, remballées exclues.
-- Absent = aucune visite les 2 jours de jeu avant l'Avis. Préparation ≥ Force → Tenu même absent ; sinon « absent », sans voile.
+- Absent = jamais vu, ou plus de 2 jours de jeu entre la dernière visite et la résolution (un retour après 10 ou 30 jours ne fait donc jamais tomber de voile). Préparation ≥ Force → Tenu même absent ; sinon « absent », sans voile.
+- Pas d'annonce d'Avis un jour de trêve des Fêtes, ni pour un Avis qui tomberait un jour de trêve.
 - Tenu consomme la Réserve d'hiver ; Voilé et absent la gardent. Les braseros valent pour un seul Avis.
 - Voile : 3 jours à partir de la résolution. « Production réduite de 50 % » = les cultures des Champs poussent d'un demi-stade par jour allumé (seule production d'un secteur pour l'instant).
+- Garde-manger plein (12) : `shareHarvest({ crop, n = 1 })` (« Partager au village ») retire n récoltes sans aucun gain (ni ressource, ni Réserve) ; événement `{ type: 'partage', crop, n, pantry }`. C'est la seule sortie des patates et du blé.
+- Arrosage une seule fois par jour de jeu (`garden.wateredDay`) : remballer puis refaire une quête le même jour ne fait pas repousser les cultures deux fois. Le voile levé par une quête ensuite remballée ne revient pas : voulu, aucune perte pour le joueur.
+- Avis résolu = figé : remballer une quête après la résolution ne reprend pas les 15 ▣ de l'Avis tenu ni ne pose de voile : voulu.
+- Fin de chapitre : `syncChapter` refait la passe des objectifs après `advanceChapter` (ceux du nouveau chapitre déjà atteints sont retenus tout de suite), donc un 2e `advanceTime` au même instant ne fait rien. `storyMoments` propose le moment « atteint » des objectifs d'un chapitre fini avant sa `fin`, dans la limite des 3 moments par jour.
+- État abîmé : `migrateState` reprend la valeur par défaut quand le type brut ne correspond pas (tableau attendu, objet attendu).
+- Les recherches dans un catalogue (`SEED_COST`, `BUILDABLES`, `CROP_STAGES`…) passent par `Object.hasOwn` : `constructor` & cie sont refusés.
 - Lettre de retour : le jour où `openApp` a donné le bonus de retour.

@@ -1,7 +1,7 @@
 // Dépenses : constructions, décors, parcelles, potager (semer, récolter, Réserve d'hiver), « Souffler ».
 // Même forme que quests.js : (tasks, game, ledger, params, now) → { tasks, game, ops, entries, events }.
 // Aucune dépense ni récolte ne passe par le registre : il ne note que les gains de quêtes et d'Avis. Une dépense
-// retire de l'Énergie ou des Matériaux déjà gagnés ; une récolte ne rend que de l'Énergie déjà dépensée en semis.
+// retire de l'Énergie ou des Matériaux déjà gagnés ; une récolte ne rend ni Énergie ni Matériaux (elle remplit le garde-manger).
 // L'état du jeu (game.set, avec sa révision) suffit donc à les enregistrer, sans ouvrir de voie au farming.
 import { Ctx } from './quests.js';
 import { CROP_STAGES } from './economy.js';
@@ -64,7 +64,7 @@ const pantryTotal = (g) => Object.values(g.garden.pantry).reduce((s, n) => s + n
  */
 export function build(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  const def = BUILDABLES[params.id];
+  const def = Object.hasOwn(BUILDABLES, params.id) ? BUILDABLES[params.id] : null; // pas de nom hérité (constructor…)
   if (!def) throw new Error('Construction inconnue.');
   const g = structuredClone(ctx.game);
   const sector = def.decor && params.sector ? params.sector : def.sector;
@@ -105,7 +105,7 @@ export function build(tasks, game, ledger, params, now) {
 export function sow(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const crop = params.crop;
-  if (!(crop in SEED_COST)) throw new Error('Culture inconnue.');
+  if (!Object.hasOwn(SEED_COST, crop)) throw new Error('Culture inconnue.');
   const g = structuredClone(ctx.game);
   const plot = params.plotId === undefined ? g.plots.find((p) => !p.crop) : g.plots.find((p) => p.id === params.plotId);
   if (!plot) throw new Error(params.plotId === undefined ? 'Aucune parcelle libre.' : 'Parcelle introuvable.');
@@ -122,16 +122,16 @@ export function sow(tasks, game, ledger, params, now) {
 
 /**
  * Récolte les cultures mûres vers le garde-manger (12 au plus). params : { plotId? } (sans plotId : toutes celles qui
- * tiennent). Garde-manger plein : la culture reste mûre dans le champ, elle ne pourrit jamais. Un événement
+ * tiennent). Garde-manger plein : la culture reste mûre dans le champ, elle ne pourrit jamais ; shareHarvest libère de la place. Un événement
  * { type: 'recolte', plotId, slot, crop, pantry } par parcelle.
  */
 export function harvest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const g = structuredClone(ctx.game);
-  const ripe = g.plots.filter((p) => p.crop && p.stage >= (CROP_STAGES[p.crop] ?? 1)
+  const ripe = g.plots.filter((p) => p.crop && p.stage >= (Object.hasOwn(CROP_STAGES, p.crop) ? CROP_STAGES[p.crop] : 1)
     && (params.plotId === undefined || p.id === params.plotId));
   if (!ripe.length) throw new Error(params.plotId === undefined ? 'Rien à récolter pour l’instant.' : 'Cette culture n’est pas encore mûre.');
-  if (pantryTotal(g) >= PANTRY_MAX) throw new Error(`Le garde-manger est plein (${PANTRY_MAX}). La culture attend dans le champ, elle ne pourrit pas.`);
+  if (pantryTotal(g) >= PANTRY_MAX) throw new Error(`Le garde-manger est plein (${PANTRY_MAX}). La culture attend dans le champ, elle ne pourrit pas. Partage une récolte au village pour faire de la place.`);
   for (const p of ripe) {
     if (pantryTotal(g) >= PANTRY_MAX) break;
     const crop = p.crop;
@@ -142,6 +142,25 @@ export function harvest(tasks, game, ledger, params, now) {
     ctx.events.push({ type: 'recolte', plotId: p.id, slot: p.slot, crop, pantry: pantryTotal(g) });
   }
   ctx.game = g;
+  return ctx.result();
+}
+
+/**
+ * « Partager au village » : retire n récoltes d'une culture du garde-manger, sans aucun gain (ni ressource, ni Réserve).
+ * Seule sortie des patates et du blé quand le garde-manger est plein. params : { crop, n = 1 }.
+ * Événement { type: 'partage', crop, n, pantry } (pantry : total restant).
+ */
+export function shareHarvest(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  const crop = params.crop;
+  if (!Object.hasOwn(SEED_COST, crop)) throw new Error('Culture inconnue.');
+  const g = structuredClone(ctx.game);
+  const have = g.garden.pantry[crop] || 0;
+  if (!(have > 0)) throw new Error('Aucune récolte de cette culture au garde-manger.');
+  const n = Math.min(Math.max(1, Math.round(Number(params.n) || 1)), have);
+  g.garden.pantry[crop] = have - n;
+  ctx.game = g;
+  ctx.events.push({ type: 'partage', crop, n, pantry: pantryTotal(g) });
   return ctx.result();
 }
 

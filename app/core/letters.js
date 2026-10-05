@@ -7,12 +7,12 @@ import { topCards } from './cote.js';
 export const LETTER_REPEAT_DAYS = 7;
 
 /**
- * Remplit les gabarits {nom}. Sans prénom, l'apostrophe « , {prenom} » disparaît (« Bon matin, {prenom}. » →
- * « Bon matin. »). Tout autre gabarit sans valeur rend la phrase impossible : renvoie null.
+ * Remplit les gabarits {nom}. Sans prénom, l'apostrophe « , {prenom} » ou « {prenom}, » disparaît (« Bon matin, {prenom}. » →
+ * « Bon matin. » ; « T’es {prenom}, le septième… » → « T’es le septième… »). Tout autre gabarit sans valeur rend la phrase impossible : renvoie null.
  */
 export function fillText(text, vars = {}) {
   let s = String(text);
-  if (!vars.prenom) s = s.replace(/,\s*\{prenom\}/g, '');
+  if (!vars.prenom) s = s.replace(/,\s*\{prenom\}/g, '').replace(/\{prenom\},\s*/g, ''); // « Bon matin, {prenom}. » et « T’es {prenom}, le… »
   let ok = true;
   s = s.replace(/\{(\w+)\}/g, (m, k) => {
     const v = vars[k];

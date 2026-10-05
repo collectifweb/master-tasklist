@@ -28,7 +28,7 @@
       "dureeMinJours": 3,
       "ouverture": {
         "declencheur": {"type": "objectif_atteint", "objectif": "ch1.lisiere"},
-        "note": "Se joue après l’impact de la première quête terminée. Solène offre alors 12 Lueur aux Champs pour que la première parcelle existe.",
+        "note": "Se joue après l’impact de la première quête terminée. La première parcelle des Champs existe dès le départ. Solène la « prête » en scène, mais aucune Lueur n’est ajoutée à l’état.",
         "lignes": [
           {"voix": "narration", "texte": "La lumière touche la Place du Bastion. Les pavés reprennent leur couleur, un à un."},
           {"voix": "solene", "texte": "Ç’a marché. Ça faisait longtemps que j’avais pas vu du vert."},

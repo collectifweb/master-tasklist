@@ -192,7 +192,7 @@ test('aucun voile après une absence de 48 h ou plus avant l’Avis (résultat �
 });
 
 test('advanceTime note le jour de présence, une fois par jour', () => {
-  const w = ch2();
+  const w = ch2(undefined, { lastSeenDay: '2026-10-02' }); // lastSeenDay ne recule jamais : le jour noté doit être plus récent
   const s = step(w, advanceTime, {}, at('2026-10-03'));
   assert.equal(s.world.game.lastSeenDay, '2026-10-03');
   assert.deepEqual(step(s.world, advanceTime, {}, at('2026-10-03', 22)).r.ops, []);

@@ -105,6 +105,22 @@
     {
       "id": "matin_sans_quete.03",
       "texte": ["Allô.", "Aucune quête ouverte. C’est rare, et c’est correct. Je reste sur le Relais, au cas où."]
+    },
+    {
+      "id": "matin_sans_quete.04",
+      "texte": ["Bon matin.", "Pile vide. J’en profite pour regarder la lisière : elle brille un peu. Pas beaucoup, mais elle brille."]
+    },
+    {
+      "id": "matin_sans_quete.05",
+      "texte": ["Allô.", "Rien à faire ce matin. Solène en a profité pour balayer la Place. Moi, je surveille les feuilles."]
+    },
+    {
+      "id": "matin_sans_quete.06",
+      "texte": ["Bon matin.", "Journée sans quête. Je garde la lumière allumée quand même, c’est mon travail. Ajoute quelque chose si l’envie te prend."]
+    },
+    {
+      "id": "matin_sans_quete.07",
+      "texte": ["Allô.", "La liste est calme, les champs aussi. Je suis sur le Relais, comme d’habitude."]
     }
   ],
   "retour": [

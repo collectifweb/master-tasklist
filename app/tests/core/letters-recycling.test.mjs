@@ -15,7 +15,7 @@ test('fillText : gabarits remplis ; sans prénom, « , {prenom} » disparaît ; 
   assert.equal(fillText('Bon retour, {prenom}.', { prenom: '' }), 'Bon retour.');
   assert.equal(fillText('Je propose « {quete} ».', { quete: 'Sortir le bac' }), 'Je propose « Sortir le bac ».');
   assert.equal(fillText('Je propose « {quete} ».', {}), null);
-  assert.equal(fillText('T’es {prenom}, le septième.', {}), null);
+  assert.equal(fillText('T’es {prenom}, le septième.', {}), 'T’es le septième.'); // « {prenom}, » disparaît aussi
 });
 
 test('lettre du matin : quête n° 1 dans {quete}, phrase correcte sans prénom, mémoire dans l’état du jeu', () => {

@@ -183,7 +183,8 @@ test('moments d’histoire : fin du chapitre passé, ouverture du suivant (ligne
   const g = w.game;
   g.chapter = { number: 2, startDay: '2026-10-08', objectives: {} };
   g.lueur.atelier = 25;
-  g.story = { seen: ['introduction', 'premier-sillon.ouverture'], day: null, count: 0 };
+  // les moments « atteint » du chapitre 1 passent avant sa fin (déjà montrés ici)
+  g.story = { seen: ['introduction', 'premier-sillon.ouverture', ...chapitres.chapitres[0].objectifs.filter((o) => o.atteint).map((o) => `${o.id}.atteint`)], day: null, count: 0 };
   let m = storyMoments(g, [], [], chapitres, at('2026-10-08'));
   assert.deepEqual(m.slice(0, 2).map((x) => x.id), ['premier-sillon.fin', 'rouge-des-erables.ouverture']);
   assert.match(m[1].lignes[0].texte, /attendait là/); // Lueur gardée sous la cendre

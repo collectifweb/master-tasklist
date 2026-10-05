@@ -70,8 +70,8 @@ export function chapterDef(chapitres, n) {
 // Coût affiché dans le détail d'un objectif ({cout}), quand la condition vise un semis ou une construction.
 function objectiveCost(cond) {
   if (!cond) return null;
-  if (cond.type === 'semis' && SEED_COST[cond.culture]) return { energy: SEED_COST[cond.culture], materials: 0 };
-  if ((cond.type === 'batiment' || cond.type === 'decor') && BUILDABLES[cond.id]) return { ...BUILDABLES[cond.id].cost };
+  if (cond.type === 'semis' && Object.hasOwn(SEED_COST, cond.culture)) return { energy: SEED_COST[cond.culture], materials: 0 };
+  if ((cond.type === 'batiment' || cond.type === 'decor') && Object.hasOwn(BUILDABLES, cond.id)) return { ...BUILDABLES[cond.id].cost };
   return null;
 }
 
@@ -105,24 +105,29 @@ export function chapterProgress(game, tasks, ledger, chapitres, now) {
  * 'secteur-seuil'). Fonction pure : renvoie { game, events }. Appelée par advanceTime (avis.js).
  */
 export function syncChapter(game, tasks, ledger, chapitres, now) {
-  const p = chapterProgress(game, tasks, ledger, chapitres, now);
-  if (!p.contenu) return { game, events: [] };
   let g = game;
   const events = [];
-  const fresh = p.objectives.filter((o) => o.done && !o.doneDay);
-  if (fresh.length) {
-    g = structuredClone(game);
-    g.chapter.objectives = { ...(g.chapter.objectives ?? {}) };
-    for (const o of fresh) {
-      g.chapter.objectives[o.id] = gameDay(now);
-      events.push({ type: 'objectif-atteint', chapter: p.number, id: o.id });
+  const latch = () => {
+    const p = chapterProgress(g, tasks, ledger, chapitres, now);
+    const fresh = p.objectives.filter((o) => o.done && !o.doneDay);
+    if (fresh.length) {
+      g = structuredClone(g);
+      g.chapter.objectives = { ...(g.chapter.objectives ?? {}) };
+      for (const o of fresh) {
+        g.chapter.objectives[o.id] = gameDay(now);
+        events.push({ type: 'objectif-atteint', chapter: p.number, id: o.id });
+      }
     }
-  }
+    return p;
+  };
+  const p = latch();
+  if (!p.contenu) return { game, events: [] };
   if (p.canFinish) {
     events.push({ type: 'chapitre-fin', chapter: p.number });
     const r = advanceChapter(g, now);
     g = r.game;
     events.push(...r.events);
+    latch(); // objectifs du nouveau chapitre déjà atteints : retenus tout de suite (un 2e appel au même instant ne fait rien)
   }
   return { game: g, events };
 }
@@ -134,7 +139,7 @@ function avisContent(chapitres, id) {
 
 /**
  * Moments d'histoire à montrer maintenant, 3 par jour au plus (moins ceux déjà montrés aujourd'hui), dans cet ordre :
- * introduction, fin des chapitres passés, ouverture du chapitre, résultat du dernier Avis, annonce de l'Avis en cours,
+ * introduction, objectifs atteints puis fin des chapitres passés, ouverture du chapitre, résultat du dernier Avis, annonce de l'Avis en cours,
  * objectifs atteints, beats (`jour_du_chapitre`), annonces d'objectifs. Lignes filtrées par leur `si` ; les gabarits
  * ({prenom}, {jour}, {du_secteur}…) restent à remplir par l'interface. Rien n'est noté : l'interface appelle
  * markStorySeen avec les identifiants qu'elle a montrés. Renvoie [{ id, kind, chapter?, avis?, result?, day?, lignes }].
@@ -157,7 +162,12 @@ export function storyMoments(game, tasks, ledger, chapitres, now) {
   const n = game.chapter.number;
 
   if (chapitres.introduction) take('introduction', 'introduction', chapitres.introduction.lignes);
-  for (const c of chapitres.chapitres ?? []) if (c.numero < n && c.fin) take(`${c.id}.fin`, 'fin', c.fin.lignes, { chapter: c.numero });
+  for (const c of chapitres.chapitres ?? []) {
+    if (c.numero >= n) continue;
+    // chapitre fini : tous ses objectifs sont atteints, le dernier (qui l'a terminé) a droit à son moment avant la fin
+    for (const o of c.objectifs ?? []) if (o.atteint) take(`${o.id}.atteint`, 'objectif-atteint', o.atteint, { chapter: c.numero });
+    if (c.fin) take(`${c.id}.fin`, 'fin', c.fin.lignes, { chapter: c.numero });
+  }
 
   const def = chapterDef(chapitres, n);
   const prog = def ? chapterProgress(game, tasks, ledger, chapitres, now) : null;
