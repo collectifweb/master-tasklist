@@ -1,6 +1,8 @@
 // État du jeu (api/data/game-state.json) : version 2, le village (bible v2).
 import { gameDay, toISO } from './time.js';
-import { QUARTIER_IDS } from './domains.js';
+import { QUARTIER_IDS, PLACE_ID, quartierOfTask } from './domains.js';
+import { quartierOfEntry } from './ledger.js';
+import { bilansPasses } from './recycling.js';
 
 export const STATE_VERSION = 2;
 
@@ -51,12 +53,57 @@ function merge(defaults, raw) {
   return out;
 }
 
-/** Complète un état lu sur le serveur (champs manquants) sans rien perdre. `now` n'est requis que si `raw` est vide. */
-export function migrateState(raw, now) {
-  if (!isObj(raw)) return createInitialState(now);
-  const defaults = createInitialState(now ?? raw.createdAt ?? '1970-01-01T00:00:00Z');
-  if (raw.startDay) defaults.startDay = raw.startDay;
-  const out = merge(defaults, raw);
-  out.version = Math.max(STATE_VERSION, Number(raw.version) || 0);
+// Clés de la partie v1 qui n'existent plus en v2 (bible §13) : stock et Confiance, plafonds, Lueur, Fil libre, lisière
+// et semaines tenues, chapitres et moments d'histoire, secteurs, constructions, potager et Avis de la v1, mémoire des
+// annulations (elle ne servait qu'avec les plafonds).
+const V1_KEYS = ['resources', 'caps', 'lueur', 'filLibre', 'lisiereDays', 'weeksHeld', 'daily', 'chapter', 'story',
+  'sectors', 'placements', 'plots', 'garden', 'avis', 'recentApplied'];
+
+/**
+ * Complète un état lu sur le serveur sans rien perdre, ou convertit une partie v1 en partie v2. Fonction pure.
+ * - Partie v2 : seules les clés manquantes ou abîmées reprennent leur valeur par défaut (`ctx` est ignoré).
+ * - Partie v1, ou absente : Énergie, Matériaux et Nourriture partent du stock de départ ; les tâches par quartier et
+ *   les bilans des semaines finies sont recomptés depuis le registre (remballées exclues) ; une tâche au statut
+ *   `done` qui n'a aucune entrée au registre (ni gain de quête ni étape) compte une fois pour son quartier, sans
+ *   Énergie ni Matériaux (décision d'Alex du 5 octobre 2026). Relevé du temps, jours vus (lastSeenDay, lastOpenDay,
+ *   lastReturnDay), lettres montrées et clés inconnues sont gardés.
+ * ctx = { tasks, ledger } (liste normalisée, registre complet ou hydraté) : lus, jamais modifiés ; sans eux, rien
+ * n'est recompté. `now` est requis pour une partie v1 ou absente. Idempotente : une partie convertie est en v2 et
+ * un 2e appel ne la change plus.
+ */
+export function migrateState(raw, now, { tasks = [], ledger = [] } = {}) {
+  if (isObj(raw) && Number(raw.version) >= STATE_VERSION) {
+    const defaults = createInitialState(now ?? raw.createdAt ?? '1970-01-01T00:00:00Z');
+    if (raw.startDay) defaults.startDay = raw.startDay;
+    const out = merge(defaults, raw);
+    out.version = Math.max(STATE_VERSION, Number(raw.version) || 0);
+    return out;
+  }
+  const kept = isObj(raw) ? { ...raw } : {};
+  for (const k of V1_KEYS) delete kept[k];
+  const g = merge(createInitialState(now), kept);
+  g.version = STATE_VERSION;
+  g.quartiers = recountQuartiers(tasks, ledger);
+  g.bilans = bilansPasses(tasks, g, ledger, now);
+  return g;
+}
+
+// Tâches par quartier d'une partie v1 : quêtes payées au registre, remballées exclues (quartier de l'entrée ; pour
+// une entrée minimale, celui de la quête, ou la Place si elle n'existe plus), puis les tâches terminées que le
+// registre ne connaît pas. Les clés suffisent : `reward:{id}:{occurrence}`, `step:{id}:{occurrence}:{étape}`.
+function recountQuartiers(tasks, ledger) {
+  const out = zeroQuartiers();
+  const keys = new Set(ledger.map((e) => e.key));
+  const byId = new Map(tasks.map((t) => [String(t.id), t]));
+  const known = new Set(); // quêtes qui ont au moins une entrée de gain (quête ou étape) au registre
+  for (const e of ledger) {
+    const [type, ...rest] = String(e.key).split(':');
+    if (type !== 'reward' && type !== 'step') continue;
+    const id = rest.slice(0, type === 'step' ? -2 : -1).join(':');
+    known.add(id);
+    if (type !== 'reward' || keys.has(['reverse', ...rest].join(':'))) continue;
+    out[quartierOfEntry(e) ?? (byId.has(id) ? quartierOfTask(byId.get(id)) : PLACE_ID)] += 1;
+  }
+  for (const t of tasks) if (t.status === 'done' && !known.has(String(t.id))) out[quartierOfTask(t)] += 1;
   return out;
 }

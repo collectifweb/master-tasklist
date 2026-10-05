@@ -1,6 +1,6 @@
-// Jour du recyclage (dimanche), version 1 : bilan informatif de la semaine et quêtes ouvertes depuis plus de 60 jours,
-// à garder ou à archiver (l'archivage passe par archiveQuest de quests.js). Rien n'est modifié ici.
-import { gameDay, weekStart, weekEnd, isoWeekday } from './time.js';
+// Jour du recyclage (dimanche) : bilan informatif de la semaine et quêtes ouvertes depuis plus de 60 jours, à garder
+// ou à archiver (l'archivage passe par archiveQuest de quests.js) ; bilans des semaines passées. Rien n'est modifié ici.
+import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js';
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
 import { reverseKey, quartierOfEntry } from './ledger.js';
@@ -23,14 +23,38 @@ const hours = (min) => Math.round(min / 6) / 10;
  */
 export function weeklyReview(tasks, game, ledger, now) {
   const today = gameDay(now);
-  const start = weekStart(today), end = weekEnd(today);
+  const aTrier = tasks.filter((t) => t.status === 'todo' && !t.readonly && taskAgeDays(t, now) > RECYCLE_AGE_DAYS)
+    .map((t) => ({ id: t.id, task: t.task, domain: t.domain ?? '', ageDays: taskAgeDays(t, now) }))
+    .sort((a, b) => b.ageDays - a.ageDays || String(a.id).localeCompare(String(b.id)));
+  return { day: today, dimanche: isoWeekday(today) === 7, ...bilanSemaine(tasks, game, ledger, weekStart(today), now), aTrier, ratioJeuQuetes: null };
+}
+
+/**
+ * Bilans figés des semaines finies avant celle de `now` qui comptent au moins une quête au registre (remballées
+ * exclues), du plus ancien au plus récent : même forme que weeklyReview, sans day, dimanche, aTrier ni ratioJeuQuetes.
+ * Une entrée minimale (registre de plus de 60 jours, sans jour) n'entre dans aucun bilan.
+ */
+export function bilansPasses(tasks, game, ledger, now) {
+  const current = weekStart(gameDay(now));
+  const weeks = new Set(paidQuests(ledger).map((e) => weekStart(e.day)).filter((w) => w < current));
+  return [...weeks].sort().map((w) => bilanSemaine(tasks, game, ledger, w, now));
+}
+
+// Gains de quête datés du registre, sans ceux qui ont été remballés.
+function paidQuests(ledger) {
   const keys = new Set(ledger.map((e) => e.key));
+  return ledger.filter((e) => e.type === 'reward' && isDayString(e.day) && !keys.has(reverseKey(e.taskId, e.occurrence)));
+}
+
+// Bilan de la semaine qui commence le lundi `start`.
+function bilanSemaine(tasks, game, ledger, start, now) {
+  const end = weekEnd(start);
   const byId = new Map(tasks.map((t) => [String(t.id), t]));
   const byQuartier = {};
   const jours = new Set();
   let quetes = 0, minutes = 0, minutesReleve = 0;
-  for (const e of ledger) {
-    if (e.type !== 'reward' || !e.day || e.day < start || e.day > end || keys.has(reverseKey(e.taskId, e.occurrence))) continue;
+  for (const e of paidQuests(ledger)) {
+    if (e.day < start || e.day > end) continue;
     const quartier = quartierOfEntry(e) ?? PLACE_ID;
     const d = (byQuartier[quartier] ||= { quartier, domain: QUARTIERS[quartier].domain, quetes: 0, minutes: 0, minutesReleve: 0 });
     jours.add(e.day);
@@ -44,14 +68,9 @@ export function weeklyReview(tasks, game, ledger, now) {
   const domaines = Object.values(byQuartier)
     .map((d) => ({ ...d, heures: hours(d.minutes), minutesReleve: round1(d.minutesReleve), heuresReleve: hours(d.minutesReleve) }))
     .sort((a, b) => b.minutes - a.minutes || a.quartier.localeCompare(b.quartier));
-  const aTrier = tasks.filter((t) => t.status === 'todo' && !t.readonly && taskAgeDays(t, now) > RECYCLE_AGE_DAYS)
-    .map((t) => ({ id: t.id, task: t.task, domain: t.domain ?? '', ageDays: taskAgeDays(t, now) }))
-    .sort((a, b) => b.ageDays - a.ageDays || String(a.id).localeCompare(String(b.id)));
   return {
-    day: today, dimanche: isoWeekday(today) === 7, semaine: { start, end },
+    semaine: { start, end },
     quetes, heures: hours(minutes), minutesReleve: round1(minutesReleve), heuresReleve: hours(minutesReleve), domaines,
     joursTravailles: jours.size,
-    aTrier,
-    ratioJeuQuetes: null,
   };
 }
