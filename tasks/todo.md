@@ -148,11 +148,14 @@ Pour le joueur : la barre montre Énergie, Matériaux, Nourriture, Habitants ; l
 
 ### Lot 3 — Migration sûre
 Pour le joueur : à la première ouverture, sa partie passe en v2 sans rien perdre, avec une lettre de Fanal qui explique ce qui change.
-- [ ] Chaque envoi de la v2 porte sa version. Le serveur refuse l'ancienne app avec « L'app a été mise à jour : recharge la page. » (sinon un onglet v1 resté ouvert réécrirait la partie v2 avec ses valeurs v1).
-- [ ] Au passage en v2, le serveur garde une copie de la partie v1, jamais effacée. Registre et opérations jamais réécrits ; une quête payée en v1 ne repaie pas.
-- [ ] File d'attente hors ligne convertie une fois : les gestes sur les quêtes sont recalculés, les gestes de jeu v1 écartés avec un message ; code d'accès et prénom gardés.
-- [ ] Tests : refus de l'ancienne app, copie v1 unique, `tasks.json` identique à l'octet ; scénario de migration complet.
-- [ ] Premier déploiement sur l'essai : sa partie v1 sert de répétition.
+- [x] Chaque envoi de la v2 porte sa version. Le serveur refuse l'ancienne app avec « L'app a été mise à jour : recharge la page. » (sinon un onglet v1 resté ouvert réécrirait la partie v2 avec ses valeurs v1).
+- [x] Au passage en v2, le serveur garde une copie de la partie v1, jamais effacée. Registre et opérations jamais réécrits ; une quête payée en v1 ne repaie pas.
+- [x] File d'attente hors ligne convertie une fois : les gestes sur les quêtes sont recalculés, les gestes de jeu v1 écartés avec un message ; code d'accès et prénom gardés.
+- [x] Tests : refus de l'ancienne app, copie v1 unique, `tasks.json` identique à l'octet ; scénario de migration complet.
+- [x] Premier déploiement sur l'essai : sa partie v1 sert de répétition.
+- *Fait le 5 octobre (commits b357112, b9e62bf, 14fd05f ; cache de l'app passé en v4). Vérifié par moi : 250 tests `node --test`. Scénario navigateur 25 réussi d'après le journal de l'agent (66 vérifications, relu, pas relancé). Refus de l'ancienne app : HTTP 409, code `client_outdated`, que la v1 écarte avec un message sans relance (test qui fait tourner le code de l'étiquette `v1`). Gain v1 reconnu au champ `filLibre` du registre.*
+- *Essai en ligne, vérifié le 5 octobre vers 17 h : photo de la partie avant envoi (`backups/avant-v2-…`), envoi, ouverture dans un navigateur de téléphone simulé. Lettre de Fanal montrée une fois, pas au rechargement, 0 erreur console. Côté serveur : copie v1 identique à l'octet à la partie d'avant, partie en version 2 avec `migratedAt`, plus rien de la v1, quartiers recomptés, liste des tâches identique à l'octet, 19 lignes du registre intactes, anciens identifiants d'opérations gardés en tête et dans l'ordre. Une écriture sans version de client reçoit bien le refus.*
+- *Accepté : pendant les 24 h qui suivent la bascule, remballer une quête payée en v1 affiche encore « Ses gains sont repris », alors que seul le quartier recule. `app/ARCHITECTURE.md` (champ `client`, `client_outdated`, copie v1, `oree.queue.v2`, `migratedAt`) sera mis à jour au lot 8, avant la bascule de la production.*
 
 ### Lot 4 — Bâtiments, habitants, fiches à trois lignes
 Pour le joueur : il rebâtit des chalets, sème, récolte, accueille des familles et voit son rang monter. Chaque bâtiment dit ce qu'il est, ce qu'il fait, ce qu'on peut faire maintenant, ou ce qui manque (« Il faut d'abord un quai. »).
