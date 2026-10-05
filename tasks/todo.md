@@ -23,8 +23,8 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 ## Étape 0 — Préparer
 
-- [ ] Ouvrir la demande de fusion de `ccr-06402b21-chsulu` vers `main` ; Alex la relit et la fusionne. Le travail continue sur une branche partie de `main`.
-- [ ] Lire, sans rien modifier, la configuration du serveur par SSH : `tasks-api.php`, emplacement de `tasks.json`, sauvegardes existantes, version de PHP, façon dont Hermes écrit.
+- [x] Ouvrir la demande de fusion de `ccr-06402b21-chsulu` vers `main` (n° 5) ; Alex la relit et la fusionne. Le travail continue sur `feat/lisiere-rallumee`, partie de cette branche.
+- [x] Lire, sans rien modifier, la configuration du serveur par SSH : `tasks-api.php`, emplacement de `tasks.json`, sauvegardes existantes, version de PHP, façon dont Hermes écrit.
 - [ ] Poser les fondations visuelles de `app/` avec /impeccable, en partant de la palette de 006.
 - [x] Inscrire les décisions ci-dessus dans `RECOMMANDATION.md` (section 10) et `SUITE.md`.
 

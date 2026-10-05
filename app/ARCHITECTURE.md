@@ -29,7 +29,7 @@ app/
 
 Lancer en local : `cp tasks.example.json tasks.json` (à la racine du dépôt, ignoré par Git), puis `php -S 127.0.0.1:8090 -t .` depuis la racine et ouvrir `http://127.0.0.1:8090/app/`.
 
-Tests : `node --test app/tests/core app/tests/api`.
+Tests : `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"` (Node 24 ne parcourt pas un dossier passé en argument).
 
 ## Données
 
