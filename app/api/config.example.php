@@ -2,7 +2,8 @@
 /**
  * Modèle de réglages. Copier en `config.php` (ignoré par Git) et adapter.
  * Ordre de priorité : variables d'environnement (OREE_TASKS_FILE, OREE_DATA_DIR,
- * OREE_TOKEN_HASH), puis ce fichier, puis les valeurs par défaut.
+ * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1), puis ce fichier,
+ * puis les valeurs par défaut.
  */
 
 // Chemin de tasks.json. Défaut : deux niveaux au-dessus de api.php.
@@ -11,11 +12,21 @@
 // Dossier des données (état du jeu, registre, sauvegardes). Défaut : api/data.
 // define('DATA_DIR', '/chemin/fictif/vers/oree-data');
 
-// Empreinte du jeton. Sans cette ligne, l'API est ouverte (développement local).
-// Produire l'empreinte avec :
-//   php -r 'echo password_hash("mon-jeton-secret-fictif", PASSWORD_DEFAULT);'
-// puis coller le résultat ci-dessous. Le client envoie : Authorization: Bearer mon-jeton-secret-fictif
-// define('TOKEN_HASH', '$2y$10$remplacer-par-l-empreinte-generee');
+// PROTECTION. L'API est fermée par défaut : sans TOKEN_HASH, elle répond 503
+// (sauf sous « php -S », le serveur de développement de PHP, ou si ALLOW_OPEN est vrai).
+//
+// 1. Produire un jeton aléatoire long ET son empreinte SHA-256 :
+//      php -r '$t=bin2hex(random_bytes(32)); echo $t, PHP_EOL, hash("sha256",$t), PHP_EOL;'
+//    Première ligne = le jeton (à garder pour le client, jamais dans le dépôt).
+//    Deuxième ligne = l'empreinte (à coller ci-dessous).
+// 2. Le client envoie : Authorization: Bearer <le jeton>
+// define('TOKEN_HASH', 'remplacer-par-l-empreinte-sha256-en-hexadecimal-fictive-000000000000');
+
+// Ouvre l'API sans jeton (déconseillé hors développement).
+// define('ALLOW_OPEN', false);
+
+// Permet à l'API de CRÉER tasks.json s'il est absent (essais seulement ; sinon 503 tasks_missing).
+// define('ALLOW_CREATE_TASKS', false);
 
 /*
  * Hébergement LiteSpeed/Apache : l'en-tête Authorization n'arrive parfois pas à PHP.
@@ -29,4 +40,6 @@
  *   CGIPassAuth On
  *
  * api.php lit HTTP_AUTHORIZATION, REDIRECT_HTTP_AUTHORIZATION, puis getallheaders().
+ *
+ * Après chaque déploiement, vérifier qu'une requête web sur api/data/ledger.jsonl répond 403.
  */

@@ -9,8 +9,14 @@ declare(strict_types=1);
 const MAX_BODY = 512 * 1024;
 const MAX_OPS_KEPT = 500;
 const BACKUPS_KEPT = 14;
+const BACKUP_DAYS = 30;
+const LEDGER_DAYS = 60;
+const LEDGER_MAX_ENTRIES = 50;
+const LEDGER_MAX_ENTRY_BYTES = 2048;
 const READ_RETRIES = 3;
 const READ_RETRY_US = 200000;
+const LOCK_WAIT_S = 5.0;
+const TASKS_WRITE_ATTEMPTS = 3;
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -22,46 +28,78 @@ final class ApiError extends RuntimeException
         public readonly string $errCode,
         string $message,
         public readonly array $extra = [],
-        public readonly ?array $headers = null
+        public readonly array $headers = []
     ) {
         parent::__construct($message);
     }
 }
 
-function respond(int $status, array $payload, array $headers = []): never
+/** Erreur 500 : le détail va au journal du serveur, jamais au client. */
+function server_error(string $detail): ApiError
+{
+    error_log('oree api: ' . $detail);
+    return new ApiError(500, 'server_error', 'Erreur interne du serveur.');
+}
+
+function jenc(mixed $v, int $flags = 0): string
+{
+    return json_encode($v, $flags | JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+}
+
+function emit(int $status, string $json, array $headers = []): never
 {
     if (!headers_sent()) {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
-        foreach ($headers as $h) {
-            header($h);
-        }
+        foreach ($headers as $h) header($h);
     }
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    echo $json;
     exit;
+}
+
+function respond(int $status, array $payload, array $headers = []): never
+{
+    emit($status, jenc($payload, JSON_UNESCAPED_SLASHES), $headers);
 }
 
 function fail(ApiError $e): never
 {
-    respond($e->status, ['ok' => false, 'code' => $e->errCode, 'error' => $e->getMessage()] + $e->extra, $e->headers ?? []);
+    respond($e->status, ['ok' => false, 'code' => $e->errCode, 'error' => $e->getMessage()] + $e->extra, $e->headers);
+}
+
+function bad(string $msg): ApiError
+{
+    return new ApiError(400, 'bad_request', $msg);
 }
 
 // ---------- Configuration : environnement, puis config.php, puis défauts ----------
 
 function load_config(): array
 {
-    $cfg = ['tasks' => __DIR__ . '/../../tasks.json', 'data' => __DIR__ . '/data', 'hash' => ''];
+    $cfg = [
+        'tasks' => __DIR__ . '/../../tasks.json',
+        'data' => __DIR__ . '/data',
+        'hash' => '',
+        'allow_open' => false,
+        'allow_create' => false,
+    ];
     $file = __DIR__ . '/config.php';
     if (is_file($file)) {
         require_once $file;
         if (defined('TASKS_FILE') && is_string(TASKS_FILE) && TASKS_FILE !== '') $cfg['tasks'] = TASKS_FILE;
         if (defined('DATA_DIR') && is_string(DATA_DIR) && DATA_DIR !== '') $cfg['data'] = DATA_DIR;
         if (defined('TOKEN_HASH') && is_string(TOKEN_HASH)) $cfg['hash'] = TOKEN_HASH;
+        if (defined('ALLOW_OPEN')) $cfg['allow_open'] = (bool)ALLOW_OPEN;
+        if (defined('ALLOW_CREATE_TASKS')) $cfg['allow_create'] = (bool)ALLOW_CREATE_TASKS;
     }
     foreach (['tasks' => 'OREE_TASKS_FILE', 'data' => 'OREE_DATA_DIR', 'hash' => 'OREE_TOKEN_HASH'] as $k => $name) {
         $v = getenv($name);
         if (is_string($v) && $v !== '') $cfg[$k] = $v;
+    }
+    foreach (['allow_open' => 'OREE_ALLOW_OPEN', 'allow_create' => 'OREE_ALLOW_CREATE_TASKS'] as $k => $name) {
+        $v = getenv($name);
+        if (is_string($v) && $v !== '') $cfg[$k] = ($v === '1');
     }
     return $cfg;
 }
@@ -80,72 +118,175 @@ function bearer_token(): ?string
     return $m[1];
 }
 
-function require_auth(string $hash): void
+/** Décision d'accès : null si permis, sinon l'erreur à renvoyer. Fermée par défaut. */
+function auth_decision(string $hash, bool $allowOpen, string $sapi, ?string $token): ?ApiError
 {
-    if ($hash === '') return;
-    $t = bearer_token();
-    if ($t === null || !password_verify($t, $hash)) {
-        throw new ApiError(401, 'unauthorized', 'Accès refusé : jeton manquant ou invalide.', [], ['WWW-Authenticate: Bearer']);
+    if ($hash !== '') {
+        if ($token !== null && hash_equals(strtolower($hash), hash('sha256', $token))) return null;
+        return new ApiError(401, 'unauthorized', 'Accès refusé : jeton manquant ou invalide.', [], ['WWW-Authenticate: Bearer']);
     }
+    if ($allowOpen || $sapi === 'cli-server') return null;
+    return new ApiError(503, 'auth_not_configured', 'L’API n’est pas configurée : aucun jeton défini.');
 }
 
-// ---------- Fichiers ----------
+// ---------- Fichiers, verrous, sauvegardes ----------
 
 function prepare_data_dir(string $dir): void
 {
-    if (!is_dir($dir)) {
-        if (!@mkdir($dir, 0755, true) && !is_dir($dir)) {
-            throw new ApiError(500, 'server_error', 'Dossier de données inaccessible.');
-        }
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw server_error("dossier de données impossible à créer : $dir");
     }
     if (!is_file($dir . '/.htaccess')) @file_put_contents($dir . '/.htaccess', "Require all denied\n");
+    if (!is_file($dir . '/.htaccess')) throw server_error("impossible de créer $dir/.htaccess");
     if (!is_file($dir . '/index.html')) @file_put_contents($dir . '/index.html', '');
-    if (!is_dir($dir . '/backups')) @mkdir($dir . '/backups', 0755, true);
+    if (!is_dir($dir . '/backups') && !@mkdir($dir . '/backups', 0755, true) && !is_dir($dir . '/backups')) {
+        throw server_error("dossier de sauvegardes impossible à créer : $dir/backups");
+    }
 }
 
-function atomic_write(string $file, string $content, int $mode): void
+/** Verrou non bloquant, réessayé 5 s au plus. */
+function lock_file(string $path, int $mode)
 {
-    $tmp = @tempnam(dirname($file), '.tmp-');
-    if ($tmp === false) throw new ApiError(500, 'server_error', 'Écriture impossible.');
-    if (@file_put_contents($tmp, $content, LOCK_EX) !== strlen($content)) {
+    $fh = @fopen($path, 'c');
+    if (!$fh) throw server_error("verrou impossible à ouvrir : $path");
+    $deadline = microtime(true) + LOCK_WAIT_S;
+    while (!flock($fh, $mode | LOCK_NB)) {
+        if (microtime(true) >= $deadline) {
+            fclose($fh);
+            throw new ApiError(503, 'busy', 'Le serveur est occupé. Rien n’a été enregistré ; réessayez dans un instant.');
+        }
+        usleep(50000);
+    }
+    return $fh;
+}
+
+/** Écriture atomique. $precheck (facultatif) renvoie false pour renoncer au rename ; renvoie alors false. */
+function atomic_write(string $file, string $content, int $mode, ?callable $precheck = null): bool
+{
+    $dir = dirname($file);
+    $tmp = @tempnam($dir, '.tmp-');
+    if ($tmp === false) throw server_error("fichier temporaire impossible dans $dir");
+    if (realpath(dirname($tmp)) !== realpath($dir)) {
         @unlink($tmp);
-        throw new ApiError(500, 'server_error', 'Écriture impossible.');
+        throw server_error("fichier temporaire hors du dossier de $file");
+    }
+    $fh = @fopen($tmp, 'wb');
+    $ok = $fh && fwrite($fh, $content) === strlen($content) && fflush($fh) && fsync($fh);
+    if ($fh) fclose($fh);
+    if (!$ok) {
+        @unlink($tmp);
+        throw server_error("écriture impossible : $file");
     }
     @chmod($tmp, $mode);
+    $hook = $GLOBALS['oree_hook_before_rename'] ?? null; // crochet réservé aux tests en ligne de commande
+    if (is_callable($hook)) $hook($file);
+    if ($precheck !== null && !$precheck()) {
+        @unlink($tmp);
+        return false;
+    }
     if (!@rename($tmp, $file)) {
         @unlink($tmp);
-        throw new ApiError(500, 'server_error', 'Écriture impossible.');
+        throw server_error("rename impossible : $file");
     }
+    return true;
 }
 
-function backup_file(string $file, string $dataDir): void
+function stamp(): string
 {
-    if (!is_file($file)) return;
-    $name = basename($file);
-    $dir = $dataDir . '/backups';
-    $stamp = gmdate('Ymd-His') . '-' . sprintf('%06d', (int)((microtime(true) * 1000000) % 1000000));
-    @copy($file, "$dir/$name.$stamp.bak");
+    return gmdate('Ymd-His') . '-' . sprintf('%06d', (int)((microtime(true) * 1000000) % 1000000));
+}
+
+function backup_names(string $dir, string $name): array
+{
     $all = [];
     foreach (scandir($dir) ?: [] as $f) {
         if (str_starts_with($f, $name . '.') && str_ends_with($f, '.bak')) $all[] = $f;
     }
     sort($all, SORT_STRING);
-    foreach (array_slice($all, 0, max(0, count($all) - BACKUPS_KEPT)) as $old) @unlink("$dir/$old");
+    return $all;
 }
 
-/** Lit tasks.json ; réessaie brièvement s'il est illisible (copie SSH en cours). */
-function read_tasks(string $file): array
+function backup_day(string $name, string $file): ?string
+{
+    return preg_match('/^' . preg_quote($name, '/') . '\.(\d{8})-\d{6}-\d{6}/', $file, $m) ? $m[1] : null;
+}
+
+/** Copie le contenu (donné, ou lu dans le fichier) ; un échec refuse l'écriture (exception). Garde 14 copies + 1 par jour pendant 30 jours. */
+function backup_file(string $file, string $dataDir, string $tag, bool $oncePerDay = false, ?string $content = null): void
+{
+    if ($content === null && !is_file($file)) return;
+    $name = basename($file);
+    $dir = $dataDir . '/backups';
+    if ($oncePerDay) {
+        $today = gmdate('Ymd');
+        foreach (backup_names($dir, $name) as $f) if (backup_day($name, $f) === $today) return;
+    }
+    $dest = "$dir/$name." . stamp() . "-$tag.bak";
+    $content ??= @file_get_contents($file);
+    if (!is_string($content) || @file_put_contents($dest, $content) !== strlen($content)) {
+        @unlink($dest);
+        throw server_error("sauvegarde impossible : $file");
+    }
+    $all = backup_names($dir, $name);
+    $keep = array_flip(array_slice($all, -BACKUPS_KEPT));
+    $lastOfDay = [];
+    foreach ($all as $f) {
+        $d = backup_day($name, $f);
+        if ($d !== null) $lastOfDay[$d] = $f;
+    }
+    $limit = gmdate('Ymd', time() - BACKUP_DAYS * 86400);
+    foreach ($lastOfDay as $d => $f) if ($d >= $limit) $keep[$f] = true;
+    foreach ($all as $f) if (!isset($keep[$f])) @unlink("$dir/$f");
+}
+
+// ---------- Lecture des données ----------
+
+function has_non_finite(mixed $v): bool
+{
+    if (is_float($v)) return !is_finite($v);
+    if (is_array($v) || $v instanceof stdClass) {
+        foreach ($v as $x) if (has_non_finite($x)) return true;
+    }
+    return false;
+}
+
+function unreadable_tasks(): ApiError
+{
+    return new ApiError(503, 'tasks_unreadable', 'Le fichier des tâches est momentanément illisible. Rien n’a été enregistré ; réessayez dans un instant.');
+}
+
+/** Signature légère d'un fichier (inode, taille, date) : sert à détecter un remplacement à la dernière milliseconde. */
+function file_sig(string $f): string
+{
+    clearstatcache(true, $f);
+    $st = @stat($f);
+    return $st ? $st['ino'] . '-' . $st['size'] . '-' . $st['mtime'] : '';
+}
+
+/** Lit tasks.json (chemin résolu par realpath) ; réessaie brièvement s'il est illisible. */
+function read_tasks(array $cfg): array
 {
     for ($i = 0; $i <= READ_RETRIES; $i++) {
         if ($i > 0) usleep(READ_RETRY_US);
-        clearstatcache(true, $file);
-        if (!file_exists($file)) return ['raw' => '', 'tasks' => []];
-        $raw = @file_get_contents($file);
+        clearstatcache(true);
+        $real = @realpath($cfg['tasks']);
+        if ($real === false) {
+            if (!$cfg['allow_create']) {
+                throw new ApiError(503, 'tasks_missing', 'Le fichier des tâches est introuvable. Rien n’a été enregistré.');
+            }
+            $dir = @realpath(dirname($cfg['tasks']));
+            if ($dir === false) throw server_error('dossier de tasks.json introuvable');
+            return ['raw' => '', 'tasks' => [], 'real' => $dir . '/' . basename($cfg['tasks']), 'exists' => false, 'sig' => ''];
+        }
+        $sig = file_sig($real);
+        $raw = is_file($real) ? @file_get_contents($real) : false;
         if (!is_string($raw)) continue;
         $data = json_decode($raw, false, 512);
-        if (is_array($data)) return ['raw' => $raw, 'tasks' => $data];
+        if (!is_array($data)) continue;
+        if (has_non_finite($data)) throw unreadable_tasks();
+        return ['raw' => $raw, 'tasks' => $data, 'real' => $real, 'exists' => true, 'sig' => $sig];
     }
-    throw new ApiError(503, 'tasks_unreadable', 'Le fichier des tâches est momentanément illisible. Rien n’a été enregistré ; réessayez dans un instant.');
+    throw unreadable_tasks();
 }
 
 function read_game(string $file): array
@@ -153,56 +294,108 @@ function read_game(string $file): array
     if (!is_file($file)) return ['raw' => null, 'game' => null, 'rev' => null];
     $raw = @file_get_contents($file);
     $game = is_string($raw) ? json_decode($raw, false, 512) : null;
-    if (!($game instanceof stdClass)) throw new ApiError(500, 'server_error', 'État du jeu illisible.');
+    if (!($game instanceof stdClass)) throw server_error('game-state.json illisible');
     return ['raw' => $raw, 'game' => $game, 'rev' => sha1($raw)];
 }
 
+/** Registre : entrées récentes (60 jours, selon `at`) et toutes les clés. */
 function read_ledger(string $file): array
 {
-    $out = [];
+    $out = ['recent' => [], 'keys' => []];
     if (!is_file($file)) return $out;
     $fh = @fopen($file, 'rb');
-    if (!$fh) throw new ApiError(500, 'server_error', 'Registre illisible.');
+    if (!$fh) throw server_error('ledger.jsonl illisible');
     while (($line = fgets($fh)) !== false) {
         $line = trim($line);
         if ($line === '') continue;
         $e = json_decode($line, false, 512);
-        if ($e instanceof stdClass) $out[] = $e;
+        if (!($e instanceof stdClass)) continue;
+        ledger_add($out, $e);
     }
     fclose($fh);
     return $out;
 }
 
+function ledger_add(array &$state, stdClass $e): void
+{
+    if (isset($e->key) && is_string($e->key)) $state['keys'][$e->key] = true;
+    $ts = isset($e->at) && is_string($e->at) ? strtotime($e->at) : false;
+    if ($ts === false || $ts >= time() - LEDGER_DAYS * 86400) $state['recent'][] = $e;
+}
+
 function read_ops(string $file): array
 {
     if (!is_file($file)) return [];
-    $d = json_decode((string)@file_get_contents($file), true);
-    return is_array($d) ? array_values(array_filter($d, 'is_string')) : [];
+    $raw = @file_get_contents($file);
+    $d = is_string($raw) ? json_decode($raw, true) : null;
+    if (!is_array($d)) throw new ApiError(503, 'ops_unreadable', 'Le journal des opérations est illisible. Rien n’a été enregistré.');
+    $out = [];
+    foreach ($d as $o) {
+        if (!is_array($o) || !isset($o['id'], $o['h']) || !is_string($o['id']) || !is_string($o['h'])) {
+            throw new ApiError(503, 'ops_unreadable', 'Le journal des opérations est illisible. Rien n’a été enregistré.');
+        }
+        $out[] = $o;
+    }
+    return $out;
 }
 
-function state_payload(array $t, array $g, array $ledger): array
+function state_payload(array $t, array $g, array $l): array
 {
     return [
         'revision' => sha1($t['raw']),
         'tasks' => $t['tasks'],
         'game' => $g['game'],
         'gameRevision' => $g['rev'],
-        'ledger' => $ledger,
+        'ledger' => $l['recent'],
+        'ledgerKeys' => array_map('strval', array_keys($l['keys'])),
     ];
-}
-
-function open_lock(string $dataDir, int $mode)
-{
-    $fh = @fopen($dataDir . '/.lock', 'c');
-    if (!$fh || !flock($fh, $mode)) throw new ApiError(500, 'server_error', 'Verrou indisponible.');
-    return $fh;
 }
 
 // ---------- Opérations ----------
 
-function bad(string $msg): ApiError
+function id_ok(mixed $v): bool
 {
-    return new ApiError(400, 'bad_request', $msg);
+    return (is_string($v) || is_int($v)) && (string)$v !== '';
+}
+
+/** Valide la forme de toutes les opérations (400) et les range par nature. */
+function parse_ops(array $ops): array
+{
+    $r = ['task' => [], 'entries' => [], 'game' => null, 'baseRev' => null];
+    foreach ($ops as $n => $op) {
+        $at = 'Opération n° ' . ($n + 1);
+        if (!($op instanceof stdClass) || !isset($op->type) || !is_string($op->type)) throw bad("$at invalide.");
+        switch ($op->type) {
+            case 'task.upsert':
+                $in = $op->task ?? null;
+                if (!($in instanceof stdClass) || !isset($in->id) || !id_ok($in->id)) throw bad("$at : la tâche doit avoir un identifiant.");
+                $r['task'][] = $op;
+                break;
+            case 'task.delete':
+                if (!isset($op->id) || !id_ok($op->id)) throw bad("$at : identifiant manquant.");
+                $r['task'][] = $op;
+                break;
+            case 'ledger.append':
+                if (!isset($op->entries) || !is_array($op->entries)) throw bad("$at : liste d’entrées manquante.");
+                foreach ($op->entries as $e) {
+                    if (!($e instanceof stdClass) || !isset($e->key) || !is_string($e->key) || $e->key === '') throw bad("$at : chaque entrée du registre doit avoir une clé.");
+                    if (strlen(jenc($e)) > LEDGER_MAX_ENTRY_BYTES) throw bad("$at : une entrée du registre dépasse 2 Kio.");
+                    $r['entries'][] = $e;
+                }
+                if (count($r['entries']) > LEDGER_MAX_ENTRIES) throw bad('Au plus ' . LEDGER_MAX_ENTRIES . ' entrées de registre par requête.');
+                break;
+            case 'game.set':
+                if ($r['game'] !== null) throw bad("$at : un seul game.set par requête.");
+                if (!property_exists($op, 'baseGameRevision') || !(is_string($op->baseGameRevision) || $op->baseGameRevision === null)) throw bad("$at : baseGameRevision requis.");
+                if (!isset($op->game) || !($op->game instanceof stdClass)) throw bad("$at : état du jeu invalide.");
+                $r['game'] = $op->game;
+                $r['baseRev'] = $op->baseGameRevision;
+                break;
+            default:
+                throw bad('Type d’opération inconnu.');
+        }
+    }
+    return $r;
 }
 
 function find_task_index(array $tasks, string $id): ?int
@@ -213,70 +406,88 @@ function find_task_index(array $tasks, string $id): ?int
     return null;
 }
 
-function apply_ops(array $ops, array &$tasks, array &$ledger, array &$game, array &$flags, array $gameCur): void
+/** Applique les opérations sur les tâches ; renvoie true si quelque chose a changé. */
+function apply_task_ops(array &$tasks, array $taskOps): bool
 {
-    $keys = [];
-    foreach ($ledger as $e) if (isset($e->key) && is_string($e->key)) $keys[$e->key] = true;
-
-    foreach ($ops as $n => $op) {
-        if (!($op instanceof stdClass) || !isset($op->type) || !is_string($op->type)) throw bad("Opération n° " . ($n + 1) . " invalide.");
-        switch ($op->type) {
-            case 'task.upsert':
-                $in = $op->task ?? null;
-                if (!($in instanceof stdClass) || !isset($in->id) || !(is_string($in->id) || is_int($in->id)) || (string)$in->id === '') {
-                    throw bad("Opération n° " . ($n + 1) . " : la tâche doit avoir un identifiant.");
+    $changed = false;
+    foreach ($taskOps as $op) {
+        if ($op->type === 'task.upsert') {
+            $in = $op->task;
+            $idx = find_task_index($tasks, (string)$in->id);
+            if ($idx === null) {
+                $tasks[] = clone $in;
+            } else {
+                foreach (get_object_vars($in) as $k => $v) {
+                    if ($k === 'id') continue; // le type d'origine de l'identifiant est conservé
+                    $tasks[$idx]->$k = $v;
                 }
-                $idx = find_task_index($tasks, (string)$in->id);
-                if ($idx === null) {
-                    $tasks[] = $in;
-                } else {
-                    foreach (get_object_vars($in) as $k => $v) $tasks[$idx]->$k = $v;
-                }
-                $flags['tasks'] = true;
-                break;
-            case 'task.delete':
-                if (!isset($op->id) || !(is_string($op->id) || is_int($op->id)) || (string)$op->id === '') throw bad("Opération n° " . ($n + 1) . " : identifiant manquant.");
-                $idx = find_task_index($tasks, (string)$op->id);
-                if ($idx !== null) {
-                    array_splice($tasks, $idx, 1);
-                    $flags['tasks'] = true;
-                }
-                break;
-            case 'ledger.append':
-                if (!isset($op->entries) || !is_array($op->entries)) throw bad("Opération n° " . ($n + 1) . " : liste d’entrées manquante.");
-                foreach ($op->entries as $e) {
-                    if (!($e instanceof stdClass) || !isset($e->key) || !is_string($e->key) || $e->key === '') throw bad("Opération n° " . ($n + 1) . " : chaque entrée du registre doit avoir une clé.");
-                    if (isset($keys[$e->key])) {
-                        throw new ApiError(409, 'duplicate_key', 'Ce gain est déjà inscrit au registre. Rien n’a été enregistré.', ['key' => $e->key]);
-                    }
-                    $keys[$e->key] = true;
-                    $ledger[] = $e;
-                    $flags['ledger'][] = $e;
-                }
-                break;
-            case 'game.set':
-                if (!property_exists($op, 'baseGameRevision') || !(is_string($op->baseGameRevision) || $op->baseGameRevision === null)) throw bad("Opération n° " . ($n + 1) . " : baseGameRevision requis.");
-                if (!isset($op->game) || !($op->game instanceof stdClass)) throw bad("Opération n° " . ($n + 1) . " : état du jeu invalide.");
-                if ($op->baseGameRevision !== $gameCur['rev']) {
-                    throw new ApiError(409, 'game_conflict', 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.', ['conflict' => true]);
-                }
-                $game = ['game' => $op->game];
-                $flags['game'] = true;
-                // Les set suivants du même lot s'appuient sur la révision de départ : un seul game.set par lot.
-                $gameCur = ['rev' => '__pending__'];
-                break;
-            default:
-                throw bad("Type d’opération inconnu : « " . mb_substr($op->type, 0, 40) . " ».");
+            }
+            $changed = true;
+        } else {
+            $idx = find_task_index($tasks, (string)$op->id);
+            if ($idx !== null) {
+                array_splice($tasks, $idx, 1);
+                $changed = true;
+            }
         }
     }
+    return $changed;
+}
+
+/**
+ * Écrit tasks.json sous verrou voisin ; relit et réapplique si le fichier a changé
+ * entre la lecture et le rename (écrivain externe sans verrou).
+ * Renvoie [état tasks, fonction d'annulation|null].
+ */
+function write_tasks(array $cfg, string $dataDir, array $taskOps): array
+{
+    $first = read_tasks($cfg);
+    $lock = lock_file($first['real'] . '.lock', LOCK_EX);
+    try {
+        for ($attempt = 1; $attempt <= TASKS_WRITE_ATTEMPTS; $attempt++) {
+            $t = read_tasks($cfg); // relu après la prise du verrou
+            $tasks = $t['tasks'];
+            if (!apply_task_ops($tasks, $taskOps)) return [$t, null];
+            $json = jenc($tasks, JSON_PRETTY_PRINT) . "\n";
+            $real = $t['real'];
+            if ($t['exists']) backup_file($real, $dataDir, 'avant', false, $t['raw']);
+            $baseSha = $t['exists'] ? sha1($t['raw']) : null;
+            $sig = $t['sig'] ?? '';
+            // Empreinte du contenu, puis signature (le contrôle le plus court en dernier : fenêtre minimale).
+            $precheck = fn(): bool => (is_file($real) ? sha1_file($real) : null) === $baseSha && ($sig === '' || file_sig($real) === $sig);
+            if (!atomic_write($real, $json, 0644, $precheck)) continue;
+            backup_file($real, $dataDir, 'apres', false, $json);
+            $prev = $t['exists'] ? $t['raw'] : null;
+            $undo = function () use ($real, $json, $prev): void { restore_file($real, $prev, $json, 0644); };
+            return [['raw' => $json, 'tasks' => $tasks, 'real' => $real, 'exists' => true], $undo];
+        }
+        throw new ApiError(503, 'tasks_changed', 'Le fichier des tâches change sans arrêt. Rien n’a été enregistré ; réessayez dans un instant.');
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
+
+function restore_file(string $file, ?string $prev, string $writtenJson, int $mode): void
+{
+    if (is_file($file) && sha1_file($file) !== sha1($writtenJson)) return;
+    if ($prev === null) @unlink($file); else atomic_write($file, $prev, $mode);
 }
 
 // ---------- Programme principal ----------
 
-function main(): void
+function read_body(): string
+{
+    if (isset($GLOBALS['oree_body_override'])) return (string)$GLOBALS['oree_body_override'];
+    return (string)file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
+}
+
+function handle(): void
 {
     $cfg = load_config();
-    require_auth($cfg['hash']);
+    $token = bearer_token();
+    $denied = auth_decision($cfg['hash'], $cfg['allow_open'], PHP_SAPI, $token);
+    if ($denied) throw $denied;
 
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     if ($method !== 'GET' && $method !== 'POST') {
@@ -284,96 +495,145 @@ function main(): void
     }
 
     $body = null;
+    $opsHash = '';
     if ($method === 'POST') {
+        $ct = strtolower(trim(explode(';', (string)($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? ''))[0]));
+        if ($ct !== 'application/json') throw new ApiError(415, 'unsupported_media_type', 'Type de contenu non pris en charge : application/json attendu.');
         $len = isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0;
         if ($len > MAX_BODY) throw new ApiError(413, 'payload_too_large', 'Requête trop volumineuse (512 Kio au plus).');
-        $raw = (string)file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
+        $raw = read_body();
         if (strlen($raw) > MAX_BODY) throw new ApiError(413, 'payload_too_large', 'Requête trop volumineuse (512 Kio au plus).');
         $body = json_decode($raw, false, 512);
         if (!($body instanceof stdClass)) throw new ApiError(400, 'invalid_json', 'Corps de requête invalide : un objet JSON est attendu.');
         if (!isset($body->opId) || !is_string($body->opId) || $body->opId === '' || strlen($body->opId) > 200) throw new ApiError(400, 'missing_op_id', 'Identifiant d’opération (opId) manquant ou invalide.');
-        if (!isset($body->ops) || !is_array($body->ops)) throw new ApiError(400, 'bad_request', 'Liste d’opérations (ops) manquante.');
+        if (!isset($body->ops) || !is_array($body->ops)) throw bad('Liste d’opérations (ops) manquante.');
+        if (has_non_finite($body)) throw bad('Nombre non valide (infini) refusé.');
+        $parsed = parse_ops($body->ops);
+        $opsHash = sha1(jenc($body->ops));
     }
 
     $dataDir = rtrim($cfg['data'], '/\\');
     prepare_data_dir($dataDir);
-    $tasksFile = $cfg['tasks'];
     $gameFile = $dataDir . '/game-state.json';
     $ledgerFile = $dataDir . '/ledger.jsonl';
     $opsFile = $dataDir . '/ops.json';
 
     if ($method === 'GET') {
-        $lock = open_lock($dataDir, LOCK_SH);
-        $t = read_tasks($tasksFile);
+        $lock = lock_file($dataDir . '/.lock', LOCK_SH);
+        $t = read_tasks($cfg);
         $g = read_game($gameFile);
         $l = read_ledger($ledgerFile);
         flock($lock, LOCK_UN);
         respond(200, state_payload($t, $g, $l));
     }
 
-    $lock = open_lock($dataDir, LOCK_EX);
+    $lock = lock_file($dataDir . '/.lock', LOCK_EX);
     // Tout est relu après la prise du verrou.
-    $t = read_tasks($tasksFile);
-    $g = read_game($gameFile);
-    $ledger = read_ledger($ledgerFile);
     $ops = read_ops($opsFile);
-
-    if (in_array($body->opId, $ops, true)) {
-        respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, $g, $ledger));
+    foreach ($ops as $o) {
+        if ($o['id'] === $body->opId) {
+            if ($o['h'] !== $opsHash) {
+                throw new ApiError(409, 'op_id_reused', 'Cet identifiant d’opération a déjà servi pour une autre requête. Rien n’a été enregistré.');
+            }
+            $t = read_tasks($cfg);
+            respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, read_game($gameFile), read_ledger($ledgerFile)));
+        }
     }
 
-    $tasks = $t['tasks'];
-    $newGame = [];
-    $flags = ['tasks' => false, 'game' => false, 'ledger' => []];
+    $g = read_game($gameFile);
+    $l = read_ledger($ledgerFile);
+
+    // Contrôles qui dépendent de l'état courant, avant toute écriture.
+    $seen = $l['keys'];
+    foreach ($parsed['entries'] as $e) {
+        if (isset($seen[$e->key])) {
+            throw new ApiError(409, 'duplicate_key', 'Ce gain est déjà inscrit au registre. Rien n’a été enregistré.', ['key' => $e->key]);
+        }
+        $seen[$e->key] = true;
+    }
+    if ($parsed['game'] !== null && $parsed['baseRev'] !== $g['rev']) {
+        $t = read_tasks($cfg);
+        respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.'] + state_payload($t, $g, $l));
+    }
+
+    // Écritures, dans l'ordre : tasks.json, game-state.json, registre, ops.json. Annulées en cas d'échec.
+    $undo = [];
     try {
-        apply_ops($body->ops, $tasks, $ledger, $newGame, $flags, $g);
-    } catch (ApiError $e) {
-        if ($e->errCode === 'game_conflict') {
-            $l = read_ledger($ledgerFile);
-            respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => $e->getMessage()] + state_payload($t, $g, $l));
+        if ($parsed['task']) {
+            [$t, $u] = write_tasks($cfg, $dataDir, $parsed['task']);
+            if ($u) $undo[] = $u;
+        } else {
+            $t = read_tasks($cfg);
         }
-        throw $e;
-    }
 
-    // Écritures (le lot est entièrement validé en mémoire avant la première).
-    if ($flags['ledger']) {
-        backup_file($ledgerFile, $dataDir);
+        $newGameJson = null;
+        if ($parsed['game'] !== null) {
+            $newGameJson = jenc($parsed['game'], JSON_PRETTY_PRINT) . "\n";
+            $g2 = ['raw' => $newGameJson, 'game' => $parsed['game'], 'rev' => sha1($newGameJson)];
+        } else {
+            $g2 = $g;
+        }
+        $l2 = $l;
         $lines = '';
-        foreach ($flags['ledger'] as $e) $lines .= json_encode($e, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
-        $prefix = '';
-        if (is_file($ledgerFile) && filesize($ledgerFile) > 0) {
-            $fh = fopen($ledgerFile, 'rb');
-            fseek($fh, -1, SEEK_END);
-            if (fread($fh, 1) !== "\n") $prefix = "\n";
-            fclose($fh);
+        foreach ($parsed['entries'] as $e) {
+            $lines .= jenc($e, JSON_UNESCAPED_SLASHES) . "\n";
+            ledger_add($l2, $e);
         }
-        if (@file_put_contents($ledgerFile, $prefix . $lines, FILE_APPEND | LOCK_EX) === false) throw new ApiError(500, 'server_error', 'Écriture du registre impossible.');
-        @chmod($ledgerFile, 0600);
-    }
-    if ($flags['game']) {
-        backup_file($gameFile, $dataDir);
-        $json = json_encode($newGame['game'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
-        atomic_write($gameFile, $json, 0600);
-        $g = read_game($gameFile);
-    }
-    if ($flags['tasks']) {
-        backup_file($tasksFile, $dataDir);
-        $json = json_encode($tasks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
-        atomic_write($tasksFile, $json, 0644);
-        $t = ['raw' => $json, 'tasks' => $tasks];
-    }
-    $ops[] = $body->opId;
-    $ops = array_slice($ops, -MAX_OPS_KEPT);
-    atomic_write($opsFile, json_encode($ops) . "\n", 0600);
+        $ops[] = ['id' => $body->opId, 'h' => $opsHash];
+        $ops = array_slice($ops, -MAX_OPS_KEPT);
+        $opsJson = jenc($ops) . "\n";
+        $responseJson = jenc(['ok' => true, 'applied' => $body->opId] + state_payload($t, $g2, $l2), JSON_UNESCAPED_SLASHES);
 
-    respond(200, ['ok' => true, 'applied' => $body->opId] + state_payload($t, $g, $ledger));
+        if ($newGameJson !== null) {
+            $prevRaw = $g['raw'];
+            if ($prevRaw !== null) backup_file($gameFile, $dataDir, 'avant', false, $prevRaw);
+            atomic_write($gameFile, $newGameJson, 0600);
+            $undo[] = function () use ($gameFile, $prevRaw, $newGameJson): void { restore_file($gameFile, $prevRaw, $newGameJson, 0600); };
+            backup_file($gameFile, $dataDir, 'apres', false, $newGameJson);
+        }
+        if ($lines !== '') {
+            backup_file($ledgerFile, $dataDir, 'jour', true);
+            $oldSize = is_file($ledgerFile) ? (int)filesize($ledgerFile) : null;
+            $prefix = '';
+            if ($oldSize) {
+                $fh = fopen($ledgerFile, 'rb');
+                fseek($fh, -1, SEEK_END);
+                if (fread($fh, 1) !== "\n") $prefix = "\n";
+                fclose($fh);
+            }
+            $data = $prefix . $lines;
+            $undo[] = function () use ($ledgerFile, $oldSize): void {
+                if ($oldSize === null) { @unlink($ledgerFile); return; }
+                $fh = @fopen($ledgerFile, 'cb');
+                if ($fh) { ftruncate($fh, $oldSize); fclose($fh); }
+            };
+            if (@file_put_contents($ledgerFile, $data, FILE_APPEND | LOCK_EX) !== strlen($data)) {
+                throw server_error('ajout au registre impossible');
+            }
+            @chmod($ledgerFile, 0600);
+        }
+        atomic_write($opsFile, $opsJson, 0600);
+    } catch (Throwable $e) {
+        foreach (array_reverse($undo) as $u) {
+            try { $u(); } catch (Throwable $e2) { error_log('oree api: restauration impossible : ' . $e2->getMessage()); }
+        }
+        throw $e instanceof ApiError ? $e : server_error(get_class($e) . ' : ' . $e->getMessage());
+    }
+
+    flock($lock, LOCK_UN);
+    emit(200, $responseJson);
 }
 
-try {
-    main();
-} catch (ApiError $e) {
-    fail($e);
-} catch (Throwable $e) {
-    error_log('oree api: ' . $e->getMessage());
-    if (!headers_sent()) respond(500, ['ok' => false, 'code' => 'server_error', 'error' => 'Erreur interne du serveur.']);
+function main(): void
+{
+    try {
+        handle();
+    } catch (ApiError $e) {
+        fail($e);
+    } catch (Throwable $e) {
+        error_log('oree api: ' . get_class($e) . ' : ' . $e->getMessage());
+        if (!headers_sent()) respond(500, ['ok' => false, 'code' => 'server_error', 'error' => 'Erreur interne du serveur.']);
+    }
 }
+
+if (!defined('OREE_API_NO_RUN')) main();

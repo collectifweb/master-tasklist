@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, SAMPLE, fmt } from './helpers.mjs';
+import { mkdirSync, chmodSync, rmSync, symlinkSync, lstatSync, readdirSync } from 'node:fs';
 
 const sha1 = (s) => createHash('sha1').update(s).digest('hex');
 
@@ -23,6 +25,7 @@ test('GET initial : revision, tâches, jeu nul, registre vide', () => withServer
   assert.equal(j.game, null);
   assert.equal(j.gameRevision, null);
   assert.deepEqual(j.ledger, []);
+  assert.deepEqual(j.ledgerKeys, []);
   // dossier de données protégé
   assert.equal(readFileSync(join(s.dataDir, '.htaccess'), 'utf8').trim(), 'Require all denied');
   assert.ok(existsSync(join(s.dataDir, 'index.html')));
@@ -115,7 +118,7 @@ test('14 sauvegardes au maximum par fichier', () => withServer({}, async (s) => 
     const r = await s.op([{ type: 'task.upsert', task: { id: 'a1', priority: (i % 10) + 1 } }]);
     assert.equal(r.status, 200);
   }
-  assert.equal(s.backups('tasks.json').length, 14);
+  assert.equal(s.backups('tasks.json').length, 14); // 40 copies faites (avant + après), 14 gardées
 }));
 
 test('413 au-delà de 512 Kio, 405 pour une autre méthode', () => withServer({}, async (s) => {
@@ -141,14 +144,15 @@ test('400 : JSON invalide, opId manquant', () => withServer({}, async (s) => {
   assert.equal(r.status, 400);
 }));
 
-test('mode jeton : 401 sans, 200 avec', () => {
-  const hash = execFileSync('php', ['-r', 'echo password_hash("jeton-fictif", PASSWORD_DEFAULT);']).toString();
+test('mode jeton : empreinte SHA-256, 401 sans, 200 avec', () => {
+  const jeton = 'jeton-fictif-' + 'a'.repeat(40);
+  const hash = createHash('sha256').update(jeton).digest('hex');
   return withServer({ env: { OREE_TOKEN_HASH: hash } }, async (s) => {
     assert.equal((await s.get()).status, 401);
     assert.equal((await s.get({ Authorization: 'Bearer mauvais' })).status, 401);
-    assert.equal((await s.get({ Authorization: 'Bearer jeton-fictif' })).status, 200);
+    assert.equal((await s.get({ Authorization: `Bearer ${jeton}` })).status, 200);
     assert.equal((await s.op([])).status, 401);
-    assert.equal((await s.op([], 'o1', { Authorization: 'Bearer jeton-fictif' })).status, 200);
+    assert.equal((await s.op([], 'o1', { Authorization: `Bearer ${jeton}` })).status, 200);
   });
 });
 
@@ -199,3 +203,242 @@ test('format de tasks.json : 4 espaces, accents non échappés, saut de ligne fi
 function statMode(f) {
   return parseInt(execFileSync('stat', ['-c', '%a', f]).toString(), 8);
 }
+
+// ---------- Correctifs de la revue ----------
+
+const PHP_ENV = (s, extra = {}) => ({ ...process.env, OREE_TASKS_FILE: s.tasksFile, OREE_DATA_DIR: s.dataDir, ...extra });
+
+function runCli(s, code, extra = {}) {
+  const f = join(s.root, 'harness.php');
+  writeFileSync(f, `<?php\ndefine('OREE_API_NO_RUN', 1);\nrequire ${JSON.stringify(join(s.root, 'app', 'api', 'api.php'))};\n${code}`);
+  return execFileSync('php', [f], { env: PHP_ENV(s, { OREE_ALLOW_OPEN: '1', ...extra }), encoding: 'utf8' });
+}
+
+test('1. nombre non fini : 400, fichiers intacts ; déjà présent sur disque : 503 sans écrire', () => withServer({}, async (s) => {
+  const before = s.readTasksRaw();
+  let r = await s.post('{"opId":"i1","ops":[{"type":"task.upsert","task":{"id":"a1","priority":1e400}}]}');
+  assert.equal(r.status, 400);
+  assert.equal(s.readTasksRaw(), before);
+  r = await s.post('{"opId":"i2","ops":[{"type":"game.set","baseGameRevision":null,"game":{"energy":1e400}}]}');
+  assert.equal(r.status, 400);
+  assert.equal(existsSync(join(s.dataDir, 'game-state.json')), false);
+  const bad = before.replace('"priority": 5', '"priority": 1e999');
+  writeFileSync(s.tasksFile, bad);
+  assert.equal((await s.get()).status, 503);
+  r = await s.op([{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }]);
+  assert.equal(r.status, 503);
+  assert.equal(s.readTasksRaw(), bad);
+}));
+
+test('2. fichier changé pendant l’écriture : relu et réappliqué ; 3 échecs : 503 tasks_changed', () => withServer({}, async (s) => {
+  const code = (always) => `
+$GLOBALS['oree_body_override'] = json_encode(['opId' => 'h1', 'ops' => [['type' => 'task.upsert', 'task' => ['id' => 'a1', 'status' => 'done']]]]);
+$_SERVER['REQUEST_METHOD'] = 'POST'; $_SERVER['CONTENT_TYPE'] = 'application/json';
+$n = 0;
+$GLOBALS['oree_hook_before_rename'] = function ($f) use (&$n) {
+  if (basename($f) !== 'tasks.json' || ($n++ >= 1 && !${always})) return;
+  $t = json_decode(file_get_contents($f)); $t[] = (object)['id' => 'ext-' . $n, 'task' => 'Ajoutée de l’extérieur'];
+  file_put_contents($f . '.x', json_encode($t, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\\n"); rename($f . '.x', $f);
+};
+register_shutdown_function(fn() => fwrite(STDERR, 'HTTP ' . http_response_code()));
+main();`;
+  const out = JSON.parse(runCli(s, code('false')));
+  assert.equal(out.ok, true, JSON.stringify(out));
+  const t = JSON.parse(s.readTasksRaw());
+  assert.equal(t.find((x) => x.id === 'a1').status, 'done');
+  assert.ok(t.some((x) => x.id === 'ext-1'), 'l’écriture externe est conservée');
+  // tout le temps changé : renonce
+  writeFileSync(s.tasksFile, fmt(SAMPLE));
+  const out2 = JSON.parse(runCli(s, code('true').replace("'h1'", "'h2'")));
+  assert.equal(out2.code, 'tasks_changed');
+  assert.equal(JSON.parse(s.readTasksRaw()).find((x) => x.id === 'a1').status, 'todo');
+}));
+
+test('3. fermée par défaut : décision d’accès', () => withServer({}, async (s) => {
+  const dec = (h, open, sapi, tok) => JSON.parse(runCli(s, `$d = auth_decision(${JSON.stringify(h)}, ${open}, ${JSON.stringify(sapi)}, ${JSON.stringify(tok)}); echo json_encode($d ? [$d->status, $d->errCode] : null);`));
+  assert.deepEqual(dec('', 'false', 'fpm-fcgi', null), [503, 'auth_not_configured']);
+  assert.deepEqual(dec('', 'false', 'litespeed', 'x'), [503, 'auth_not_configured']);
+  assert.equal(dec('', 'true', 'litespeed', null), null);
+  assert.equal(dec('', 'false', 'cli-server', null), null);
+  const h = sha1hex('abc');
+  assert.equal(dec(h, 'false', 'litespeed', 'abc'), null);
+  assert.deepEqual(dec(h, 'false', 'litespeed', 'abd'), [401, 'unauthorized']);
+  assert.deepEqual(dec(h, 'false', 'cli-server', null), [401, 'unauthorized']);
+  // la configuration par variable d'environnement
+  const cfg = JSON.parse(runCli(s, 'echo json_encode(load_config());', { OREE_ALLOW_OPEN: '1' }));
+  assert.equal(cfg.allow_open, true);
+}));
+function sha1hex(x) { return createHash('sha256').update(x).digest('hex'); }
+
+test('3b. POST : Content-Type autre que application/json refusé (415)', () => withServer({}, async (s) => {
+  const body = JSON.stringify({ opId: 'x', ops: [{ type: 'task.delete', id: 'a1' }] });
+  for (const ct of ['text/plain', 'application/x-www-form-urlencoded']) {
+    const r = await fetch(s.url, { method: 'POST', headers: { 'Content-Type': ct }, body });
+    assert.equal(r.status, 415);
+    assert.equal((await r.json()).code, 'unsupported_media_type');
+  }
+  assert.ok(s.readTasksRaw().includes('"a1"'));
+  const r = await fetch(s.url, { method: 'POST', headers: { 'Content-Type': 'Application/JSON; charset=utf-8' }, body });
+  assert.equal(r.status, 200);
+}));
+
+test('4. tasks.json absent : 503 tasks_missing sans rien créer ; création seulement si permise', async () => {
+  await withServer({ tasksRaw: null, env: { OREE_ALLOW_CREATE_TASKS: '0' } }, async (s) => {
+    let r = await s.get();
+    assert.equal(r.status, 503);
+    assert.equal((await r.json()).code, 'tasks_missing');
+    r = await s.op([{ type: 'task.upsert', task: { id: 'n1', task: 'Nouvelle' } }]);
+    assert.equal(r.status, 503);
+    assert.equal(existsSync(s.tasksFile), false);
+    assert.equal(existsSync(s.tasksFile + '.lock'), false);
+  });
+  await withServer({ tasksRaw: null }, async (s) => {
+    const r = await s.op([{ type: 'task.upsert', task: { id: 'n1', task: 'Nouvelle' } }]);
+    assert.equal(r.status, 200);
+    assert.equal(JSON.parse(s.readTasksRaw()).length, 1);
+  });
+});
+
+test('5. tout-ou-rien réel : échec du registre, tasks.json et jeu restaurés, puis même opId réussit', () => withServer({}, async (s) => {
+  await s.get();
+  mkdirSync(join(s.dataDir, 'ledger.jsonl')); // l'ajout au registre échouera, après tasks.json et le jeu
+  const before = s.readTasksRaw();
+  const lot = [
+    { type: 'task.upsert', task: { id: 'a1', status: 'done' } },
+    { type: 'game.set', baseGameRevision: null, game: { version: 1, energy: 3 } },
+    { type: 'ledger.append', entries: [{ key: 'reward:a1:1', pe: 10 }] },
+  ];
+  let r = await s.op(lot, 'terminer-a1');
+  assert.equal(r.status, 500);
+  const j = await r.json();
+  assert.equal(j.code, 'server_error');
+  assert.ok(!/\/|\.php/.test(j.error));
+  assert.equal(s.readTasksRaw(), before);
+  assert.equal(existsSync(join(s.dataDir, 'game-state.json')), false);
+  assert.equal(existsSync(join(s.dataDir, 'ops.json')), false);
+  rmSync(join(s.dataDir, 'ledger.jsonl'), { recursive: true });
+  r = await s.op(lot, 'terminer-a1');
+  assert.equal(r.status, 200);
+  assert.equal(JSON.parse(s.readTasksRaw()).find((x) => x.id === 'a1').status, 'done');
+  assert.deepEqual((await r.json()).ledgerKeys, ['reward:a1:1']);
+}));
+
+test('6. sauvegardes : avant et après, registre une fois par jour, échec de sauvegarde = refus', () => withServer({}, async (s) => {
+  const avant = s.readTasksRaw();
+  await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }]);
+  const bdir = join(s.dataDir, 'backups');
+  const tb = s.backups('tasks.json');
+  assert.equal(tb.length, 2);
+  const contenus = tb.map((f) => [f, readFileSync(join(bdir, f), 'utf8')]);
+  assert.equal(contenus.find(([f]) => f.endsWith('-avant.bak'))[1], avant);
+  assert.equal(contenus.find(([f]) => f.endsWith('-apres.bak'))[1], s.readTasksRaw());
+  await s.op([{ type: 'game.set', baseGameRevision: null, game: { v: 1 } }]);
+  assert.equal(s.backups('game-state.json').length, 1); // création : pas d'« avant »
+  for (const k of ['k1', 'k2', 'k3']) await s.op([{ type: 'ledger.append', entries: [{ key: k }] }]);
+  assert.equal(s.backups('ledger.jsonl').length, 1); // une seule copie ce jour-là
+  // échec de sauvegarde : rien n'est écrit
+  chmodSync(bdir, 0o555);
+  try {
+    const raw = s.readTasksRaw();
+    const r = await s.op([{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }]);
+    assert.equal(r.status, 500);
+    assert.equal(s.readTasksRaw(), raw);
+  } finally { chmodSync(bdir, 0o755); }
+}));
+
+test('7. opId réutilisé avec un autre corps : 409 ; ops.json illisible : 503', () => withServer({}, async (s) => {
+  assert.equal((await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }], 'dup')).status, 200);
+  const r = await s.op([{ type: 'task.upsert', task: { id: 'n9', task: 'Autre' } }], 'dup');
+  assert.equal(r.status, 409);
+  assert.equal((await r.json()).code, 'op_id_reused');
+  assert.ok(!s.readTasksRaw().includes('n9'));
+  writeFileSync(join(s.dataDir, 'ops.json'), '{pas du json');
+  const raw = s.readTasksRaw();
+  const r2 = await s.op([{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }]);
+  assert.equal(r2.status, 503);
+  assert.equal((await r2.json()).code, 'ops_unreadable');
+  assert.equal(s.readTasksRaw(), raw);
+}));
+
+test('8. verrou tenu par un autre processus : 503 busy après environ 5 s', () => withServer({}, async (s) => {
+  await s.get();
+  const holder = spawn('flock', [join(s.dataDir, '.lock'), 'sleep', '8'], { stdio: 'ignore' });
+  try {
+    await new Promise((r) => setTimeout(r, 300));
+    const t0 = Date.now();
+    const [g, p] = await Promise.all([s.get(), s.op([{ type: 'task.delete', id: 'a1' }])]);
+    const dt = Date.now() - t0;
+    assert.deepEqual([g.status, p.status], [503, 503]);
+    assert.equal((await p.json()).code, 'busy');
+    assert.ok(dt >= 4800 && dt < 7500, `attente de ${dt} ms`);
+    assert.ok(s.readTasksRaw().includes('"a1"'));
+  } finally { holder.kill(); }
+}));
+
+test('9. registre : limites, entrées récentes et clés complètes', () => withServer({}, async (s) => {
+  const many = Array.from({ length: 51 }, (_, i) => ({ key: `m:${i}` }));
+  assert.equal((await s.op([{ type: 'ledger.append', entries: many }])).status, 400);
+  assert.equal((await s.op([{ type: 'ledger.append', entries: [{ key: 'gros', pad: 'x'.repeat(3000) }] }])).status, 400);
+  assert.equal((await (await s.get()).json()).ledgerKeys.length, 0);
+  const old = new Date(Date.now() - 90 * 86400e3).toISOString();
+  const recent = new Date().toISOString();
+  const r = await s.op([{ type: 'ledger.append', entries: [{ key: 'vieux', at: old }, { key: 'recent', at: recent }, { key: 'sans-date' }, { key: 'date-folle', at: 'pas une date' }] }]);
+  const j = await r.json();
+  assert.deepEqual(j.ledger.map((e) => e.key), ['recent', 'sans-date', 'date-folle']);
+  assert.deepEqual(j.ledgerKeys, ['vieux', 'recent', 'sans-date', 'date-folle']);
+  const g = await (await s.get()).json();
+  assert.deepEqual(g.ledger.map((e) => e.key), ['recent', 'sans-date', 'date-folle']);
+  assert.equal(g.ledgerKeys.length, 4);
+  const dup = await s.op([{ type: 'ledger.append', entries: [{ key: 'vieux' }] }]);
+  assert.equal(dup.status, 409);
+}));
+
+test('10. .htaccess du dossier de données impossible à créer : 500, rien écrit', () => withServer({}, async (s) => {
+  mkdirSync(s.dataDir, { recursive: true });
+  chmodSync(s.dataDir, 0o555);
+  try {
+    const raw = s.readTasksRaw();
+    const r = await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }]);
+    assert.equal(r.status, 500);
+    assert.equal(s.readTasksRaw(), raw);
+    assert.equal((await s.get()).status, 500);
+  } finally { chmodSync(s.dataDir, 0o755); }
+}));
+
+test('11. lien symbolique : le vrai fichier est modifié, le lien reste', () => withServer({}, async (s) => {
+  const real = join(s.root, 'vrai.json');
+  writeFileSync(real, fmt(SAMPLE));
+  rmSync(s.tasksFile);
+  symlinkSync(real, s.tasksFile);
+  assert.equal((await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }])).status, 200);
+  assert.ok(lstatSync(s.tasksFile).isSymbolicLink());
+  assert.ok(readFileSync(real, 'utf8').includes('"done"'));
+}));
+
+test('12. sans mbstring ; type d’identifiant conservé à la fusion', async () => {
+  await withServer({ phpArgs: ['-n'] }, async (s) => {
+    assert.equal((await s.get()).status, 200);
+    const r = await s.op([{ type: 'nimporte.quoi' }]);
+    assert.equal(r.status, 400);
+  });
+  await withServer({ tasksRaw: fmt([{ id: 7, task: 'Id entier' }]) }, async (s) => {
+    const r = await s.op([{ type: 'task.upsert', task: { id: '7', status: 'done' } }]);
+    assert.equal(r.status, 200);
+    const t = JSON.parse(s.readTasksRaw());
+    assert.equal(t.length, 1);
+    assert.strictEqual(t[0].id, 7);
+    assert.equal(t[0].status, 'done');
+  });
+});
+
+test('verrou voisin : l’écriture attend celui de tasks.json.lock', () => withServer({}, async (s) => {
+  await s.get();
+  const holder = spawn('flock', [s.tasksFile + '.lock', 'sleep', '1.5'], { stdio: 'ignore' });
+  try {
+    await new Promise((r) => setTimeout(r, 300));
+    const t0 = Date.now();
+    const r = await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }]);
+    assert.equal(r.status, 200);
+    assert.ok(Date.now() - t0 >= 1000, 'a attendu le verrou voisin');
+  } finally { holder.kill(); }
+}));
