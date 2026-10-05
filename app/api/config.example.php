@@ -33,6 +33,13 @@
 // refuse (409 sandbox_only).
 // define('SANDBOX', true);
 
+// RAPPEL DU MATIN (app/serveur/rappel.php, lancé à 8 h par une tâche planifiée de l'hébergement) : une notification
+// ntfy au texte général, qui ouvre l'app. Le nom du canal fait office de mot de passe sur le serveur public de ntfy :
+// le choisir long et aléatoire, jamais dans le dépôt. Environnement : OREE_NTFY_TOPIC, OREE_NTFY_SERVER, OREE_APP_URL.
+// define('NTFY_TOPIC', 'canal-fictif-long-et-aleatoire');
+// define('NTFY_SERVER', 'https://ntfy.sh');
+// define('APP_URL', 'https://exemple.test/app/');
+
 /*
  * Hébergement LiteSpeed/Apache : l'en-tête Authorization n'arrive parfois pas à PHP.
  * Si l'API répond 401 avec un bon jeton, ajouter dans le .htaccess du dossier app/api/
