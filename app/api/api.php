@@ -22,6 +22,7 @@ const LOCKOUT_WINDOW_S = 900;         // fenêtre de comptage : 15 minutes
 const LOCKOUT_DURATION_S = 900;       // durée du blocage : 15 minutes
 const LOCKOUT_PRUNE_S = 86400;        // entrées oubliées après 24 h
 const LOCKOUT_DELAY_US = 250000;      // délai fixe après un jeton faux
+const LOCKOUT_MAX_KEYS = 500;         // entrées gardées au plus dans le fichier de compteurs
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -136,9 +137,20 @@ function auth_decision(string $hash, bool $allowOpen, string $sapi, ?string $tok
 
 // ---------- Blocage après jetons faux ----------
 
+/**
+ * Clé de blocage : l'adresse du visiteur, et en IPv6 son préfixe /64 (une seule machine en contrôle souvent des
+ * milliards d'adresses). Jamais X-Forwarded-For ; l'adresse brute n'est pas gardée.
+ */
 function lockout_key(): string
 {
-    return hash('sha256', (string)($_SERVER['REMOTE_ADDR'] ?? '')); // jamais X-Forwarded-For ; l'adresse brute n'est pas gardée
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $bin = @inet_pton($ip);
+    if (is_string($bin) && strlen($bin) === 16) {
+        $ip = substr($bin, 0, 12) === str_repeat("\0", 10) . "\xff\xff"
+            ? (string)inet_ntop(substr($bin, 12))   // IPv4 écrite en IPv6 (::ffff:a.b.c.d)
+            : bin2hex(substr($bin, 0, 8)) . '::/64';
+    }
+    return hash('sha256', $ip);
 }
 
 /** Compteurs lus sans verrou (les écritures sont atomiques). Fichier absent ou abîmé : liste vide. */
@@ -156,18 +168,28 @@ function lockout_remaining(array $all, string $key, int $now): int
     return is_int($until) && $until > $now ? $until - $now : 0;
 }
 
-/** Relit, modifie et réécrit le fichier de compteurs sous verrou ; purge ce qui a plus de 24 h. */
-function lockout_update(string $dataDir, string $key, int $now, callable $change): void
+/** Dernière activité d'une entrée, 0 si elle est abîmée : sert à la purge et au plafond. */
+function lockout_last(mixed $e): int
+{
+    return is_array($e) ? max([0, ...array_filter(array_merge((array)($e['fails'] ?? []), [$e['until'] ?? 0]), 'is_int')]) : 0; // max() d'un tableau : jamais vide, même entrée abîmée
+}
+
+/**
+ * Relit, modifie et réécrit le fichier de compteurs sous verrou, seulement s'il change ; purge ce qui a plus de 24 h et
+ * garde au plus LOCKOUT_MAX_KEYS entrées, les plus récentes.
+ */
+function lockout_update(string $dataDir, int $now, callable $change): void
 {
     prepare_data_dir($dataDir);
     $lock = lock_file($dataDir . '/.lockout.lock', LOCK_EX);
     try {
-        $all = lockout_read($dataDir);
-        $all = $change($all);
-        foreach ($all as $k => $e) {
-            $last = is_array($e) ? max([0, ...array_filter(array_merge((array)($e['fails'] ?? []), [$e['until'] ?? 0]), 'is_int')]) : 0; // max() d'un tableau : jamais vide, même entrée abîmée
-            if ($last < $now - LOCKOUT_PRUNE_S) unset($all[$k]);
+        $before = lockout_read($dataDir);
+        $all = array_filter($change($before), fn($e) => lockout_last($e) >= $now - LOCKOUT_PRUNE_S);
+        if (count($all) > LOCKOUT_MAX_KEYS) {
+            uasort($all, fn($a, $b) => lockout_last($b) <=> lockout_last($a));
+            $all = array_slice($all, 0, LOCKOUT_MAX_KEYS, true);
         }
+        if ($all === $before) return;
         if ($all === []) {
             @unlink($dataDir . '/lockout.json');
         } else {
@@ -179,36 +201,41 @@ function lockout_update(string $dataDir, string $key, int $now, callable $change
     }
 }
 
-/** Avant l'authentification : 429 si la clé est bloquée, même avec le bon jeton. */
+function lockout_error(int $left): ApiError
+{
+    return new ApiError(429, 'too_many_attempts', 'Trop d’essais. Réessayez plus tard.', ['retryAfter' => $left], ['Retry-After: ' . $left]);
+}
+
+/** Requête sans jeton : rien à juger ; 429 si la clé est bloquée (simple lecture). */
 function lockout_guard(string $dataDir, int $now): void
 {
     $left = lockout_remaining(lockout_read($dataDir), lockout_key(), $now);
-    if ($left > 0) {
-        throw new ApiError(429, 'too_many_attempts', 'Trop d’essais. Réessayez plus tard.', ['retryAfter' => $left], ['Retry-After: ' . $left]);
-    }
+    if ($left > 0) throw lockout_error($left);
 }
 
-/** Jeton présent et faux : on le compte (5 en 15 min = blocage de 15 min) et on ralentit. */
-function lockout_fail(string $dataDir, int $now): void
+/**
+ * Requête qui porte un jeton : sous un seul verrou, 429 si la clé est bloquée (le jeton n'est alors pas jugé), sinon
+ * compte le jeton faux (5 en 15 min = blocage de 15 min) ou remet le compteur à zéro. Des requêtes simultanées ne
+ * peuvent donc pas faire juger plus de LOCKOUT_MAX_FAILS jetons. Un jeton faux est ensuite ralenti.
+ */
+function lockout_attempt(string $dataDir, int $now, bool $wrong): void
 {
     $key = lockout_key();
-    lockout_update($dataDir, $key, $now, function (array $all) use ($key, $now): array {
+    $left = 0;
+    lockout_update($dataDir, $now, function (array $all) use ($key, $now, $wrong, &$left): array {
+        $left = lockout_remaining($all, $key, $now);
+        if ($left > 0) return $all;
+        if (!$wrong) {
+            unset($all[$key]);
+            return $all;
+        }
         $fails = array_values(array_filter((array)($all[$key]['fails'] ?? []), fn($t) => is_int($t) && $t > $now - LOCKOUT_WINDOW_S));
         $fails[] = $now;
-        $entry = ['fails' => $fails];
-        if (count($fails) >= LOCKOUT_MAX_FAILS) $entry = ['fails' => [], 'until' => $now + LOCKOUT_DURATION_S];
-        $all[$key] = $entry;
+        $all[$key] = count($fails) >= LOCKOUT_MAX_FAILS ? ['fails' => [], 'until' => $now + LOCKOUT_DURATION_S] : ['fails' => $fails];
         return $all;
     });
-    usleep(LOCKOUT_DELAY_US);
-}
-
-/** Jeton juste : le compteur de cette clé repart de zéro (sans rien écrire s'il n'y en a pas). */
-function lockout_reset(string $dataDir, int $now): void
-{
-    $key = lockout_key();
-    if (!isset(lockout_read($dataDir)[$key])) return;
-    lockout_update($dataDir, $key, $now, function (array $all) use ($key): array { unset($all[$key]); return $all; });
+    if ($left > 0) throw lockout_error($left);
+    if ($wrong) usleep(LOCKOUT_DELAY_US);
 }
 
 // ---------- Fichiers, verrous, sauvegardes ----------
@@ -571,11 +598,10 @@ function handle(): void
     $dataDir = rtrim($cfg['data'], '/\\');
     $guarded = $cfg['hash'] !== '';
     $now = time();
-    if ($guarded) lockout_guard($dataDir, $now);
     $denied = auth_decision($cfg['hash'], $cfg['allow_open'], PHP_SAPI, $token);
     if ($guarded) {
-        if ($denied && $token !== null) lockout_fail($dataDir, $now);
-        elseif (!$denied) lockout_reset($dataDir, $now);
+        if ($token === null) lockout_guard($dataDir, $now);
+        else lockout_attempt($dataDir, $now, $denied !== null); // avec le hash réglé, un jeton refusé est un jeton faux
     }
     if ($denied) throw $denied;
 

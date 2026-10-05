@@ -242,6 +242,36 @@ test('blocage : entrée abîmée dans un fichier lisible → ni plantage ni bloc
   }
 }));
 
+test('blocage : 12 jetons faux simultanés → 5 jugés (401) au plus, les autres 429', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  assert.equal((await s.get(good)).status, 200); // crée le dossier de données
+  const codes = (await Promise.all(Array.from({ length: 12 }, () => s.get(bad)))).map((r) => r.status);
+  assert.equal(codes.filter((c) => c === 401).length, 5, `codes : ${codes.join(' ')}`);
+  assert.equal(codes.filter((c) => c === 429).length, 7, `codes : ${codes.join(' ')}`);
+  assert.equal((await s.get(good)).status, 429);
+}));
+
+test('blocage : clé par adresse IPv4, et par préfixe /64 en IPv6', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  const key = (ip) => runCli(s, `$_SERVER['REMOTE_ADDR'] = ${JSON.stringify(ip)}; echo lockout_key();`);
+  assert.equal(key('203.0.113.7'), createHash('sha256').update('203.0.113.7').digest('hex'));
+  assert.notEqual(key('203.0.113.7'), key('203.0.113.8'));
+  assert.equal(key('2001:db8:1:2:aaaa::1'), key('2001:db8:1:2:ffff:ffff:ffff:ffff'), 'même /64');
+  assert.notEqual(key('2001:db8:1:2::1'), key('2001:db8:1:3::1'), 'autre /64');
+  assert.equal(key('::ffff:203.0.113.7'), key('203.0.113.7'), 'IPv4 écrite en IPv6');
+  assert.notEqual(key('::ffff:203.0.113.7'), key('::ffff:203.0.113.8'));
+}));
+
+test('blocage : le fichier de compteurs ne grossit pas sans limite', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  assert.equal((await s.get(good)).status, 200); // crée le dossier de données
+  const now = Math.floor(Date.now() / 1000);
+  const many = {};
+  for (let i = 0; i < 700; i++) many['cle-' + i] = { fails: [now - 600 + (i % 500)] };
+  writeFileSync(cptFile(s), JSON.stringify(many));
+  assert.equal((await s.get(bad)).status, 401);
+  const after = JSON.parse(readFileSync(cptFile(s), 'utf8'));
+  assert.ok(Object.keys(after).length <= 500, `${Object.keys(after).length} entrées`);
+  assert.ok(createHash('sha256').update('127.0.0.1').digest('hex') in after, 'la clé qui vient d’échouer est gardée');
+}));
+
 test('tasks.json corrompu : 503 et fichier intact', () => withServer({ tasksRaw: '[{"id": "a1", "task": ' }, async (s) => {
   const before = s.readTasksRaw();
   const t0 = Date.now();
