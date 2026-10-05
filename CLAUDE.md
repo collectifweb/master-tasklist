@@ -8,8 +8,10 @@ Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobi
 
 Deux applications cohabitent :
 
-- **`index.html` (racine)** — application historique en production (`todo.example.com`). Un seul fichier HTML/JS inline, sans module. Elle lit `tasks.json` par `fetch`, écrit par `POST tasks.json` (corps = tableau complet de tâches), avec repli `localStorage['familytasks']`. En production, l’écriture passe par `tasks-api.php` sur l’hébergement LiteSpeed/PHP ; ce fichier n’est **pas** dans le dépôt.
+- **`index.html` (racine)** — application historique en production. Un seul fichier HTML/JS inline, sans module. Elle lit `tasks.json` par `fetch`, écrit par `POST tasks.json` (corps = tableau complet de tâches), avec repli `localStorage['familytasks']`. En production, l’écriture passe par `tasks-api.php` sur l’hébergement LiteSpeed/PHP ; ce fichier n’est **pas** dans le dépôt.
 - **`sketches/006-oree-vivante/`** — itération active du jeu (« Orée vivante »). Sandbox local : aucun appel réseau. Les tâches de départ sont une copie statique dans `js/data.js` (`SOURCE_TASKS`) et l’état vit seulement dans `localStorage`.
+
+`sketches/007-spikes-rendu/` contient trois prototypes techniques jetables de la même scène (DOM/SVG sans dépendance, PixiJS et three.js copiés dans `vendor/`), et `docs/revue-2026-10/` la revue complète d’octobre 2026 (diagnostic, glitches, directions de jeu, recommandation). La direction recommandée y est « La lisière rallumée » avec un rendu DOM/SVG.
 
 `sketches/001` à `005` sont des explorations de direction archivées (comparatif dans `sketches/README.md` et `sketches/index.html`). 006 reprend des idées de 002 (Potager), 003 (Vecteur), 004 (Bastion) et 005 (Colonie, voir `RULES.md`).
 
@@ -24,8 +26,10 @@ cp tasks.example.json tasks.json
 # Serveur statique (lecture seule) → http://127.0.0.1:8080/ et /sketches/006-oree-vivante/
 python3 -m http.server 8080
 
-# Serveur local avec écriture : accepte POST /tasks.json et écrit tasks.json à côté du script (port 8767)
-python3 tasks-server.py
+# Serveur local (port 8767, écoute sur 127.0.0.1) : POST /tasks.json exige
+# « Authorization: Bearer $TASKS_WRITE_TOKEN » ; sans jeton, il est en lecture seule.
+# L’app historique n’envoie pas encore ce jeton : tester l’écriture avec curl.
+TASKS_WRITE_TOKEN=dev python3 tasks-server.py
 
 # Vérifications attendues avant commit (README / CONTRIBUTING)
 for f in sketches/006-oree-vivante/js/*.js; do node --check "$f"; done
@@ -34,7 +38,7 @@ python3 -m json.tool tasks.example.json > /dev/null
 
 Les modules ES de 006 doivent être servis en HTTP (pas en `file://`). La vérification manuelle se fait dans Chromium aux largeurs **390×844, 834×1112 et 1280×900**, sans défilement horizontal, en testant l’ajout/la modification d’une tâche et le placement d’une construction.
 
-Ne pas exécuter `sync-tasks-remote.sh` ni `run-public-tunnel.sh` : ils contiennent des chemins, un hôte et une clé SSH propres à la machine d’Alex et agissent sur les données de production. `TASKS_WORKFLOW.md` décrit ce flux (un agent écrit `tasks.json`, synchronisé chaque minute par SSH avec l’hébergement).
+Ne pas exécuter `sync-tasks-remote.sh` ni `run-public-tunnel.sh` : ils agissent sur les données de production. Leur configuration réelle (hôte, port, clé, chemins) est lue dans `~/.config/oree/sync.env`, hors du dépôt ; `sync.env.example` ne contient que des valeurs fictives. `TASKS_WORKFLOW.md` décrit ce flux (un agent écrit `tasks.json`, synchronisé chaque minute par SSH avec l’hébergement).
 
 ## Architecture de 006 (Orée vivante)
 
@@ -62,7 +66,7 @@ Schéma `tasks.json` (tableau) : `{ id, task, domain, difficulty 1-10, length 1-
 
 ## Règles du dépôt
 
-- **Confidentialité** : ne jamais committer `tasks.json`, `PUBLIC_URL.txt`, les fichiers d’état de synchronisation ni des captures avec des données réelles (`sketches/**/review/*.png` est ignoré). Utiliser uniquement des titres de tâches fictifs et génériques dans le code, les exemples et les tests.
+- **Confidentialité** : le dépôt est public et son historique a été réécrit le 5 octobre 2026 pour retirer des données réelles. Ne jamais committer `tasks.json`, `PUBLIC_URL.txt`, un fichier `.env`, les fichiers d’état de synchronisation ni des captures (les dossiers `review/` sont ignorés). Aucune donnée réelle dans le code, les exemples, les tests ou les captures : ni titre de tâche, ni prénom de proche, ni fournisseur, ni domaine, IP, compte ou chemin `/home` de production. Utiliser uniquement `tasks.example.json` et des titres fictifs génériques. Ne jamais réécrire l’historique ni forcer un push sans demande explicite.
 - **Design** : `sketches/006-oree-vivante/DESIGN.md` (et `.impeccable/design.json`) est le contrat visuel. Palette chaude terre/sauge/verre solaire, sans fond sombre ni cyan néon. L’orange braise (`#bf5a38`) est réservé aux menaces. La carte doit dominer l’écran mobile. Dans l’interface, la ressource s’appelle « Confiance », jamais « Réputation ».
 - **Accessibilité (exigée par PRODUCT.md)** : cibles d’au moins 44 px ; toute couleur doublée par du texte, une icône ou un motif ; chaque geste a un bouton équivalent ; respect de `prefers-reduced-motion` ; aucun son automatique. En mode construction, une seule tuile est tabulable (`tabindex="0"`) ; hors construction, toutes les tuiles sont à `-1`.
 - **Aléas de jeu** : leurs conséquences restent virtuelles et réparables. Ils ne modifient jamais une tâche réelle.

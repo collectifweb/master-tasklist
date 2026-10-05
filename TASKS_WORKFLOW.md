@@ -114,15 +114,17 @@ Synchronisation     : `tasks-sync.timer` toutes les minutes
 
 ## Commandes de maintenance
 
+La configuration réelle (dossier des tâches, hôte, port, clé, chemin distant) vit **hors du dépôt**, dans `~/.config/oree/sync.env` (modèle : `sync.env.example`). Rien de tout cela ne doit être versionné.
+
 ```bash
 # Synchroniser immédiatement dans les deux directions
-/home/user/todo-app/sync-tasks-remote.sh sync
+./sync-tasks-remote.sh sync
 
 # Après une modification locale faite par l'agent
-/home/user/todo-app/sync-tasks-remote.sh push
+./sync-tasks-remote.sh push
 
 # Récupérer les modifications faites depuis le tableau web
-/home/user/todo-app/sync-tasks-remote.sh pull
+./sync-tasks-remote.sh pull
 
 # Vérifier la synchronisation automatique
 systemctl --user status tasks-sync.timer

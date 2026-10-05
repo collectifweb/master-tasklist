@@ -1,16 +1,31 @@
 #!/usr/bin/env bash
+# Synchronisation bidirectionnelle de tasks.json avec l'hébergement.
+# Aucune valeur d'infrastructure n'est versionnée : tout vient de l'environnement
+# ou d'un fichier de configuration local (voir sync.env.example).
+#
+# Recommandé : déclarer l'hôte dans ~/.ssh/config (Host, HostName, Port, User,
+# IdentityFile) et ne mettre ici que l'alias, ex. TASKS_REMOTE=oree-prod.
 set -euo pipefail
 
-LOCAL="/home/user/todo-app/tasks.json"
-STATE="/home/user/todo-app/.remote-sync-hash"
-LOCK="/home/user/todo-app/.remote-sync.lock"
-REMOTE_USER="deploy"
-REMOTE_HOST="203.0.113.10"
-REMOTE_PORT="22"
-REMOTE_FILE="/home/deploy/todo/tasks.json"
-KEY="/home/user/.ssh/id_ed25519_todo_app"
-SSH=(ssh -p "$REMOTE_PORT" -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 "$REMOTE_USER@$REMOTE_HOST")
-SCP=(scp -P "$REMOTE_PORT" -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15)
+CONFIG="${TASKS_SYNC_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/oree/sync.env}"
+# shellcheck source=/dev/null
+[[ -f "$CONFIG" ]] && source "$CONFIG"
+
+: "${TASKS_DIR:?TASKS_DIR non défini (dossier local contenant tasks.json)}"
+: "${TASKS_REMOTE:?TASKS_REMOTE non défini (alias SSH ou utilisateur@hôte)}"
+: "${TASKS_REMOTE_FILE:?TASKS_REMOTE_FILE non défini (chemin distant de tasks.json)}"
+
+LOCAL="$TASKS_DIR/tasks.json"
+STATE="$TASKS_DIR/.remote-sync-hash"
+LOCK="$TASKS_DIR/.remote-sync.lock"
+REMOTE_FILE="$TASKS_REMOTE_FILE"
+
+SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=15)
+[[ -n "${TASKS_SSH_PORT:-}" ]] && SSH_PORT_OPT=(-p "$TASKS_SSH_PORT") || SSH_PORT_OPT=()
+[[ -n "${TASKS_SSH_PORT:-}" ]] && SCP_PORT_OPT=(-P "$TASKS_SSH_PORT") || SCP_PORT_OPT=()
+[[ -n "${TASKS_SSH_KEY:-}" ]] && KEY_OPT=(-i "$TASKS_SSH_KEY") || KEY_OPT=()
+SSH=(ssh "${SSH_PORT_OPT[@]}" "${KEY_OPT[@]}" "${SSH_OPTS[@]}" "$TASKS_REMOTE")
+SCP=(scp "${SCP_PORT_OPT[@]}" "${KEY_OPT[@]}" "${SSH_OPTS[@]}")
 
 mode="${1:-sync}"
 exec 9>"$LOCK"
@@ -22,7 +37,7 @@ validate_json() { python3 -m json.tool "$1" >/dev/null; }
 
 pull_remote() {
   local tmp="${LOCAL}.remote-tmp"
-  "${SCP[@]}" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_FILE" "$tmp"
+  "${SCP[@]}" "$TASKS_REMOTE:$REMOTE_FILE" "$tmp"
   validate_json "$tmp"
   mv "$tmp" "$LOCAL"
   remote_hash > "$STATE"
@@ -32,7 +47,7 @@ pull_remote() {
 push_local() {
   validate_json "$LOCAL"
   local remote_tmp="${REMOTE_FILE}.upload-tmp"
-  "${SCP[@]}" "$LOCAL" "$REMOTE_USER@$REMOTE_HOST:$remote_tmp"
+  "${SCP[@]}" "$LOCAL" "$TASKS_REMOTE:$remote_tmp"
   "${SSH[@]}" "chmod 644 '$remote_tmp' && mv '$remote_tmp' '$REMOTE_FILE'"
   local_hash > "$STATE"
   printf 'pushed local tasks.json\n'
