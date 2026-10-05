@@ -76,19 +76,22 @@ Forme : `{ key, at, day, type, taskId?, occurrence?, pe, energy, materials, lueu
 
 Un seul fichier, PHP 8.3, sans dépendance. Toutes les réponses en JSON UTF-8, `Cache-Control: no-store`.
 
-- `GET api.php` → `{ revision, tasks, game, gameRevision, ledger }`. `revision` = empreinte SHA-1 du contenu de `tasks.json` (il peut changer hors de l'API).
-- `POST api.php` avec `{ opId, ops: [...] }` → applique **toutes** les opérations ou **aucune**, sous verrou (`flock` sur `api/data/.lock`), puis renvoie le même format que `GET` plus `{ ok: true, applied: opId }`.
-  - `opId` : identifiant unique choisi par le client. Rejouer un `opId` déjà appliqué ne refait rien et renvoie `{ ok: true, replay: true, ... }` (les 500 derniers sont retenus dans `api/data/ops.json`).
+- `GET api.php` → `{ revision, tasks, game, gameRevision, ledger, ledgerKeys }`. `revision` = empreinte SHA-1 du contenu de `tasks.json` (il peut changer hors de l'API). `ledger` = les entrées des 60 derniers jours (selon `at`) ; `ledgerKeys` = toutes les clés jamais écrites. Le client reconstitue un registre complet en ajoutant une entrée minimale `{ key }` pour chaque clé plus ancienne (assez pour savoir qu'un gain a déjà été versé).
+- `POST api.php` (`Content-Type: application/json` obligatoire, sinon 415) avec `{ opId, ops: [...] }` → applique **toutes** les opérations ou **aucune**, sous verrou (`flock` non bloquant réessayé 5 s au plus sur `api/data/.lock`, sinon 503 `busy`), puis renvoie le même format que `GET` plus `{ ok: true, applied: opId }`.
+  - `opId` : identifiant unique choisi par le client (aléatoire, pas fondé sur l'heure). Rejouer un `opId` déjà appliqué avec le même corps ne refait rien et renvoie `{ ok: true, replay: true, ... }` ; le même `opId` avec un autre corps → 409 `op_id_reused`. Les 500 derniers sont retenus dans `api/data/ops.json` avec l'empreinte du corps.
   - Opérations :
-    - `{ type: 'task.upsert', task }` : remplace la tâche de même `id` (ou l'ajoute) ; les champs absents de `task` mais présents sur le serveur sont **conservés** (fusion champ par champ, pas d'écrasement aveugle).
+    - `{ type: 'task.upsert', task }` : ajoute la tâche, ou fusionne champ par champ dans la tâche de même `id` (identifiants comparés comme texte, type d'origine conservé). **Le client n'envoie que `id` et les champs qu'il a réellement modifiés** (plus `updatedAt`) : un champ absent est conservé tel quel sur le serveur, ce qui évite d'écraser une modification faite entre-temps par l'agent familial ou un autre appareil. Un champ à effacer est envoyé à `null`.
     - `{ type: 'task.delete', id }`.
-    - `{ type: 'ledger.append', entries: [...] }` : refuse le lot entier (409, `code: 'duplicate_key'`) si une clé existe déjà.
+    - `{ type: 'ledger.append', entries: [...] }` : 50 entrées au plus par requête, 2 Kio au plus chacune ; refuse le lot entier (409, `code: 'duplicate_key'`) si une clé existe déjà.
     - `{ type: 'game.set', game, baseGameRevision }` : refuse (409, `code: 'game_conflict'`, avec l'état courant) si `baseGameRevision` ne correspond pas.
-- Écritures atomiques (fichier temporaire + `rename`), `tasks.json` en `JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE` comme aujourd'hui.
-- Avant chaque écriture d'un fichier : copie dans `api/data/backups/`, en gardant les 14 plus récentes par fichier.
-- Erreurs : 400 (corps invalide), 405 (méthode), 409 (conflit, avec `code`), 413 (corps > 512 Kio), 500. Messages en français, sans chemin de fichier.
-- Protection : si `api/config.php` définit `TOKEN_HASH` (empreinte `password_hash`), toute requête doit porter `Authorization: Bearer <jeton>`. Sans ce réglage, l'API est ouverte (développement local). La décision pour la production revient à Alex.
-- `api/data/.htaccess` : `Require all denied`.
+- Nombres non finis (`1e400`…) refusés en 400 ; tout encodage JSON se fait avec `JSON_THROW_ON_ERROR` et rien n'est écrit si l'encodage échoue.
+- `tasks.json` absent → 503 `tasks_missing`, sans rien créer (création permise seulement par le réglage explicite `ALLOW_CREATE_TASKS`, pour les tests). Illisible → réessais puis 503 `tasks_unreadable`.
+- Écriture de `tasks.json` : sous un second verrou `tasks.json.lock` à côté du fichier (que le script de synchronisation pourra prendre aussi) ; juste avant le `rename`, l'empreinte du fichier est recalculée et, si elle a changé depuis la lecture, le fichier est relu et les opérations sur les tâches réappliquées (3 fois au plus, sinon 503). Chemin résolu par `realpath`, fichier temporaire dans le même dossier, `fsync` avant `rename`, `tasks.json` en `JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE` comme aujourd'hui.
+- Ordre d'écriture : `tasks.json`, puis `game-state.json`, puis le registre, puis `ops.json`. Si une écriture échoue, les fichiers déjà remplacés sont restaurés depuis leur contenu gardé en mémoire. Chaque 500 est journalisé (`error_log`).
+- Sauvegardes dans `api/data/backups/` : copie avant ET après chaque écriture de `tasks.json` et `game-state.json`, 14 plus récentes gardées, plus une copie par jour gardée 30 jours ; le registre (ajout seul) est copié une fois par jour. Si une sauvegarde échoue, l'écriture est refusée.
+- Erreurs : 400 (corps invalide), 401, 405, 409 (conflit, avec `code`), 413 (corps > 512 Kio), 415, 500, 503. Messages en français, sans chemin de fichier.
+- Protection, **fermée par défaut** : si `TOKEN_HASH` est réglé (empreinte SHA-256 en hexadécimal d'un jeton aléatoire long, comparée par `hash_equals`), toute requête doit porter `Authorization: Bearer <jeton>`. Sans `TOKEN_HASH`, l'API refuse tout (503 `auth_not_configured`), sauf sous le serveur de développement de PHP (`php -S`) ou si `ALLOW_OPEN` est réglé explicitement. La décision pour la production revient à Alex.
+- `api/data/.htaccess` (`Require all denied`) est créé s'il manque ; s'il ne peut pas l'être, l'API répond 500 sans rien écrire. Après chaque déploiement, vérifier qu'une requête web sur `api/data/ledger.jsonl` répond 403.
 
 ## `core/` — modules
 
