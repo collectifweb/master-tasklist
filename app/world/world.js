@@ -1,88 +1,64 @@
 // L'île de l'Orée, en DOM et SVG, sans dépendance.
 //
-//   const world = createWorld(conteneur, { texts, anchors, announce, onImpact, onSelect, onHarvest, threadFrom, now });
+//   const world = createWorld(conteneur, { texts, anchors, announce, onImpact, onSelect, threadFrom, now });
 //   world.render(game, tasks);   // met à jour ce qui a changé (différence par identifiant)
-//   world.play(events);          // joue les événements du cœur (quests, build, avis, chapters), dans l'ordre ; sautables
+//   world.play(events);          // joue les événements du cœur, dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
-//   world.focusSector('champs');
+//   world.focusSector('champs'); // cadre un quartier
 //   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
 //   world.destroy();
 //
 // Appeler render(game, tasks) PUIS play(events) dans la même tâche (ou play d'abord) : le nouvel état
 // est retenu pendant que les animations le dévoilent, puis appliqué en entier à la fin.
+// Ici, « secteur » désigne la zone de carte d'un quartier (identifiants de core/domains.js : champs, atelier…).
 //
 // onSelect(info) — un toucher (ou Entrée) sur la carte. Formes de `info` :
-//   { type: 'sector', id }                                   plaque de secteur
-//   { type: 'plot', id, sector, crop, stage, ripe }          parcelle (crop null = vide ; ripe : l'interface propose « Récolter »)
-//   { type: 'landmark', id, sector, model, state }           repère fixe (tour, etabli, relais, bastion, atelier…) ;
-//                                                            l'établi non construit : model 'chantier', state null
-//   { type: 'placement', id, sector, model }                 construction du joueur ({model}-{n})
-//   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou personnage (taskId null)
-// onHarvest(plotId) — glisser le doigt (ou la souris) sur une parcelle mûre. Le monde n'applique rien lui-même :
-//   l'hôte appelle harvest() du cœur puis rejoue ses événements ('recolte'). Équivalent bouton : onSelect 'plot'.
+//   { type: 'sector', id }                                   plaque de quartier
+//   { type: 'landmark', id, sector, model }                  repère fixe (halle, tour, atelier, mairie, école…)
+//   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
-// Événements que play() sait jouer (un type inconnu est ignoré) : reward, fil-libre, secteur-seuil, lisiere-allumee,
-// lisiere-retiree, chapitre, secteur-ouvert, construction, parcelle, semis, recolte, brasero, souffler, avis-annonce,
-// avis-resolu, voile-leve, reflet, veille, surplus, etape, seance-debut, seance-fin ; sans animation : partage, reserve,
-// objectif-atteint, chapitre-fin.
+// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-niveau, reflet, veille, etape,
+// seance-debut, seance-fin.
 //   seance-debut { taskId, occurrence }                     « Je m'y mets » (Côte à côte) : Fanal va une fois au bord
-//                                                           de la Place, vers le secteur de la quête, et y reste immobile
+//                                                           de la Place, vers le quartier de la quête, et y reste immobile
 //   seance-fin { taskId, occurrence, minutes, raison, … }   la séance s'arrête : Fanal rentre (s'il n'en commence pas une autre)
 // Pendant la séance, aucune boucle d'animation : Fanal est dessiné à sa place de travail (pose fixe, data-pose).
-import { P, f, pts } from './iso.js';
+import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
-  CELLS, LIT_ORDER, SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, LISIERE_POSTS, CHARACTERS, DECOR,
-  PLOT_SLOTS, CRATE_SPOTS, AVIS_EDGE, VEIL_CELLS, FANAL_SPOTS, braseroSpots, sectorAt, germCell,
+  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, FANAL_SPOTS, sectorAt,
 } from './layout.js';
 import { deriveView } from './view.js';
-import { terrainSVG, TERRAIN, BOUNDS, sectorPolygon, frontSVG, edgeNormal } from './terrain.js';
+import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal } from './terrain.js';
 import { Scene } from './scene.js';
 import { createTicker, createBus } from './ticker.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, levelKey, fmt, avisName, avisWhen } from './texts.js';
+import { makeTexts, tachesText } from './texts.js';
 import { playEvents, cloneView } from './moments.js';
+import { QUARTIERS } from '../core/domains.js';
 
 export { createWorldPlan } from './plan.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const FOOT = { tunnel: [1, 2], atelier: [2, 1], registres: [2, 2], maison: [2, 2], bastion: [2, 2] }; // [w, h]
-const LIGHT = { lanterne: 'lantern', relais: 'core', bastion: 'lantern', etabli: 'lamp', registres: 'window', maison: 'window', tour: 'crystal' };
+const LIGHT = { lanterne: 'lantern', bastion: 'lantern', etabli: 'lamp', registres: 'window', maison: 'window', tour: 'crystal' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
 const AMBIENT_MS = 9000; // l'île respire quelques secondes après chaque activité, puis s'immobilise
-const FRONT_FAR = 1.8; // recul du Front de givre à l'annonce (cases), jusqu'au rivage la veille de l'Avis
-const SWIPE_PX = 18; // glissé qui récolte une parcelle mûre
-const LANDMARK_IDS = new Set(LANDMARKS.map((l) => l.id));
+const FRONT_FAR = 1.8; // recul du front de givre à l'annonce (cases), jusqu'au rivage la veille (en sommeil)
 let uid = 0;
 
-/** Flocon à six branches (grille de 24), pour le Front et le badge d'Avis. */
-function flakePath(cx = 12, cy = 12, r = 9) {
-  let d = '';
-  for (let k = 0; k < 6; k++) {
-    const t = (k * Math.PI) / 3 - Math.PI / 2;
-    const c = Math.cos(t), s = Math.sin(t);
-    const bx = cx + c * r * 0.6, by = cy + s * r * 0.6, w = r * 0.26;
-    d += `M${f(cx)} ${f(cy)}L${f(cx + c * r)} ${f(cy + s * r)}`;
-    d += `M${f(bx + c * w - s * w)} ${f(by + s * w + c * w)}L${f(bx)} ${f(by)}L${f(bx + c * w + s * w)} ${f(by + s * w - c * w)}`;
-  }
-  return d;
-}
-
-/** Pictos de secteur (grille de 24, trait arrondi, currentColor). */
+/** Pictos de quartier : les mêmes tracés que design/icons.svg (grille de 24, trait arrondi, currentColor). */
 export const SECTOR_GLYPH = {
-  place: 'M6 21V10l3-2V4h6v4l3 2v11M10 21v-4h4v4M4 21h16',
-  champs: 'M12 21v-8M12 13c0-4-3-6.5-7-6.5 0 4 3 6.5 7 6.5zM12 11c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5zM5 21h14',
-  atelier: 'M4.5 19.5l8.5-8.5M11 5.5l7.5 7.5M13.5 3.5l7 7-2.8 2.8-7-7z',
-  archives: 'M6 4h10.5A2.5 2.5 0 0 1 19 6.5V20H8.5A2.5 2.5 0 0 1 6 17.5zM6 17.5A2.5 2.5 0 0 1 8.5 15H19M10 8h5M10 11h5',
-  'maison-commune': 'M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5',
-  relais: 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16zM12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6',
-  brume: 'M7 17.5h10a3.8 3.8 0 0 0 .4-7.6A5.2 5.2 0 0 0 7.5 9 4.3 4.3 0 0 0 7 17.5zM5 20.5h8M15 20.5h4',
-  givre: flakePath(),
+  place: 'M4 10.4c3.4-.6 6.4-2.6 8-6.2 1.6 3.6 4.6 5.6 8 6.2zM12 4.2V2.6M6 10.4v7.4M12 10.4v7.4M18 10.4v7.4M4 17.8h16M5 20.2h14',
+  champs: 'M12 20V12M12 12c-3.4 0-5.6-2.2-5.6-5.6 3.4 0 5.6 2.2 5.6 5.6zm0 0c0-3.4 2.2-5.6 5.6-5.6 0 3.4-2.2 5.6-5.6 5.6zM4 20h16',
+  atelier: 'M5.5 4.5h9.8l2.9 3.4H5.5zM10.6 7.9v12.6M8.4 20.5h4.4',
+  mairie: 'M3.5 20.2h17M4.8 18h14.4M4.6 10 12 6.2l7.4 3.8zM7.2 10v8M10.4 10v8M13.6 10v8M16.8 10v8M12 6.2V2.6l3.6 1.3L12 5.2',
+  ecole: 'M3.5 20.2h17M3.8 12.6 12 7.4l8.2 5.2M5.4 11.6v8.6M18.6 11.6v8.6M10.2 20.2v-4.6h3.6v4.6M9.6 4.6 12 2.8l2.4 1.8M10.2 4.6v3.6M13.8 4.6v3.6',
+  garage: 'M3 20.2h18M3 10.4 12 5.2l9 5.2M4.8 9.4v10.8M19.2 9.4v10.8M7.4 20.2v-7.6h9.2v7.6M7.4 15.2h9.2M7.4 17.7h9.2',
 };
 
 function glyph(id, cls = '') {
-  return `<svg class="ow-glyph ${cls}" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="${SECTOR_GLYPH[id] || SECTOR_GLYPH.brume}"/></svg>`;
+  return `<svg class="ow-glyph ${cls}" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="${SECTOR_GLYPH[id] || ''}"/></svg>`;
 }
 
 function el(tag, cls, attrs = {}) {
@@ -94,80 +70,25 @@ function el(tag, cls, attrs = {}) {
 
 // ----------------------------------------------------------------------------- entités voulues
 export function entitiesFor(v, tasks = []) {
-  const S = v.sectors;
-  const open = (id) => S[id].visibility === 'open';
-  const lanterns = (id) => open(id) && (S[id].stage >= 1 || v.lisiere || v.veille);
   const list = [];
   for (const L of LANDMARKS) {
-    const vis = S[L.sector].visibility;
-    if (vis === 'brume') continue;
-    const e = { ...L, landmark: true, interactive: vis === 'open', light: LIGHT[L.model] ?? null, allume: false };
-    if (L.model === 'tour') { e.variant = v.tourRepaired ? 1 : 0; e.allume = open('place') && v.tourRepaired; }
-    else if (L.model === 'atelier') e.variant = S.atelier.stage === 0 ? 'abime' : '';
-    else if (L.model === 'relais') e.allume = open('place');
-    else if (L.model === 'lanterne') e.allume = lanterns(L.sector);
-    else if (L.model === 'etabli' && v.landmarkState?.etabli !== 'construit') { e.model = 'chantier'; e.light = null; }
-    else if (e.light) e.allume = open(L.sector) && (S[L.sector].stage >= 1 || !!v.veille);
+    const e = { ...L, landmark: true, interactive: true, light: LIGHT[L.model] ?? null, allume: false };
+    if (L.model === 'tour') e.variant = 0; // vieille tour de guet, pas encore réparée
+    else if (e.light) e.allume = !!v.veille; // lanternes, fenêtres et lampe s'allument quand tout est enregistré
     if (v.reflets?.has?.(L.id)) e.reluit = true;
     list.push(e);
   }
   for (const d of DECOR) list.push(d);
-  if (open('champs')) {
-    for (const p of v.plots) {
-      const slot = PLOT_SLOTS[p.slot];
-      if (!slot) continue;
-      list.push({ id: `${p.id}:sol`, model: 'parcelle', sector: 'champs', r: slot.r, c: slot.c, w: 2, h: 2, ground: true });
-      // la culture porte la cible de toucher, même vide (crop null : aucun dessin, l'interface propose « Semer »)
-      list.push({
-        id: p.id, model: 'culture', sector: 'champs', r: slot.r, c: slot.c, w: 2, h: 2, crop: p.crop,
-        progress: p.crop ? Math.round((p.stage / Math.max(1, p.need)) * 100) / 100 : 0, seed: p.slot + 3, interactive: true, plot: p,
-        reluit: v.reflets?.has?.(`plot:${p.slot}`) || false,
-      });
-    }
-  }
-  // Avis annoncé : trois braseros sur le rebord du secteur visé, face au Front ; allumés un à un
-  if (v.avis && open(v.avis.sector)) {
-    braseroSpots(v.avis.sector).forEach(([u, vv], i) => {
-      const lit = i < v.avis.braseros;
-      list.push({ id: `brasero-${i + 1}`, model: 'brasero', sector: v.avis.sector, r: vv - 0.5, c: u - 0.5, variant: lit ? 1 : 0, placed: true, light: 'lantern', allume: lit });
-    });
-  }
-  // Voile : cases couvertes de givre
-  for (const vl of v.veils || []) {
-    if (!open(vl.sector)) continue;
-    (VEIL_CELLS[vl.sector] || []).slice(0, vl.cells).forEach(([r, c], k) => {
-      list.push({ id: `givre-${vl.sector}-${k}`, kind: 'frost', model: 'givre', sector: vl.sector, r, c, seed: r * 13 + c });
-    });
-  }
-  for (const p of v.placements) {
-    if (S[p.sector]?.visibility !== 'open') continue;
-    const [w, h] = FOOT[p.model] ?? [1, 1];
-    list.push({ id: p.id, model: p.model, sector: p.sector, r: p.r, c: p.c, w, h, interactive: true, placed: true, light: p.model === 'lanterne' ? 'lantern' : null, allume: p.model === 'lanterne' && lanterns(p.sector) });
-  }
   v.crates.forEach((cr, i) => {
     const [u, vv] = CRATE_SPOTS[i];
     const task = tasks.find((t) => t && t.id === cr.taskId);
     list.push({ id: cr.id, model: 'caisse', sector: sectorAt(Math.floor(vv), Math.floor(u)), r: vv - 0.5, c: u - 0.5, seed: i + 2, interactive: true, crate: cr, title: task ? String(task.task ?? '') : '', reluit: v.reflets?.has?.(`caisse:${i}`) || false });
   });
-  for (const id of v.posts) {
-    const p = LISIERE_POSTS.find((x) => x.id === id);
-    if (!p) continue;
-    const side = open(p.between[0]) ? p.between[0] : p.between[1];
-    list.push({ id: p.id, model: 'lanterne', sector: side, r: p.v - 0.5, c: p.u - 0.5, light: 'lantern', allume: !!(v.lisiere || v.veille), post: true });
-  }
-  for (const ch of CHARACTERS) {
-    if (!open(ch.sector)) continue;
-    const e = { id: ch.id, kind: 'char', who: ch.kind, sector: ch.sector, u: ch.u, v: ch.v, interactive: true, light: ch.kind === 'fanal' ? 'fanal' : null, allume: true };
-    const spot = ch.kind === 'fanal' && v.fanal && FANAL_SPOTS[v.fanal.sector];
-    if (spot) [e.u, e.v, e.pose] = spot; // au travail : penché vers la quête (pose fixe, voir world.css)
-    list.push(e);
-  }
-  for (const id of SECTOR_ORDER) {
-    const s = S[id];
-    if (!open(id) || s.stage > 0 || !s.germ) continue;
-    const [r, c] = germCell(id, s.lit);
-    list.push({ id: `germe-${id}`, kind: 'germ', stage: s.germ, sector: id, u: c + 0.5, v: r + 0.5 });
-  }
+  // Fanal sur la Place ; au travail (Côte à côte), penché vers le quartier de la quête (pose fixe, voir world.css)
+  const fanal = { id: 'fanal', kind: 'char', who: 'fanal', sector: 'place', u: FANAL_HOME[0], v: FANAL_HOME[1], interactive: true, light: 'fanal', allume: true };
+  const spot = v.fanal && FANAL_SPOTS[v.fanal.sector];
+  if (spot) [fanal.u, fanal.v, fanal.pose] = spot;
+  list.push(fanal);
   return list;
 }
 
@@ -223,45 +144,17 @@ export function createWorld(container, options = {}) {
   veils.setAttribute('width', TERRAIN.w); veils.setAttribute('height', TERRAIN.h);
   veils.setAttribute('aria-hidden', 'true');
   Object.assign(veils.style, { left: TERRAIN.x + 'px', top: TERRAIN.y + 'px' });
-  let vm = `<defs><pattern id="ow-ash-${id}" width="22" height="13" patternUnits="userSpaceOnUse"><ellipse cx="4" cy="3" rx="1.6" ry=".8" class="ow-ash-speck"/><ellipse cx="15" cy="9" rx="1.2" ry=".6" class="ow-ash-speck"/><ellipse cx="19" cy="2" rx=".8" ry=".45" class="ow-ash-speck"/></pattern></defs>`;
-  for (const s of SECTOR_ORDER) {
-    const poly = pts(sectorPolygon(s));
-    vm += `<g class="ow-veil" data-sector="${s}" hidden><polygon class="ow-veil-fill" points="${poly}"/><polygon class="ow-veil-pat" points="${poly}" fill="url(#ow-ash-${id})"/><polygon class="ow-veil-edge" points="${poly}"/></g>`;
-  }
-  vm += '<g class="ow-front" hidden><g class="ow-front-move"></g></g>';
-  veils.innerHTML = vm;
+  // front de givre : en sommeil, gardé pour les alertes météo (semaines 3-4) ; caché tant qu'aucune n'est annoncée
+  veils.innerHTML = '<g class="ow-front" hidden><g class="ow-front-move"></g></g>';
   const frontHost = veils.querySelector('.ow-front');
   const frontMove = frontHost.firstElementChild;
 
   const fxg = el('div', 'ow-fxg', { 'aria-hidden': 'true' });
-  const flashSvg = doc.createElementNS(SVGNS, 'svg');
-  flashSvg.setAttribute('class', 'ow-flashes');
-  flashSvg.setAttribute('viewBox', `${TERRAIN.x} ${TERRAIN.y} ${TERRAIN.w} ${TERRAIN.h}`);
-  flashSvg.setAttribute('width', TERRAIN.w); flashSvg.setAttribute('height', TERRAIN.h);
-  Object.assign(flashSvg.style, { left: TERRAIN.x + 'px', top: TERRAIN.y + 'px' });
-  let fm = '';
-  for (const s of SECTOR_ORDER) fm += `<polygon class="ow-flash" data-sector="${s}" points="${pts(sectorPolygon(s))}"/>`;
-  fm += '<g class="ow-tileflashes"></g>';
-  flashSvg.innerHTML = fm;
-  fxg.appendChild(flashSvg);
 
   const shadows = el('div', 'ow-shadows', { 'aria-hidden': 'true' });
   const ents = el('div', 'ow-ents-root');
   const groups = {};
   for (const s of SECTOR_ORDER) { groups[s] = el('div', 'ow-ents', { 'data-sector': s }); ents.appendChild(groups[s]); }
-  const mist = el('div', 'ow-mistlayer', { 'aria-hidden': 'true' });
-  const mists = {};
-  for (const s of SECTOR_ORDER) {
-    const m = el('div', 'ow-mist', { 'data-sector': s });
-    m.hidden = true;
-    const [u, v] = SECTOR_CENTER[s];
-    const [x, y] = P(u, v);
-    m.style.transform = `translate(${f(x)}px, ${f(y - 30)}px)`;
-    // la brume passe devant les objets de son secteur, derrière ceux des secteurs plus proches
-    m.style.zIndex = String(105 + 10 * Math.max(...CELLS[s].map(([r, c]) => r + c + 2)));
-    m.innerHTML = '<i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i>';
-    mists[s] = m; mist.appendChild(m);
-  }
   const dusk = el('div', 'ow-dusk', { 'aria-hidden': 'true' });
   const stars = el('div', 'ow-stars', { 'aria-hidden': 'true' });
   for (let k = 0; k < 9; k++) {
@@ -271,7 +164,7 @@ export function createWorld(container, options = {}) {
   }
   const lights = el('div', 'ow-lights', { 'aria-hidden': 'true' });
   const fxw = el('div', 'ow-fxw', { 'aria-hidden': 'true' });
-  stage.append(terrainHost, veils, fxg, shadows, ents, mist, dusk, stars, lights, fxw);
+  stage.append(terrainHost, veils, fxg, shadows, ents, dusk, stars, lights, fxw);
   // le décor du terrain est purement visuel : seuls les boutons d'objets sont exposés
   terrainHost.setAttribute('aria-hidden', 'true');
 
@@ -308,17 +201,6 @@ export function createWorld(container, options = {}) {
   const camera = new Camera({ root, scroller, content, stage, plaques, insets: options.insets, onChange: onLayout });
   const fx = new Fx({ camera, ticker, layers: { view: fxv, world: fxw, ground: fxg } });
 
-  const grounds = {}, tiles = {}, litShown = {}, sectorAttr = {};
-  for (const s of SECTOR_ORDER) {
-    grounds[s] = terrain.querySelector(`.ow-ground[data-sector="${s}"]`);
-    const byCell = new Map([...grounds[s].querySelectorAll('.ow-tile')].map((n) => [n.dataset.cell, n]));
-    tiles[s] = LIT_ORDER[s].map(([r, c]) => byCell.get(`${r}-${c}`));
-    litShown[s] = -1;
-    sectorAttr[s] = { etat: undefined, voile: undefined };
-  }
-  const veilOf = Object.fromEntries(SECTOR_ORDER.map((s) => [s, veils.querySelector(`.ow-veil[data-sector="${s}"]`)]));
-  const flashOf = Object.fromEntries(SECTOR_ORDER.map((s) => [s, flashSvg.querySelector(`.ow-flash[data-sector="${s}"]`)]));
-  const tileFlashes = flashSvg.querySelector('.ow-tileflashes');
 
   // ---- état
   let pending = null;   // dernier { game, tasks } reçu
@@ -339,25 +221,19 @@ export function createWorld(container, options = {}) {
   const plaqueLast = {};
 
   // ---------------------------------------------------------------------------- textes accessibles
-  function sectorName(s) { return t(`sector.${s}.name`); }
+  function sectorName(s) { return t(`quartier.${s}.name`); }
   function objName(e) {
     if (e.kind === 'char') return t(e.pose ? `monde.obj.${e.who}.travail` : `monde.obj.${e.who}`);
     if (e.model === 'tour') return t(e.variant ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
-    if (e.model === 'culture') {
-      const p = e.plot;
-      if (!p.crop) return `${t('monde.obj.parcelle')} : ${t('monde.crop.empty')}`;
-      const state = p.stage <= 0 ? t('monde.crop.state.0') : p.ripe ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
-      return `${t('monde.obj.parcelle')} : ${t(`monde.crop.${p.crop}`)}, ${state}${p.ripe ? `. ${t('monde.crop.ripe.hint')}` : ''}`;
-    }
-    if (e.model === 'chantier') return t('monde.obj.chantier');
     if (e.crate) {
       const d = e.crate.days;
       const when = d < 0 ? t('monde.crate.passed') : d === 0 ? t('monde.crate.today') : t('monde.crate.days', { n: d });
-      return `${t('monde.obj.caisse')}${e.title ? ` : ${e.title}` : ''}, ${when}`;
+      return `${t('monde.obj.caisse')}${e.title ? ` : ${e.title}` : ''}, ${when}`;
     }
+    if (e.landmark && t.has(`monde.obj.${e.id}`)) return t(`monde.obj.${e.id}`); // repère qui porte son propre nom
     return t(`monde.obj.${e.model}`);
   }
-  function labelOf(e) { return t('monde.select.object', { objet: objName(e), au_secteur: t(`sector.${e.sector}.in`) }); }
+  function labelOf(e) { return t('monde.select.object', { objet: objName(e), au_secteur: t(`quartier.${e.sector}.in`) }); }
 
   function say(text) {
     if (!text) return;
@@ -367,44 +243,8 @@ export function createWorld(container, options = {}) {
   }
 
   // ---------------------------------------------------------------------------- application d'une vue
-  function applySectors(v) {
-    for (const s of SECTOR_ORDER) {
-      const sv = v.sectors[s];
-      const etat = sv.visibility === 'open' ? sv.etat : null;
-      const voile = sv.visibility === 'open' ? null : sv.visibility;
-      setSectorAttr(s, etat, voile);
-    }
-  }
-  function setSectorAttr(s, etat, voile, part = 'both') {
-    const a = sectorAttr[s];
-    for (const node of part === 'ground' ? [grounds[s]] : part === 'ents' ? [groups[s]] : [grounds[s], groups[s]]) {
-      if (etat) node.setAttribute('data-etat', etat); else node.removeAttribute('data-etat');
-      if (voile) node.setAttribute('data-voile', voile); else node.removeAttribute('data-voile');
-    }
-    if (part === 'both') { a.etat = etat; a.voile = voile; }
-  }
-
-  function litCount(sv) {
-    if (sv.visibility !== 'open') return 0;
-    return sv.stage >= 1 ? tiles[sv.id].length : sv.lit;
-  }
-  function setLit(s, n) {
-    if (litShown[s] === n) return;
-    const list = tiles[s];
-    for (let i = 0; i < list.length; i++) list[i].toggleAttribute('data-lit', i < n);
-    litShown[s] = n;
-  }
-  function applyTiles(v) { for (const s of SECTOR_ORDER) setLit(s, litCount(v.sectors[s])); }
-
-  function applyVeils(v) {
-    for (const s of SECTOR_ORDER) {
-      const vis = v.sectors[s].visibility;
-      if (veilOf[s].hasAttribute('hidden') !== (vis !== 'cendre')) veilOf[s].toggleAttribute('hidden', vis !== 'cendre');
-      if (mists[s].hidden !== (vis !== 'brume')) mists[s].hidden = vis !== 'brume';
-    }
-  }
-
-  // ---- Front de givre (Avis annoncé) : posé au rivage du bord visé, reculé selon le temps qui reste
+  // ---- front de givre (en sommeil) : posé au rivage du bord visé, reculé selon le temps qui reste.
+  // La vue ne porte pas encore d'alerte météo (v.avis) : il reste caché. Gardé pour les semaines 3-4.
   let frontSector = null;
   function frontShift(progress, extra = 0) {
     const [nx, ny] = edgeNormal(AVIS_EDGE[frontSector]);
@@ -413,7 +253,7 @@ export function createWorld(container, options = {}) {
   }
   function applyFront(v) {
     const a = v.avis;
-    const s = a && AVIS_EDGE[a.sector] && v.sectors[a.sector]?.visibility !== 'brume' ? a.sector : null;
+    const s = a && AVIS_EDGE[a.sector] ? a.sector : null;
     if (!s) {
       if (!frontHost.hasAttribute('hidden')) frontHost.setAttribute('hidden', '');
       return;
@@ -424,67 +264,39 @@ export function createWorld(container, options = {}) {
     if (frontMove.style.transform !== tr) frontMove.style.transform = tr;
   }
 
-  // ---- Avis : nom, échéance en mots
-  function avisBadge(a) {
-    const nom = avisName(t, a.id);
-    return a.daysLeft <= 0 ? t('monde.avis.badge.0', { nom }) : a.daysLeft === 1 ? t('monde.avis.badge.1', { nom }) : t('monde.avis.badge', { nom, n: a.daysLeft });
-  }
-
-  // ---- plaques de secteur
-  function plaqueModel(sv, avis) {
+  // ---- plaques de quartier : nom, niveau, barre vers le niveau suivant
+  function plaqueModel(sv) {
     const name = sectorName(sv.id);
-    if (sv.visibility === 'brume') {
-      return { vis: 'brume', name: t('monde.mist'), line: '', etat: '', stage: 0, progress: 0, label: t('monde.mist.hint') };
-    }
-    // repère d'Avis : picto de givre + texte court, aussi lu dans l'étiquette du bouton ; parti dès que l'Avis est
-    // résolu, même pendant que son matin se rejoue
-    const av = avis && avis.sector === sv.id && !avis.resolu ? { text: avisBadge(avis), label: t('monde.avis.label', { nom: avisName(t, avis.id), au_secteur: t(`sector.${sv.id}.in`), quand: avisWhen(t, avis.daysLeft) }) } : null;
-    const withAvis = (label) => (av ? `${label} ${av.label}` : label);
-    if (sv.visibility === 'cendre') {
-      const n = fmt(sv.lueur);
-      const line = sv.lueur > 0 ? t('monde.plaque.reserve', { n }) : t('sector.closed');
-      return { vis: 'cendre', name, line, etat: '', stage: 0, progress: 0, avis: av, label: withAvis(t('monde.plaque.label', { secteur: name, etat: t('sector.closed'), detail: sv.lueur > 0 ? t('monde.plaque.reserve', { n }) : t('monde.plan.opens', { n: sv.chapter }) })) };
-    }
-    const lvl = t(levelKey(sv.stage));
-    const nx = sv.next;
-    const line = nx ? t('monde.plaque.lueur', { n: fmt(sv.lueur), cible: nx.lueur }) : t('monde.plaque.full', { n: fmt(sv.lueur) });
-    const prevT = sv.stage === 0 ? 0 : [0, 150, 400, 750][sv.stage];
-    const progress = nx ? Math.max(0, Math.min(1, (sv.lueur - prevT) / (nx.lueur - prevT))) : 1;
-    const detail = nx ? t('sector.level.next', { palier: t(levelKey(sv.stage + 1)), n: nx.lueur }) : '';
-    const tilesTxt = sv.stage === 0 ? ` ${t('monde.tiles', { n: sv.lit })}.` : '';
+    const s = sv.suivant;
     return {
-      vis: 'open', name, line, etat: sv.etat, stage: sv.stage, progress, lvl, avis: av,
-      label: withAvis(t('monde.plaque.label', { secteur: name, etat: lvl, detail: `${line}.${tilesTxt} ${detail}`.trim() })),
+      name,
+      line: t('monde.niveau', { n: sv.niveau }),
+      niveau: sv.niveau,
+      progress: sv.progres,
+      label: t('monde.plaque.label', { quartier: name, n: sv.niveau, taches: tachesText(t, s.encore, QUARTIERS[sv.id]?.domain), suivant: s.niveau }),
     };
   }
   function makePlaque(s) {
     const b = el('button', 'ow-plaque', { type: 'button', 'data-sector': s, tabindex: '-1' });
-    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true"></span><i class="ow-plaque-mark" aria-hidden="true" hidden>${glyph('givre')}</i><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-pips" aria-hidden="true"><i></i><i></i><i></i></span><span class="ow-plaque-val num"></span></span><span class="ow-plaque-avis" hidden>${glyph('givre')}<span class="ow-plaque-avis-txt"></span></span></span><span class="ow-plaque-bar" aria-hidden="true"><i></i></span>`;
+    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true">${glyph(s)}</span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-plaque-val num"></span></span></span><span class="ow-plaque-bar" aria-hidden="true"><i></i></span>`;
     plaques.appendChild(b);
     plaqueEls[s] = b;
     return b;
   }
-  function updatePlaque(sv, avis = shown?.avis ?? null) {
+  function updatePlaque(sv) {
     const b = plaqueEls[sv.id] || makePlaque(sv.id);
-    const m = plaqueModel(sv, avis);
+    const m = plaqueModel(sv);
     const key = JSON.stringify(m);
     if (plaqueLast[sv.id] === key) return false;
     const prev = plaqueLast[sv.id] ? JSON.parse(plaqueLast[sv.id]) : null;
     plaqueLast[sv.id] = key;
-    b.dataset.vis = m.vis;
-    if (m.etat) b.dataset.etat = m.etat; else delete b.dataset.etat;
-    b.dataset.stage = String(m.stage);
-    b.toggleAttribute('data-avis', !!m.avis);
+    b.dataset.niveau = String(m.niveau);
     b.setAttribute('aria-label', m.label);
-    if (!prev || prev.vis !== m.vis) b.querySelector('.ow-plaque-icon').innerHTML = glyph(m.vis === 'brume' ? 'brume' : sv.id);
     b.querySelector('.ow-plaque-name').textContent = m.name;
     b.querySelector('.ow-plaque-val').textContent = m.line;
-    b.querySelector('.ow-plaque-mark').hidden = !m.avis;
-    b.querySelector('.ow-plaque-avis').hidden = !m.avis;
-    b.querySelector('.ow-plaque-avis-txt').textContent = m.avis ? m.avis.text : '';
     b.querySelector('.ow-plaque-bar i').style.transform = `scaleX(${m.progress.toFixed(3)})`;
     // le texte change de longueur : la plaque se remesure et se replace (sinon elle déborde sous la colonne de zoom)
-    if (!first && prev && (prev.line !== m.line || prev.name !== m.name || !!prev.avis !== !!m.avis || prev.avis?.text !== m.avis?.text)) {
+    if (!first && prev && (prev.line !== m.line || prev.name !== m.name)) {
       plaqueSize[sv.id] = [b.offsetWidth, b.offsetHeight];
       placePlaques();
     }
@@ -492,7 +304,7 @@ export function createWorld(container, options = {}) {
   }
   function applyPlaques(v) {
     let changed = false;
-    for (const s of SECTOR_ORDER) changed = updatePlaque(v.sectors[s], v.avis) || changed;
+    for (const s of SECTOR_ORDER) changed = updatePlaque(v.sectors[s]) || changed;
     changed = sizePlaques() || changed;
     if (changed && !first) { measurePlaques(); placePlaques(); }
   }
@@ -549,9 +361,6 @@ export function createWorld(container, options = {}) {
   }
 
   function apply(v, { quiet = false, enter = true } = {}) {
-    applySectors(v);
-    applyTiles(v);
-    applyVeils(v);
     applyFront(v);
     applyPlaques(v);
     const res = scene.sync(entitiesFor(v, tasks), { quiet });
@@ -608,13 +417,7 @@ export function createWorld(container, options = {}) {
     zIn.disabled = camera.s >= lv[lv.length - 1] - 0.001;
   }
 
-  function defaultActive() {
-    if (active) return active;
-    if (!shown) return 'place';
-    const open = SECTOR_ORDER.filter((s) => s !== 'place' && shown.sectors[s].visibility === 'open');
-    open.sort((a, b) => shown.sectors[b].chapter - shown.sectors[a].chapter);
-    return open[0] || 'place';
-  }
+  function defaultActive() { return active || 'place'; }
   function sectorPoint(s) { const [u, v] = SECTOR_CENTER[s]; return P(u, v); }
 
   function initialCamera() {
@@ -664,7 +467,7 @@ export function createWorld(container, options = {}) {
     if (vt < camera.top + m) vt = y + 14 - camera.sy; // pas de place au-dessus : l'étiquette passe sous l'objet
     tag.style.transform = `translate(${f(vl + camera.sx)}px, ${f(vt + camera.sy)}px)`;
   }
-  /** L'objet sélectionné a pu changer (Tour réparée, culture qui pousse) : l'étiquette suit. */
+  /** L'objet sélectionné a pu changer (caisse dont l'échéance approche, Fanal au travail) : l'étiquette suit. */
   function syncTag() {
     if (!selected || tag.hidden) return;
     const text = objName(scene.get(selected).e);
@@ -790,7 +593,6 @@ export function createWorld(container, options = {}) {
     if (pl) {
       const s = pl.dataset.sector;
       rovingTo(pl);
-      if (shown?.sectors[s]?.visibility === 'brume') { say(t('monde.mist.hint')); return; }
       focusSector(s);
       options.onSelect?.({ type: 'sector', id: s });
       bus.emit('select', { type: 'sector', id: s });
@@ -813,18 +615,8 @@ export function createWorld(container, options = {}) {
     if (ev.target.closest('.ow-scroller')) select(null);
   }
   function selectInfo(e) {
-    if (e.plot) return { type: 'plot', id: e.plot.id, sector: e.sector, crop: e.plot.crop, stage: e.plot.stage, ripe: e.plot.ripe };
-    if (e.landmark) return { type: 'landmark', id: e.id, sector: e.sector, model: e.model, state: e.model === 'chantier' ? null : (shown?.landmarkState?.[e.id] ?? null) };
-    if (e.placed && !e.kind) return { type: 'placement', id: e.id, sector: e.sector, model: e.model };
+    if (e.landmark) return { type: 'landmark', id: e.id, sector: e.sector, model: e.model };
     return { type: 'object', id: e.id, sector: e.sector, model: e.kind === 'char' ? e.who : e.model, taskId: e.crate?.taskId ?? null };
-  }
-  /** Glissé sur une parcelle mûre : petit écrasement de la culture, puis l'hôte décide (onHarvest). */
-  function harvestGesture(eid) {
-    const n = scene.get(eid);
-    if (!n || !n.e.plot?.ripe) return;
-    fx.anim(n.el, [{ transform: 'scale(1)' }, { transform: 'scale(1.06, .9)' }, { transform: 'scale(1)' }], { duration: reduced ? 1 : 200, easing: 'ease-out' });
-    options.onHarvest?.(n.e.plot.id);
-    bus.emit('harvest', { plotId: n.e.plot.id });
   }
   function rovingTo(n) {
     for (const x of rovingItems()) if (x !== n && x.tabIndex === 0) x.tabIndex = -1;
@@ -862,16 +654,10 @@ export function createWorld(container, options = {}) {
   let drag = null;
   const touches = new Map();
   let pinch = null;
-  let swipe = null; // glissé de récolte commencé sur une parcelle mûre
   function onPointerDown(ev) {
     if (playing || queued) { skip(); }
     clearVeille();
     wake();
-    const ripe = !playing && (ev.pointerType !== 'mouse' || ev.button === 0) && ev.target.closest?.('.ow-ent.is-btn[data-mure]');
-    if (ripe && !touches.size) {
-      swipe = { id: ripe.dataset.id, pid: ev.pointerId, x: ev.clientX, y: ev.clientY, done: false };
-      if (ev.pointerType !== 'touch') return; // pas de déplacement de carte depuis une parcelle mûre
-    }
     if (ev.pointerType === 'touch') {
       touches.set(ev.pointerId, [ev.clientX, ev.clientY]);
       if (touches.size === 2) {
@@ -886,11 +672,6 @@ export function createWorld(container, options = {}) {
     drag = { x: ev.clientX, y: ev.clientY, sl: scroller.scrollLeft, st: scroller.scrollTop, moved: false };
   }
   function onPointerMove(ev) {
-    if (swipe && swipe.pid === ev.pointerId && !swipe.done && touches.size < 2
-      && Math.hypot(ev.clientX - swipe.x, ev.clientY - swipe.y) > SWIPE_PX) {
-      swipe.done = true;
-      harvestGesture(swipe.id);
-    }
     if (ev.pointerType === 'touch' && touches.has(ev.pointerId)) {
       touches.set(ev.pointerId, [ev.clientX, ev.clientY]);
       if (pinch && touches.size === 2) {
@@ -907,10 +688,6 @@ export function createWorld(container, options = {}) {
     if (drag.moved) camera.scrollToView(drag.sl - dx, drag.st - dy, false);
   }
   function onPointerUp(ev) {
-    if (swipe && swipe.pid === ev.pointerId) {
-      if (swipe.done) { suppressClick = true; win.setTimeout(() => { suppressClick = false; }, 0); }
-      swipe = null;
-    }
     if (ev.pointerType === 'touch') { touches.delete(ev.pointerId); if (touches.size < 2) pinch = null; return; }
     if (drag && drag.moved) { suppressClick = true; win.setTimeout(() => { suppressClick = false; }, 0); }
     if (drag) delete root.dataset.glisse;
@@ -961,20 +738,16 @@ export function createWorld(container, options = {}) {
 
   // ---------------------------------------------------------------------------- jeu des événements
   const ctx = {
-    t, fx, camera, scene, bus, root, win, doc, dusk, stars, tileFlashes, flashOf, veilOf, mists, grounds, groups, plaqueEls,
-    say, apply: (opts) => apply(shown, opts), entitiesFor: () => entitiesFor(shown, tasks),
+    t, fx, camera, scene, root, dusk, stars, plaqueEls,
+    say, apply: (opts) => apply(shown, opts),
     get shown() { return shown; }, get target() { return target; }, get tasks() { return tasks; },
     get reduced() { return reduced; },
-    setSectorAttr, setLit, tiles, updatePlaque, reveal, sectorPoint,
-    sectorName,
+    updatePlaque, reveal,
     onImpact(ev) { options.onImpact?.(ev); bus.emit('impact', ev); },
     setActive,
     threadFrom: null,
     objName,
-    // semaine 3 : Front de givre, Avis, bouton de saut
-    frontHost, frontMove, frontShift,
-    avisName: (aid) => avisName(t, aid), avisWhen: (n) => avisWhen(t, n),
-    onStep: placeSkip,
+    onStep: placeSkip, // le bouton « Passer l'animation » reste touchable à chaque étape
   };
 
   function originFrom(from) {
@@ -1051,7 +824,7 @@ export function createWorld(container, options = {}) {
     clearSelection() { if (!destroyed) select(null); },
     /** Termine les animations en cours en 150 ms au plus. */
     skip,
-    /** Écoute : 'impact' (gain arrivé), 'select', 'harvest' ({ plotId }), 'render', 'played'. Renvoie la fonction de retrait. */
+    /** Écoute : 'impact' (gain arrivé), 'select', 'render', 'played'. Renvoie la fonction de retrait. */
     on: (type, fn) => bus.on(type, fn),
     get playing() { return playing > 0 || queued > 0; },
     destroy() {

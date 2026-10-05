@@ -158,7 +158,7 @@ function patchRow(li, m, now) {
 export function renderList(root, ctx, ui) {
   const { tasks, now } = ctx;
   const ul = $('#quest-list', root);
-  const filters = { status: ui.status, quick: ui.quick, lowEnergy: ui.lowEnergy, thisWeek: ui.thisWeek, sector: ui.sector, search: ui.search };
+  const filters = { status: ui.status, quick: ui.quick, lowEnergy: ui.lowEnergy, thisWeek: ui.thisWeek, quartier: ui.quartier, search: ui.search };
   let items = listQuests(tasks, { sort: ui.sort, filters }, now);
   if (ui.sort === 'cote' && ui.status === 'done') items = items.slice().sort((a, b) => String(b.doneAt || '').localeCompare(String(a.doneAt || '')));
   if (ui.sort === 'cote' && ui.status === 'archived') items = items.slice().sort((a, b) => String(b.archivedAt || '').localeCompare(String(a.archivedAt || '')));
@@ -172,7 +172,7 @@ export function renderList(root, ctx, ui) {
 
   // état vide
   const empty = $('#list-empty', root);
-  const filtered = ui.quick || ui.lowEnergy || ui.thisWeek || ui.sector || ui.search;
+  const filtered = ui.quick || ui.lowEnergy || ui.thisWeek || ui.quartier || ui.search;
   ul.hidden = items.length === 0;
   empty.hidden = items.length > 0;
   if (!items.length) {

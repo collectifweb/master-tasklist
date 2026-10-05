@@ -1,11 +1,11 @@
 // Pont vers le monde (app/world/world.js). S'il manque ou échoue, l'illustration statique de la coquille reste en place.
 // Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
 //
-//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion });
-//   onSelect({ type: 'sector' | 'object' | 'plot' | 'landmark' | 'placement', id, … }) ; onHarvest(plotId) : récolte au glissé.
+//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion });
+//   onSelect({ type: 'sector' | 'object' | 'landmark', id, sector?, taskId? }) : sector est le quartier touché.
 //   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
-//   w.plan(conteneur, { onFocusSector }) → { render, focus, destroy }
-export async function initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion }) {
+//   w.plan(conteneur, { onFocusSector, onFilter }) → { render, focus, destroy }
+export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion }) {
   let mod, view;
   try {
     [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
@@ -16,7 +16,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
   try {
     const texts = content.ui;
     const anchors = content.ancres;
-    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, onHarvest, threadFrom, now });
+    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now });
     world.setReducedMotion(reducedMotion());
     container.hidden = false;
     slot.dataset.world = 'live';
@@ -40,8 +40,8 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
         const before = reflets(game, tasksBefore);
         return [...reflets(game, tasksAfter)].filter((id) => !before.has(id)).map((objectId) => ({ type: 'reflet', objectId }));
       },
-      plan(host, { onFocusSector } = {}) {
-        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector });
+      plan(host, { onFocusSector, onFilter } = {}) {
+        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector, onFilter });
         return { render: safe(p.render), focus: safe(p.focus), destroy: safe(p.destroy) };
       },
       destroy: safe(world.destroy),

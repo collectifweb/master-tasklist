@@ -1,4 +1,4 @@
-// Primitives d'effets : fils de lumière, anneaux, éclats, poussière, flocons de cendre ou de givre, faisceaux.
+// Primitives d'effets : fils de lumière, anneaux, éclats, étoiles scintillantes.
 // Particules préparées d'avance (réserves d'éléments), animées par la Web Animations API sur transform et
 // opacity (compositeur). Les fils sont redessinés par la boucle unique (ticker), image par image.
 // Tout est « sautable » : skip() termine ce qui joue en 150 ms au plus.
@@ -65,11 +65,6 @@ export class Fx {
     }
     this.orbs = new Pool(layers.view, 'ow-orb', 3);
     this.sparks = new Pool(layers.view, 'ow-spark', 18);
-    this.wsparks = new Pool(layers.world, 'ow-wspark', 16);
-    this.dusts = new Pool(layers.world, 'ow-dust', 14);
-    this.chips = new Pool(layers.world, 'ow-chip', 8);
-    this.flakePool = new Pool(layers.world, 'ow-flake', 14);
-    this.beams = new Pool(layers.world, 'ow-beam', 5);
     this.rings = new Pool(layers.ground, 'ow-ring', 5);
     this.stars = new Pool(layers.world, 'ow-star', 4, '<svg viewBox="-10 -10 20 20" width="20" height="20" aria-hidden="true"><path d="M0,-9 C1,-2 2,-1 9,0 C2,1 1,2 0,9 C-1,2 -2,1 -9,0 C-2,-1 -1,-2 0,-9Z"/></svg>');
   }
@@ -181,102 +176,6 @@ export class Fx {
     Object.assign(el.style, { left: f(x - rx) + 'px', top: f(y - rx / 2) + 'px', width: f(2 * rx) + 'px', height: f(rx) + 'px' });
     return this.anim(el, [{ transform: 'scale(.25)', opacity: 0.95 }, { transform: `scale(${to})`, opacity: 0 }], { duration: dur, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' })
       .finished.then(() => this.rings.give(el), () => this.rings.give(el));
-  }
-
-  /** Éclats lumineux qui montent depuis des points (px monde). */
-  rise(points, { dur = 900, spread = 10, height = 46 } = {}) {
-    const all = points.map(([x, y], i) => {
-      const el = this.wsparks.take();
-      const dx = rand(-spread, spread), up = rand(height * 0.6, height);
-      return this.anim(el, [
-        { transform: `translate(${f(x)}px, ${f(y)}px) scale(.3)`, opacity: 0 },
-        { transform: `translate(${f(x + dx * 0.4)}px, ${f(y - up * 0.4)}px) scale(1)`, opacity: 1, offset: 0.3 },
-        { transform: `translate(${f(x + dx)}px, ${f(y - up)}px) scale(.2)`, opacity: 0 },
-      ], { duration: dur * rand(0.8, 1.1), delay: i * 30, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' })
-        .finished.then(() => this.wsparks.give(el), () => this.wsparks.give(el));
-    });
-    return Promise.all(all);
-  }
-
-  dust(x, y, count = 12) {
-    const all = [];
-    for (let i = 0; i < count; i++) {
-      const el = this.dusts.take();
-      const ang = (i / count) * Math.PI * 2 + rand(-0.2, 0.2);
-      const sx = x + Math.cos(ang) * 20, sy = y + Math.sin(ang) * 10;
-      const ex = x + Math.cos(ang) * rand(42, 64), ey = y + Math.sin(ang) * rand(20, 30) - rand(4, 14);
-      const s = rand(0.9, 1.5);
-      all.push(this.anim(el, [
-        { transform: `translate(${f(sx)}px, ${f(sy)}px) scale(${f(s * 0.4)})`, opacity: 0.95 },
-        { transform: `translate(${f((sx + ex) / 2)}px, ${f((sy + ey) / 2 - 4)}px) scale(${f(s)})`, opacity: 0.8, offset: 0.35 },
-        { transform: `translate(${f(ex)}px, ${f(ey - 8)}px) scale(${f(s * 1.3)})`, opacity: 0 },
-      ], { duration: rand(600, 820), easing: 'cubic-bezier(.15,.7,.3,1)' }).finished.then(() => this.dusts.give(el), () => this.dusts.give(el)));
-    }
-    for (let i = 0; i < 8; i++) {
-      const el = this.chips.take();
-      const dx = rand(-46, 46), up = rand(22, 44), dr = rand(-380, 380), kf = [];
-      for (let s = 0; s <= 8; s++) { const t = s / 8; kf.push({ transform: `translate(${f(x + dx * t)}px, ${f(y - 6 - up * 4 * t * (1 - t) + t * 14)}px) rotate(${f(dr * t)}deg)`, opacity: t > 0.75 ? (1 - t) * 4 : 1 }); }
-      all.push(this.anim(el, kf, { duration: rand(480, 680), easing: 'linear' }).finished.then(() => this.chips.give(el), () => this.chips.give(el)));
-    }
-    return Promise.all(all);
-  }
-
-  /** Flocons de cendre soufflés depuis une zone (liste de points px monde). */
-  flakes(points, { dur = 1100 } = {}) {
-    const all = points.map(([x, y], i) => {
-      const el = this.flakePool.take();
-      el.className = 'ow-flake';
-      const dx = rand(-40, 40), up = rand(40, 90), dr = rand(-260, 260);
-      return this.anim(el, [
-        { transform: `translate(${f(x)}px, ${f(y)}px) rotate(0deg) scale(1)`, opacity: 0.95 },
-        { transform: `translate(${f(x + dx * 0.5)}px, ${f(y - up * 0.6)}px) rotate(${f(dr * 0.5)}deg) scale(.9)`, opacity: 0.8, offset: 0.45 },
-        { transform: `translate(${f(x + dx)}px, ${f(y - up)}px) rotate(${f(dr)}deg) scale(.5)`, opacity: 0 },
-      ], { duration: dur * rand(0.75, 1.1), delay: i * 22, easing: 'cubic-bezier(.25,.6,.35,1)', fill: 'backwards' })
-        .finished.then(() => this.flakePool.give(el), () => this.flakePool.give(el));
-    });
-    return Promise.all(all);
-  }
-
-  /** Neige de givre qui se pose sur des points (px monde), poussée par `drift` [dx, dy]. Même réserve que la cendre. */
-  snow(points, { dur = 1200, drift = [0, 0] } = {}) {
-    const all = points.map(([x, y], i) => {
-      const el = this.flakePool.take();
-      el.className = 'ow-flake is-snow';
-      const fall = rand(46, 80), dx = drift[0] + rand(-12, 12), dy = drift[1];
-      return this.anim(el, [
-        { transform: `translate(${f(x - dx)}px, ${f(y - fall - dy)}px) rotate(0deg) scale(.6)`, opacity: 0 },
-        { transform: `translate(${f(x - dx * 0.45)}px, ${f(y - fall * 0.45 - dy * 0.45)}px) rotate(90deg) scale(1)`, opacity: 1, offset: 0.4 },
-        { transform: `translate(${f(x)}px, ${f(y)}px) rotate(180deg) scale(.7)`, opacity: 0 },
-      ], { duration: dur * rand(0.8, 1.1), delay: i * 45, easing: 'cubic-bezier(.3,.2,.5,1)', fill: 'backwards' })
-        .finished.then(() => this.flakePool.give(el), () => this.flakePool.give(el));
-    });
-    return Promise.all(all);
-  }
-
-  /** Pièce de passage dans la scène (graine, fruit, panier, sceau) en (x, y) px monde ; l'appelant l'anime puis la retire. */
-  piece(cls, html, x, y) {
-    const el = document.createElement('i');
-    el.className = `ow-piece ${cls}`;
-    el.innerHTML = html;
-    el.style.left = f(x) + 'px';
-    el.style.top = f(y) + 'px';
-    this.L.world.appendChild(el);
-    return el;
-  }
-
-  /** Faisceaux de lumière qui percent le sol (px monde). */
-  beam(points, { dur = 900 } = {}) {
-    const all = points.map(([x, y], i) => {
-      const el = this.beams.take();
-      Object.assign(el.style, { left: f(x - 9) + 'px', top: f(y - 120) + 'px' });
-      return this.anim(el, [
-        { transform: 'scaleY(0)', opacity: 0 },
-        { transform: 'scaleY(1)', opacity: 1, offset: 0.35 },
-        { transform: 'scaleY(1.08)', opacity: 0 },
-      ], { duration: dur, delay: i * 70, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' })
-        .finished.then(() => this.beams.give(el), () => this.beams.give(el));
-    });
-    return Promise.all(all);
   }
 
   /** Étoiles scintillantes (reflet). */

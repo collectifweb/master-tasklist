@@ -1,14 +1,13 @@
-// Récit et rendez-vous : moments d'histoire (intro comprise), lettre du matin, réglage du prénom, bilan de la semaine.
+// Rendez-vous : lettre du matin, réglage du prénom, bilan de la semaine.
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
-// Le cœur choisit (storyMoments, morningLetter, weeklyReview) ; l'interface montre, puis note (markStorySeen,
-// markLetterShown). Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { storyMoments, morningLetter, weeklyReview, AVIS, gameDay, daysBetween } from '../../core/index.js';
-import { t, tn, content, prenom, setPrenom, fillLine } from '../content.js';
+// Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
+// Tout texte dynamique passe par esc(), titres de quêtes compris.
+import { morningLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
+import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
 import { num, shortDate, releveText } from './format.js';
 import { openSheet, closeSheet } from './sheets.js';
-import { dayWord, avisName } from './carnet.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
 const KEEP_DAYS = 28; // « Garder » : la quête ne revient pas dans le bilan avant 4 semaines
@@ -23,149 +22,12 @@ function writeReview(v) {
 const anyOpen = () => document.querySelector('dialog[open]');
 
 /**
- * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte),
- *         focusHome(), onIntroEnd(choix 'start' | 'later') }.
+ * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte), focusHome() }.
  */
 export function createStory(app) {
-  const scene = { steps: [], i: 0, ids: [], intro: false, onDone: null };
   let welcoming = false;
   let waitFor = null;
-
-  // ───────── Moments d'histoire ─────────
   const voiceName = (v) => content.repliques?.voix?.[v]?.nom || null;
-
-  function vars(m, c) {
-    const avisDef = m.avis ? AVIS[m.avis] : null;
-    const cur = c.game.avis && c.game.avis.current;
-    const sector = avisDef ? avisDef.sector : null;
-    const day = m.day || (cur && m.avis === cur.id ? cur.day : null);
-    return {
-      prenom: prenom() || null,
-      jour: day ? dayWord(day, c.now) : null,
-      du_secteur: sector ? t(`sector.${sector}.of`) : null,
-      au_secteur: sector ? t(`sector.${sector}.in`) : null,
-      secteur: sector ? t(`sector.${sector}.the`) : null,
-    };
-  }
-
-  function objectiveText(id) {
-    for (const ch of content.chapitres?.chapitres ?? []) for (const o of ch.objectifs ?? []) if (o.id === id) return o.texte;
-    return '';
-  }
-  function chapterTitle(n) {
-    const ch = (content.chapitres?.chapitres ?? []).find((x) => x.numero === n);
-    return ch ? t('carnet.chapter.title', { n, titre: ch.titre }) : t('chapter.label', { n });
-  }
-
-  function titleOf(m) {
-    switch (m.kind) {
-      case 'introduction': return t('scene.intro.title');
-      case 'fin': return t('chapter.done', { n: m.chapter });
-      case 'ouverture': case 'beat': return chapterTitle(m.chapter);
-      case 'objectif-atteint': return t('scene.objective.done', { objectif: objectiveText(m.id.replace(/\.atteint$/, '')) });
-      case 'objectif-annonce': return t('scene.objective.new', { objectif: objectiveText(m.id.replace(/\.annonce$/, '')) });
-      case 'avis-annonce': return t('carnet.avis.title', { nom: avisName(m.avis) });
-      case 'avis-resultat': return t(`scene.avis.${m.result}`, { nom: avisName(m.avis) });
-      default: return t('scene.title');
-    }
-  }
-
-  function renderScene() {
-    const dlg = $('#dlg-scene');
-    const s = scene.steps[scene.i];
-    const last = scene.i === scene.steps.length - 1;
-    const momentSteps = scene.steps.filter((x) => x.m === s.m);
-    const pos = momentSteps.indexOf(s) + 1;
-    const nom = voiceName(s.voix);
-    const kindCls = s.voix === 'inscription' ? 'scene-line--inscription' : s.voix === 'narration' ? 'scene-line--narration' : '';
-    const intro = s.m.kind === 'introduction';
-    const isFrost = s.m.kind === 'avis-annonce' || s.m.kind === 'avis-resultat';
-    const skip = intro ? t('intro.skip') : t('scene.skip');
-    const foot = intro && last
-      ? `<button class="btn btn--quiet" type="button" data-action="scene-later">${esc(t('quest.later'))}</button>
-         <button class="btn btn--primary" type="button" data-action="scene-start">${esc(t('scene.intro.start'))}</button>`
-      : `<button class="btn btn--quiet" type="button" data-action="scene-skip"${last ? ' hidden' : ''}>${esc(skip)}</button>
-         <button class="btn btn--primary" type="button" data-action="scene-next">${esc(last ? t('scene.close') : t('scene.continue'))}</button>`;
-    dlg.innerHTML = `
-      <header class="sheet-head scene-head">
-        <h2 class="sheet-title scene-title${isFrost ? ' scene-title--frost' : ''}" id="scene-t">${isFrost ? glyph('givre') : glyph('chapitre')}<span>${esc(titleOf(s.m))}</span></h2>
-        <span class="scene-count">${esc(t('scene.count', { n: pos, total: momentSteps.length }))}</span>
-      </header>
-      <div class="sheet-body scene-body">
-        <div class="scene-line ${kindCls}" data-voix="${esc(s.voix)}">
-          ${nom ? `<p class="scene-voice">${esc(nom)}</p>` : ''}
-          ${s.voix === 'inscription' ? `<p class="scene-inscription-label">${esc(t('scene.inscription'))}</p>` : ''}
-          <p class="scene-text" id="scene-text">${esc(s.texte)}</p>
-        </div>
-      </div>
-      <footer class="sheet-foot scene-foot">${foot}</footer>`;
-    const primary = dlg.querySelector('.btn--primary');
-    // le bouton garde le focus d'une réplique à l'autre : sa description est la réplique, lue avec lui (une région
-    // aria-live recréée à chaque réplique n'était pas lue de façon fiable, et l'aurait été deux fois avec la description)
-    if (primary) { primary.setAttribute('aria-describedby', 'scene-text'); primary.focus(); }
-  }
-
-  function finishScene(choice) {
-    const dlg = $('#dlg-scene');
-    const ids = scene.ids;
-    const intro = scene.intro;
-    scene.steps = []; scene.ids = []; scene.i = 0; scene.intro = false;
-    if (ids.length) app.run('markStorySeen', { ids });
-    const done = scene.onDone; scene.onDone = null;
-    // après la fermeture réelle : le navigateur rend d'abord le focus à ce qui l'avait avant la feuille
-    const after = () => {
-      if (intro && app.onIntroEnd) app.onIntroEnd(choice || 'later');
-      if (done) done();
-    };
-    if (dlg.open) { whenClosed(dlg, after); closeSheet(dlg); } else after();
-  }
-
-  /** Montre une suite de moments (lignes passables), puis les note comme vus. */
-  function showMoments(moments, c, onDone) {
-    const steps = [];
-    for (const m of moments) {
-      const v = vars(m, c);
-      for (const l of m.lignes) {
-        const texte = fillLine(l.texte, v);
-        if (texte) steps.push({ m, voix: l.voix, texte });
-      }
-    }
-    scene.ids = moments.map((m) => m.id);
-    scene.intro = moments.some((m) => m.kind === 'introduction');
-    scene.onDone = onDone;
-    if (!steps.length) { finishScene(); return; }
-    scene.steps = steps;
-    scene.i = 0;
-    const dlg = $('#dlg-scene');
-    renderScene();
-    if (!dlg._wired) {
-      dlg._wired = true;
-      // Échap, toucher hors de la feuille : même effet que « Passer » (l'intro va à sa dernière réplique, jamais à la fin)
-      dlg._dismiss = () => sceneAction('scene-skip');
-      dlg.addEventListener('close', () => { if (scene.steps.length) finishScene('later'); });
-    }
-    openSheet(dlg);
-    dlg.querySelector('.btn--primary')?.focus();
-  }
-
-  function sceneAction(action) {
-    if (!scene.steps.length) return;
-    if (action === 'scene-next') {
-      if (scene.i < scene.steps.length - 1) { scene.i++; renderScene(); } else finishScene('next');
-    } else if (action === 'scene-skip') {
-      // « Passer » saute le moment en cours ; à la fin de l'intro, « Plus tard » ou « Commencer »
-      const cur = scene.steps[scene.i].m;
-      const next = scene.steps.findIndex((x, k) => k > scene.i && x.m !== cur);
-      if (cur.kind === 'introduction') {
-        const lastIntro = scene.steps.map((x) => x.m).lastIndexOf(cur);
-        scene.i = lastIntro; renderScene();
-      } else if (next >= 0) { scene.i = next; renderScene(); } else finishScene('skip');
-    } else if (action === 'scene-later') {
-      finishScene('later');
-    } else if (action === 'scene-start') {
-      finishScene('start');
-    }
-  }
 
   // ───────── Lettre du matin ─────────
   function openLetter(letter, onDone) {
@@ -235,8 +97,8 @@ export function createStory(app) {
     // temps relevé avec Fanal (Côte à côte), seulement s'il y en a : à côté des heures estimées, jamais à leur place
     const releve = r.minutesReleve >= 1 ? t('review.releve', { duree: releveText(r.minutesReleve) }) : '';
     const domainReleve = (d) => (d.minutesReleve >= 1 ? `<small>${esc(t('review.domain.releve', { duree: releveText(d.minutesReleve) }))}</small>` : '');
-    const lisiere = tn('review.lisiere', r.joursLisiere, { n: r.joursLisiere });
-    const domains = r.domaines.map((d) => `<div class="why-line"><dt>${esc(t(`sector.${d.sector}.domain`))}<small>${esc(tn('review.domain.quests', d.quetes, { n: d.quetes }))} · ${esc(t(`sector.${d.sector}.name`))}</small></dt><dd>${esc(t('review.domain.hours', { h: num(d.heures) }))}${domainReleve(d)}</dd></div>`).join('');
+    const jours = tn('review.days', r.joursTravailles, { n: r.joursTravailles });
+    const domains = r.domaines.map((d) => `<div class="why-line"><dt>${esc(t(`quartier.${d.quartier}.domain`))}<small>${esc(tn('review.domain.quests', d.quetes, { n: d.quetes }))} · ${esc(t(`quartier.${d.quartier}.name`))}</small></dt><dd>${esc(t('review.domain.hours', { h: num(d.heures) }))}${domainReleve(d)}</dd></div>`).join('');
     const olds = old.map((q) => `<li class="review-old" data-quest="${esc(q.id)}">
         <span class="review-old-text"><span class="review-old-title">${esc(q.task)}</span><span class="review-old-meta">${esc(t('review.old.age', { n: q.ageDays }))}${q.domain ? ` · ${esc(q.domain)}` : ''}</span></span>
         <span class="review-old-acts">
@@ -253,7 +115,7 @@ export function createStory(app) {
         <section class="review-sum">
           <p class="review-lead">${esc(summary)}</p>
           ${releve ? `<p class="act-text">${icon('clock')}<span>${esc(releve)}</span></p>` : ''}
-          <p class="review-lisiere">${icon('lueur')}<span>${esc(lisiere)}</span></p>
+          <p class="review-days">${icon('calendar')}<span>${esc(jours)}</span></p>
           ${domains ? `<dl class="why-ledger review-domains">${domains}</dl>` : ''}
         </section>
         ${old.length ? `<section class="review-sort" aria-labelledby="review-old-t">
@@ -299,7 +161,7 @@ export function createStory(app) {
     (back || dlg.querySelector('.sheet-foot .btn')).focus();
   }
 
-  // ───────── Accueil : intro, lettre, moments, bilan du dimanche ─────────
+  // ───────── Accueil : lettre, bilan du dimanche ─────────
   /** Une feuille d'accueil s'ouvre seule : à sa fermeture, le navigateur rend le focus à la page entière. */
   const refocus = () => { if (!document.activeElement || document.activeElement === document.body) app.focusHome?.(); };
   function whenClosed(dlg, fn) {
@@ -309,8 +171,8 @@ export function createStory(app) {
   }
 
   /**
-   * Montre ce qui attend, une feuille à la fois : moments d'histoire (intro d'abord), lettre du matin (pas le jour
-   * de l'intro), puis le bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend sa fermeture.
+   * Montre ce qui attend, une feuille à la fois : lettre du matin (pas le premier jour), puis le bilan le dimanche
+   * (une fois par appareil). Si une autre feuille est ouverte, attend sa fermeture.
    */
   function welcome() {
     if (welcoming) return;
@@ -322,8 +184,6 @@ export function createStory(app) {
     const c = app.ctx();
     if (!c || !c.game) return;
     const next = () => { welcoming = false; refocus(); setTimeout(welcome, 50); };
-    const moments = content.chapitres ? storyMoments(c.game, c.tasks, c.ledger, content.chapitres, c.now) : [];
-    if (moments.length) { welcoming = true; showMoments(moments, c, next); return; }
     const today = gameDay(c.now);
     if (content.lettres && c.game.startDay !== today) {
       const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null });
@@ -337,7 +197,6 @@ export function createStory(app) {
 
   return {
     welcome,
-    sceneAction,
     openSettings,
     saveSettings,
     openReview: () => openReview(app.ctx()),

@@ -2,14 +2,13 @@
 // à jour (attributs, profondeur, contenu quand son modèle change). Jamais de innerHTML global : les
 // animations en cours et l'état d'interaction survivent à chaque rendu.
 import { P, f, pts, hull } from './iso.js';
-import { artFor, characterSVG, frostCellSVG } from './models.js';
+import { artFor, characterSVG } from './models.js';
 
 const ART = new Map();
 // px monde : 44 px à l'écran dès que les objets deviennent touchables (échelle ≥ 0,69, voir camera.js)
 const MIN_HIT = 64;
-const FROST_BOX = [-34, -8, 68, 42]; // case de givre : losange de 64 × 32 et aiguilles debout
 function artKey(e) {
-  return [e.model, e.variant ?? '', e.seed ?? '', e.m ?? '', e.s ?? '', e.end ? 1 : '', e.crop ?? '', e.progress ?? ''].join('|');
+  return [e.model, e.variant ?? '', e.seed ?? '', e.m ?? '', e.s ?? '', e.end ? 1 : ''].join('|');
 }
 function cachedArt(e) {
   const k = artKey(e);
@@ -20,20 +19,13 @@ function cachedArt(e) {
 
 /** Profondeur de tri (coin avant de l'emprise). Le sol passe sous tout ce qui est debout. */
 export function depthOf(e) {
-  if (e.kind === 'char' || e.kind === 'germ') return e.u + e.v + 1.05;
+  if (e.kind === 'char') return e.u + e.v + 1.05;
   return e.r + (e.h || 1) + e.c + (e.w || 1);
 }
 export function zOf(e) {
-  if (e.kind === 'frost') return 60; // au-dessus de tous les sols (≤ 34), sous tout ce qui est debout (≥ 100)
   if (e.ground) return 10 + Math.round(depthOf(e));
   return 100 + Math.round(depthOf(e) * 10) + (e.bias || 0);
 }
-
-const GERM = [
-  '',
-  '<svg class="ow-sprite" viewBox="-12 -16 24 18" width="24" height="18" aria-hidden="true"><ellipse cx="0" cy="0" rx="6" ry="2.4" fill="#8a5a3a" opacity=".55"/><path d="M0,0 C-.4,-3 -1.5,-5 -6,-5.5 C-3.5,-2.6 -2,-1.4 0,0Z" fill="#8fc25c"/><path d="M0,0 C.4,-3.5 2,-6.2 6.5,-6.4 C3.8,-3 2.2,-1.4 0,0Z" fill="#a8d46f"/></svg>',
-  '<svg class="ow-sprite" viewBox="-12 -22 24 24" width="24" height="24" aria-hidden="true"><ellipse cx="0" cy="0" rx="7" ry="2.8" fill="#8a5a3a" opacity=".55"/><path d="M0,0 V-11" stroke="#6f9e45" stroke-width="1.6"/><path d="M0,-4 C-2,-6 -4,-8.5 -9,-8 C-6,-4.5 -3,-3.8 0,-4Z" fill="#8fc25c"/><path d="M0,-7 C2,-10 4.5,-12 9,-11.4 C6,-8 3,-6.8 0,-7Z" fill="#a8d46f"/><circle cx="0" cy="-12.5" r="2.4" fill="#ffd98c"/><circle cx="-.7" cy="-13.2" r=".8" fill="#fffbe9"/></svg>',
-];
 
 export class Scene {
   /**
@@ -55,8 +47,8 @@ export class Scene {
     for (const e of list) {
       seen.add(e.id);
       let n = this.nodes.get(e.id);
-      // devenu touchable (secteur sorti de la cendre) : la balise change (div → button) et la zone de toucher n'a
-      // de style transparent que sous .is-btn. L'élément est recréé sur place, sans fondu d'entrée.
+      // devenu touchable : la balise change (div → button) et la zone de toucher n'a de style transparent que
+      // sous .is-btn. L'élément est recréé sur place, sans fondu d'entrée.
       if (n && !!n.e.interactive !== !!e.interactive) {
         this.remove(n, true);
         n = this.create(e);
@@ -89,18 +81,7 @@ export class Scene {
   draw(n, e) {
     const el = n.el;
     if (e.kind === 'char') {
-      el.innerHTML = `<div class="ow-char-bob">${characterSVG(e.who)}</div><svg class="ow-hitbox" viewBox="-32 -60 64 66" width="64" height="66" aria-hidden="true"><ellipse class="ow-hit" cx="0" cy="-26" rx="32" ry="32"/></svg>`;
-      n.art = null;
-      return;
-    }
-    if (e.kind === 'germ') {
-      el.innerHTML = GERM[e.stage] || '';
-      n.art = null;
-      return;
-    }
-    if (e.kind === 'frost') {
-      const [bx, by, bw, bh] = FROST_BOX;
-      el.innerHTML = `<svg class="ow-art" viewBox="${bx} ${by} ${bw} ${bh}" width="${bw}" height="${bh}" aria-hidden="true" focusable="false">${frostCellSVG(e.seed || 1)}</svg>`;
+      el.innerHTML = `<div class="ow-char-bob">${characterSVG()}</div><svg class="ow-hitbox" viewBox="-32 -60 64 66" width="64" height="66" aria-hidden="true"><ellipse class="ow-hit" cx="0" cy="-26" rx="32" ry="32"/></svg>`;
       n.art = null;
       return;
     }
@@ -164,18 +145,12 @@ export class Scene {
   }
 
   place(n, e) {
-    if (e.kind === 'char' || e.kind === 'germ') {
+    if (e.kind === 'char') {
       const [X, Y] = P(e.u, e.v);
       n.X = X; n.Y = Y;
-      const box = e.kind === 'char' ? [-32, -60, 64, 66] : [-12, e.stage === 2 ? -22 : -16, 24, e.stage === 2 ? 24 : 18];
+      const box = [-32, -60, 64, 66];
       Object.assign(n.el.style, { left: f(X + box[0]) + 'px', top: f(Y + box[1]) + 'px', width: box[2] + 'px', height: box[3] + 'px' });
       n.el.style.transformOrigin = `${-box[0]}px ${-box[1]}px`;
-    } else if (e.kind === 'frost') {
-      const [X, Y] = P(e.c, e.r);
-      n.X = X; n.Y = Y;
-      const [bx, by, bw, bh] = FROST_BOX;
-      Object.assign(n.el.style, { left: f(X + bx) + 'px', top: f(Y + by) + 'px', width: bw + 'px', height: bh + 'px' });
-      n.el.style.transformOrigin = `${-bx}px ${16 - by}px`;
     } else {
       const [X, Y] = P(e.c, e.r);
       n.X = X; n.Y = Y;
@@ -193,18 +168,15 @@ export class Scene {
     const prev = n.e;
     let changed = false;
     if (first || prev.r !== e.r || prev.c !== e.c || prev.u !== e.u || prev.v !== e.v) { this.place(n, e); changed = !first; }
-    const key = e.kind === 'char' ? `char|${e.who}` : e.kind === 'germ' ? `germ|${e.stage}` : e.kind === 'frost' ? 'frost' : `${artKey(e)}|${e.interactive ? 1 : 0}`;
-    if (key !== n.key) {
-      if (e.kind === 'germ' && !first) this.place(n, e);
-      this.draw(n, e); n.key = key; changed = changed || !first;
-    }
+    const key = e.kind === 'char' ? `char|${e.who}` : `${artKey(e)}|${e.interactive ? 1 : 0}`;
+    if (key !== n.key) { this.draw(n, e); n.key = key; changed = changed || !first; }
     if (!first && prev.sector !== e.sector) this.L.groups[e.sector].appendChild(n.el);
     if (!first && prev.model !== e.model && e.model) { n.el.classList.remove(`m-${prev.model}`); n.el.classList.add(`m-${e.model}`); }
     const z = zOf(e) + (n.last.sel ? 3000 : 0);
     if (n.last.z !== z) { n.el.style.zIndex = z; n.last.z = z; }
     const label = e.interactive && this.hooks.label ? this.hooks.label(e) : null;
     if (label && n.last.label !== label) { n.el.setAttribute('aria-label', label); n.last.label = label; }
-    for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit], ['neuf', e.placed], ['mure', e.plot?.ripe]]) {
+    for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit]]) {
       if (n.last[attr] !== !!val) { n.el.toggleAttribute(`data-${attr}`, !!val); n.last[attr] = !!val; }
     }
     const pose = e.pose || null; // personnage au travail (Côte à côte) : 'gauche' | 'droite'
@@ -214,7 +186,7 @@ export class Scene {
     return changed;
   }
 
-  // halo de lumière (calque au-dessus du crépuscule) pour lanternes, cœur du Relais, cristal, Fanal
+  // halo de lumière (calque au-dessus du crépuscule) pour lanternes, fenêtres, cristal, Fanal
   syncHalo(n, e) {
     const anchor = e.kind === 'char' ? (e.who === 'fanal' ? [0, -32] : null) : n.art && (n.art.anchors.light || null);
     if (!e.light || !anchor) { if (n.halo) { n.halo.remove(); n.halo = null; } return; }
@@ -250,8 +222,7 @@ export class Scene {
     const n = this.nodes.get(id);
     if (!n) return null;
     const e = n.e;
-    if (e.kind === 'char' || e.kind === 'germ') return [n.X, n.Y - 20 * lift];
-    if (!n.art) return [n.X, n.Y + 16 - 8 * lift]; // case de givre : milieu du losange
+    if (e.kind === 'char') return [n.X, n.Y - 20 * lift];
     const [fx, fy] = P((e.w || 1) / 2, (e.h || 1) / 2);
     const art = n.art;
     const top = art.y;

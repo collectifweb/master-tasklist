@@ -4,19 +4,18 @@ import { $, esc, icon, restart, reducedMotion } from './dom.js';
 import { num } from './format.js';
 import { topSheet } from './sheets.js';
 
-/** Somme les gains d'une action à partir de ses événements. */
+/** Somme les gains d'une action à partir de ses événements, et le niveau de quartier atteint s'il y en a un. */
 export function summarize(events) {
-  const s = { energy: 0, materials: 0, lueur: 0, filLibre: 0, confidence: 0, sector: null, noGain: false, rewards: 0 };
+  const s = { energy: 0, materials: 0, quartier: null, niveau: null, noGain: false, rewards: 0 };
   for (const e of events || []) {
     if (e.type === 'reward') {
-      s.energy += e.energy || 0; s.materials += e.materials || 0; s.lueur += e.lueur || 0; s.filLibre += e.filLibre || 0;
-      if (e.sector && !s.sector) s.sector = e.sector;
+      s.energy += e.energy || 0; s.materials += e.materials || 0;
+      if (e.quartier && !s.quartier) s.quartier = e.quartier;
       s.rewards++;
-    } else if (e.type === 'lisiere-allumee' || e.type === 'semaine-tenue') s.confidence += 1;
+    } else if (e.type === 'quartier-niveau') s.niveau = { quartier: e.quartier, niveau: e.niveau };
     else if (e.type === 'sans-gain') s.noGain = true;
   }
   s.energy = Math.round(s.energy * 10) / 10; s.materials = Math.round(s.materials * 10) / 10;
-  s.lueur = Math.round(s.lueur); s.filLibre = Math.round(s.filLibre);
   return s;
 }
 
@@ -24,9 +23,7 @@ export function gainList(s) {
   const out = [];
   if (s.energy > 0) out.push(t('gain.energy', { n: num(s.energy) }));
   if (s.materials > 0) out.push(tn('gain.materials', s.materials, { n: num(s.materials) }));
-  if (s.confidence > 0) out.push(t('gain.confidence', { n: s.confidence }));
-  if (s.lueur > 0 && s.sector) out.push(t('gain.lueur', { n: s.lueur, secteur: t(`sector.${s.sector}.the`) }));
-  if (s.filLibre > 0) out.push(t('gain.fil_libre', { n: s.filLibre }));
+  if (s.niveau) out.push(t('gain.niveau', { quartier: t(`quartier.${s.niveau.quartier}.name`), n: s.niveau.niveau }));
   return out;
 }
 
@@ -69,8 +66,9 @@ export function createAnnounce(lane, live) {
       } else {
         if (s.energy > 0) items.push(`<span class="announce-item" data-res="energie">+${num(s.energy)} ${icon('energie')}<span class="sr-only">${esc(t('resource.energy'))}</span></span>`);
         if (s.materials > 0) items.push(`<span class="announce-item" data-res="materiaux">+${num(s.materials)} ${icon('materiaux')}<span class="sr-only">${esc(t('resource.materials.other'))}</span></span>`);
-        if (s.confidence > 0) items.push(`<span class="announce-item" data-res="confiance">+${num(s.confidence)} ${icon('confiance')}<span class="sr-only">${esc(t('resource.confidence'))}</span></span>`);
-        if (s.lueur > 0 && s.sector) items.push(`<span class="announce-item announce-tail" data-res="lueur">${esc(t('announce.lueur_to', { secteur: t(`sector.${s.sector}.name`) }))}</span>`);
+        // la tâche compte pour son quartier : « → Champs », ou « Champs · niveau 2 » quand il monte
+        if (s.niveau) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.niveau.quartier)}">${icon(s.niveau.quartier)}${esc(t('announce.niveau', { quartier: t(`quartier.${s.niveau.quartier}.name`), n: s.niveau.niveau }))}</span>`);
+        else if (s.quartier) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
         if (!items.length) return say(liveText);
       }
       el.innerHTML = `<span class="announce-done">${icon('check')}</span>` + items.join('<span class="announce-sep">·</span>');

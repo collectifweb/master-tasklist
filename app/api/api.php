@@ -129,7 +129,7 @@ function auth_decision(string $hash, bool $allowOpen, string $sapi, ?string $tok
 {
     if ($hash !== '') {
         if ($token !== null && hash_equals(strtolower($hash), hash('sha256', $token))) return null;
-        return new ApiError(401, 'unauthorized', 'Accès refusé : jeton manquant ou invalide.', [], ['WWW-Authenticate: Bearer']);
+        return new ApiError(401, 'unauthorized', 'Accès refusé : code d’accès manquant ou invalide.', [], ['WWW-Authenticate: Bearer']);
     }
     if ($allowOpen || $sapi === 'cli-server') return null;
     return new ApiError(503, 'auth_not_configured', 'L’API n’est pas configurée : aucun jeton défini.');

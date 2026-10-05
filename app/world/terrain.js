@@ -1,7 +1,6 @@
 // Terrain : UN seul SVG (lac, socle en strates, dessus en cases). Le dessus est dessiné en coordonnées de
-// grille dans un groupe par secteur (data-sector / data-etat), projeté par une matrice affine : un secteur
-// se recolore en changeant un attribut sur son groupe. Chaque case est un <g class="ow-tile"> de deux
-// triangles (aplats low-poly), rallumable une à une (data-lit).
+// grille dans un groupe par secteur (data-sector : la zone de carte d'un quartier), projeté par une matrice
+// affine. Chaque case est un <g class="ow-tile"> de deux triangles (aplats low-poly).
 import { P, f, pts, rng, HW, HH, Art } from './iso.js';
 import { N, CELLS, SECTOR_ORDER, ROADS, groundDetails, sectorOutline } from './layout.js';
 
@@ -71,8 +70,8 @@ function sectorGround(id, details) {
     for (let k = 0; k < 14; k++) { const t = (k / 14) * Math.PI * 2; g.push(`<ellipse cx="${f(6 + Math.cos(t) * 0.8)}" cy="${f(6 + Math.sin(t) * 0.8)}" rx=".11" ry=".08" class="pathe-t" stroke="none"/>`); }
   }
   if (id === 'atelier') g.push('<rect x="8.6" y="8.55" width="2.8" height="1.9" rx=".35" class="path-t" stroke="none" opacity=".75"/><rect x="8.75" y="6.6" width="1.5" height="1.2" rx=".3" class="path-t" stroke="none" opacity=".6"/>');
-  if (id === 'archives') g.push('<rect x="7.8" y="3.1" width="2.6" height=".9" rx=".2" class="cobble-t" stroke="none"/><path d="M8.45,3.1V4M9.1,3.1V4M9.75,3.1V4M7.8,3.55H10.4" class="k-pathe-t" stroke-width=".04"/>');
-  if (id === 'maison-commune') g.push('<ellipse cx="2.9" cy="5.3" rx=".9" ry=".45" class="grassl-t" stroke="none"/><ellipse cx="0.9" cy="2.4" rx=".5" ry=".4" class="grassd-t" stroke="none" opacity=".7"/>');
+  if (id === 'mairie') g.push('<rect x="7.8" y="3.1" width="2.6" height=".9" rx=".2" class="cobble-t" stroke="none"/><path d="M8.45,3.1V4M9.1,3.1V4M9.75,3.1V4M7.8,3.55H10.4" class="k-pathe-t" stroke-width=".04"/>');
+  if (id === 'ecole') g.push('<ellipse cx="2.9" cy="5.3" rx=".9" ry=".45" class="grassl-t" stroke="none"/><ellipse cx="0.9" cy="2.4" rx=".5" ry=".4" class="grassd-t" stroke="none" opacity=".7"/>');
   for (const road of ROADS.filter((x) => x.sector === id)) {
     g.push(`<path d="${road.d}" class="k-pathe-t" stroke-width=".9" stroke-linecap="round"/>`);
     g.push(`<path d="${road.d}" class="k-path-t" stroke-width=".72" stroke-linecap="round"/>`);
@@ -91,7 +90,7 @@ function sectorGround(id, details) {
   return g.join('');
 }
 
-/** SVG du terrain. Les groupes de secteur portent data-sector ; world.js y pose data-etat et data-voile. */
+/** SVG du terrain. Les groupes de secteur portent data-sector. */
 export function terrainSVG() {
   const R = rng(42);
   const o = [];
@@ -117,7 +116,7 @@ export function terrainSVG() {
   const lips = {
     champs: [lipStrip(L, B, b1L, 0, 6 / 12).replace('SIDE', 'l')],
     atelier: [lipStrip(L, B, b1L, 6 / 12, 1).replace('SIDE', 'l'), lipStrip(B, Rt, b1R, 0, 6 / 12).replace('SIDE', 'r')],
-    archives: [lipStrip(B, Rt, b1R, 6 / 12, 1).replace('SIDE', 'r')],
+    mairie: [lipStrip(B, Rt, b1R, 6 / 12, 1).replace('SIDE', 'r')],
   };
 
   // quai et barque sous la route avant

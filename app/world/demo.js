@@ -1,13 +1,11 @@
 // Démo autonome du monde : état FICTIF construit avec core/, aucun appel réseau sauf les textes locaux
-// de content/fr-CA/. Chaque bouton passe par les vraies fonctions du cœur quand elles existent
-// (completeQuest, remballerQuest, directFilLibre, advanceChapter) et joue leurs événements.
+// de content/fr-CA/. Chaque bouton passe par les vraies fonctions du cœur (completeQuest, remballerQuest)
+// et joue leurs événements.
 import { createWorld, createWorldPlan } from './world.js';
 import { createInitialState } from '../core/state.js';
 import { completeQuest, remballerQuest } from '../core/quests.js';
-import { directFilLibre, advanceChapter, stageForLueur, stageName, CROP_STAGES } from '../core/economy.js';
-import { build, sow, harvest, shareHarvest, storeReserve, souffler } from '../core/build.js';
-import { advanceTime, lightBrasero, liftVeil } from '../core/avis.js';
-import { gameDay, addDays } from '../core/time.js';
+import { niveauQuartier } from '../core/village.js';
+import { gameDay } from '../core/time.js';
 
 const $ = (s) => document.querySelector(s);
 const app = $('#app');
@@ -36,35 +34,29 @@ function fictiveTasks(now) {
     { ...base, id: 'demo-4', task: 'Changer une ampoule', domain: 'Maison', difficulty: 1, length: 1, priority: 6, deadline: day(2) },
     { ...base, id: 'demo-5', task: 'Arroser le potager', domain: 'Terrain', difficulty: 2, length: 2, priority: 4, deadline: day(0) },
     { ...base, id: 'demo-6', task: 'Payer une facture', domain: 'Administratif', difficulty: 2, length: 1, priority: 7, deadline: day(5) },
-    { ...base, id: 'demo-7', task: 'Tailler la haie', domain: 'Terrain', difficulty: 6, length: 6, priority: 3 },
-    { ...base, id: 'demo-8', task: 'Réparer la clôture', domain: 'Terrain', difficulty: 5, length: 5, priority: 5 },
+    { ...base, id: 'demo-7', task: 'Préparer les boîtes à lunch', domain: 'Enfants', difficulty: 2, length: 2, priority: 6 },
+    { ...base, id: 'demo-8', task: 'Vérifier les pneus', domain: 'Véhicule', difficulty: 3, length: 2, priority: 5 },
+    { ...base, id: 'demo-9', task: 'Tailler la haie', domain: 'Terrain', difficulty: 6, length: 6, priority: 3 },
   ];
 }
 
 function fictiveGame(now) {
   const g = createInitialState(new Date(now));
-  g.chapter = { number: 2, startDay: gameDay(new Date(now - 20 * DAY_MS)), objectives: {} };
-  g.sectors.atelier.open = true;
-  g.lueur = { place: 160, champs: 420, atelier: 118, archives: 45, 'maison-commune': 0, relais: 0 };
-  for (const id of Object.keys(g.sectors)) if (g.sectors[id].open) g.sectors[id].stage = stageForLueur(g.lueur[id]);
-  g.resources = { energy: 90, materials: 200, confidence: 9 };
-  g.filLibre = 12;
-  // une parcelle vide (sol seul), une courge mûre (panier au coin), du blé en pousse ; ni établi ni tunnel
-  g.plots = [{ id: 'parcelle-1', crop: null, stage: 0, slot: 0 }, { id: 'parcelle-2', crop: 'courge', stage: 2, slot: 1 }, { id: 'parcelle-3', crop: 'ble', stage: 2, slot: 2 }];
-  g.placements = [];
+  g.quartiers = { place: 3, champs: 12, atelier: 4, mairie: 1, ecole: 0, garage: 0 };
+  g.resources = { energy: 40, materials: 25, food: 6 };
+  g.habitants = 3;
   g.lastSeenDay = gameDay(new Date(now));
   return g;
 }
 
 let now = Date.now();
-let game, tasks, ledger, lastDone, builds;
+let game, tasks, ledger, lastDone;
 function reset() {
   now = Date.now();
   game = fictiveGame(now);
   tasks = fictiveTasks(now);
   ledger = [];
   lastDone = [];
-  builds = 0;
 }
 reset();
 
@@ -74,7 +66,7 @@ function announce(text) {
   setTimeout(() => { live.textContent = text; }, 80);
 }
 function hud(g) {
-  const v = { energy: g.resources.energy, materials: g.resources.materials, confidence: g.resources.confidence, filLibre: g.filLibre };
+  const v = { energy: g.resources.energy, materials: g.resources.materials, food: g.resources.food, habitants: g.habitants };
   for (const [k, n] of Object.entries(v)) {
     const el = document.querySelector(`[data-val="${k}"]`);
     el.textContent = String(Math.round(n * 10) / 10).replace('.', ',');
@@ -82,17 +74,18 @@ function hud(g) {
   }
 }
 let pendingHud = null;
-window.__harvested = [];
 window.__selections = [];
 const world = createWorld($('#world'), {
   texts, anchors, announce, now: () => new Date(now),
   onImpact: () => { if (pendingHud) { hud(pendingHud); pendingHud = null; } },
-  // le monde n'applique rien : l'hôte appelle le cœur puis rejoue ses événements
-  onHarvest: (plotId) => { window.__harvested.push(plotId); actions.recolter(plotId); },
-  onSelect: (info) => { window.__selections.push(info); if (info.type === 'plot') selectedPlot = info.id; },
+  onSelect: (info) => { window.__selections.push(info); },
 });
-let selectedPlot = null;
-const plan = createWorldPlan($('#plan'), { texts, anchors, now: () => new Date(now), onFocusSector: (s) => world.focusSector(s) });
+window.__filters = [];
+const plan = createWorldPlan($('#plan'), {
+  texts, anchors, now: () => new Date(now),
+  onFocusSector: (s) => world.focusSector(s),
+  onFilter: (s) => { window.__filters.push(s); announce(`Filtre : ${s}`); },
+});
 
 function show(result, extra = []) {
   if (!result) return;
@@ -121,75 +114,23 @@ function complete(id) {
   return show(r);
 }
 
-/** Appelle une fonction du cœur (tasks, game, ledger, params, now) et joue ses événements ; erreur → annonce. */
-function core(fn, params = {}) {
-  try {
-    return show(fn(tasks, structuredClone(game), ledger, { gameRevision: 0, ...params }, new Date(now)));
-  } catch (err) { announce(err.message); return null; }
-}
-const at = (day) => new Date(`${day}T12:00:00`).getTime();
-/** Démo : fait arriver le jour de l'Avis annoncé (en l'annonçant d'abord s'il le faut). */
-function resolveAvis(result) {
-  if (!game.avis.current) announceAvis();
-  const cur = game.avis.current;
-  if (!cur) return null;
-  const g = structuredClone(game);
-  // valeurs forcées pour la démo : Force nulle (tenu) ou hors d'atteinte (voilé, absent)
-  g.avis.current.force = result === 'tenu' ? 0 : 999;
-  g.lastSeenDay = result === 'absent' ? addDays(cur.day, -5) : addDays(cur.day, -1);
-  game = g;
-  now = at(cur.day);
-  return core(advanceTime);
-}
-function announceAvis() {
-  if (game.avis.current) { announce('Un Avis est déjà annoncé.'); return null; }
-  const g = structuredClone(game);
-  g.chapter.startDay = addDays(gameDay(new Date(now)), -10); // le Premier gel s'annonce au 5e jour du chapitre 2
-  g.avis.history = [];
-  game = g;
-  return core(advanceTime);
-}
-
+const todoOf = (domain) => tasks.find((t) => t.domain === domain && t.status === 'todo')?.id;
 const actions = {
-  'q-champs': () => complete(tasks.find((t) => t.domain === 'Terrain' && t.status === 'todo')?.id ?? 'demo-2'),
-  'q-atelier': () => complete(tasks.find((t) => t.domain === 'Maison' && t.status === 'todo')?.id ?? 'demo-1'),
-  'q-archives': () => complete(tasks.find((t) => t.domain === 'Administratif' && t.status === 'todo')?.id ?? 'demo-3'),
-  fil: () => {
-    const n = Math.min(game.filLibre, 10);
-    if (!(n > 0)) { announce('Le Fil libre est vide.'); return; }
-    const r = directFilLibre(game, 'atelier', n);
-    return show({ game: r.game, tasks, events: r.events }, [{ type: 'fil-libre', sector: 'atelier', amount: n }]);
-  },
-  build: () => {
-    const list = [{ model: 'erable', sector: 'atelier' }, { model: 'lanterne', sector: 'champs' }, { model: 'glaciere', sector: 'atelier' }, { model: 'caisse', sector: 'place' }];
-    const p = { id: `construction-${++builds}`, ...list[(builds - 1) % list.length] };
+  'q-champs': () => complete(todoOf('Terrain') ?? 'demo-2'),
+  'q-atelier': () => complete(todoOf('Maison') ?? 'demo-1'),
+  'q-mairie': () => complete(todoOf('Administratif') ?? 'demo-3'),
+  'q-garage': () => complete(todoOf('Véhicule') ?? 'demo-8'),
+  // amène l'Atelier à une tâche de son niveau suivant, puis termine une quête Maison : le cœur annonce le niveau
+  niveau: () => {
     const g = structuredClone(game);
-    g.placements = [...g.placements, p];
-    return show({ game: g, tasks, events: [] }, [{ type: 'construction', id: p.id }]);
-  },
-  seuil: () => {
-    const g = structuredClone(game);
-    const s = g.sectors.atelier;
-    const next = Math.min(3, s.stage + 1);
-    g.lueur.atelier = Math.max(g.lueur.atelier, [0, 150, 400, 750][next]);
-    const events = [];
-    for (let st = s.stage + 1; st <= stageForLueur(g.lueur.atelier); st++) events.push({ type: 'secteur-seuil', sector: 'atelier', stage: stageName(st) });
-    s.stage = stageForLueur(g.lueur.atelier);
-    return show({ game: g, tasks, events });
+    g.quartiers.atelier = niveauQuartier(g.quartiers.atelier).suivant.seuil - 1;
+    game = g;
+    return actions['q-atelier']();
   },
   reflet: () => {
     // une quête fictive « frigo » terminée aujourd'hui : l'ancre « glaciere » fait reluire la glacière
     const t = tasks.map((x) => (x.id === 'demo-1' ? { ...x, status: 'done', doneAt: iso(now) } : x));
     return show({ game, tasks: t, events: [] }, [{ type: 'reflet', objectId: 'glaciere' }]);
-  },
-  chapitre: () => {
-    const g = structuredClone(game);
-    g.chapter.startDay = gameDay(new Date(now - 40 * DAY_MS));
-    g.resources.confidence = Math.max(g.resources.confidence, 60);
-    try {
-      const r = advanceChapter(g, new Date(now));
-      return show({ game: r.game, tasks, events: r.events });
-    } catch (err) { announce(err.message); }
   },
   veille: () => world.play([{ type: 'veille' }]),
   remballer: () => {
@@ -200,53 +141,7 @@ const actions = {
       return show(r);
     } catch (err) { announce(err.message); }
   },
-  // ---- potager
-  semer: () => {
-    const plot = game.plots.find((p) => !p.crop);
-    if (!plot) { announce('Aucune parcelle vide.'); return; }
-    const crops = ['courge', 'ble', 'patate'];
-    return core(sow, { crop: crops[game.plots.indexOf(plot) % 3], plotId: plot.id });
-  },
-  parcelle: () => core(build, { id: 'parcelle' }),
-  recolter: (plotId) => {
-    const ripe = (p) => p.crop && p.stage >= (CROP_STAGES[p.crop] ?? 2);
-    const id = typeof plotId === 'string' ? plotId : game.plots.find((p) => p.id === selectedPlot && ripe(p))?.id ?? game.plots.find(ripe)?.id;
-    if (!id) { announce('Rien à récolter pour l’instant.'); return; }
-    return core(harvest, { plotId: id });
-  },
-  pousser: () => {
-    // démo seulement : chaque culture semée gagne un stade
-    const g = structuredClone(game);
-    for (const p of g.plots) if (p.crop) p.stage = Math.min(CROP_STAGES[p.crop] ?? 2, p.stage + 1);
-    return show({ game: g, tasks, events: [] });
-  },
-  reserve: () => core(storeReserve, { n: 1 }),
-  partage: () => {
-    const crop = Object.keys(game.garden.pantry).find((k) => game.garden.pantry[k] > 0);
-    if (!crop) { announce('Le garde-manger est vide.'); return; }
-    return core(shareHarvest, { crop, n: 1 });
-  },
-  // ---- constructions
-  etabli: () => core(build, { id: 'etabli' }),
-  tour: () => core(build, { id: 'tour' }),
-  tunnel: () => core(build, { id: 'tunnel' }),
-  erable: () => core(build, { id: 'erable' }),
-  cloture: () => core(build, { id: 'cloture' }),
-  lanterne: () => core(build, { id: 'lanterne' }),
-  // ---- Avis
-  avis: () => announceAvis(),
-  jour: () => { now += 86400000; return core(advanceTime); },
-  brasero: () => core(lightBrasero),
-  souffler: () => core(souffler),
-  'avis-tenu': () => resolveAvis('tenu'),
-  'avis-voile': () => resolveAvis('voile'),
-  'avis-absent': () => resolveAvis('absent'),
-  lever: () => {
-    const v = game.avis.veils[0];
-    if (!v) { announce('Aucune case sous le voile.'); return; }
-    return core(liftVeil, { sector: v.sector });
-  },
-  muets: () => world.play([{ type: 'objectif-atteint', chapter: 2, id: 'demo' }, { type: 'chapitre-fin', chapter: 2 }, { type: 'type-inconnu' }, { type: 'partage', crop: 'ble', n: 1, pantry: 0 }]),
+  muets: () => world.play([{ type: 'sans-gain', taskId: 'demo-1' }, { type: 'type-inconnu' }, { type: 'plaque', id: 'demo' }]),
   motion: (b) => {
     const on = b.getAttribute('aria-pressed') !== 'true';
     b.setAttribute('aria-pressed', String(on));

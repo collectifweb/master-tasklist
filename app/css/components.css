@@ -450,10 +450,11 @@
   text-align: left;
   transition: transform var(--t-press) var(--ease-out), background-color var(--t-micro);
 }
-.res[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
-.res[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
-.res[data-res="confiance"] { --res: var(--res-confiance); --res-wash: var(--res-confiance-wash); }
-.res[data-res="lueur"] { --res: var(--res-lueur); --res-wash: var(--res-lueur-wash); }
+/* la feuille d'aide reprend la matière de sa tuile */
+.res[data-res="energie"], .help-title[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
+.res[data-res="materiaux"], .help-title[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
+.res[data-res="nourriture"], .help-title[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
+.res[data-res="habitants"], .help-title[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
 
 .res-tile {
   display: grid;
@@ -464,20 +465,10 @@
   width: 20px;
   height: 20px;
 }
-.res[data-res="lueur"] .res-tile .icon {
-  filter: drop-shadow(0 0 3px var(--c-lantern-glow));
-}
 .res-value {
   font: var(--w-heavy) var(--text-18) / 1 var(--font-num);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-.res-cap {
-  display: none;
-  margin-left: 1px;
-  font-size: var(--text-12);
-  font-weight: var(--w-semibold);
-  color: var(--text-muted);
 }
 .res-label {
   grid-column: 1 / -1;
@@ -489,22 +480,6 @@
   color: var(--text-soft);
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.res[data-full="true"] .res-label {
-  color: var(--res);
-}
-.res[data-full="true"] .res-label::after {
-  content: " · plein";
-}
-/* HUD étroit : « Matériaux · plein » ne tient pas ; le mot « Plein » remplace le nom (le picto reste) */
-@container hud (max-width: 559px) {
-  .res[data-full="true"] .res-label {
-    font-size: 0;
-  }
-  .res[data-full="true"] .res-label::after {
-    content: "Plein";
-    font-size: var(--text-12);
-  }
 }
 @media (hover: hover) {
   .res:hover {
@@ -565,7 +540,7 @@
   }
 }
 
-/* HUD large (≥ 560 px) : tuile teintée et plafond visibles */
+/* HUD large (≥ 560 px) : tuile teintée */
 @container hud (min-width: 560px) {
   .res {
     grid-template-columns: 34px minmax(0, 1fr);
@@ -581,9 +556,6 @@
   }
   .res-label {
     grid-column: 2;
-  }
-  .res-cap {
-    display: inline;
   }
 }
 
@@ -643,7 +615,12 @@
 }
 .announce-item[data-res="energie"] .icon { color: var(--res-energie); }
 .announce-item[data-res="materiaux"] .icon { color: var(--res-materiaux); }
-.announce-item[data-res="lueur"] { color: var(--res-lueur); }
+/* la tâche compte pour son quartier : « → Champs », ou son picto et « Champs · niveau 2 » quand il monte */
+.announce-tail[data-quartier] { color: var(--c-sage-deep); }
+.announce-tail .icon {
+  margin-right: 4px;
+  vertical-align: -3px;
+}
 .announce-sep {
   color: var(--text-muted);
   font-weight: var(--w-regular);

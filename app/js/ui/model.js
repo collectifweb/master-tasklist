@@ -1,17 +1,13 @@
 // Modèle d'affichage d'une quête : tout ce que les rendus ont besoin de savoir, calculé une fois.
 import {
-  cote, isPinned, sectorOfTask, canReverse, taskAgeDays, daysUntil, dayOnly, gameDay, currentSeance,
+  cote, isPinned, quartierOfTask, canReverse, taskAgeDays, daysUntil, dayOnly, gameDay, currentSeance,
 } from '../../core/index.js';
-import { t } from '../content.js';
+import { t, quartierName } from '../content.js';
 import { durationText, deadlineInfo, recurrenceText, stepsProgress, minutesSince, shortDate, timeOf, capitalize, releveText } from './format.js';
-
-export const SECTOR_ICON = {
-  champs: 'champs', atelier: 'atelier', archives: 'archives', 'maison-commune': 'maison-commune', relais: 'relais', place: 'bastion',
-};
 
 export function taskModel(task, ctx) {
   const { now, ledger } = ctx;
-  const sector = sectorOfTask(task);
+  const quartier = quartierOfTask(task);
   const state = task.status === 'done' ? 'done' : task.status === 'archived' ? 'archived' : isPinned(task) ? 'doing' : 'todo';
   const dl = state === 'todo' || state === 'doing' ? deadlineInfo(task, now) : null;
   const steps = stepsProgress(task);
@@ -25,8 +21,8 @@ export function taskModel(task, ctx) {
     task,
     title: task.task,
     state,
-    sector,
-    sectorName: t(`sector.${sector}.name`),
+    quartier,
+    quartierName: quartierName(quartier),
     cote: state === 'todo' || state === 'doing' ? cote(task, now) : null,
     duration: durationText(task.length),
     deadline: dl,
@@ -49,7 +45,7 @@ export function seanceText(m) {
  * Éléments de la ligne de méta, dans l'ordre : { cls?, icon, text, sr? }. withSeance false : la séance en cours n'y
  * figure pas (le Fil du jour la dit à la place de la raison, pour que « Pause » reste visible panneau replié).
  */
-export function metaItems(m, { now, withSector = true, done = true, withSeance = true } = {}) {
+export function metaItems(m, { now, withQuartier = true, done = true, withSeance = true } = {}) {
   const items = [];
   const task = m.task;
   if (m.state === 'doing' && m.seanceMinutes !== null) {
@@ -57,7 +53,7 @@ export function metaItems(m, { now, withSector = true, done = true, withSeance =
   } else if (m.state === 'doing') {
     items.push({ cls: 'meta-item--doing', icon: 'pin', text: m.doingMinutes >= 1 ? t('fil.doing.since', { n: m.doingMinutes }) : t('fil.doing.now') });
   }
-  if (withSector) items.push({ icon: SECTOR_ICON[m.sector], text: m.sectorName });
+  if (withQuartier) items.push({ icon: m.quartier, text: m.quartierName }); // picto du même nom que le quartier
   if (m.state === 'todo' || m.state === 'doing') items.push({ icon: 'clock', text: m.duration });
   if (m.deadline) items.push({ cls: m.deadline.late ? 'meta-item--late' : '', icon: m.deadline.late ? 'crate' : 'calendar', text: m.deadline.text });
   if (m.recurrence) items.push({ icon: 'repeat', text: m.recurrence.toLowerCase() });

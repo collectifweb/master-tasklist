@@ -88,8 +88,8 @@
   /* Chaque ressource est une matière du monde, toujours doublée d'un picto et d'un mot */
   --res-energie: var(--c-glass-deep);     --res-energie-wash: var(--c-glass-wash);
   --res-materiaux: var(--c-soil-deep);    --res-materiaux-wash: var(--c-soil-wash);
-  --res-confiance: var(--c-sage-deep);    --res-confiance-wash: var(--c-sage-wash);
-  --res-lueur: var(--c-lantern-ink);      --res-lueur-wash: var(--c-lantern-wash);
+  --res-nourriture: var(--c-sage-deep);   --res-nourriture-wash: var(--c-sage-wash);   /* ce qui pousse */
+  --res-habitants: var(--c-lantern-ink);  --res-habitants-wash: var(--c-lantern-wash); /* fenêtres allumées */
 
   /* ───────── Typographie ───────── */
   --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;

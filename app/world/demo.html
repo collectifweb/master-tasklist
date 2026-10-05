@@ -15,7 +15,6 @@
     .demo-grid .btn { width: 100%; justify-content: center; white-space: normal; text-align: center; line-height: 1.2; }
     .demo-note { margin: var(--sp-2) 0 0; font-size: var(--text-14); color: var(--text-soft); }
     .demo-plan { padding-top: var(--sp-4); }
-    .demo-sub { margin: var(--sp-4) 0 0; font-size: var(--text-14); font-weight: var(--w-bold); color: var(--text-soft); }
   </style>
 </head>
 <body>
@@ -33,15 +32,15 @@
       <span class="res-value num" data-val="materials">0</span>
       <span class="res-label">Matériaux</span>
     </button>
-    <button class="res" type="button" data-res="confiance" aria-label="Confiance">
-      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-confiance"/></svg></span>
-      <span class="res-value num" data-val="confidence">0</span>
-      <span class="res-label">Confiance</span>
+    <button class="res" type="button" data-res="nourriture" aria-label="Nourriture">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-nourriture"/></svg></span>
+      <span class="res-value num" data-val="food">0</span>
+      <span class="res-label">Nourriture</span>
     </button>
-    <button class="res" type="button" data-res="lueur" aria-label="Fil libre">
-      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-lueur"/></svg></span>
-      <span class="res-value num" data-val="filLibre">0</span>
-      <span class="res-label">Fil libre</span>
+    <button class="res" type="button" data-res="habitants" aria-label="Habitants">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-habitants"/></svg></span>
+      <span class="res-value num" data-val="habitants">0</span>
+      <span class="res-label">Habitants</span>
     </button>
   </header>
 
@@ -60,51 +59,20 @@
       <ul class="demo-grid">
         <li><button class="btn btn--primary btn--small" type="button" data-demo="q-champs">Quête aux Champs</button></li>
         <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-atelier">Quête à l’Atelier</button></li>
-        <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-archives">Quête aux Archives</button></li>
-        <li><button class="btn btn--secondary btn--small" type="button" data-demo="build">Construire</button></li>
+        <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-mairie">Quête à la Mairie</button></li>
+        <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-garage">Quête au Garage</button></li>
       </ul>
       <div class="panel-rest" id="panel-rest">
         <ul class="demo-grid">
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="fil">Diriger le Fil libre</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="seuil">Palier de l’Atelier</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="niveau">Niveau de l’Atelier</button></li>
           <li><button class="btn btn--secondary btn--small" type="button" data-demo="reflet">Reflet de la glacière</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="chapitre">Chapitre suivant</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="veille">L’Orée veille</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="veille">Tout est enregistré</button></li>
           <li><button class="btn btn--secondary btn--small" type="button" data-demo="remballer">Remballer</button></li>
-        </ul>
-        <h3 class="demo-sub">Potager</h3>
-        <ul class="demo-grid">
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="semer">Semer</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="parcelle">Nouvelle parcelle</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="recolter">Récolter</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="pousser">Faire pousser</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="reserve">Mettre en réserve</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="partage">Partager</button></li>
-        </ul>
-        <h3 class="demo-sub">Constructions</h3>
-        <ul class="demo-grid">
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="etabli">Établi</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="tour">Réparer la Tour</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="tunnel">Tunnel</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="erable">Érable</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="cloture">Clôture</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="lanterne">Lanterne</button></li>
-        </ul>
-        <h3 class="demo-sub">Avis</h3>
-        <ul class="demo-grid">
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="avis">Annoncer l’Avis</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="jour">Jour suivant</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="brasero">Allumer un brasero</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="souffler">Souffler</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="avis-tenu">Avis tenu</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="avis-voile">Avis voilé</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="avis-absent">Avis en absence</button></li>
-          <li><button class="btn btn--secondary btn--small" type="button" data-demo="lever">Lever une case</button></li>
           <li><button class="btn btn--quiet btn--small" type="button" data-demo="muets">Événements sans dessin</button></li>
         </ul>
         <ul class="demo-grid">
           <li><button class="btn btn--quiet btn--small" type="button" data-demo="motion" aria-pressed="false">Mouvement réduit</button></li>
-          <li><button class="btn btn--quiet btn--small" type="button" data-demo="plan" aria-pressed="false">Plan accessible</button></li>
+          <li><button class="btn btn--quiet btn--small" type="button" data-demo="plan" aria-pressed="false">Carte en liste</button></li>
           <li><button class="btn btn--quiet btn--small" type="button" data-demo="reset">Recommencer</button></li>
         </ul>
         <p class="demo-note" id="demo-note">Toutes les quêtes et valeurs de cette page sont fictives. Toucher la carte ou Échap passe une animation.</p>

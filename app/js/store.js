@@ -4,37 +4,15 @@
 // Chaque action passe par core/quests.js (fonctions pures), s'affiche tout de suite, puis part à l'API.
 import * as core from '../core/index.js';
 import { api, ApiError, newOpId } from './api-client.js';
-import { t, content } from './content.js';
-
-/**
- * Diriger le Fil libre vers un secteur. core/economy.js n'offre que directFilLibre(game, secteur, montant) ;
- * cette enveloppe lui donne la forme des autres opérations (tasks, game, ledger, params, now) → { …, ops, events }.
- * params : { sector, amount? } (sans montant : tout le Fil libre). Événement 'fil-libre' joué par le monde.
- */
-function directFil(tasks, game, ledger, params, now) {
-  const ctx = new core.Ctx(tasks, game, ledger, params, now);
-  const amount = Math.floor((params.amount === undefined ? ctx.game.filLibre : Number(params.amount)) * 100) / 100;
-  const r = core.directFilLibre(ctx.game, params.sector, amount);
-  ctx.game = r.game;
-  ctx.events.push({ type: 'fil-libre', sector: params.sector, amount }, ...r.events);
-  return ctx.result();
-}
+import { t } from './content.js';
 
 const ACTIONS = {
   createQuest: core.createQuest, updateQuest: core.updateQuest, startQuest: core.startQuest, pauseQuest: core.pauseQuest,
   addStep: core.addStep, removeStep: core.removeStep, toggleStep: core.toggleStep, completeQuest: core.completeQuest,
   reopenQuest: core.reopenQuest, remballerQuest: core.remballerQuest, archiveQuest: core.archiveQuest,
   unarchiveQuest: core.unarchiveQuest, deleteQuest: core.deleteQuest, claimBonus: core.claimBonus, openApp: core.openApp,
-  // semaine 3 : le jeu
-  build: core.build, sow: core.sow, harvest: core.harvest, storeReserve: core.storeReserve, souffler: core.souffler,
-  lightBrasero: core.lightBrasero, liftVeil: core.liftVeil, markStorySeen: core.markStorySeen,
-  markLetterShown: core.markLetterShown, directFil,
-  // le contenu des chapitres (15 Ko) n'entre jamais dans la file : il est réinjecté ici, à l'appel comme au rejeu
-  advanceTime: (tasks, game, ledger, params, now) =>
-    core.advanceTime(tasks, game, ledger, { ...params, chapitres: content.chapitres || undefined }, now),
+  advanceTime: core.advanceTime, markLetterShown: core.markLetterShown,
 };
-// « Partager au village » : ajouté au cœur en même temps que cet écran ; branché seulement s'il existe
-if (typeof core.shareHarvest === 'function') ACTIONS.shareHarvest = core.shareHarvest;
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
 export const hasAction = (name) => Object.hasOwn(ACTIONS, name) && typeof ACTIONS[name] === 'function';
@@ -62,9 +40,9 @@ function saveQueue(q) {
   try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); return true; } catch { return false; }
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-// Tenue du jeu (ouverture, passage du temps, moment vu, lettre montrée) : elle part avec la file, mais n'est pas
+// Tenue du jeu (ouverture, passage du temps, lettre montrée) : elle part avec la file, mais n'est pas
 // un « changement » du joueur ; l'indicateur hors ligne ne la compte pas (« 1 changement » après une quête faite).
-const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markStorySeen', 'markLetterShown']);
+const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown']);
 const pendingCount = (q) => q.filter((e) => !BOOKKEEPING.has(e.name)).length;
 
 function fromResponse(r, now) {

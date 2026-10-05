@@ -14,15 +14,15 @@ const SHELL = [
   'design/icons.svg',
   'css/tokens.css', 'css/base.css', 'css/components.css', 'css/world.css', 'css/app.css',
   'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js',
-  'js/ui/announce.js', 'js/ui/carnet.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/game.js', 'js/ui/glyphs.js',
+  'js/ui/announce.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/glyphs.js',
   'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js',
-  'core/index.js', 'core/avis.js', 'core/build.js', 'core/chapters.js', 'core/cote.js', 'core/cote-a-cote.js', 'core/domains.js', 'core/economy.js',
+  'core/index.js', 'core/cote.js', 'core/cote-a-cote.js', 'core/domains.js', 'core/economy.js',
   'core/infer.js', 'core/ledger.js', 'core/letters.js', 'core/migrate.js', 'core/quests.js', 'core/recycling.js',
-  'core/reward.js', 'core/state.js', 'core/time.js',
+  'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js',
   'world/world.js', 'world/view.js', 'world/camera.js', 'world/fx.js', 'world/iso.js', 'world/layout.js', 'world/models.js',
   'world/moments.js', 'world/palette.js', 'world/plan.js', 'world/scene.js', 'world/terrain.js', 'world/texts.js', 'world/ticker.js',
   'content/fr-CA/interface.json', 'content/fr-CA/repliques.json', 'content/fr-CA/ancres.json',
-  'content/fr-CA/chapitres.json', 'content/fr-CA/lettres.json',
+  'content/fr-CA/lettres.json',
 ];
 
 /**

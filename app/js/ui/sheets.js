@@ -1,7 +1,7 @@
-// Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, jeton, aide d'une ressource.
+// Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  SECTORS, sectorOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes, isPinned,
+  QUARTIERS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes, isPinned,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -9,7 +9,7 @@ import { durationText, capitalize, num } from './format.js';
 import { taskModel } from './model.js';
 import { token } from '../api-client.js';
 
-const SECTOR_ORDER = ['atelier', 'champs', 'archives', 'maison-commune', 'relais', 'place'];
+const QUARTIER_ORDER = ['atelier', 'champs', 'mairie', 'ecole', 'garage', 'place'];
 const DEFAULTS = { priority: 5, length: 2, difficulty: 3 };
 
 // ───────── Ouverture / fermeture ─────────
@@ -78,14 +78,12 @@ export function handleStep(btn) {
 const valueOf = (root, kind) => Number($(`.stepper-row[data-kind="${kind}"] output`, root).textContent);
 
 // ───────── Ajout rapide ─────────
-function sectorOptions(name, checked) {
-  return SECTOR_ORDER.map((id) => {
-    const s = SECTORS[id];
-    const sIcon = { place: 'bastion' }[id] || id;
-    return `<label class="sector-option"><input type="radio" name="${esc(name)}" value="${esc(id)}"${id === checked ? ' checked' : ''}>
-      <span class="sector-card">${icon(sIcon)}<span class="sector-text"><span class="sector-name">${esc(t(`sector.${id}.name`))}</span><span class="sector-domain">${esc(t(`sector.${id}.domain`))}</span></span><span class="sector-tick">${icon('check')}</span></span></label>`;
-  }).join('');
+function quartierOptions(name, checked) {
+  return QUARTIER_ORDER.map((id) => `<label class="sector-option"><input type="radio" name="${esc(name)}" value="${esc(id)}"${id === checked ? ' checked' : ''}>
+      <span class="sector-card">${icon(id)}<span class="sector-text"><span class="sector-name">${esc(t(`quartier.${id}.name`))}</span><span class="sector-domain">${esc(t(`quartier.${id}.domain`))}</span></span><span class="sector-tick">${icon('check')}</span></span></label>`).join('');
 }
+/** Domaine écrit dans la tâche pour un quartier choisi (la Place prend « Autres »). */
+const domainOf = (id) => QUARTIERS[id].domain || t('add.sector.other');
 
 function updateAddSummary() {
   const form = $('#add-form');
@@ -110,7 +108,7 @@ export function openAdd() {
       </div>
       <fieldset class="field">
         <legend class="field-label">${esc(t('add.sector'))} <span class="tag tag--guess" id="add-guess" hidden></span></legend>
-        <div class="sector-picker">${sectorOptions('add-sector', 'place')}</div>
+        <div class="sector-picker">${quartierOptions('add-sector', 'place')}</div>
       </fieldset>
       <details class="disclosure">
         <summary><span class="disclosure-summary"></span><span class="disclosure-action">${esc(t('add.adjust'))} ${icon('chevron-down')}</span></summary>
@@ -130,7 +128,7 @@ export function openAdd() {
   $('#add-title').focus();
 }
 
-/** Devine le secteur à mesure qu'on écrit, tant que l'utilisateur n'a pas choisi lui-même. */
+/** Devine le quartier à mesure qu'on écrit, tant que l'utilisateur n'a pas choisi lui-même. */
 export function onAddInput(input) {
   const dlg = $('#dlg-add');
   input.removeAttribute('aria-invalid');
@@ -138,7 +136,7 @@ export function onAddInput(input) {
   if (dlg.dataset.manual === '1') return;
   const guess = content.ancres ? inferDomain(input.value, content.ancres) : null;
   const tag = $('#add-guess');
-  const pick = guess ? guess.sector : 'place';
+  const pick = guess ? guess.quartier : 'place';
   const radio = $(`input[name="add-sector"][value="${pick}"]`, dlg);
   if (radio) radio.checked = true;
   tag.hidden = !guess;
@@ -162,10 +160,10 @@ export function readAdd() {
     input.focus();
     return null;
   }
-  const sectorId = $('input[name="add-sector"]:checked', form).value;
+  const quartier = $('input[name="add-sector"]:checked', form).value;
   return {
     task: title,
-    domain: sectorId === 'place' ? t('add.sector.other') : SECTORS[sectorId].domain,
+    domain: domainOf(quartier),
     priority: valueOf(form, 'priority'),
     length: valueOf(form, 'length'),
     difficulty: valueOf(form, 'difficulty'),
@@ -255,8 +253,8 @@ export function openFiche(ctx, id) {
   const dlg = $('#dlg-fiche');
   dlg.dataset.taskId = id;
   const rec = recurOptions(task.recurrence);
-  const sectorId = sectorOfTask(task);
-  const sectorOpts = SECTOR_ORDER.map((sid) => `<option value="${esc(sid)}"${sid === sectorId ? ' selected' : ''}>${esc(t(`sector.${sid}.name`))} · ${esc(t(`sector.${sid}.domain`))}</option>`).join('');
+  const quartier = quartierOfTask(task);
+  const sectorOpts = QUARTIER_ORDER.map((id) => `<option value="${esc(id)}"${id === quartier ? ' selected' : ''}>${esc(t(`quartier.${id}.name`))} · ${esc(t(`quartier.${id}.domain`))}</option>`).join('');
   dlg.innerHTML = `
     <header class="sheet-head">
       <h2 class="sheet-title" id="fiche-t">${esc(t('fiche.title'))}</h2>
@@ -306,7 +304,7 @@ export function openFiche(ctx, id) {
   $('#fiche-title').value = task.task;
   $('#fiche-deadline').value = dayOnly(task.deadline) || '';
   $('#fiche-notes').value = task.notes || '';
-  dlg._orig = { task: task.task, sector: sectorId, priority: task.priority, length: task.length, difficulty: task.difficulty,
+  dlg._orig = { task: task.task, sector: quartier, priority: task.priority, length: task.length, difficulty: task.difficulty,
     deadline: dayOnly(task.deadline) || '', recur: rec.cur, notes: task.notes || '' };
   for (const row of $$('.stepper-row', dlg)) { row.dataset.locked = ro ? '1' : ''; syncStepper(row); }
   openSheet(dlg);
@@ -339,7 +337,7 @@ export function readFiche(ctx) {
   if (title.trim() === '') return { error: t('add.error.empty') };
   if (title !== o.task) patch.task = title;
   const sector = $('#fiche-sector').value;
-  if (sector !== o.sector) patch.domain = sector === 'place' ? t('add.sector.other') : SECTORS[sector].domain;
+  if (sector !== o.sector) patch.domain = domainOf(sector);
   for (const k of ['priority', 'length', 'difficulty']) {
     const v = valueOf(dlg, k);
     if (v !== o[k]) patch[k] = v;
@@ -419,7 +417,7 @@ export function confirmRemballer() {
   return confirmDialog({ title: t('confirm.undo.title'), body: t('confirm.undo.body'), yes: t('confirm.undo.yes'), no: t('confirm.undo.no') });
 }
 
-// ───────── Jeton d'accès ─────────
+// ───────── Code d'accès ─────────
 export function openToken(onSaved, { bad = false, locked = 0 } = {}) {
   const err = locked ? tn('token.locked', Math.max(1, Math.ceil(locked / 60))) : bad ? t('token.bad') : '';
   const dlg = $('#dlg-token');
@@ -447,22 +445,22 @@ export function openToken(onSaved, { bad = false, locked = 0 } = {}) {
   $('#tok-in', dlg).focus();
 }
 
-// ───────── Aide d'une ressource ─────────
-const HELP = { energie: ['resource.energy', 'resource.energy.help'], materiaux: ['resource.materials.other', 'resource.materials.help'],
-  confiance: ['resource.confidence', 'resource.confidence.help'], lueur: ['resource.lueur', 'resource.lueur.help'] };
+// ───────── Aide d'une ressource : ce que c'est, d'où ça vient, à quoi ça sert ─────────
+const HELP = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants' };
 export function openHelp(name) {
-  const [nom, help] = HELP[name] || [];
+  const nom = HELP[name];
   if (!nom) return;
   const dlg = $('#dlg-help');
+  const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`))}</dd></div>`;
   dlg.innerHTML = `
-    <header class="sheet-head"><h2 class="sheet-title" id="help-t">${esc(t(nom))}</h2>
+    <header class="sheet-head"><h2 class="sheet-title help-title" id="help-t" data-res="${esc(name)}">${icon(name)}<span>${esc(t(nom))}</span></h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('add.close'))}">${icon('x')}</button></header>
-    <div class="sheet-body"><p>${esc(t(help))}</p></div>`;
+    <div class="sheet-body"><dl class="help-lines">${line('quoi')}${line('source')}${line('usage')}</dl></div>`;
   openSheet(dlg);
 }
 
 /**
- * « L'Orée veille » : écran de fin de visite. La prochaine quête en grand, une réplique, et rien d'autre.
+ * « Tout est enregistré, à demain » : écran de fin de visite. La prochaine quête en grand, une réplique, et rien d'autre.
  * `saved` : true seulement quand tout est bien enregistré (sinon la phrase de réassurance n'est pas écrite).
  * `onClose` : appelé à la fermeture (le monde allume alors ses lanternes).
  */
@@ -470,13 +468,13 @@ export function openVeille({ next, reply, saved, onClose }) {
   const dlg = $('#dlg-veille');
   const m = next ? taskModel(next, { now: new Date() }) : null;
   dlg.innerHTML = `
-    <header class="sheet-head"><h2 class="sheet-title" id="veille-t">${esc(t('visit.end.title'))}</h2>
+    <header class="sheet-head"><h2 class="sheet-title" id="veille-t">${esc(t(saved ? 'visit.end.title' : 'visit.end.title.pending'))}</h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('visit.end.close'))}">${icon('x')}</button></header>
     <div class="sheet-body veille">
       ${reply ? `<p class="veille-reply"><span class="speech-name">${esc(reply.nom)}</span><span class="veille-text">${esc(reply.texte)}</span></p>` : ''}
       ${m ? `<p class="veille-label">${esc(t('visit.end.next'))}</p>
         <p class="veille-quest">${esc(next.task)}</p>
-        <p class="veille-meta">${esc(m.sectorName)} · ${esc(durationText(next.length))}</p>` : `<p class="veille-text">${esc(t('visit.end.empty'))}</p>`}
+        <p class="veille-meta">${esc(m.quartierName)} · ${esc(durationText(next.length))}</p>` : `<p class="veille-text">${esc(t('visit.end.empty'))}</p>`}
       ${saved ? `<p class="veille-saved">${icon('cloud-ok')}${esc(t(m ? 'visit.end.sub' : 'visit.end.saved'))}</p>` : ''}
     </div>
     <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="button" data-close>${esc(t('visit.end.show'))}</button></footer>`;

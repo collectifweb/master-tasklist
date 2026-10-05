@@ -1,8 +1,8 @@
 // Textes (content/fr-CA/*.json), gabarits, et choix des répliques de personnages sans répétition sur 7 jours.
-import { daysBetween, localParts, gameDay, SECTORS, fillText } from '../core/index.js';
+import { daysBetween, localParts, gameDay, QUARTIERS } from '../core/index.js';
 
 const BASE = new URL('content/fr-CA/', document.baseURI).href;
-export const content = { ui: {}, repliques: null, ancres: null, lettres: null, chapitres: null };
+export const content = { ui: {}, repliques: null, ancres: null, lettres: null };
 
 export async function loadContent() {
   const get = async (f) => {
@@ -14,10 +14,8 @@ export async function loadContent() {
   content.ui = ui;
   content.repliques = repliques;
   content.ancres = ancres;
-  // chapitres et lettres : le jeu reste utilisable sans eux (pas de récit, pas de lettre)
-  const [chapitres, lettres] = await Promise.all([get('chapitres.json').catch(() => null), get('lettres.json').catch(() => null)]);
-  content.chapitres = chapitres;
-  content.lettres = lettres;
+  // lettres : le jeu reste utilisable sans elles (pas de lettre du matin)
+  content.lettres = await get('lettres.json').catch(() => null);
 }
 
 // ───────── Prénom (réglage facultatif, gardé sur l'appareil) ─────────
@@ -29,17 +27,6 @@ export function setPrenom(v) {
   const s = String(v ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
   try { if (s) localStorage.setItem(PRENOM_KEY, s); else localStorage.removeItem(PRENOM_KEY); } catch { /* sans stockage : pas de prénom */ }
   return s;
-}
-
-/**
- * Remplit une ligne de scène ou de lettre. Sans prénom, « , {prenom} » et « {prenom}, » disparaissent
- * (« T’es {prenom}, le septième intendant. » → « T’es le septième intendant. »). Renvoie null si un autre gabarit
- * reste vide : la ligne est alors écartée, jamais affichée avec une accolade.
- */
-export function fillLine(text, vars = {}) {
-  const p = vars.prenom || '';
-  const s = p ? String(text) : String(text).replace(/\{prenom\},\s*/g, '');
-  return fillText(s, { ...vars, prenom: p || null });
 }
 
 /** Remplace {nom} ; renvoie null si un gabarit n'a pas de valeur (jamais d'accolade affichée). */
@@ -65,7 +52,7 @@ export function tn(base, n, vars = {}) {
   return t(`${base}.${form}`, { n, ...vars });
 }
 
-export const sectorName = (id) => t(`sector.${id}.name`);
+export const quartierName = (id) => t(`quartier.${id}.name`);
 
 // ───────── Répliques ─────────
 const HIST_KEY = 'oree.replies.v1';
@@ -89,8 +76,8 @@ function momentOf(now) {
 
 /**
  * Tire une réplique pour une situation (règles de content/README.md) :
- * voix arrivée, filtres, gabarits remplissables, pas de repli sur 7 jours, tirage déterministe.
- * ctx : { now, chapter, sector?, length?, vars }. Renvoie { id, nom, texte, voix } ou null.
+ * filtres, gabarits remplissables, pas de repli sur 7 jours, tirage déterministe.
+ * ctx : { now, quartier?, length?, vars }. Renvoie { id, nom, texte, voix } ou null.
  * `gate` : applique la fréquence de la situation (1 = chaque fois, 3 = 1re puis une fois sur trois).
  */
 export function pickReply(situation, ctx, { gate = true, record = true } = {}) {
@@ -108,8 +95,8 @@ export function pickReply(situation, ctx, { gate = true, record = true } = {}) {
   const cands = [];
   for (const v of sit.variantes) {
     const voix = rep.voix[v.voix];
-    if (!voix || (voix.arrivee ?? 1) > (ctx.chapter ?? 1)) continue;
-    if (v.secteur && v.secteur !== ctx.sector) continue;
+    if (!voix) continue;
+    if (v.quartier && v.quartier !== ctx.quartier) continue;
     if (v.longueurMin && !(ctx.length >= v.longueurMin)) continue;
     if (v.moment && v.moment !== moment) continue;
     const texte = fillStrict(v.texte, ctx.vars);
@@ -130,15 +117,15 @@ export function pickReply(situation, ctx, { gate = true, record = true } = {}) {
 }
 
 /** Variables de gabarit d'une quête. */
-export function replyVars(task, sectorId) {
-  const id = sectorId in SECTORS ? sectorId : 'place';
-  const the = t(`sector.${id}.the`);
+export function replyVars(task, quartierId) {
+  const id = Object.hasOwn(QUARTIERS, quartierId) ? quartierId : 'place';
+  const the = t(`quartier.${id}.the`);
   return {
     prenom: prenom() || null, // facultatif : sans prénom, une variante qui l'emploie est écartée (jamais d'accolade)
     quete: task ? task.task : undefined,
-    secteur: the,
-    Secteur: the.charAt(0).toUpperCase() + the.slice(1),
-    du_secteur: t(`sector.${id}.of`),
-    au_secteur: t(`sector.${id}.in`),
+    quartier: the,
+    Quartier: the.charAt(0).toUpperCase() + the.slice(1),
+    du_quartier: t(`quartier.${id}.of`),
+    au_quartier: t(`quartier.${id}.in`),
   };
 }

@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, isPinned, topCards, PANTRY_MAX, RESERVE_MAX, BRASERO, AVIS, SEANCE_MAX_MINUTES } from '../core/index.js';
+import { SORTS, gameDay, isPinned, topCards, SEANCE_MAX_MINUTES } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { loadContent, t, content, pickReply, replyVars } from './content.js';
@@ -15,14 +15,12 @@ import {
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
-import { renderCarnet, toggleCarnet, closeCarnet, carnetOpen, avisName, dayWord } from './ui/carnet.js';
-import { openActions, refreshActions, resolveTarget, planActionsHtml } from './ui/game.js';
 import { createStory } from './ui/story.js';
 
 const root = document.documentElement;
 const app = $('#app');
 const store = new Store();
-const ui = { sort: 'cote', status: 'todo', quick: false, lowEnergy: false, thisWeek: false, sector: null, search: '' };
+const ui = { sort: 'cote', status: 'todo', quick: false, lowEnergy: false, thisWeek: false, quartier: null, search: '' };
 
 const hud = createHud($('.hud'));
 const announce = createAnnounce($('.announce-lane'), $('#live'));
@@ -40,7 +38,6 @@ let world = null;
 let worldPlan = null;
 let started = false;
 let touchFrom = null; // [x, y] du bouton « Fait » touché : le fil de lumière part de là
-let prevGame = null;
 
 const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: new Date() });
 const story = createStory({
@@ -48,10 +45,6 @@ const story = createStory({
   run: (action, params) => run(action, params),
   announce: (text) => announce.say(text),
   focusHome,
-  onIntroEnd: (choice) => {
-    // « Commencer » : le Fil du jour, quête n° 1 ; « Plus tard » : tout reste utilisable, rien ne bouge
-    if (choice === 'start') focusHome();
-  },
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -71,9 +64,6 @@ function renderAll({ deferHud = false } = {}) {
   renderAlts($('#panel-scroll'), c, cards);
   renderList($('#panel-scroll'), c, ui);
   refreshFiche(c);
-  renderCarnet(c);
-  refreshActions(c);
-  renderPlanActs(c);
   setText($('#panel-date'), new Intl.DateTimeFormat('fr-CA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Montreal' })
     .format(new Date(gameDay(c.now) + 'T12:00:00Z')));
   // Les compteurs montent à l'impact du fil de lumière (onImpact du monde), pas avant. Sans monde : 320 ms de retard.
@@ -96,13 +86,12 @@ function flushHud() {
 // ───────── Réactions à une action ─────────
 function react(payload) {
   const { action, params = {}, events = [], result, now } = payload;
-  const c = ctx();
   const s = summarize(events);
   const created = action === 'createQuest' ? ((result.ops || []).find((o) => o.type === 'task.upsert') || {}).task?.id : null;
   const taskId = params.id || created || (events.find((e) => e.type === 'reward' && e.taskId) || {}).taskId || null;
   const task = findTask(taskId) || (result && result.tasks.find((x) => x.id === taskId)) || null;
   const title = task ? task.task : '';
-  const reply = speech.react({ action, params, events, task, game: c.game, now: now || new Date() });
+  const reply = speech.react({ action, params, events, task, now: now || new Date() });
   const replyText = reply ? ` ${reply.nom} : ${reply.texte}` : '';
   const gains = gainList(s);
   const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
@@ -136,9 +125,7 @@ function react(payload) {
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
   if (say) return announce.say(remember(say() + (fanal ? ' ' + fanal : '') + replyText));
-  if (action === 'advanceTime') { const text = timeSay(events); if (text) announce.say(after(text)); return; }
-  const text = gameSay(action, params, events, c.game);
-  if (text) announce.say(remember(text + replyText));
+  if (action === 'advanceTime') { const text = timeSay(events); if (text) announce.say(after(text)); }
 }
 
 // Côte à côte : une phrase au début de la séance, une à la fin, jamais pendant. Après Pause ou Fait, une quête qui a
@@ -155,47 +142,17 @@ function fanalSay(events, title) {
   return `${text} ${offer}`;
 }
 
-/** Phrase lue après un geste dans l'Orée (construire, semer, récolter…). */
-function gameSay(action, params, events, game) {
-  const ev = (type) => events.find((e) => e.type === type);
-  switch (action) {
-    case 'build': { const e = ev('construction') || ev('parcelle'); return e ? t(`sr.build.${e.model || 'parcelle'}`) : ''; }
-    case 'sow': { const e = ev('semis'); return e ? t(`sr.sow.${e.crop}`) : ''; }
-    case 'harvest': {
-      const r = events.filter((e) => e.type === 'recolte');
-      return r.length ? r.map((e) => t(`sr.harvest.${e.crop}`)).join(' ') + ' ' + t('sr.pantry', { n: r[r.length - 1].pantry, max: PANTRY_MAX }) : '';
-    }
-    case 'shareHarvest': { const e = ev('partage'); return e ? `${t(`sr.share.${e.crop}`)} ${t('sr.pantry', { n: e.pantry, max: PANTRY_MAX })}` : ''; }
-    case 'storeReserve': { const e = ev('reserve'); return e ? t('sr.reserve', { n: e.reserve, max: RESERVE_MAX }) : ''; }
-    case 'souffler': { const e = ev('souffler'); return e ? t('sr.souffler', { n: e.filLibre }) : ''; }
-    case 'lightBrasero': { const e = ev('brasero'); return e ? t('sr.brasero', { n: e.braseros, max: BRASERO.max, p: num(e.preparation) }) : ''; }
-    case 'liftVeil': { const e = ev('voile-leve'); return e ? (e.cells > 0 ? t('sr.veil.lift', { n: e.cells }) : t('sr.veil.lifted')) : ''; }
-    case 'directFil': return t('sr.fil_libre', { n: num(params.amount || 0), secteur: t(`sector.${params.sector}.the`) });
-    default: return '';
-  }
-}
-
-/** Phrase lue après le passage du temps : objectifs, chapitre, Avis annoncé ou résolu, voile parti. */
+/** Phrase lue après le passage du temps : une séance oubliée qui se ferme d'elle-même. */
 function timeSay(events) {
-  const now = new Date();
   const out = [];
   for (const e of events) {
-    if (e.type === 'objectif-atteint') out.push(t('sr.objective', { objectif: objectiveText(e.id) }));
-    else if (e.type === 'chapitre') out.push(t('sr.chapter', { n: e.chapter }));
-    else if (e.type === 'avis-annonce') out.push(t('sr.avis.announce', { nom: avisName(e.id), quand: dayWord(e.day, now) }));
-    else if (e.type === 'avis-resolu') out.push(t(`sr.avis.${e.result}`, { nom: avisName(e.id), au_secteur: t(`sector.${AVIS[e.id] ? AVIS[e.id].sector : 'champs'}.in`) }));
-    else if (e.type === 'voile-leve' && e.reason === 'temps') out.push(t('sr.veil.gone', { du_secteur: t(`sector.${e.sector}.of`) }));
-    else if (e.type === 'seance-fin' && e.raison === 'oubliee') out.push(t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }));
+    if (e.type === 'seance-fin' && e.raison === 'oubliee') out.push(t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }));
   }
   return out.join(' ');
 }
-function objectiveText(id) {
-  for (const ch of (content.chapitres && content.chapitres.chapitres) || []) for (const o of ch.objectifs || []) if (o.id === id) return o.texte;
-  return '';
-}
 
-/** Événements du jeu + ceux que seule l'interface connaît : objet-reflet de la quête faite, secteur qui vient de s'ouvrir. */
-function worldEvents(payload, before) {
+/** Événements du jeu + ceux que seule l'interface connaît : objet-reflet de la quête faite. */
+function worldEvents(payload) {
   const events = [...((payload && payload.events) || [])];
   if (!world || !payload || !payload.action) return events;
   const { action, params = {}, result } = payload;
@@ -209,46 +166,35 @@ function worldEvents(payload, before) {
       events.push(...world.refletEvents(result.game, after, prior));
     }
   }
-  if (before && result && result.game && !events.some((e) => e.type === 'chapitre')) {
-    for (const [sid, sec] of Object.entries(result.game.sectors || {})) {
-      if (sec.open && before.sectors && before.sectors[sid] && !before.sectors[sid].open) events.push({ type: 'secteur-ouvert', sector: sid });
-    }
-  }
   return events;
 }
 
 store.on('change', (payload) => {
-  const before = prevGame;
-  prevGame = store.view && store.view.game ? structuredClone(store.view.game) : null;
   const events = (payload && payload.events) || [];
-  renderAll({ deferHud: events.some((e) => e.type === 'reward' || e.type === 'lisiere-allumee') });
+  renderAll({ deferHud: events.some((e) => e.type === 'reward') });
   if (payload && payload.action && started) react(payload);
-  const storyNext = started && events.some((e) => STORY_EVENTS.has(e.type));
   if (world && events.length) {
     const from = touchFrom && Date.now() - touchFrom.at < 4000 ? [touchFrom.x, touchFrom.y] : undefined;
     touchFrom = null;
-    const run = world.play(worldEvents(payload, before), { from });
+    const run = world.play(worldEvents(payload), { from });
     Promise.resolve(run).then(() => {
       if (hudPending) flushHud();
-      // un objectif, un chapitre ou un Avis : le moment d'histoire vient après l'animation
-      if (storyNext) setTimeout(() => story.welcome(), 300);
       // plus aucune quête ouverte après un « Fait » : la visite se termine d'elle-même
-      else if (payload.action === 'completeQuest' && !topCards(store.view.tasks, new Date()).first) setTimeout(endVisit, 600);
+      if (payload.action === 'completeQuest' && !topCards(store.view.tasks, new Date()).first) setTimeout(endVisit, 600);
     });
-  } else if (storyNext) setTimeout(() => story.welcome(), 600);
+  }
 });
-const STORY_EVENTS = new Set(['objectif-atteint', 'chapitre-fin', 'chapitre', 'avis-annonce', 'avis-resolu']);
 store.on('sync', (s) => sync.set(s));
 store.on('notice', (n) => sync.notice(n));
 const askToken = (locked = 0) => openToken(
-  // pendant un blocage, le nouveau jeton attend : la feuille se rouvre avec le temps qui reste
+  // pendant un blocage, le nouveau code attend : la feuille se rouvre avec le temps qui reste
   () => (store.lockLeft() ? askToken(store.lockLeft()) : started ? store.retryNow() : start()),
   { bad: token.has() && !locked, locked },
 );
 store.on('need-token', (p) => askToken((p && p.locked) || 0));
 
-// Après ces gestes, le temps du jeu avance (objectifs, fin de chapitre, Avis) : advanceTime est idempotente.
-const AFTER_TIME = new Set(['completeQuest', 'createQuest', 'toggleStep', 'build', 'sow', 'harvest', 'shareHarvest', 'storeReserve', 'directFil']);
+// Après ces gestes, le temps du jeu avance (séance oubliée refermée) : advanceTime est idempotente.
+const AFTER_TIME = new Set(['completeQuest', 'createQuest', 'toggleStep']);
 
 /** Lance une action ; un refus du jeu (message en français) s'affiche en message court, rien n'est modifié. */
 function run(action, params) {
@@ -284,80 +230,29 @@ document.addEventListener('focusin', (e) => {
   if (r.bottom > window.innerHeight || r.top < $('#panel-scroll').getBoundingClientRect().top) setPanel(true);
 });
 
-// ───────── Monde : sélection d'un secteur, plan accessible ─────────
-/** Toucher un secteur de la carte : la liste ne montre que les quêtes de ce secteur, et le panneau s'ouvre. */
-function filterBySector(id) {
-  ui.sector = id;
-  for (const c of $$('.chip[data-sector]')) c.setAttribute('aria-pressed', String(c.dataset.sector === id));
+// ───────── Monde : sélection d'un quartier, carte en liste ─────────
+/** Toucher un quartier de la carte : la liste ne montre que les quêtes de ce quartier, et le panneau s'ouvre. */
+function filterByQuartier(id) {
+  ui.quartier = id;
+  for (const c of $$('.chip[data-quartier]')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
   renderAll();
   setPanel(true);
 }
-/** Toucher la carte : une caisse ouvre sa quête ; une parcelle, un repère, une construction ou un secteur, sa feuille d'actions. */
+/** Toucher la carte : une caisse ouvre sa quête ; un quartier ou l'un de ses repères filtre la liste sur lui. */
 function onWorldSelect(info) {
   if (!info) return;
   if (info.taskId) { if (findTask(info.taskId)) openFiche(ctx(), info.taskId); return; }
-  const target = resolveTarget(info, store.view.game);
-  if (target) openActions(ctx(), target);
+  if (info.sector) filterByQuartier(info.sector);
 }
-// La feuille ouverte par un toucher sur la carte se ferme : l'objet n'est plus sélectionné (le toucher suivant la rouvre)
-for (const d of $$('#dlg-act, #dlg-fiche')) d.addEventListener('close', () => { if (world) world.clearSelection(); });
-// Feuille ouverte depuis le Plan : le geste a pu recréer son bouton « Agir » ; le focus revient au bouton de la même cible
-$('#dlg-act').addEventListener('close', () => {
-  const plan = $('#dlg-plan');
-  if (!plan.open || plan.contains(document.activeElement)) return;
-  const target = $('#dlg-act').dataset.target;
-  const back = [...plan.querySelectorAll('[data-act="open-target"]')].find((b) => b.dataset.params === target);
-  if (back) back.focus();
-});
-/** Glisser sur une parcelle mûre : la même récolte que le bouton « Récolter ». */
-function onWorldHarvest(plotId) {
-  run('harvest', { plotId });
-}
+// La fiche ouverte par un toucher sur la carte se ferme : l'objet n'est plus sélectionné (le toucher suivant la rouvre)
+$('#dlg-fiche').addEventListener('close', () => { if (world) world.clearSelection(); });
 
-// ───────── Gestes de jeu (data-act) : feuille d'actions, carnet, plan ─────────
-// Ces gestes ferment la feuille pour laisser voir l'animation ; les autres (garde-manger) la laissent ouverte.
-const CLOSE_AFTER = new Set(['build', 'sow', 'harvest', 'directFil', 'souffler', 'liftVeil']);
-function doAct(btn) {
-  const name = btn.dataset.act;
-  let params = {};
-  try { params = JSON.parse(btn.dataset.params || '{}'); } catch { /* paramètres illisibles : rien */ }
-  if (disabled(btn)) {
-    // refusé : on relit la raison, rien n'est tenté
-    const why = btn.getAttribute('aria-describedby') && document.getElementById(btn.getAttribute('aria-describedby'));
-    if (why) announce.say(why.textContent.trim());
-    return;
-  }
-  if (name === 'open-target') return openActions(ctx(), params);
-  if (name === 'filter') {
-    for (const d of $$('#dlg-act[open], #dlg-plan[open]')) closeSheet(d);
-    return filterBySector(params.sector);
-  }
-  const sheet = btn.closest('#dlg-act');
-  const r = run(name, params);
-  if (r && sheet && CLOSE_AFTER.has(name)) {
-    closeSheet(sheet);
-    // depuis le plan, on y revient ; sinon le focus retourne à ce qui avait ouvert la feuille
-    if (!$('#dlg-plan').open) setPanel(false);
-  }
-}
-let planActs = null;
-function renderPlanActs(c) {
-  if (!planActs || !$('#dlg-plan').open) return;
-  const html = planActionsHtml(c);
-  if (planActs._html === html) return;
-  const had = document.activeElement && planActs.contains(document.activeElement) ? document.activeElement.dataset.params : null;
-  planActs.innerHTML = html;
-  planActs._html = html;
-  if (had) { const b = [...planActs.querySelectorAll('[data-params]')].find((x) => x.dataset.params === had); if (b) b.focus(); }
-}
-/** Fin de visite : « L'Orée veille ». Fermée, elle laisse le monde allumer ses lanternes. */
+/** Fin de visite : « Tout est enregistré, à demain ». Fermée, elle laisse le monde allumer ses lanternes. */
 function endVisit() {
   if (!started || document.querySelector('dialog[open]')) return;
   const c = ctx();
   const next = topCards(c.tasks, c.now).first;
-  const reply = pickReply('visit.end', {
-    now: c.now, chapter: c.game.chapter ? c.game.chapter.number : 1, sector: 'place', length: 0, vars: replyVars(null, 'place'),
-  }, { gate: false });
+  const reply = pickReply('visit.end', { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') }, { gate: false });
   const sync = store.sync || {};
   openVeille({
     next, reply,
@@ -370,7 +265,6 @@ function openPlan() {
   const c = ctx();
   worldPlan.render(c.game, c.tasks);
   openSheet($('#dlg-plan'));
-  renderPlanActs(c);
   worldPlan.focus();
 }
 
@@ -391,9 +285,9 @@ document.addEventListener('click', (e) => {
   }
   if (target.matches('.chip[aria-pressed]')) {
     const on = target.getAttribute('aria-pressed') !== 'true';
-    if (target.dataset.sector) {
-      $$('.chip[data-sector]').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-      ui.sector = on ? target.dataset.sector : null;
+    if (target.dataset.quartier) {
+      $$('.chip[data-quartier]').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+      ui.quartier = on ? target.dataset.quartier : null;
     } else {
       ui[target.dataset.filter] = on;
     }
@@ -401,7 +295,6 @@ document.addEventListener('click', (e) => {
     return renderAll();
   }
   if (target.dataset.step) return handleStep(target);
-  if (target.dataset.act) return doAct(target);
 
   const action = target.dataset.action;
   const id = idOf(target);
@@ -424,10 +317,6 @@ document.addEventListener('click', (e) => {
       return run('completeQuest', { id });
     }
     case 'open-plan': return openPlan();
-    case 'end-visit': return endVisit();
-    case 'carnet': return toggleCarnet(target.dataset.card, ctx());
-    case 'carnet-close': return closeCarnet(ctx(), { refocus: true });
-    case 'scene-next': case 'scene-skip': case 'scene-later': case 'scene-start': return story.sceneAction(action);
     case 'open-settings': return story.openSettings();
     case 'open-review': return story.openReview();
     case 'review-keep': case 'review-archive': return story.reviewAction(action, target.dataset.id);
@@ -466,7 +355,7 @@ document.addEventListener('click', (e) => {
       return renderAll();
     }
     case 'clear-filters':
-      Object.assign(ui, { quick: false, lowEnergy: false, thisWeek: false, sector: null, search: '' });
+      Object.assign(ui, { quick: false, lowEnergy: false, thisWeek: false, quartier: null, search: '' });
       $$('.chips .chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
       $('#search').value = ''; $('.search-clear').hidden = true;
       return renderAll();
@@ -475,11 +364,6 @@ document.addEventListener('click', (e) => {
     case 'offer-close': return sync.closeOffer();
     case 'reload': return start();
   }
-});
-
-// Carnet déplié : un toucher ailleurs le replie (pas dans une feuille, qui a sa propre fermeture)
-document.addEventListener('pointerdown', (e) => {
-  if (carnetOpen() && store.view && !e.target.closest('#carnet') && !e.target.closest('dialog')) closeCarnet(ctx());
 });
 
 function addStepFromInput(id) {
@@ -520,10 +404,6 @@ document.addEventListener('submit', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'fiche-step-new') { e.preventDefault(); addStepFromInput($('#dlg-fiche').dataset.taskId); }
-  if (e.key === 'Escape' && carnetOpen() && !document.querySelector('dialog[open]')) {
-    closeCarnet(ctx(), { refocus: !!(document.activeElement && document.activeElement.closest('#carnet')) });
-    return;
-  }
   if (e.key === 'Escape' && app.dataset.panel === 'open' && !document.querySelector('dialog[open]')) {
     setPanel(false);
     $('[data-action="toggle-panel"]').focus();
@@ -554,7 +434,6 @@ async function start() {
   }
   fillSortOptions();
   for (const el of $$('[data-t]')) setText(el, t(el.dataset.t)); // libellés posés dans la page, textes dans interface.json
-  $('#carnet').setAttribute('aria-label', t('carnet.label'));
   await inlineSprite();
   try {
     await store.load();
@@ -565,18 +444,16 @@ async function start() {
   }
   renderAll();
   started = true;
-  // ouverture du jour, puis le temps du jeu (voiles, Avis, objectifs) ; l'accueil vient quand le monde est prêt
+  // ouverture du jour, puis le temps du jeu ; l'accueil vient quand le monde est prêt
   run('openApp', {});
   advanceTime();
   playedDay = gameDay(new Date());
-  prevGame = structuredClone(store.view.game);
   initWorld({
     container: $('#world-live'), slot: $('.world-slot'), content,
     now: () => new Date(), reducedMotion,
     announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,
-    onHarvest: onWorldHarvest,
   }).then((w) => {
     world = w;
     setTimeout(() => story.welcome(), world ? 400 : 0);
@@ -584,16 +461,16 @@ async function start() {
     world.render(store.view.game, store.view.tasks);
     const host = $('#dlg-plan');
     host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('plan.close'))}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
-    worldPlan = world.plan($('#plan-host'), { onFocusSector: (sid) => { closeSheet(host); setPanel(false); world.focusSector(sid); } });
-    planActs = document.createElement('section');
-    planActs.className = 'plan-acts-wrap';
-    $('#plan-host').append(planActs);
+    worldPlan = world.plan($('#plan-host'), {
+      onFocusSector: (id) => { closeSheet(host); setPanel(false); world.focusSector(id); },
+      onFilter: (id) => { closeSheet(host); filterByQuartier(id); },
+    });
     host.setAttribute('aria-labelledby', $('#plan-host .ow-plan-title').id);
     $('[data-action="open-plan"]').hidden = false;
   });
 }
 
-/** Changement de jour de jeu (4 h, Montréal) : ouverture du jour, temps du jeu, accueil (lettre, moments). */
+/** Changement de jour de jeu (4 h, Montréal) : ouverture du jour, temps du jeu, accueil (lettre, bilan). */
 let playedDay = null;
 function tickDay() {
   if (!started || !store.view) return;

@@ -2,96 +2,84 @@
   "version": 1,
   "langue": "fr-CA",
   "voix": {
-    "fanal": {"nom": "Fanal", "role": "Automate-lanterne du Relais, compagnon d’Alex", "arrivee": 1, "registre": "tu", "motsMax": 20},
-    "solene": {"nom": "Solène", "role": "Agronome, secteur des Champs", "arrivee": 1, "registre": "tu"},
-    "milo": {"nom": "Milo", "role": "Technicien pince-sans-rire, secteur de l’Atelier", "arrivee": 2, "registre": "tu"},
-    "naima": {"nom": "Naïma", "role": "Coordinatrice, secteur des Archives, plans et bilans", "arrivee": 3, "registre": "tu"},
-    "echo7": {"nom": "ÉCHO-7", "role": "Mémoire des six intendants, secteur des Archives", "arrivee": 3, "registre": "vous"},
-    "lou": {"nom": "Lou", "role": "Apprentie de 11 ans, secteur de la Maison commune", "arrivee": 4, "registre": "tu"},
-    "ambroise": {"nom": "Ambroise", "role": "Convoyeur, s’occupe des échéances", "arrivee": 5, "registre": "tu"},
-    "narration": {"nom": null, "role": "Voix hors champ des scènes (chapitres.json seulement)", "arrivee": 1},
-    "inscription": {"nom": null, "role": "Texte gravé ou peint, affiché comme une inscription (chapitres.json seulement)", "arrivee": 1}
+    "fanal": {"nom": "Fanal", "role": "Vieux robot de déneigement remis en marche, porte une lanterne ; contremaître du village. Parle court, humour pince-sans-rire, jamais moralisateur.", "registre": "tu", "motsMax": 20}
   },
   "situations": {
-    "day.first_quest": {
-      "quand": "Première quête terminée du jour de jeu : la lisière s’allume (+1 Confiance). Remplace la réplique de quête terminée.",
-      "frequence": 1,
-      "variantes": [
-        {"id": "day.first_quest.01", "voix": "fanal", "texte": "La lisière s’allume. Au village, quelqu’un l’a vue et l’a dit aux autres."},
-        {"id": "day.first_quest.02", "voix": "fanal", "texte": "Lisière allumée. Je l’ai vue de mon poteau. J’ai fait semblant d’être calme."},
-        {"id": "day.first_quest.03", "voix": "solene", "texte": "La lisière est allumée. Les gens sortent sur le perron pour la regarder."},
-        {"id": "day.first_quest.04", "voix": "fanal", "texte": "La lisière s’allume pareil pour une petite quête que pour une grosse. Celle-là a bien fait l’affaire."},
-        {"id": "day.first_quest.05", "voix": "solene", "texte": "Ah, la lisière. Ici, quand elle s’allume, tout le monde sait que t’es passé."},
-        {"id": "day.first_quest.06", "voix": "fanal", "texte": "Allumée. Les cultures poussent d’un stade aujourd’hui. Elles aiment ça quand tu passes."},
-        {"id": "day.first_quest.07", "voix": "solene", "texte": "Lisière allumée. Les rangs vont en profiter, je le sens d’ici."},
-        {"id": "day.first_quest.08", "voix": "fanal", "texte": "Et voilà. La Confiance monte d’un cran. Ici, on compte les jours où tu viens, pas le reste."},
-        {"id": "day.first_quest.09", "voix": "milo", "texte": "La lisière est allumée. Les machines de l’Atelier ont toussé de joie. Surtout toussé."},
-        {"id": "day.first_quest.10", "voix": "naima", "texte": "Lisière allumée. Je l’inscris. Pas pour compter, pour me souvenir."},
-        {"id": "day.first_quest.11", "voix": "echo7", "texte": "Lisière active. Votre présence est consignée. C’est le mot que les registres préfèrent."}
-      ]
-    },
     "quest.done.short": {
       "quand": "Quête terminée, Durée 1 à 3. Célébration minimale.",
       "frequence": 3,
       "variantes": [
         {"id": "quest.done.short.01", "voix": "fanal", "texte": "Fait."},
-        {"id": "quest.done.short.02", "voix": "fanal", "texte": "Une de moins. Bien."},
-        {"id": "quest.done.short.03", "voix": "fanal", "texte": "Petit geste, bonne journée."},
-        {"id": "quest.done.short.04", "voix": "fanal", "texte": "Réglé. Je l’ai vue partir en lumière."},
-        {"id": "quest.done.short.05", "voix": "solene", "texte": "Ça, c’est fait. Merci."},
-        {"id": "quest.done.short.06", "voix": "fanal", "texte": "Hop. Une affaire de moins dans ta tête."},
-        {"id": "quest.done.short.07", "voix": "fanal", "texte": "Correct! Les petites comptent aussi."},
-        {"id": "quest.done.short.08", "voix": "solene", "secteur": "champs", "texte": "Ça sent la terre jusqu’ici."},
-        {"id": "quest.done.short.09", "voix": "milo", "secteur": "atelier", "texte": "Vite fait, bien fait. J’ajoute rien."},
-        {"id": "quest.done.short.10", "voix": "naima", "secteur": "archives", "texte": "Un papier de moins. Les Archives respirent mieux."},
-        {"id": "quest.done.short.11", "voix": "echo7", "secteur": "archives", "texte": "Tâche consignée. Merci."}
+        {"id": "quest.done.short.02", "voix": "fanal", "texte": "Une de moins. Je note."},
+        {"id": "quest.done.short.03", "voix": "fanal", "texte": "Réglé. J’ai rien vu, mais je te crois."},
+        {"id": "quest.done.short.04", "voix": "fanal", "texte": "Correct. Les petites comptent aussi."},
+        {"id": "quest.done.short.05", "voix": "fanal", "texte": "Hop. Une affaire de moins dans ta tête."},
+        {"id": "quest.done.short.06", "voix": "fanal", "texte": "Noté au registre. En petit, mais noté."},
+        {"id": "quest.done.short.07", "voix": "fanal", "quartier": "champs", "texte": "Les Champs prennent note."},
+        {"id": "quest.done.short.08", "voix": "fanal", "quartier": "atelier", "texte": "L’Atelier te salue. Moi aussi, par politesse."},
+        {"id": "quest.done.short.09", "voix": "fanal", "quartier": "mairie", "texte": "Un papier de moins. La Mairie respire."},
+        {"id": "quest.done.short.10", "voix": "fanal", "quartier": "ecole", "texte": "L’École approuve. Moi aussi, en silence."},
+        {"id": "quest.done.short.11", "voix": "fanal", "quartier": "garage", "texte": "Le Garage dit merci. Il parle peu, comme moi."},
+        {"id": "quest.done.short.12", "voix": "fanal", "quartier": "place", "texte": "Une de plus pour la Place. Les bancs sont contents."}
       ]
     },
     "quest.done.medium": {
       "quand": "Quête terminée, Durée 4 ou 5. Une réplique un peu plus chaude.",
       "frequence": 3,
       "variantes": [
-        {"id": "quest.done.medium.01", "voix": "fanal", "texte": "Belle quête. La lumière est partie vers {secteur}, je l’ai suivie des yeux."},
-        {"id": "quest.done.medium.02", "voix": "fanal", "texte": "Un peu de couleur de plus {au_secteur}. Ça, c’était pas rien."},
-        {"id": "quest.done.medium.03", "voix": "solene", "texte": "Bon travail. Ça se voit d’ici, et chez vous aussi, j’imagine."},
-        {"id": "quest.done.medium.04", "voix": "fanal", "texte": "Celle-là demandait du temps. Je la note nulle part, mais je la retiens."},
-        {"id": "quest.done.medium.05", "voix": "solene", "texte": "Tu travailles fort. Prends une gorgée d’eau avant la suite."},
-        {"id": "quest.done.medium.06", "voix": "fanal", "texte": "Bien joué. Le fil de lumière était plus épais que d’habitude."},
-        {"id": "quest.done.medium.07", "voix": "solene", "secteur": "champs", "texte": "T’as travaillé dehors, ça se sent jusqu’ici. Les rangs sont plus meubles."},
-        {"id": "quest.done.medium.08", "voix": "milo", "secteur": "atelier", "texte": "Une réparation chez toi, un gond de moins qui grince ici. J’explique pas, je constate."},
-        {"id": "quest.done.medium.09", "voix": "milo", "secteur": "atelier", "texte": "L’établi ronronne. Pas pire pantoute."},
-        {"id": "quest.done.medium.10", "voix": "naima", "secteur": "archives", "texte": "Ce genre de travail, personne ne le remarque quand il est fait. Moi, si."},
-        {"id": "quest.done.medium.11", "voix": "echo7", "secteur": "archives", "texte": "Dossier clos. Les registres vous remercient. Je crois que moi aussi."}
+        {"id": "quest.done.medium.01", "voix": "fanal", "texte": "Belle job. Le village l’a senti passer."},
+        {"id": "quest.done.medium.02", "voix": "fanal", "texte": "Ça, c’en était une vraie. Je lève ma lanterne."},
+        {"id": "quest.done.medium.03", "voix": "fanal", "texte": "Bon morceau. J’ajoute du bois sur le tas."},
+        {"id": "quest.done.medium.04", "voix": "fanal", "texte": "Celle-là demandait du temps. Je la retiens."},
+        {"id": "quest.done.medium.05", "voix": "fanal", "texte": "Le tas de Matériaux grossit. Moi, je surveille."},
+        {"id": "quest.done.medium.06", "voix": "fanal", "quartier": "champs", "texte": "Les Champs ont bien travaillé. Toi surtout."},
+        {"id": "quest.done.medium.07", "voix": "fanal", "quartier": "atelier", "texte": "L’Atelier tourne mieux. On entend la différence."},
+        {"id": "quest.done.medium.08", "voix": "fanal", "quartier": "mairie", "texte": "Dossier fermé. La Mairie peut ranger son tampon."},
+        {"id": "quest.done.medium.09", "voix": "fanal", "quartier": "ecole", "texte": "L’École a eu sa journée. Les pupitres aussi."},
+        {"id": "quest.done.medium.10", "voix": "fanal", "quartier": "garage", "texte": "Le Garage ronronne. Je savais pas qu’il pouvait."}
       ]
     },
     "quest.done.big": {
-      "quand": "Quête terminée, Durée 6 ou plus (grand chantier, plaque datée). Parle à chaque fois.",
+      "quand": "Quête terminée, Durée 6 ou plus (grand chantier). Parle à chaque fois.",
       "frequence": 1,
       "variantes": [
-        {"id": "quest.done.big.01", "voix": "fanal", "texte": "Grand chantier terminé! J’ai crié. Doucement, mais j’ai crié."},
-        {"id": "quest.done.big.02", "voix": "fanal", "texte": "Une plaque datée de plus dans l’Orée. Celle-là, on va la montrer aux visiteurs."},
-        {"id": "quest.done.big.03", "voix": "solene", "texte": "Toute la colonie est sortie voir la lumière. On va en parler au souper."},
-        {"id": "quest.done.big.04", "voix": "fanal", "texte": "L’échafaudage est tombé, la plaque est posée. Prends le temps de la lire."},
-        {"id": "quest.done.big.05", "voix": "solene", "texte": "Un gros morceau de fait. Assieds-toi deux minutes. C’est un ordre amical."},
-        {"id": "quest.done.big.06", "voix": "fanal", "texte": "Fini! Je savais que ça finirait. Bon, je le savais pas. Mais là, oui."},
-        {"id": "quest.done.big.07", "voix": "milo", "secteur": "atelier", "texte": "Grand chantier fini. J’ai sorti la bonne cafetière."},
-        {"id": "quest.done.big.08", "voix": "milo", "secteur": "atelier", "texte": "Ça, c’est de l’ouvrage. L’hiver va passer à côté de chez vous."},
-        {"id": "quest.done.big.09", "voix": "naima", "secteur": "archives", "texte": "Un gros dossier refermé. Je le range en haut de la pile, là où on le voit."},
-        {"id": "quest.done.big.10", "voix": "echo7", "texte": "Chantier inscrit à votre registre, avec sa date. Ces lignes-là se relisent avec plaisir."}
+        {"id": "quest.done.big.01", "voix": "fanal", "texte": "Grosse affaire, réglée. J’ai sorti ma lanterne des grandes occasions. C’est la même."},
+        {"id": "quest.done.big.02", "voix": "fanal", "texte": "« {quete} » : terminé. Je l’inscris en gros."},
+        {"id": "quest.done.big.03", "voix": "fanal", "texte": "Ça, c’est un chantier. Le village va en parler au souper."},
+        {"id": "quest.done.big.04", "voix": "fanal", "texte": "Celle-là pesait lourd. Elle pèse plus rien."},
+        {"id": "quest.done.big.05", "voix": "fanal", "texte": "Gros morceau. J’ai déneigé moins que ça en un hiver."},
+        {"id": "quest.done.big.06", "voix": "fanal", "texte": "Fini. Assieds-toi deux minutes. C’est un ordre de contremaître."},
+        {"id": "quest.done.big.07", "voix": "fanal", "quartier": "champs", "texte": "Gros chantier aux Champs. La terre va s’en souvenir."},
+        {"id": "quest.done.big.08", "voix": "fanal", "quartier": "atelier", "texte": "L’Atelier a fait sa grosse journée. Moi, j’ai tenu la lampe."}
       ]
     },
     "quest.already_done": {
-      "quand": "Quête ajoutée déjà faite. Ne jamais promettre le plein tarif : à partir de la 4e du jour, elle rapporte la moitié.",
+      "quand": "Quête ajoutée déjà faite. Ne jamais promettre le plein tarif : elle rapporte la moitié.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.already_done.01", "voix": "fanal", "texte": "Déjà faite? Elle compte. Bien vu de l’avoir notée."},
-        {"id": "quest.already_done.02", "voix": "fanal", "texte": "Faite avant d’être écrite. C’est la plus efficace des quêtes."},
-        {"id": "quest.already_done.03", "voix": "solene", "texte": "Ah, c’était déjà fait. On prend la lumière quand même, merci."},
-        {"id": "quest.already_done.04", "voix": "fanal", "texte": "Notée après coup. C’est permis. Le travail était vrai."},
-        {"id": "quest.already_done.05", "voix": "solene", "texte": "Ce qui a été fait chez vous traverse quand même. L’ordre importe peu."},
-        {"id": "quest.already_done.06", "voix": "fanal", "texte": "Je la range avec les autres. Elle a déjà l’air contente d’être là."},
-        {"id": "quest.already_done.07", "voix": "fanal", "texte": "Une chose faite reste une chose faite, même écrite après."},
-        {"id": "quest.already_done.08", "voix": "naima", "texte": "Les choses faites sans témoin, je les aime bien. On les inscrit quand même."}
+        {"id": "quest.already_done.02", "voix": "fanal", "texte": "Faite avant d’être écrite. La plus efficace des quêtes."},
+        {"id": "quest.already_done.03", "voix": "fanal", "texte": "Notée après coup. C’est permis. Le travail était vrai."},
+        {"id": "quest.already_done.04", "voix": "fanal", "texte": "Une chose faite reste une chose faite, même écrite après."},
+        {"id": "quest.already_done.05", "voix": "fanal", "texte": "Je la range avec les autres. Elle a l’air contente d’être là."},
+        {"id": "quest.already_done.06", "voix": "fanal", "texte": "Pas de témoin, mais je te crois. Je l’inscris."}
+      ]
+    },
+    "quartier.niveau": {
+      "quand": "Un quartier atteint un nouveau niveau (5, 15, 30, 60, 100 tâches, puis toutes les 50). Remplace la réplique de quête terminée. Les variables {quartier}, {du_quartier} et {au_quartier} désignent ce quartier.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "quartier.niveau.01", "voix": "fanal", "texte": "Niveau suivant {au_quartier}. Je l’ai écrit sur le mur."},
+        {"id": "quartier.niveau.02", "voix": "fanal", "texte": "Ça monte {au_quartier}. Je l’annonce, c’est mon travail."},
+        {"id": "quartier.niveau.03", "voix": "fanal", "texte": "Un niveau de plus {au_quartier}. Pas de discours. Bon, un petit : bravo."},
+        {"id": "quartier.niveau.04", "voix": "fanal", "texte": "Le compteur {du_quartier} a changé de chiffre. J’aime quand ça arrive."},
+        {"id": "quartier.niveau.05", "voix": "fanal", "texte": "Nouveau niveau {au_quartier}. On garde le rythme, sans courir."},
+        {"id": "quartier.niveau.06", "voix": "fanal", "quartier": "champs", "texte": "Les Champs montent d’un cran. Les clôtures font semblant de rien."},
+        {"id": "quartier.niveau.07", "voix": "fanal", "quartier": "atelier", "texte": "L’Atelier monte d’un niveau. J’ai huilé la porte pour l’occasion."},
+        {"id": "quartier.niveau.08", "voix": "fanal", "quartier": "mairie", "texte": "La Mairie monte d’un niveau. Elle a acheté un deuxième tampon."},
+        {"id": "quartier.niveau.09", "voix": "fanal", "quartier": "ecole", "texte": "L’École monte d’un niveau. La cloche a sonné toute seule. Presque."},
+        {"id": "quartier.niveau.10", "voix": "fanal", "quartier": "garage", "texte": "Le Garage monte d’un niveau. Ma pelle est jalouse."},
+        {"id": "quartier.niveau.11", "voix": "fanal", "quartier": "place", "texte": "La Place monte d’un niveau. Les bancs se tiennent plus droits."}
       ]
     },
     "step.done": {
@@ -101,43 +89,38 @@
         {"id": "step.done.01", "voix": "fanal", "texte": "Une étape de moins."},
         {"id": "step.done.02", "voix": "fanal", "texte": "Étape cochée. Le reste a l’air plus petit d’ici."},
         {"id": "step.done.03", "voix": "fanal", "texte": "Un morceau de fait. On respire."},
-        {"id": "step.done.04", "voix": "solene", "texte": "Une étape, puis une autre. C’est comme ça qu’on laboure un champ."},
-        {"id": "step.done.05", "voix": "fanal", "texte": "Coché. Le chantier avance, même si ça paraît pas encore."},
-        {"id": "step.done.06", "voix": "fanal", "texte": "Étape réglée. La prochaine peut attendre son tour."},
-        {"id": "step.done.07", "voix": "fanal", "longueurMin": 6, "texte": "L’échafaudage monte d’un cran. Je l’ai vu bouger."},
-        {"id": "step.done.08", "voix": "milo", "texte": "Un morceau à la fois. C’est comme ça que les ponts tiennent."},
-        {"id": "step.done.09", "voix": "naima", "texte": "Une étape cochée, c’est une chose de moins à garder en tête."}
+        {"id": "step.done.04", "voix": "fanal", "texte": "Coché. Le chantier avance, même si ça paraît pas encore."},
+        {"id": "step.done.05", "voix": "fanal", "texte": "Étape réglée. La prochaine attend son tour."},
+        {"id": "step.done.06", "voix": "fanal", "texte": "Une pelletée à la fois. C’est comme ça qu’on déneige."},
+        {"id": "step.done.07", "voix": "fanal", "longueurMin": 6, "texte": "L’échafaudage monte d’un cran. Je l’ai vu bouger."}
       ]
     },
     "quest.start": {
-      "quand": "« Je m’y mets » : la quête passe en cours. Fanal fait la corvée miroir du secteur.",
+      "quand": "« Je m’y mets » : la quête passe en cours. Fanal fait une petite corvée du même genre, dans le quartier de la quête.",
       "frequence": 1,
       "variantes": [
-        {"id": "quest.start.01", "voix": "fanal", "texte": "Parfait. Je travaille à côté de toi. Fais-moi signe quand c’est fini."},
+        {"id": "quest.start.01", "voix": "fanal", "texte": "Parfait. Je travaille à côté. Fais-moi signe quand c’est fini."},
         {"id": "quest.start.02", "voix": "fanal", "texte": "D’accord. Je m’y mets aussi, à ma manière."},
         {"id": "quest.start.03", "voix": "fanal", "texte": "Je reste là. Pas de presse."},
-        {"id": "quest.start.04", "voix": "solene", "texte": "Bon courage. On va être deux à travailler, ici."},
-        {"id": "quest.start.05", "voix": "fanal", "texte": "Commencer, c’est souvent le plus dur. Ça, c’est fait."},
-        {"id": "quest.start.06", "voix": "fanal", "texte": "Je fais la même chose de mon bord, en plus petit."},
-        {"id": "quest.start.07", "voix": "fanal", "secteur": "place", "texte": "J’époussette ma lanterne pendant ce temps-là. Elle en avait besoin."},
-        {"id": "quest.start.08", "voix": "fanal", "secteur": "champs", "texte": "Je m’occupe des pots pendant que tu fais le terrain. On se rejoint après."},
-        {"id": "quest.start.09", "voix": "fanal", "secteur": "atelier", "texte": "Je balaie le Relais pendant que tu fais la maison. Chacun son plancher."},
-        {"id": "quest.start.10", "voix": "fanal", "secteur": "archives", "texte": "Je trie des fiches pendant que tu fais les papiers. Les miennes sont moins importantes."},
-        {"id": "quest.start.11", "voix": "fanal", "secteur": "maison-commune", "texte": "Je plie des cerfs-volants pendant ce temps. Pour plus tard."},
-        {"id": "quest.start.12", "voix": "fanal", "secteur": "relais", "texte": "Je graisse une roue de charrette pendant que tu t’occupes du véhicule."}
+        {"id": "quest.start.04", "voix": "fanal", "texte": "Commencer, c’est souvent le plus dur. Ça, c’est fait."},
+        {"id": "quest.start.05", "voix": "fanal", "texte": "Je fais la même chose de mon bord, en plus petit."},
+        {"id": "quest.start.06", "voix": "fanal", "quartier": "place", "texte": "J’époussette ma lanterne pendant ce temps-là. Elle en avait besoin."},
+        {"id": "quest.start.07", "voix": "fanal", "quartier": "champs", "texte": "Je m’occupe des pots pendant que tu fais le terrain. On se rejoint après."},
+        {"id": "quest.start.08", "voix": "fanal", "quartier": "atelier", "texte": "Je balaie l’Atelier pendant que tu fais la maison. Chacun son plancher."},
+        {"id": "quest.start.09", "voix": "fanal", "quartier": "mairie", "texte": "Je trie des fiches pendant que tu fais les papiers. Les miennes sont moins importantes."},
+        {"id": "quest.start.10", "voix": "fanal", "quartier": "ecole", "texte": "Je taille des crayons pendant ce temps. J’en ai déjà trop."},
+        {"id": "quest.start.11", "voix": "fanal", "quartier": "garage", "texte": "Je graisse ma pelle pendant que tu t’occupes du véhicule."}
       ]
     },
     "quest.undo": {
-      "quand": "« Remballer » dans les 24 h : la quête revient dans la liste et ses gains sont repris.",
+      "quand": "« Remballer » dans les 24 h : la quête revient dans la liste et ses gains sont repris.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.undo.01", "voix": "fanal", "texte": "Remballée. Elle reprend sa place dans la liste."},
         {"id": "quest.undo.02", "voix": "fanal", "texte": "Correct. On défait, on refera quand ce sera le bon moment."},
         {"id": "quest.undo.03", "voix": "fanal", "texte": "Elle est revenue. Ça arrive. Une liste, c’est fait pour bouger."},
-        {"id": "quest.undo.04", "voix": "solene", "texte": "Pas grave. On la remet sur la pile."},
-        {"id": "quest.undo.05", "voix": "fanal", "texte": "C’est noté. J’ai rangé la lumière, elle attend avec la quête."},
-        {"id": "quest.undo.06", "voix": "fanal", "texte": "Remballée sans bruit. Elle t’attend tranquillement."},
-        {"id": "quest.undo.07", "voix": "naima", "texte": "On n’efface rien. On ajoute une note : à reprendre."}
+        {"id": "quest.undo.04", "voix": "fanal", "texte": "C’est noté. J’ai remis les Matériaux sur la pile."},
+        {"id": "quest.undo.05", "voix": "fanal", "texte": "Remballée sans bruit. Elle t’attend tranquillement."}
       ]
     },
     "deadline.soon": {
@@ -145,90 +128,22 @@
       "frequence": 1,
       "variantes": [
         {"id": "deadline.soon.01", "voix": "fanal", "texte": "Une caisse est apparue sur la route. Elle a une date, on s’en occupe en temps et lieu."},
-        {"id": "deadline.soon.02", "voix": "fanal", "texte": "Celle-là a une échéance {echeance}. Je la garde à l’œil pour toi."},
-        {"id": "deadline.soon.03", "voix": "solene", "texte": "Il y a une date sur celle-là. Pas d’inquiétude, c’est juste un repère."},
-        {"id": "deadline.soon.04", "voix": "fanal", "texte": "Finie avant la date, elle peut rapporter un peu plus. Après, elle garde toute sa valeur."},
-        {"id": "deadline.soon.05", "voix": "fanal", "texte": "Petite caisse sur le chemin, pour {echeance}. Je la mets où tu la vois."},
-        {"id": "deadline.soon.06", "voix": "solene", "texte": "Une date approche. On s’organise, sans courir."},
-        {"id": "deadline.soon.07", "voix": "naima", "texte": "Échéance {echeance}. Je l’ai mise au calendrier. Une chose à la fois."},
-        {"id": "deadline.soon.08", "voix": "ambroise", "texte": "Une échéance, c’est juste une date où quelqu’un t’attend."},
-        {"id": "deadline.soon.09", "voix": "ambroise", "texte": "La caisse est chargée. Elle part {echeance}. On fait ça comme il faut."}
+        {"id": "deadline.soon.02", "voix": "fanal", "texte": "Il y a une date sur celle-là. Pas d’inquiétude, c’est juste un repère."},
+        {"id": "deadline.soon.03", "voix": "fanal", "texte": "Petite caisse sur le chemin. Je la mets où tu la vois."},
+        {"id": "deadline.soon.04", "voix": "fanal", "texte": "Une date approche. On s’organise, sans courir."},
+        {"id": "deadline.soon.05", "voix": "fanal", "texte": "Une échéance, c’est juste une date où quelqu’un t’attend."}
       ]
     },
     "deadline.passed": {
-      "quand": "Une fois par quête, à la première visite après la date. Rien n’est perdu : la Cote prend +25, la récompense ne baisse pas. Jamais de rouge.",
+      "quand": "Une fois par quête, à la première visite après la date. Rien n’est perdu : la Cote monte, la récompense ne baisse pas. Jamais de rouge.",
       "frequence": 1,
       "variantes": [
-        {"id": "deadline.passed.01", "voix": "fanal", "texte": "Elle est passée date. C’est correct : je l’ai mise en haut de la pile."},
+        {"id": "deadline.passed.01", "voix": "fanal", "texte": "Elle est passée date. C’est correct : je l’ai mise en haut de la pile."},
         {"id": "deadline.passed.02", "voix": "fanal", "texte": "Cette caisse attend encore. Elle est patiente. Moi aussi."},
-        {"id": "deadline.passed.03", "voix": "solene", "texte": "La date est passée, la quête est encore là. Ça se fait encore très bien."},
-        {"id": "deadline.passed.04", "voix": "fanal", "texte": "Elle est montée dans la liste, juste pour que tu la voies."},
-        {"id": "deadline.passed.05", "voix": "fanal", "texte": "Une date a passé. Rien n’est perdu. On la fera quand ça adonnera."},
-        {"id": "deadline.passed.06", "voix": "solene", "texte": "Celle-là a pris de l’âge. Elle garde toute sa valeur."},
-        {"id": "deadline.passed.07", "voix": "naima", "texte": "Les dates, je les note. Celle-ci est passée, la porte reste ouverte."},
-        {"id": "deadline.passed.08", "voix": "ambroise", "texte": "Elle attend au bord du chemin. Quand tu pourras."},
-        {"id": "deadline.passed.09", "voix": "ambroise", "texte": "J’ai vu des caisses attendre une saison entière. Elles finissent toujours par arriver."}
-      ]
-    },
-    "sector.repair": {
-      "quand": "Un secteur franchit le palier Réparer (150 Lueur, 12 cases).",
-      "frequence": 1,
-      "variantes": [
-        {"id": "sector.repair.01", "voix": "fanal", "texte": "Réparation terminée {au_secteur}. Douze cases de couleur. Je les ai comptées deux fois."},
-        {"id": "sector.repair.02", "voix": "solene", "texte": "Regarde {secteur}. Ça faisait des cycles qu’on avait pas vu ça."},
-        {"id": "sector.repair.03", "voix": "fanal", "texte": "La cendre a reculé pour de bon {au_secteur}. Elle reviendra pas."},
-        {"id": "sector.repair.04", "voix": "fanal", "texte": "Les habitants vont venir voir {secteur}. Moi, j’y suis déjà."},
-        {"id": "sector.repair.05", "voix": "solene", "texte": "{Secteur}, c’est toi, ça. Ce que tu fais chez vous, rendu ici."},
-        {"id": "sector.repair.06", "voix": "fanal", "texte": "La couleur reste {au_secteur}, même quand tu regardes ailleurs."},
-        {"id": "sector.repair.07", "voix": "solene", "secteur": "champs", "texte": "Les Champs sont réparés. On va pouvoir semer large."},
-        {"id": "sector.repair.08", "voix": "milo", "secteur": "atelier", "texte": "L’Atelier est réparé. Je vais dire à tout le monde que c’est moi."},
-        {"id": "sector.repair.09", "voix": "naima", "secteur": "archives", "texte": "Les Archives sont réparées. Je peux enfin lire les étiquettes."},
-        {"id": "sector.repair.10", "voix": "echo7", "texte": "Réparation consignée. Vous avez avancé à votre rythme. C’est le bon."}
-      ]
-    },
-    "sector.thrive": {
-      "quand": "Un secteur franchit le palier Prospérer (400 Lueur).",
-      "frequence": 1,
-      "variantes": [
-        {"id": "sector.thrive.01", "voix": "fanal", "texte": "Ça prospère {au_secteur}. Il y a du monde et une odeur de soupe."},
-        {"id": "sector.thrive.02", "voix": "solene", "texte": "Ça pousse presque tout seul {au_secteur}. On commence à avoir du surplus."},
-        {"id": "sector.thrive.03", "voix": "fanal", "texte": "On a arrêté de compter les cases {au_secteur}. Ça s’appelle prospérer, je pense."},
-        {"id": "sector.thrive.04", "voix": "fanal", "texte": "Des familles s’installent près {du_secteur}. Elles ont apporté leurs chaises."},
-        {"id": "sector.thrive.05", "voix": "solene", "texte": "Tu vois {secteur}? Avant, c’était gris. Maintenant, faut presque prendre rendez-vous."},
-        {"id": "sector.thrive.06", "voix": "fanal", "texte": "Tout le monde a quelque chose à faire {au_secteur}, et personne fait tout."},
-        {"id": "sector.thrive.07", "voix": "milo", "secteur": "atelier", "texte": "L’Atelier prospère. J’ai même un tabouret de rechange. Le grand luxe."},
-        {"id": "sector.thrive.08", "voix": "naima", "secteur": "archives", "texte": "Les Archives prospèrent. On a des tiroirs vides. J’ignorais que ça existait."},
-        {"id": "sector.thrive.09", "voix": "echo7", "texte": "Prospérité constatée. Ce mot n’avait plus servi ici depuis 184 cycles."}
-      ]
-    },
-    "sector.autonomous": {
-      "quand": "Un secteur franchit le palier Autonome (750 Lueur, +6 de Préparation permanente). C’est la vraie victoire : le secteur tient sans Alex.",
-      "frequence": 1,
-      "variantes": [
-        {"id": "sector.autonomous.01", "voix": "fanal", "texte": "Plus besoin de toi {au_secteur}. Je dis ça gentiment : ça tient tout seul."},
-        {"id": "sector.autonomous.02", "voix": "solene", "texte": "On s’occupe de tout {au_secteur}, maintenant. Tu peux regarder ailleurs. C’était ça, le but."},
-        {"id": "sector.autonomous.03", "voix": "fanal", "texte": "Autonome {au_secteur}. Ça veut dire que ça marche même quand tu dors."},
-        {"id": "sector.autonomous.04", "voix": "fanal", "texte": "{Secteur}, c’est plus toi qui portes ça. C’est tout le monde."},
-        {"id": "sector.autonomous.05", "voix": "solene", "texte": "Les gens {du_secteur} se débrouillent seuls. Ils te saluent quand même, par habitude."},
-        {"id": "sector.autonomous.06", "voix": "fanal", "texte": "Le gel peut bien venir. Ça se défend tout seul {au_secteur}, maintenant."},
-        {"id": "sector.autonomous.07", "voix": "fanal", "texte": "Une lanterne s’allume {au_secteur}. Celle-là reste allumée sans personne."},
-        {"id": "sector.autonomous.08", "voix": "milo", "secteur": "atelier", "texte": "L’Atelier roule sans moi. Je vais devoir me trouver un passe-temps."},
-        {"id": "sector.autonomous.09", "voix": "naima", "secteur": "archives", "texte": "Les Archives tiennent seules. Je n’ai plus besoin de tout vérifier. Ça me fait drôle."},
-        {"id": "sector.autonomous.10", "voix": "echo7", "texte": "Autonomie atteinte. Ce secteur peut vous attendre sans s’éteindre. C’est le travail d’un intendant."}
-      ]
-    },
-    "fil_libre.directed": {
-      "quand": "Alex envoie de la Lueur du Fil libre vers un secteur.",
-      "frequence": 1,
-      "variantes": [
-        {"id": "fil_libre.directed.01", "voix": "fanal", "texte": "Fil libre envoyé {au_secteur}. Bon choix. Je dis ça de tous les choix."},
-        {"id": "fil_libre.directed.02", "voix": "fanal", "texte": "La lumière file vers {secteur}. Elle connaît le chemin."},
-        {"id": "fil_libre.directed.03", "voix": "solene", "texte": "Tu donnes un coup de main {au_secteur}. Ça se fait, entre voisins."},
-        {"id": "fil_libre.directed.04", "voix": "fanal", "texte": "Le Fil libre aide là où ça pousse moins vite. Bien envoyé."},
-        {"id": "fil_libre.directed.05", "voix": "fanal", "texte": "Un peu de lumière en plus pour {secteur}. Personne a besoin de tout faire seul."},
-        {"id": "fil_libre.directed.06", "voix": "solene", "texte": "Les quêtes vont pas toutes au même endroit. Le Fil libre, lui, va où tu veux."},
-        {"id": "fil_libre.directed.07", "voix": "milo", "secteur": "atelier", "texte": "Merci pour la lumière. Je vais l’utiliser comme il faut. Probablement."},
-        {"id": "fil_libre.directed.08", "voix": "naima", "secteur": "archives", "texte": "Reçu aux Archives. Je note d’où ça vient. Curiosité professionnelle."}
+        {"id": "deadline.passed.03", "voix": "fanal", "texte": "La date est passée, la quête est encore là. Ça se fait encore très bien."},
+        {"id": "deadline.passed.04", "voix": "fanal", "texte": "Une date a passé. Rien n’est perdu. On la fera quand ça adonnera."},
+        {"id": "deadline.passed.05", "voix": "fanal", "texte": "Celle-là a pris de l’âge. Elle garde toute sa valeur."},
+        {"id": "deadline.passed.06", "voix": "fanal", "texte": "J’ai vu des caisses attendre un hiver entier. Elles finissent toujours par arriver."}
       ]
     },
     "return.after_absence": {
@@ -236,32 +151,25 @@
       "frequence": 1,
       "variantes": [
         {"id": "return.after_absence.01", "voix": "fanal", "texte": "Te revoilà! On a gardé ta place."},
-        {"id": "return.after_absence.02", "voix": "fanal", "texte": "Allô! L’Orée a tenu pendant ce temps-là. Tout est à sa place."},
-        {"id": "return.after_absence.03", "voix": "solene", "texte": "Te v’là! Les Champs ont tenu. Rien de perdu."},
-        {"id": "return.after_absence.04", "voix": "fanal", "texte": "Bon retour. J’ai pas bougé. Bon, un peu."},
-        {"id": "return.after_absence.05", "voix": "fanal", "texte": "Ah ben. T’es là. Ça me fait plaisir, c’est tout."},
-        {"id": "return.after_absence.06", "voix": "solene", "texte": "Contente de te voir. Une petite quête pour reprendre? Juste un tour, c’est correct aussi."},
-        {"id": "return.after_absence.07", "voix": "naima", "texte": "Pas besoin de rattraper quoi que ce soit. On reprend où on en était."},
-        {"id": "return.after_absence.08", "voix": "milo", "texte": "T’es revenu. J’avais mis ta tasse de côté. Elle a refroidi, par contre."},
-        {"id": "return.after_absence.09", "voix": "echo7", "texte": "Retour de l’intendant détecté. Aucune perte à signaler. Bienvenue."}
+        {"id": "return.after_absence.02", "voix": "fanal", "texte": "Allô! Le village a tenu pendant ce temps-là. Tout est à sa place."},
+        {"id": "return.after_absence.03", "voix": "fanal", "texte": "Bon retour. J’ai pas bougé. Bon, un peu."},
+        {"id": "return.after_absence.04", "voix": "fanal", "texte": "Ah ben. T’es là. Ça me fait plaisir, c’est tout."},
+        {"id": "return.after_absence.05", "voix": "fanal", "texte": "Pas besoin de rattraper quoi que ce soit. On reprend où on était."},
+        {"id": "return.after_absence.06", "voix": "fanal", "texte": "Une petite quête pour reprendre? Juste un tour, c’est correct aussi."}
       ]
     },
     "visit.end": {
-      "quand": "Écran « L’Orée veille » qui ferme la visite, avec la prochaine quête en grand.",
+      "quand": "Écran « Tout est enregistré, à demain » qui ferme la visite, avec la prochaine quête en grand.",
       "frequence": 1,
       "variantes": [
-        {"id": "visit.end.01", "voix": "fanal", "texte": "L’Orée veille. Je garde ta prochaine quête au chaud."},
-        {"id": "visit.end.02", "voix": "fanal", "texte": "C’est assez pour aujourd’hui. Le reste peut attendre ici, avec moi."},
-        {"id": "visit.end.03", "voix": "solene", "texte": "On s’occupe du reste. Reviens quand tu veux."},
-        {"id": "visit.end.04", "voix": "fanal", "texte": "Ta prochaine quête est là, en gros, pour quand tu reviendras."},
-        {"id": "visit.end.05", "voix": "fanal", "texte": "L’Orée veille. Tu peux fermer, elle tient."},
-        {"id": "visit.end.06", "voix": "fanal", "texte": "Merci d’être passé. Je retourne dormir sur ta liste."},
-        {"id": "visit.end.07", "voix": "solene", "texte": "Retourne à tes affaires. Ici, ça tient."},
-        {"id": "visit.end.08", "voix": "fanal", "texte": "Pas besoin de tout porter aujourd’hui. L’Orée veille aussi."},
-        {"id": "visit.end.09", "voix": "fanal", "moment": "soir", "texte": "Les lanternes sont allumées. Va te reposer, on s’occupe du reste."},
-        {"id": "visit.end.10", "voix": "solene", "moment": "soir", "texte": "Bonne nuit. Les rangs sont couverts, la lisière veille."},
-        {"id": "visit.end.11", "voix": "fanal", "moment": "soir", "texte": "Les lanternes sont prêtes. Moi aussi. Bonne nuit."},
-        {"id": "visit.end.12", "voix": "fanal", "moment": "matin", "texte": "Bonne journée. On se revoit ce soir, ou demain. Les deux me vont."}
+        {"id": "visit.end.01", "voix": "fanal", "texte": "C’est assez pour aujourd’hui. Le reste peut attendre ici, avec moi."},
+        {"id": "visit.end.02", "voix": "fanal", "texte": "Ta prochaine quête est là, en gros, pour quand tu reviendras."},
+        {"id": "visit.end.03", "voix": "fanal", "texte": "Tu peux fermer. Le village tient, je fais la ronde."},
+        {"id": "visit.end.04", "voix": "fanal", "texte": "Merci d’être passé. Je retourne à mon poste."},
+        {"id": "visit.end.05", "voix": "fanal", "texte": "Pas besoin de tout porter aujourd’hui. Je garde la liste au chaud."},
+        {"id": "visit.end.06", "voix": "fanal", "moment": "soir", "texte": "Les lanternes sont allumées. Va te reposer, je fais la ronde."},
+        {"id": "visit.end.07", "voix": "fanal", "moment": "soir", "texte": "Les lanternes sont prêtes. Moi aussi. Bonne nuit."},
+        {"id": "visit.end.08", "voix": "fanal", "moment": "matin", "texte": "Bonne journée. On se revoit ce soir, ou demain. Les deux me vont."}
       ]
     },
     "list.empty": {
@@ -270,25 +178,19 @@
       "variantes": [
         {"id": "list.empty.01", "voix": "fanal", "texte": "Ta liste est vide. J’ai vérifié deux fois. Ajoute une vraie chose à faire, même petite."},
         {"id": "list.empty.02", "voix": "fanal", "texte": "Rien sur la pile. Si quelque chose te trotte dans la tête, écris-le ici."},
-        {"id": "list.empty.03", "voix": "solene", "texte": "Pas de quête pour l’instant. Note la prochaine chose à faire chez vous, on s’occupe du reste."},
-        {"id": "list.empty.04", "voix": "fanal", "texte": "Liste vide. Moi, j’aime bien avoir une quête. Pour dormir dessus."},
-        {"id": "list.empty.05", "voix": "fanal", "texte": "Une seule ligne suffit pour commencer. Le bouton d’ajout est juste là."},
-        {"id": "list.empty.06", "voix": "solene", "texte": "Une liste vide, c’est un champ pas encore semé. Une quête, et on part."},
-        {"id": "list.empty.07", "voix": "fanal", "texte": "Ajoute une chose, même minuscule. Elle va traverser comme les autres."}
+        {"id": "list.empty.03", "voix": "fanal", "texte": "Liste vide. Moi, j’aime bien avoir une quête. Pour m’occuper."},
+        {"id": "list.empty.04", "voix": "fanal", "texte": "Une seule ligne suffit pour commencer. Le bouton d’ajout est juste là."}
       ]
     },
     "list.all_done": {
       "quand": "Plus aucune quête ouverte, et au moins une terminée.",
       "frequence": 1,
       "variantes": [
-        {"id": "list.all_done.01", "voix": "fanal", "texte": "Tout est fait. Je sais plus où dormir."},
+        {"id": "list.all_done.01", "voix": "fanal", "texte": "Tout est fait. Je sais plus quoi déneiger."},
         {"id": "list.all_done.02", "voix": "fanal", "texte": "Plus rien d’ouvert. C’est permis, ça aussi. Repose-toi."},
-        {"id": "list.all_done.03", "voix": "solene", "texte": "Toutes les quêtes sont faites. Prends ça tranquille. Le repos, ça compte aussi."},
-        {"id": "list.all_done.04", "voix": "fanal", "texte": "Liste terminée. J’ai vérifié sous les coussins. Rien."},
-        {"id": "list.all_done.05", "voix": "fanal", "texte": "Si une nouvelle chose arrive, tu l’ajoutes. Sinon, profite."},
-        {"id": "list.all_done.06", "voix": "solene", "texte": "Plus rien à faire dans la liste. L’Orée va bien. Toi aussi, j’espère."},
-        {"id": "list.all_done.07", "voix": "milo", "texte": "Plus de quêtes. Je me sens inutile. C’est agréable, en fait."},
-        {"id": "list.all_done.08", "voix": "naima", "texte": "Toutes les quêtes sont closes. C’est rare. Je l’inscris, pour le plaisir."}
+        {"id": "list.all_done.03", "voix": "fanal", "texte": "Liste terminée. J’ai vérifié sous les coussins. Rien."},
+        {"id": "list.all_done.04", "voix": "fanal", "texte": "Si une nouvelle chose arrive, tu l’ajoutes. Sinon, profite."},
+        {"id": "list.all_done.05", "voix": "fanal", "texte": "Plus de quêtes. Je me sens inutile. C’est agréable, en fait."}
       ]
     }
   }
