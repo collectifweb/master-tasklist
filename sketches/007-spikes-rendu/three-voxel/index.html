@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Orée voxel</title>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<link rel="modulepreload" href="./vendor/three.core.min.js">
+<link rel="modulepreload" href="./vendor/three.module.min.js">
+<style>
+:root{
+  --ink:#273026; --ink-soft:#4f5848; --paper:#fff8e8; --cream:#f7e7bd; --sun:#f3c879;
+  --soil:#aa6c43; --soil-deep:#75472f; --sage:#718c5d; --sage-deep:#3f6047;
+  --glass:#58a9a4; --glass-deep:#2d7473; --ember:#bf5a38; --wood:#d9b277;
+  --sky-top:#78afd6; --sky-mid:#b9d6e3; --sky-bot:#f3ead3; --hill-far:#a9bfc5; --hill-near:#8ea898;
+  --star-o:0; --disc-o:1; --disc-x:70%; --disc-y:18%;
+  --hud-h:64px;
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--sky-bot);color:var(--ink);-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button,input,output{font:inherit;color:inherit}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- Ciel (CSS, ne coûte rien au GPU) ---------- */
+#sky{position:fixed;inset:0;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 48%,var(--sky-bot) 100%);overflow:hidden}
+#stars{position:absolute;inset:0 0 35% 0;opacity:var(--star-o);
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 33% 9%,#fff 98%,transparent),
+    radial-gradient(1.4px 1.4px at 57% 22%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 76% 12%,#fff 98%,transparent),
+    radial-gradient(1.2px 1.2px at 88% 31%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 22% 37%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 46% 41%,#fff 98%,transparent),
+    radial-gradient(1.3px 1.3px at 67% 5%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 5% 46%,#fff 98%,transparent),
+    radial-gradient(1px 1px at 94% 50%,#fff 98%,transparent);
+  background-size:100% 100%}
+#disc{position:absolute;left:var(--disc-x);top:var(--disc-y);width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;opacity:var(--disc-o);
+  background:radial-gradient(circle,var(--disc-c,#fff6dc) 0 34%,color-mix(in srgb,var(--disc-c,#fff6dc) 45%,transparent) 36%,transparent 70%)}
+#hills{position:absolute;left:0;right:0;bottom:var(--hills-b,0px);width:100%;height:30%}
+#sky::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--hills-b,0px);background:var(--hill-near)}
+#hills .far{fill:var(--hill-far)} #hills .near{fill:var(--hill-near)}
+
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:0;right:0;display:flex;justify-content:center;gap:8px;padding:0 12px;pointer-events:none;z-index:5}
+.res{pointer-events:auto;display:grid;grid-template-columns:34px auto;align-items:center;column-gap:7px;min-width:104px;height:48px;padding:6px 12px 6px 7px;
+  background:color-mix(in srgb,var(--paper) 94%,transparent);border-radius:16px;box-shadow:0 8px 22px rgba(81,59,31,.16),inset 0 -2px 0 rgba(117,71,47,.12);transform-origin:50% 60%}
+.res .ico{grid-row:1/3;width:34px;height:34px;border-radius:11px;display:grid;place-items:center}
+.res .num{font-weight:900;font-size:1.08rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.res .lbl{font-size:.64rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);line-height:1.1}
+.res .delta{position:absolute;margin-top:-46px;margin-left:44px;font-weight:900;font-size:.8rem;color:var(--sage-deep);opacity:0;pointer-events:none}
+.ico.en{background:#f6d58a} .ico.ma{background:#e7c79a} .ico.co{background:#cddcc0}
+.res.flash{box-shadow:0 0 0 3px var(--sun),0 8px 22px rgba(81,59,31,.16)}
+
+/* ---------- Surcouche monde ---------- */
+#overlay{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+#sel{position:absolute;left:0;top:0;transform:translate(-50%,-100%);min-width:140px;max-width:210px;padding:7px 11px 8px;border-radius:13px;background:var(--paper);
+  box-shadow:0 10px 24px rgba(60,40,20,.25);font-size:.8rem;line-height:1.28;text-align:center;will-change:transform}
+#sel::after{content:"";position:absolute;left:calc(50% + var(--ax,0px));bottom:-7px;width:14px;height:14px;margin-left:-7px;background:var(--paper);transform:rotate(45deg);border-radius:2px}
+#sel strong{display:block;font-size:.92rem;font-weight:900;letter-spacing:-.01em}
+#sel span{display:block;color:var(--ink-soft)}
+#sel .tag{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#e6efdc;color:var(--sage-deep);font-weight:800;font-size:.72rem;letter-spacing:.04em}
+.fly{position:absolute;left:0;top:0;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:11px;display:grid;place-items:center;box-shadow:0 6px 14px rgba(60,40,20,.28);will-change:transform,opacity}
+.float{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-weight:900;font-size:1.5rem;color:var(--paper);letter-spacing:-.02em;
+  text-shadow:0 2px 0 var(--sage-deep),0 0 1px var(--sage-deep),2px 0 0 var(--sage-deep),-2px 0 0 var(--sage-deep),0 -2px 0 var(--sage-deep),0 6px 14px rgba(40,30,10,.35);white-space:nowrap;will-change:transform,opacity}
+.float small{font-size:.9rem}
+
+/* ---------- Contrôles carte ---------- */
+#mapctl{position:fixed;right:12px;bottom:calc(var(--panel-h,190px) + 12px);display:flex;flex-direction:column;gap:8px;z-index:5}
+.round{width:46px;height:46px;border-radius:50%;border:0;background:color-mix(in srgb,var(--paper) 94%,transparent);box-shadow:0 6px 16px rgba(60,40,20,.2);display:grid;place-items:center;cursor:pointer}
+.round:active{transform:scale(.94)}
+
+/* ---------- Panneau bas ---------- */
+#panel{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;z-index:6;padding:12px 14px calc(env(safe-area-inset-bottom,0px) + 12px);
+  background:color-mix(in srgb,var(--paper) 96%,transparent);border-radius:24px 24px 0 0;box-shadow:0 -10px 30px rgba(60,40,20,.16)}
+.row{display:flex;align-items:center;gap:8px}
+.row + .row{margin-top:10px}
+.time input{flex:1;min-width:0;height:44px;accent-color:var(--sage-deep)}
+.time output{min-width:66px;text-align:right;font-weight:900;font-variant-numeric:tabular-nums}
+#todico{width:28px;height:28px;display:grid;place-items:center;flex:none}
+.chip{height:44px;padding:0 12px;border-radius:12px;border:1.5px solid rgba(39,48,38,.18);background:var(--paper);font-weight:800;font-size:.84rem;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:#e6efdc;border-color:var(--sage)}
+.acts{display:grid!important;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+.act{min-height:52px;border-radius:14px;border:1.5px solid rgba(39,48,38,.2);background:var(--paper);font-weight:900;font-size:.9rem;line-height:1.1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 8px}
+.act.primary{background:var(--sage-deep);color:var(--paper);border-color:var(--sage-deep);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.act:active{transform:translateY(1px)}
+.act[disabled]{opacity:.45;cursor:default}
+.meta{justify-content:space-between}
+.meta small{color:var(--ink-soft);font-size:.74rem}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+#dbg{position:fixed;left:8px;top:calc(var(--hud-h) + 14px);z-index:9;font:11px/1.35 ui-monospace,monospace;background:rgba(20,24,20,.72);color:#e9f3df;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
+
+@media (min-width:700px){
+  .res{min-width:132px;height:52px}
+  #panel{bottom:16px;border-radius:24px}
+}
+@media (prefers-reduced-motion: reduce){ .act:active,.round:active{transform:none} }
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true">
+  <div id="stars"></div>
+  <div id="disc"></div>
+  <svg id="hills" viewBox="0 0 1000 340" preserveAspectRatio="none"><path class="far" d=""/><path class="near" d=""/></svg>
+</div>
+
+<canvas id="c" tabindex="-1" aria-label="Carte de la ferme de l’Orée. Utilise la liste « Lieux » pour sélectionner au clavier."></canvas>
+
+<header id="hud" aria-label="Ressources">
+  <div class="res" id="r-energie" role="group" aria-label="Énergie">
+    <span class="ico en" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M13.5 2 4.5 13.5h6l-1.5 8.5 9.5-12h-6.2z" fill="#f3c879" stroke="#273026" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
+    <span class="num" aria-live="off">128</span><span class="lbl">Énergie</span>
+  </div>
+  <div class="res" id="r-materiaux" role="group" aria-label="Matériaux">
+    <span class="ico ma" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><g fill="#d9b277" stroke="#273026" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="13" width="18" height="6" rx="1.5"/><rect x="5" y="6" width="14" height="6" rx="1.5"/></g><path d="M8 13v6M14 13v6M11 6v6" stroke="#75472f" stroke-width="1.3"/></svg></span>
+    <span class="num">42</span><span class="lbl">Matériaux</span>
+  </div>
+  <div class="res" id="r-confiance" role="group" aria-label="Confiance">
+    <span class="ico co" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M5 20c-.5-8.5 5-14.5 15-15 .4 9.6-5.6 15.3-15 15z" fill="#718c5d" stroke="#273026" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 20 14 11" stroke="#273026" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+    <span class="num">7</span><span class="lbl">Confiance</span>
+  </div>
+</header>
+
+<div id="overlay" aria-hidden="true">
+  <div id="sel" hidden><strong></strong><span></span><em class="tag"></em></div>
+</div>
+
+<div id="mapctl">
+  <button class="round" id="rotL" aria-label="Pivoter la vue vers la gauche"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#273026" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4v4.5h4.5"/></svg></button>
+  <button class="round" id="rotR" aria-label="Pivoter la vue vers la droite"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#273026" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>
+</div>
+
+<section id="panel" aria-label="Commandes">
+  <div class="row time">
+    <span id="todico" aria-hidden="true"></span>
+    <label for="tod" class="sr-only">Heure du jour</label>
+    <input type="range" id="tod" min="0" max="24" step="0.25" value="14">
+    <output id="todout" for="tod">14 h 00</output>
+    <button class="chip" id="now">Maintenant</button>
+  </div>
+  <div class="row acts">
+    <button class="act primary" id="bQuest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Quête terminée</button>
+    <button class="act" id="bBuild"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>Construire</button>
+    <button class="act" id="bHarvest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 21V8"/><path d="M12 12c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c0-3 2-5 5-5 0 3-2 5-5 5zM12 16c-3 0-5-2-5-5M12 15c3 0 5-2 5-5"/></svg>Récolter</button>
+  </div>
+  <div class="row meta">
+    <button class="chip" id="amb" aria-pressed="true">Vie ambiante</button>
+    <small id="hint">Touche un bâtiment ou un villageois</small>
+    <button class="chip" id="reset">Remettre</button>
+  </div>
+  <nav aria-label="Lieux de la ferme" id="places" class="sr-only"></nav>
+</section>
+
+<div id="live" class="sr-only" aria-live="polite"></div>
+<div id="dbg" hidden></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

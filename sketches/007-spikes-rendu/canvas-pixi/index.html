@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Orée · spike PixiJS</title>
+  <meta name="description" content="Prototype technique : île-ferme isométrique en WebGL (PixiJS v8) avec calque DOM accessible.">
+  <link rel="preload" href="assets/nunito.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="vendor/pixi.min.mjs">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+    <h1 class="sr-only">Quêtes du foyer — la ferme de l’Orée</h1>
+    <div id="stage"></div>
+    <div id="hotspots" role="group" aria-label="Carte de la ferme : flèches pour passer d’un élément à l’autre"></div>
+    <div id="sel-label" hidden aria-hidden="true"><strong></strong><span></span></div>
+
+    <header class="hud" aria-label="Ressources">
+      <div class="res" id="res-energy"><span class="ico" aria-hidden="true"></span><span class="txt"><b class="num">0</b><small>Énergie</small></span></div>
+      <div class="res" id="res-materials"><span class="ico" aria-hidden="true"></span><span class="txt"><b class="num">0</b><small>Matériaux</small></span></div>
+      <div class="res" id="res-trust"><span class="ico" aria-hidden="true"></span><span class="txt"><b class="num">0</b><small>Confiance</small></span></div>
+    </header>
+
+    <nav class="tools" aria-label="Commandes de la carte">
+      <button id="zoom-in" type="button" aria-label="Zoomer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button id="zoom-out" type="button" aria-label="Dézoomer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+      <button id="recenter" type="button" aria-label="Recentrer la carte"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      <button id="list-toggle" type="button" aria-expanded="false" aria-controls="alt-panel" aria-label="Vue liste des éléments"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+    </nav>
+
+    <div id="toast" role="status" aria-live="off"></div>
+
+    <section class="dock" aria-label="Actions">
+      <div class="time">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+        <input id="time" type="range" min="0" max="1439" step="5" value="840" aria-label="Heure de la journée">
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></svg>
+        <output id="time-out" for="time">14 h 00 · Jour</output>
+        <label class="realtime"><input id="realtime" type="checkbox" checked> Heure réelle</label>
+      </div>
+      <div class="actions">
+        <button id="btn-quest" type="button" class="primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Quête terminée</button>
+        <button id="btn-build" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V10l6-5 6 5v10M10 20v-5h4v5"/></svg>Construire</button>
+        <button id="btn-harvest" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9M12 13c-3 0-5-2-5-5 3 0 5 2 5 5zM12 11c3 0 5-2 5-5-3 0-5 2-5 5zM12 17c-3 0-5-2-5-5 3 0 5 2 5 5zM12 15c3 0 5-2 5-5"/></svg>Récolter</button>
+      </div>
+    </section>
+
+    <aside id="alt-panel" hidden aria-labelledby="alt-title">
+      <div class="alt-head"><h2 id="alt-title" tabindex="-1">Éléments de la ferme</h2><button id="alt-close" type="button">Fermer</button></div>
+      <p class="alt-note">Même contenu que la carte, en liste.</p>
+      <ul id="alt-list"></ul>
+    </aside>
+
+    <div id="live" class="sr-only" aria-live="polite"></div>
+    <noscript>Cette démo nécessite JavaScript et WebGL.</noscript>
+  </main>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
