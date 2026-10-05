@@ -6,7 +6,8 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   const b = await a.context().newPage();
   b.errors = [];
   b.on('pageerror', (e) => b.errors.push('pageerror: ' + e.message));
-  b.on('console', (m) => { if (m.type() === 'error' && !/world\//.test(m.location().url || '')) b.errors.push('console: ' + m.text()); });
+  // 409 : conflit de révision, réponse normale du protocole (l'onglet rejoue sur l'état frais) ; voir lib.cjs
+  b.on('console', (m) => { if (m.type() === 'error' && !/world\//.test(m.location().url || '') && !/status of 409/.test(m.text())) b.errors.push('console: ' + m.text()); });
   await a.goto(srv.url); await L.ready(a);
   await b.goto(srv.url); await L.ready(b);
   await L.openPanel(a); await L.openPanel(b);

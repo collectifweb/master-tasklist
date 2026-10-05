@@ -73,9 +73,12 @@ L.runScenario('12. monde : fil de lumière, impact, Lueur, repos', async ({ R, s
   R.check('0 requestAnimationFrame après 12 s d’inactivité', r2 === r1, `${r1} → ${r2}`);
   R.check('le monde est au repos (data-ambient=off, plus de bouton « Passer »)', await page.evaluate(() => document.querySelector('.ow').dataset.ambient === 'off' && document.querySelector('.ow-skip').hidden));
 
-  // toucher un secteur de la carte : liste filtrée et panneau ouvert
+  // toucher un secteur de la carte : sa feuille d'actions, puis « Voir les quêtes des Champs » → liste filtrée
   await page.click('.ow-plaque[data-sector="champs"]');
-  R.check('toucher un secteur ouvre le panneau', await L.waitFor(() => page.evaluate(() => document.getElementById('app').dataset.panel === 'open'), 2000));
+  R.check('toucher un secteur ouvre sa feuille d’actions', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-act').open && /Champs/.test(document.getElementById('act-t').textContent)), 2000));
+  await page.waitForTimeout(300);
+  await page.click('#dlg-act [data-act="filter"]');
+  R.check('« Voir les quêtes » ferme la feuille et ouvre le panneau', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-act').open && document.getElementById('app').dataset.panel === 'open'), 2000));
   R.check('et filtre la liste par ce secteur', await page.evaluate(() => document.querySelector('.chip[data-sector="champs"]').getAttribute('aria-pressed') === 'true' && [...document.querySelectorAll('#quest-list .quest-title')].map((e) => e.textContent.trim()).join('|') === 'Ratisser les feuilles'));
   await page.screenshot({ path: `${L.SHOTS}/12-secteur-${size[0]}.png` });
 

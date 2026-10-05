@@ -25,6 +25,7 @@ export function situationFor(action, params, events, task) {
     case 'startQuest': return 'quest.start';
     case 'remballerQuest': return 'quest.undo';
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
+    case 'directFil': return 'fil_libre.directed';
     default: return null;
   }
 }
@@ -46,7 +47,7 @@ export function createSpeech(root) {
     react({ action, params, events, task, game, now }) {
       const sit = situationFor(action, params || {}, events || [], task);
       if (!sit) return null;
-      const sectorId = task ? sectorOfTask(task) : 'place';
+      const sectorId = task ? sectorOfTask(task) : (params && params.sector) || 'place';
       const reply = pickReply(sit, {
         now, chapter: game.chapter ? game.chapter.number : 1, sector: sectorId,
         length: task ? (task.frozen ? task.frozen.length : task.length) : 0,

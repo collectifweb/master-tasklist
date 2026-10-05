@@ -145,3 +145,711 @@
   font-size: var(--text-14);
   color: var(--text-soft);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Semaine 3 : carnet (chapitre, Avis, voile), feuille d'actions, plan,
+   moments d'histoire, lettre du matin, réglages, bilan de la semaine.
+   Mêmes jetons, mêmes composants (.btn, .tag, .why-ledger, dialog.sheet).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Le carnet occupe une rangée sous la voie d'annonce : le monde se cadre en dessous
+   (la caméra lit --world-safe-top), le bouton « Passer l'animation » et la réplique aussi. */
+.app {
+  --carnet-top: calc(var(--lane-top) + var(--lane-h));
+  --world-safe-top: calc(var(--carnet-top) + var(--target) + var(--sp-2));
+}
+
+.carnet {
+  position: absolute;
+  z-index: var(--z-lane);
+  top: var(--carnet-top);
+  left: calc(var(--sp-2) + var(--safe-left));
+  right: calc(var(--sp-2) + var(--safe-right) + var(--world-cover-right));
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+.carnet > * {
+  pointer-events: auto;
+}
+.carnet-pills {
+  display: flex;
+  gap: var(--sp-2);
+  max-width: 100%;
+}
+.carnet-pills:empty {
+  display: none;
+}
+.carnet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: var(--target);
+  padding: 0 var(--sp-3) 0 10px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+  color: var(--text);
+  font: var(--w-bold) var(--text-14) / 1.2 var(--font-ui);
+  white-space: nowrap;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-micro);
+}
+.carnet-pill .icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--c-sage-deep);
+}
+.carnet-pill--frost .icon {
+  color: var(--c-frost-ink);
+}
+.carnet-pill[aria-expanded="true"] {
+  background: var(--c-paper);
+  box-shadow: var(--shadow-hud), inset 0 0 0 2px var(--c-line-strong);
+}
+.carnet-pill:active {
+  transform: translateY(calc(var(--motion) * 1px));
+}
+.carnet-pill-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.carnet-pill-num {
+  font: var(--w-heavy) var(--text-14) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-frost-ink);
+}
+.carnet-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.carnet-pips i {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--c-sage-deep);
+  border-radius: 50%;
+}
+.carnet-pips i.is-done {
+  background: var(--c-sage-deep);
+}
+
+/* Jauge d'Avis : la Préparation (givre) monte vers le trait de la Force. Le texte dit toujours où on en est. */
+.avis-gauge {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--c-frost-wash);
+  box-shadow: inset 0 0 0 1px var(--c-frost);
+}
+.avis-gauge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--c-frost-ink);
+}
+.avis-gauge-force {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: var(--r-pill);
+  background: var(--text);
+}
+.avis-gauge--big {
+  width: 100%;
+  height: 12px;
+  background: var(--c-paper);
+}
+.avis-gauge--big .avis-gauge-force {
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+}
+
+/* Carte dépliée : posée sur le monde, sous les pastilles ; défile si elle dépasse la partie visible */
+.carnet-card {
+  width: min(400px, 100%);
+  max-height: calc(100dvh - var(--carnet-top) - var(--target) - var(--sp-4) - var(--world-cover-bottom) - var(--safe-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--c-paper);
+  box-shadow: var(--shadow-float);
+  animation: carnet-in var(--t-short) var(--ease-out);
+}
+.carnet-card[hidden] {
+  display: none;
+}
+@keyframes carnet-in {
+  from { opacity: 0; transform: translateY(calc(var(--motion) * -6px)); }
+}
+.carnet-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-right: calc(-1 * var(--sp-3));
+}
+.carnet-card-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-18);
+  font-weight: var(--w-display);
+  line-height: var(--lh-snug);
+}
+.carnet-card-title .icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--c-sage-deep);
+}
+.carnet-card-title--frost .icon {
+  color: var(--c-frost-ink);
+}
+.carnet-card-title:focus {
+  outline: none;
+}
+.carnet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--sp-2);
+  margin-top: calc(-1 * var(--sp-2));
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.carnet-meta > span + span::before {
+  content: "·";
+  margin-right: var(--sp-2);
+}
+.carnet-objs {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carnet-obj {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-2);
+  padding: 7px 0;
+  font-size: var(--text-15);
+  line-height: var(--lh-snug);
+}
+.carnet-obj + .carnet-obj {
+  border-top: 1px dashed var(--c-line);
+}
+.carnet-obj-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--c-line-strong);
+  border-radius: 50%;
+}
+.carnet-obj-mark .icon {
+  width: 14px;
+  height: 14px;
+}
+.carnet-obj.is-done .carnet-obj-mark {
+  border-color: var(--c-sage-deep);
+  background: var(--c-sage-deep);
+  color: var(--text-on-action);
+}
+.carnet-obj.is-done .carnet-obj-text {
+  color: var(--text-soft);
+}
+.carnet-obj.is-now .carnet-obj-mark {
+  border-color: var(--c-sage-deep);
+}
+.carnet-obj.is-now .carnet-obj-text > span:first-child {
+  font-weight: var(--w-bold);
+}
+.carnet-obj-text small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.carnet-obj .tag {
+  margin-left: 4px;
+  vertical-align: 1px;
+}
+.tag--now {
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+}
+.carnet-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-glass-wash);
+  color: var(--c-glass-ink);
+  font-size: var(--text-14);
+  line-height: 1.4;
+}
+.carnet-status .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+.avis-block {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-frost-wash);
+  color: var(--c-frost-ink);
+}
+.avis-figures {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+}
+.avis-figures b {
+  margin-left: 4px;
+  font: var(--w-heavy) var(--text-20) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.avis-verdict {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+}
+.avis-verdict .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.carnet-lines .why-line {
+  padding: 6px 0;
+  font-size: var(--text-15);
+}
+.carnet-lines .why-line dd {
+  font-size: var(--text-16);
+  color: var(--c-frost-ink);
+}
+.carnet-lines .why-line--zero dd {
+  color: var(--text-muted);
+}
+.carnet-note {
+  font-size: var(--text-14);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.carnet-veil {
+  display: grid;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px dashed var(--c-line);
+}
+.carnet-veil-head {
+  font-size: var(--text-15);
+}
+
+/* ───────── Feuille d'actions ───────── */
+.act-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-ui);
+  font-size: var(--text-14);
+  font-weight: var(--w-medium);
+  color: var(--text-soft);
+}
+.act-body {
+  gap: var(--sp-4);
+}
+.act-section {
+  display: grid;
+  gap: var(--sp-2);
+}
+.act-section-title {
+  font-size: var(--text-14);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.02em;
+  color: var(--text-soft);
+}
+.act-section--frost {
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-frost-wash);
+}
+.act-section--frost .act-section-title {
+  color: var(--c-frost-ink);
+}
+.act-row {
+  display: grid;
+  gap: 2px;
+}
+.act-row .btn-reason {
+  margin-top: 2px;
+}
+.act-btn {
+  width: 100%;
+  justify-content: flex-start;
+  gap: var(--sp-2);
+  padding: 6px var(--sp-3);
+  text-align: left;
+  white-space: normal;
+}
+.act-label {
+  flex: 1;
+  min-width: 0;
+}
+.act-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding-left: var(--sp-2);
+  white-space: nowrap;
+}
+.cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: var(--w-heavy) var(--text-15) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+.cost .icon {
+  width: 18px;
+  height: 18px;
+}
+.cost[data-res="energie"] .icon { color: var(--res-energie); }
+.cost[data-res="materiaux"] .icon { color: var(--res-materiaux); }
+.btn--primary .cost .icon,
+.btn[aria-disabled="true"] .cost .icon {
+  color: currentColor;
+}
+.cost-and {
+  font-weight: var(--w-bold);
+  opacity: 0.75;
+}
+.btn-reason .cost {
+  font-size: var(--text-14);
+  vertical-align: -3px;
+}
+.btn-reason .cost .icon {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+.act-hint {
+  padding-left: 2px;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.act-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--text-15);
+  line-height: 1.4;
+}
+.act-text .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.act-text--done,
+.act-text--done .icon {
+  color: var(--c-sage-deep);
+}
+.act-text--frost {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-frost-wash);
+  color: var(--c-frost-ink);
+}
+.act-text--frost .icon {
+  color: inherit;
+}
+.act-pantry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-15);
+}
+.act-count {
+  font: var(--w-heavy) var(--text-16) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+.act-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ───────── Plan accessible : les gestes en liste ───────── */
+.plan-acts-wrap {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+.plan-acts {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-act {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px dashed var(--c-line);
+}
+.plan-act-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+.plan-act-text .icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--c-sage-deep);
+}
+.plan-act-name {
+  display: block;
+  font-weight: var(--w-bold);
+}
+.plan-act-state {
+  display: block;
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+
+/* ───────── Moments d'histoire ───────── */
+.scene-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-18);
+  line-height: var(--lh-snug);
+}
+.scene-title .icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--c-sage-deep);
+}
+.scene-title--frost .icon {
+  color: var(--c-frost-ink);
+}
+.scene-count {
+  flex: none;
+  padding-right: var(--sp-3);
+  font: var(--w-semibold) var(--text-14) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+}
+.scene-body {
+  min-height: 132px;
+  align-content: center;
+}
+.scene-line {
+  display: grid;
+  gap: var(--sp-1);
+  animation: fade-in var(--t-short) var(--ease-out);
+}
+.scene-voice {
+  font-size: var(--text-14);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.02em;
+  color: var(--c-glass-ink);
+}
+.scene-text {
+  font-family: var(--font-display);
+  font-size: var(--text-20);
+  font-weight: var(--w-medium);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.scene-line--narration .scene-text {
+  font-family: var(--font-ui);
+  font-size: var(--text-18);
+  font-style: italic;
+  font-weight: var(--w-regular);
+  color: var(--text-soft);
+}
+.scene-line--inscription {
+  justify-items: center;
+  padding: var(--sp-4) var(--sp-3);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
+  box-shadow: inset 0 2px 0 var(--c-paper), inset 0 -2px 0 var(--c-line);
+  text-align: center;
+}
+.scene-inscription-label {
+  font-size: var(--text-12);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+.scene-line--inscription .scene-text {
+  letter-spacing: 0.01em;
+}
+.scene-foot .btn--quiet {
+  flex: 0 1 auto;
+}
+.scene-foot [hidden] {
+  display: none;
+}
+
+/* ───────── Lettre du matin ───────── */
+.letter-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.letter-title .icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--c-lantern-ink);
+}
+.letter-paper {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  font-size: var(--text-18);
+  line-height: var(--lh-body);
+  overflow-wrap: anywhere;
+}
+.letter-sign {
+  justify-self: end;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: var(--w-bold);
+  color: var(--c-glass-ink);
+}
+.letter-prenom {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-14);
+}
+.letter-prenom > .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+/* ───────── Bilan de la semaine ───────── */
+.review-body {
+  gap: var(--sp-5);
+}
+.review-sum {
+  display: grid;
+  gap: var(--sp-2);
+}
+.review-lead {
+  font-family: var(--font-display);
+  font-size: var(--text-20);
+  font-weight: var(--w-bold);
+  line-height: var(--lh-snug);
+}
+.review-lisiere {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-soft);
+}
+.review-lisiere .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--res-lueur);
+}
+.review-domains .why-line dd {
+  font-size: var(--text-16);
+}
+.review-sort {
+  display: grid;
+  gap: var(--sp-2);
+}
+.review-olds {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.review-old {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px dashed var(--c-line);
+}
+.review-old-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.review-old-title {
+  font-weight: var(--w-bold);
+  overflow-wrap: anywhere;
+}
+.review-old-meta {
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.review-old-acts {
+  display: flex;
+  gap: var(--sp-2);
+}
+@media (max-width: 479px) {
+  .review-old {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carnet-card,
+  .scene-line {
+    animation-duration: 150ms;
+  }
+}
+
+/* Carte du carnet dépliée : la réplique (aussi lue dans #live) s'efface pour ne pas la recouvrir */
+.app:has(#carnet-card:not([hidden])) .speech {
+  visibility: hidden;
+}

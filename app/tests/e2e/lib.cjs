@@ -26,7 +26,35 @@ function freePort() {
   });
 }
 
-async function startServer({ tasks } = {}) {
+/** Identifiants de tous les moments d'histoire de chapitres.json (pour un état « déjà vu »). */
+function allStoryIds() {
+  const ch = JSON.parse(fs.readFileSync(path.join(REPO, 'app', 'content', 'fr-CA', 'chapitres.json'), 'utf8'));
+  const ids = ['introduction'];
+  for (const c of ch.chapitres || []) {
+    ids.push(`${c.id}.ouverture`, `${c.id}.fin`);
+    for (const o of c.objectifs || []) ids.push(`${o.id}.annonce`, `${o.id}.atteint`);
+    for (const b of c.beats || []) ids.push(b.id);
+    if (c.avis) for (const r of ['annonce', 'tenu', 'voile', 'absent']) ids.push(`avis.${c.avis.id}.${r}`);
+  }
+  return ids;
+}
+
+/**
+ * État de jeu « calme » pour les scénarios qui ne testent pas le récit : intro et moments déjà vus, lettre du jour
+ * déjà montrée. Sans lui, l'intro (feuille modale) s'ouvrirait au premier lancement et masquerait la page.
+ */
+function quietState(core, now = new Date(), { letters = true } = {}) {
+  const g = core.createInitialState(now);
+  g.story = { seen: allStoryIds(), day: null, count: 0 };
+  if (letters) {
+    const lt = JSON.parse(fs.readFileSync(path.join(REPO, 'app', 'content', 'fr-CA', 'lettres.json'), 'utf8'));
+    const day = core.gameDay(now);
+    for (const k of ['matin', 'matinSansQuete', 'retour']) for (const l of lt[k] || []) g.letters[l.id] = day;
+  }
+  return g;
+}
+
+async function startServer({ tasks, game, ledger } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'oree-ui-'));
   fs.cpSync(path.join(REPO, 'app'), path.join(root, 'app'), {
     recursive: true,
@@ -35,6 +63,11 @@ async function startServer({ tasks } = {}) {
   const tasksFile = path.join(root, 'tasks.json');
   if (tasks) fs.writeFileSync(tasksFile, JSON.stringify(tasks, null, 4) + '\n');
   else fs.copyFileSync(path.join(REPO, 'tasks.example.json'), tasksFile);
+  // état du jeu et registre de départ, posés avant le premier appel à l'API
+  const dataDir = path.join(root, 'app', 'api', 'data');
+  if (game || ledger) fs.mkdirSync(dataDir, { recursive: true });
+  if (game) fs.writeFileSync(path.join(dataDir, 'game-state.json'), JSON.stringify(game));
+  if (ledger) fs.writeFileSync(path.join(dataDir, 'ledger.jsonl'), ledger.map((e) => JSON.stringify(e)).join('\n') + (ledger.length ? '\n' : ''));
   const port = await freePort();
   const proc = spawn('php', ['-S', `127.0.0.1:${port}`, '-t', root], {
     env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8' }, stdio: 'ignore',
@@ -194,6 +227,31 @@ async function ready(page) {
   await page.waitForTimeout(150);
 }
 
+/**
+ * Ferme ce que l'accueil a pu ouvrir (moment d'histoire, lettre, bilan), une feuille après l'autre.
+ * Renvoie la liste des feuilles fermées (ex. ['dlg-letter']).
+ */
+async function closeWelcome(page, ms = 2500) {
+  const closed = [];
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    const id = await page.evaluate(() => { const d = document.querySelector('#dlg-scene[open], #dlg-letter[open], #dlg-review[open]'); return d ? d.id : null; });
+    if (!id) { await page.waitForTimeout(150); continue; }
+    if (id === 'dlg-scene') {
+      // « Passer » jusqu'à la fin, puis le dernier bouton (Fermer, Plus tard)
+      for (let i = 0; i < 40 && await page.evaluate(() => !!document.querySelector('#dlg-scene[open]')); i++) {
+        await page.evaluate(() => { const d = document.querySelector('#dlg-scene'); (d.querySelector('[data-action="scene-later"]') || d.querySelector('[data-action="scene-next"]')).click(); });
+        await page.waitForTimeout(60);
+      }
+    } else {
+      await page.evaluate((x) => document.querySelector(`#${x} .sheet-foot [data-close]`).click(), id);
+    }
+    closed.push(id);
+    await page.waitForTimeout(500);
+  }
+  return closed;
+}
+
 /** Ouvre le panneau en compact (la liste n'est visible qu'ouverte). */
 async function openPanel(page) {
   const open = await page.evaluate(() => document.getElementById('app').dataset.panel === 'open');
@@ -202,17 +260,27 @@ async function openPanel(page) {
   await page.waitForTimeout(450);
 }
 
-/** Lance fn pour chacune des 3 largeurs, avec un serveur neuf à chaque fois. */
-async function runScenario(name, fn, { tasks } = {}) {
+/** Le bilan du dimanche est déjà passé sur cet appareil aujourd'hui (scénarios « calmes »). */
+const QUIET_REVIEW = (day) => { try { if (!localStorage.getItem('oree.recycle.v1')) localStorage.setItem('oree.recycle.v1', JSON.stringify({ shown: day })); } catch {} };
+
+/**
+ * Lance fn pour chacune des 3 largeurs, avec un serveur neuf à chaque fois.
+ * Options : tasks ; game (objet ou fonction (core) → objet) ; ledger ; fresh: true = premier lancement réel
+ * (aucun état posé : intro, lettre et bilan peuvent s'ouvrir). Par défaut, état « calme » (quietState).
+ * quietReview (vrai sauf avec fresh) : le bilan du dimanche est noté comme déjà vu sur l'appareil.
+ */
+async function runScenario(name, fn, { tasks, game, ledger, fresh = false, quietReview = !fresh } = {}) {
   const R = reporter(name);
   const b = await launch();
   const core = await import(require('node:url').pathToFileURL(path.join(REPO, 'app', 'core', 'index.js')).href);
   for (const size of sizes) {
     console.log(`-- ${size[0]}x${size[1]}`);
-    const srv = await startServer({ tasks });
+    const seed = typeof game === 'function' ? game(core) : game || (fresh ? null : quietState(core));
+    const srv = await startServer({ tasks, game: seed, ledger: typeof ledger === 'function' ? ledger(core) : ledger });
     const pages = [];
     const mk = async (opts, ctxOpts) => {
       const c = await newPage(b, size, ctxOpts);
+      if (quietReview) await c.context.addInitScript(QUIET_REVIEW, core.gameDay(new Date()));
       pages.push(c.page);
       return c;
     };
@@ -245,4 +313,4 @@ const rect = (page, sel) => page.evaluate((s) => {
   return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom };
 }, sel);
 
-module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium };
+module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, allStoryIds, closeWelcome };

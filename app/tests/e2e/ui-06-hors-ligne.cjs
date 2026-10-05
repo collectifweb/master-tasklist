@@ -18,7 +18,9 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   R.check('le texte hors ligne dit combien de changements attendent', /1 changement/.test(await page.textContent('#sync')), await page.textContent('#sync'));
   R.check('l’action est visible tout de suite (ressources en hausse)', (await L.resValue(page, 'energie')) > e0);
   R.check('rien n’est parti vers le serveur', posts.length === base && !srv.ledger().some((e) => e.key === `reward:${id}:1`) && srv.readTasks().find((t) => t.id === id).status === 'todo');
-  R.check('la file d’attente est gardée dans localStorage', await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').length) === 1);
+  // la quête, plus la tenue du jeu qui la suit (passage du temps) : seule la quête compte comme changement
+  const q = await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').map((e) => e.name));
+  R.check('la file d’attente est gardée dans localStorage (une quête faite)', q.filter((n) => n === 'completeQuest').length === 1 && q.every((n) => ['completeQuest', 'advanceTime'].includes(n)), q.join());
   await shot(page, '06-hors-ligne');
   await context.setOffline(false);
   // serveur injoignable au démarrage (la page est déjà là, l'API non) : l'app se reconstruit depuis la copie locale

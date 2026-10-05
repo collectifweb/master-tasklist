@@ -1,8 +1,8 @@
 // Textes (content/fr-CA/*.json), gabarits, et choix des répliques de personnages sans répétition sur 7 jours.
-import { daysBetween, localParts, gameDay, SECTORS } from '../core/index.js';
+import { daysBetween, localParts, gameDay, SECTORS, fillText } from '../core/index.js';
 
 const BASE = new URL('content/fr-CA/', document.baseURI).href;
-export const content = { ui: {}, repliques: null, ancres: null, lettres: null };
+export const content = { ui: {}, repliques: null, ancres: null, lettres: null, chapitres: null };
 
 export async function loadContent() {
   const get = async (f) => {
@@ -14,6 +14,32 @@ export async function loadContent() {
   content.ui = ui;
   content.repliques = repliques;
   content.ancres = ancres;
+  // chapitres et lettres : le jeu reste utilisable sans eux (pas de récit, pas de lettre)
+  const [chapitres, lettres] = await Promise.all([get('chapitres.json').catch(() => null), get('lettres.json').catch(() => null)]);
+  content.chapitres = chapitres;
+  content.lettres = lettres;
+}
+
+// ───────── Prénom (réglage facultatif, gardé sur l'appareil) ─────────
+const PRENOM_KEY = 'oree.prenom.v1';
+export function prenom() {
+  try { return (localStorage.getItem(PRENOM_KEY) || '').trim(); } catch { return ''; }
+}
+export function setPrenom(v) {
+  const s = String(v ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  try { if (s) localStorage.setItem(PRENOM_KEY, s); else localStorage.removeItem(PRENOM_KEY); } catch { /* sans stockage : pas de prénom */ }
+  return s;
+}
+
+/**
+ * Remplit une ligne de scène ou de lettre. Sans prénom, « , {prenom} » et « {prenom}, » disparaissent
+ * (« T’es {prenom}, le septième intendant. » → « T’es le septième intendant. »). Renvoie null si un autre gabarit
+ * reste vide : la ligne est alors écartée, jamais affichée avec une accolade.
+ */
+export function fillLine(text, vars = {}) {
+  const p = vars.prenom || '';
+  const s = p ? String(text) : String(text).replace(/\{prenom\},\s*/g, '');
+  return fillText(s, { ...vars, prenom: p || null });
 }
 
 /** Remplace {nom} ; renvoie null si un gabarit n'a pas de valeur (jamais d'accolade affichée). */

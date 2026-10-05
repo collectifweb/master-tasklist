@@ -1,10 +1,11 @@
 // Pont vers le monde (app/world/world.js). S'il manque ou échoue, l'illustration statique de la coquille reste en place.
 // Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
 //
-//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion });
+//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion });
+//   onSelect({ type: 'sector' | 'object' | 'plot' | 'landmark' | 'placement', id, … }) ; onHarvest(plotId) : récolte au glissé.
 //   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now)
 //   w.plan(conteneur, { onFocusSector }) → { render, focus, destroy }
-export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion }) {
+export async function initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion }) {
   let mod, view;
   try {
     [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
@@ -15,7 +16,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
   try {
     const texts = content.ui;
     const anchors = content.ancres;
-    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now });
+    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, onHarvest, threadFrom, now });
     world.setReducedMotion(reducedMotion());
     container.hidden = false;
     slot.dataset.world = 'live';

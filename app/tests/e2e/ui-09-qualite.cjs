@@ -41,6 +41,12 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
     R.check(`${label} : toutes les cibles ≥ 44 px`, a.small.length === 0, a.small.slice(0, 6).join(' ; '));
   };
   await audit('Fil du jour replié');
+  // carte du chapitre dépliée sur la carte
+  await page.click('#carnet [data-card="chapitre"]');
+  await page.waitForSelector('#carnet-card:not([hidden])'); await page.waitForTimeout(300);
+  await audit('carte du chapitre');
+  await shot(page, '09-carnet');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
   await L.openPanel(page);
   await audit('panneau ouvert');
   // états variés
@@ -61,6 +67,26 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
   await page.waitForTimeout(300);
   await audit('ajout (réglages ouverts)');
   await shot(page, '09-ajout-reglages');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+
+  // écrans de jeu : feuille d'actions d'un secteur (depuis le plan), bilan de la semaine, prénom
+  await page.click('[data-action="open-plan"]');
+  await page.waitForSelector('#dlg-plan[open]'); await page.waitForTimeout(400);
+  await audit('plan accessible');
+  await page.click(`#dlg-plan [data-act="open-target"][data-params='{"type":"sector","id":"champs"}']`);
+  await page.waitForSelector('#dlg-act[open]'); await page.waitForTimeout(500);
+  await audit('feuille d’actions des Champs');
+  await shot(page, '09-feuille-champs');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await page.click('[data-action="open-review"]');
+  await page.waitForSelector('#dlg-review[open]'); await page.waitForTimeout(500);
+  await audit('bilan de la semaine');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await page.click('[data-action="open-settings"]');
+  await page.waitForSelector('#dlg-settings[open]'); await page.waitForTimeout(500);
+  await audit('prénom (réglages)');
+  await shot(page, '09-prenom');
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 
   // indicateur hors ligne et message
