@@ -2,6 +2,7 @@
 // arrière de l'emprise. Chaque fonction renvoie { svg, x, y, w, h, shadow, anchors } (voir iso.js : Art.done).
 // Les 15 modèles du monde : bastion, tour, relais, lanterne, cloture, caisse, parcelle (sol), culture
 // (courge, patate, blé), tunnel, atelier, etabli, erable, glaciere, registres, maison.
+// Semaine 3 : chantier (emplacement de l'établi), brasero, case de givre, panier, sceau.
 // Décor : epinette, arbre, buisson, rocher. Personnages (Fanal, Solène, Milo) : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
@@ -242,6 +243,88 @@ export function etabli() {
   return a.done(2);
 }
 
+/** Emplacement de l'établi avant sa construction : piquets, cordeau et deux planches. Discret, au ras du sol. */
+export function chantier() {
+  const a = new Art();
+  const c = [[0.18, 0.3], [0.82, 0.3], [0.82, 0.72], [0.18, 0.72]];
+  a.ext(...P(0, 0)); a.ext(...P(1, 1));
+  // cordeau derrière, piquets, cordeau devant
+  a.seg([...c[0], 6], [...c[1], 6], 'k-rope-t', 0.8);
+  a.seg([...c[0], 6], [...c[3], 6], 'k-rope-t', 0.8);
+  for (const [u, v] of c) a.box(u - 0.025, v - 0.025, 0.05, 0.05, 0, 8, 'woodd', { rim: true });
+  a.seg([...c[3], 6], [...c[2], 6], 'k-rope-l', 0.8);
+  a.seg([...c[1], 6], [...c[2], 6], 'k-rope-r', 0.8);
+  a.box(0.32, 0.44, 0.4, 0.1, 0, 1.6, 'woodb', { rim: true });
+  a.box(0.4, 0.38, 0.1, 0.26, 1.6, 1.6, 'woodb', { rim: true });
+  return a.done(2);
+}
+
+/** Brasero de défense : socle de pierre, coupe, et une flamme quand il est allumé (`lit`). */
+export function brasero(lit = false) {
+  const a = new Art();
+  a.prism(0.5, 0.5, 0.15, 0, 3, 'stoned', 6, { rim: true });
+  a.box(0.46, 0.46, 0.08, 0.08, 3, 7, 'woodd');
+  a.prism(0.5, 0.5, 0.23, 10, 4, 'stone', 8, { rim: true });
+  const [cx, cy] = P(0.5, 0.5, 14);
+  a.raw(`<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="9" ry="4.4" class="${lit ? 'amber-t' : 'wooddk-t'}"/>`);
+  if (lit) {
+    // flamme low-poly : pan ambré, pan doré, une petite langue, un cœur de lanterne (jamais la braise des menaces)
+    a.raw(`<g class="ow-flame"><polygon points="${pts([[cx - 6.5, cy], [cx - 0.5, cy - 16], [cx + 0.5, cy + 1]])}" class="amber-t"/><polygon points="${pts([[cx + 0.5, cy + 1], [cx - 0.5, cy - 16], [cx + 6.5, cy - 0.5]])}" class="gold-t"/><polygon points="${pts([[cx + 2, cy - 2], [cx + 5.6, cy - 10.5], [cx + 6.2, cy - 1]])}" class="gold-t"/><polygon points="${pts([[cx - 3, cy - 0.5], [cx + 0.2, cy - 9], [cx + 3, cy - 0.5]])}" class="ow-flame-core"/></g>`);
+    a.ext(cx - 7, cy - 19);
+    a.castS(cx, cy - 17, 30);
+  } else {
+    for (const [dx, dy] of [[-3, -1], [2, 0], [0, -2.4]]) a.raw(`<circle cx="${f(cx + dx)}" cy="${f(cy + dy)}" r="1.4" class="stoned-t"/>`);
+  }
+  a.anchor('light', 0.5, 0.5, 22);
+  return a.done(2);
+}
+
+/**
+ * Case de givre (Voile d'un Avis), dans le repère local d'une case : losange (0,0)→(1,1) en grille.
+ * Un motif, pas une teinte : flocons couchés au sol, traits de givre, liseré en tirets et petites aiguilles debout.
+ */
+export function frostCellSVG(seed = 1) {
+  const R = rng(seed);
+  let g = `<g transform="matrix(${HW},${HH},${-HW},${HH},0,0)">`;
+  g += '<polygon points="0.04,0.04 0.96,0.04 0.96,0.96 0.04,0.96" class="ow-frost-base"/>';
+  for (let k = 0; k < 5; k++) {
+    const y0 = 0.16 + k * 0.17 + (R() - 0.5) * 0.05;
+    g += `<path d="M${f(0.1 + R() * 0.08)},${f(y0)}l${f(0.22 + R() * 0.2)},${f(-0.12 - R() * 0.06)}" class="ow-frost-line"/>`;
+  }
+  for (const [u, v, r] of [[0.3, 0.32, 0.13], [0.72, 0.36, 0.1], [0.5, 0.72, 0.12]]) {
+    let d = '';
+    for (let i = 0; i < 3; i++) {
+      const t = (i / 3) * Math.PI;
+      const dx = Math.cos(t) * r, dy = Math.sin(t) * r;
+      d += `M${f((u - dx) * 100) / 100},${f((v - dy) * 100) / 100}L${f((u + dx) * 100) / 100},${f((v + dy) * 100) / 100}`;
+    }
+    g += `<path d="${d}" class="ow-frost-flake"/>`;
+  }
+  g += '<polygon points="0.04,0.04 0.96,0.04 0.96,0.96 0.04,0.96" class="ow-frost-edge"/>';
+  g += '</g>';
+  // aiguilles de givre debout sur les deux bords avant (trois tons)
+  for (const [u0, v0, u1, v1] of [[0.08, 1, 0.92, 1], [1, 0.08, 1, 0.92]]) {
+    for (const t of [0.22, 0.52, 0.8]) {
+      const [x, y] = P(u0 + (u1 - u0) * t, v0 + (v1 - v0) * t);
+      const h = 4 + R() * 3;
+      g += `<polygon points="${pts([[x - 2.2, y], [x, y - h], [x, y + 0.6]])}" class="ow-frost-l"/><polygon points="${pts([[x, y + 0.6], [x, y - h], [x + 2.2, y]])}" class="ow-frost-r"/>`;
+    }
+  }
+  return g;
+}
+
+/** Sceau d'Avis tenu : disque festonné de sauge, coche de papier. Centré en (0, 0), rayon 26. */
+export function sealSVG() {
+  const n = 14, out = [], inner = [];
+  for (let k = 0; k < n * 2; k++) {
+    const t = (k / (n * 2)) * Math.PI * 2 - Math.PI / 2;
+    const r = k % 2 ? 23.5 : 26;
+    out.push([Math.cos(t) * r, Math.sin(t) * r]);
+  }
+  for (let k = 0; k < 24; k++) { const t = (k / 24) * Math.PI * 2; inner.push([Math.cos(t) * 18, Math.sin(t) * 18]); }
+  return `<svg class="ow-seal-art" viewBox="-30 -30 60 60" width="60" height="60" aria-hidden="true" focusable="false"><polygon points="${pts(out)}" class="ow-seal-disc"/><polygon points="${pts(inner)}" class="ow-seal-ring"/><path d="M-8,0.5 L-2.4,6.2 L9,-6" class="ow-seal-check"/></svg>`;
+}
+
 // ---------------------------------------------------------------- Champs
 
 /** Sol d'une parcelle 2×2 (élément au ras du sol). */
@@ -262,11 +345,46 @@ export function parcelleSol() {
   return r;
 }
 
-/** Culture sur une parcelle 2×2. `progress` = stade / stades nécessaires (0 à 1). */
+/**
+ * Panier tressé (repère « mûre » et panier de récolte). (x, y) = milieu du fond, en px ; `fill` = ce qu'il contient.
+ * Forme avant la couleur : une parcelle mûre se reconnaît à son panier posé au coin, même en niveaux de gris.
+ */
+export function basketSVG(x, y, s = 1, fill = '') {
+  const rw = 9.5 * s, w = 7.2 * s, ry = 3.4 * s, top = y - 8 * s, band = 1.5 * s;
+  const L = (p) => pts(p);
+  let o = `<ellipse cx="${f(x)}" cy="${f(y + 0.6 * s)}" rx="${f(w + 1.5 * s)}" ry="${f(2.6 * s)}" class="ow-basket-shadow"/>`;
+  o += `<path d="M${f(x - rw * 0.78)},${f(top + 0.6 * s)}Q${f(x)},${f(top - 12 * s)} ${f(x + rw * 0.78)},${f(top + 0.6 * s)}" class="k-woodd-l" stroke-width="${f(1.5 * s)}" stroke-linecap="round"/>`;
+  o += `<ellipse cx="${f(x)}" cy="${f(top)}" rx="${f(rw)}" ry="${f(ry)}" class="wooddk-t"/>`;
+  o += fill;
+  o += `<polygon points="${L([[x - rw, top], [x, top + ry], [x, y + 1.6 * s], [x - w, y]])}" class="woodb-l"/>`;
+  o += `<polygon points="${L([[x, top + ry], [x + rw, top], [x + w, y], [x, y + 1.6 * s]])}" class="woodb-r"/>`;
+  for (const k of [0.42, 0.74]) {
+    const yl = top + (y - top) * k;
+    o += `<path d="M${f(x - rw + (rw - w) * k)},${f(yl)}L${f(x)},${f(yl + ry * (1 - k * 0.5))}L${f(x + rw - (rw - w) * k)},${f(yl)}" class="k-woodd-l" stroke-width="${f(0.7 * s)}" fill="none" opacity=".8"/>`;
+  }
+  o += `<polygon points="${L([[x - rw, top], [x, top + ry], [x + rw, top], [x + rw, top + band], [x, top + ry + band], [x - rw, top + band]])}" class="woodd-l"/>`;
+  return o;
+}
+
+/** Une récolte, en petit (ce qui saute dans le panier). Pied en (x, y). */
+export function cropSVG(crop, x, y, s = 1) {
+  if (crop === 'ble') {
+    let o = '';
+    for (const k of [-1, 0, 1]) o += `<path d="M${f(x + k * 1.2 * s)},${f(y)}L${f(x + k * 3 * s)},${f(y - 12 * s)}" class="k-wheat-l" stroke-width="${f(1 * s)}"/><ellipse cx="${f(x + k * 3.2 * s)}" cy="${f(y - 14 * s)}" rx="${f(1.6 * s)}" ry="${f(3.4 * s)}" transform="rotate(${k * 14} ${f(x + k * 3.2 * s)} ${f(y - 14 * s)})" class="wheat-${k < 0 ? 't' : k ? 'r' : 'l'}"/>`;
+    return o + `<path d="M${f(x - 3 * s)},${f(y - 5 * s)}h${f(6 * s)}" class="k-rope-t" stroke-width="${f(1.4 * s)}"/>`;
+  }
+  if (crop === 'patate') {
+    return `<ellipse cx="${f(x)}" cy="${f(y - 3.6 * s)}" rx="${f(5.4 * s)}" ry="${f(3.8 * s)}" class="soilr-l"/><path d="M${f(x)},${f(y - 7.4 * s)}A${f(5.4 * s)},${f(3.8 * s)} 0 0 1 ${f(x)},${f(y + 0.2 * s)}Z" class="soilr-r"/><circle cx="${f(x - 2 * s)}" cy="${f(y - 4.6 * s)}" r="${f(0.7 * s)}" class="soilf-t"/><circle cx="${f(x + 1.8 * s)}" cy="${f(y - 2.6 * s)}" r="${f(0.6 * s)}" class="soilf-t"/>`;
+  }
+  return `<ellipse cx="${f(x)}" cy="${f(y - 4.4 * s)}" rx="${f(6 * s)}" ry="${f(4.6 * s)}" class="squash-l"/><path d="M${f(x)},${f(y - 9 * s)}A${f(6 * s)},${f(4.6 * s)} 0 0 1 ${f(x)},${f(y + 0.2 * s)}Z" class="squash-r"/><path d="M${f(x)},${f(y - 8.8 * s)}v${f(-2.4 * s)}" class="k-woodd-l" stroke-width="${f(1.4 * s)}"/><ellipse cx="${f(x - 2 * s)}" cy="${f(y - 6.4 * s)}" rx="${f(1.7 * s)}" ry="${f(1.1 * s)}" class="squash-t"/>`;
+}
+
+/** Culture sur une parcelle 2×2. `progress` = stade entier / stades nécessaires (0 à 1) ; `crop` null = parcelle vide. */
 export function culture(crop, progress, seed = 1) {
   const a = new Art();
   const R = rng(seed);
   a.ext(...P(0, 2)); a.ext(...P(2, 0)); a.ext(...P(0, 0, 4));
+  if (!crop) { const r = a.done(2); r.shadow = null; return r; } // vide : le sol seul (dessiné par parcelleSol)
   const grid = crop === 'courge' ? [[0.55, 0.5], [1.45, 0.5], [0.55, 1.45], [1.45, 1.45]]
     : crop === 'patate' ? [[0.45, 0.44], [1.0, 0.44], [1.55, 0.44], [0.45, 1.24], [1.0, 1.24], [1.55, 1.24]]
       : [0.44, 0.84, 1.24, 1.64].flatMap((v) => [0.4, 0.8, 1.2, 1.6].map((u) => [u, v])).filter((_, i) => i % 2 === 0 || crop !== 'ble');
@@ -275,6 +393,12 @@ export function culture(crop, progress, seed = 1) {
     const [x, y] = P(u + (R() - 0.5) * 0.05, v + (R() - 0.5) * 0.05);
     a.raw(`<g class="ow-plant">${plant(crop, progress, x, y, R)}</g>`);
     a.ext(x - 12, y - 24); a.ext(x + 12, y + 4);
+  }
+  if (progress >= 1) {
+    // mûre : un panier vide attend au coin avant de la parcelle
+    const [bx, by] = P(1.86, 1.86);
+    a.raw(`<g class="ow-ripe">${basketSVG(bx, by, 1.15)}</g>`);
+    a.ext(bx - 13, by - 24); a.ext(bx + 13, by + 4);
   }
   const r = a.done(2);
   r.shadow = null;
@@ -547,6 +671,8 @@ export function artFor(e) {
     case 'caisse': return caisse(e.seed || 1);
     case 'glaciere': return glaciere();
     case 'etabli': return etabli();
+    case 'chantier': return chantier();
+    case 'brasero': return brasero(!!e.variant);
     case 'parcelle': return parcelleSol();
     case 'culture': return culture(e.crop, e.progress, e.seed || 1);
     case 'tunnel': return tunnel();

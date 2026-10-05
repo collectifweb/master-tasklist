@@ -2,10 +2,12 @@
 // à jour (attributs, profondeur, contenu quand son modèle change). Jamais de innerHTML global : les
 // animations en cours et l'état d'interaction survivent à chaque rendu.
 import { P, f, pts, hull } from './iso.js';
-import { artFor, characterSVG } from './models.js';
+import { artFor, characterSVG, frostCellSVG } from './models.js';
 
 const ART = new Map();
-const MIN_HIT = 64; // px monde
+// px monde : 44 px à l'écran dès que les objets deviennent touchables (échelle ≥ 0,69, voir camera.js)
+const MIN_HIT = 64;
+const FROST_BOX = [-34, -8, 68, 42]; // case de givre : losange de 64 × 32 et aiguilles debout
 function artKey(e) {
   return [e.model, e.variant ?? '', e.seed ?? '', e.m ?? '', e.s ?? '', e.end ? 1 : '', e.crop ?? '', e.progress ?? ''].join('|');
 }
@@ -22,6 +24,7 @@ export function depthOf(e) {
   return e.r + (e.h || 1) + e.c + (e.w || 1);
 }
 export function zOf(e) {
+  if (e.kind === 'frost') return 60; // au-dessus de tous les sols (≤ 34), sous tout ce qui est debout (≥ 100)
   if (e.ground) return 10 + Math.round(depthOf(e));
   return 100 + Math.round(depthOf(e) * 10) + (e.bias || 0);
 }
@@ -86,41 +89,56 @@ export class Scene {
       n.art = null;
       return;
     }
+    if (e.kind === 'frost') {
+      const [bx, by, bw, bh] = FROST_BOX;
+      el.innerHTML = `<svg class="ow-art" viewBox="${bx} ${by} ${bw} ${bh}" width="${bw}" height="${bh}" aria-hidden="true" focusable="false">${frostCellSVG(e.seed || 1)}</svg>`;
+      n.art = null;
+      return;
+    }
     const art = cachedArt(e);
     n.art = art;
+    // boîte du bouton (repère local) : le dessin, élargi à la zone de toucher pour un objet touchable
+    let box = [art.x, art.y, art.w, art.h];
     let hit = '';
     if (e.interactive) {
       const w = e.w || 1, h = e.h || 1;
       const foot = [P(0, 0), P(w, 0), P(w, h), P(0, h)];
       const top = foot.map(([x, y]) => [x, Math.max(art.y + 4, y - (art.h - 6))]);
       const pts0 = foot.concat(top);
-      // cible d'au moins 64 × 64 px monde : 44 px à l'écran dès que les objets deviennent touchables (échelle 0,69)
+      // cible d'au moins 64 × 64 px monde, sans changer le dessin : zone transparente élargie
       const xs = pts0.map((p) => p[0]), ys = pts0.map((p) => p[1]);
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       if (y1 - y0 < MIN_HIT) pts0.push([x0, y1 - MIN_HIT], [x1, y1 - MIN_HIT]);
       if (x1 - x0 < MIN_HIT) { const cx = (x0 + x1) / 2; pts0.push([cx - MIN_HIT / 2, y1 - 12], [cx + MIN_HIT / 2, y1 - 12]); }
-      hit = `<polygon class="ow-hit" points="${pts(hull(pts0))}"/>`;
+      const poly = hull(pts0);
+      hit = `<polygon class="ow-hit" points="${pts(poly)}"/>`;
+      const hx = poly.map((p) => p[0]), hy = poly.map((p) => p[1]);
+      const l = Math.min(art.x, ...hx), t = Math.min(art.y, ...hy);
+      const r = Math.max(art.x + art.w, ...hx), b = Math.max(art.y + art.h, ...hy);
+      box = [f(l), f(t), f(r - l), f(b - t)];
     }
-    el.innerHTML = `<svg class="ow-art" viewBox="${art.x} ${art.y} ${art.w} ${art.h}" width="${art.w}" height="${art.h}" aria-hidden="true" focusable="false">${art.svg}${hit}</svg>`;
-    el.style.left = f(n.X + art.x) + 'px';
-    el.style.top = f(n.Y + art.y) + 'px';
-    el.style.width = art.w + 'px';
-    el.style.height = art.h + 'px';
+    const [bx, by, bw, bh] = box;
+    n.box = box;
+    el.innerHTML = `<svg class="ow-art" viewBox="${bx} ${by} ${bw} ${bh}" width="${bw}" height="${bh}" aria-hidden="true" focusable="false">${art.svg}${hit}</svg>`;
+    el.style.left = f(n.X + bx) + 'px';
+    el.style.top = f(n.Y + by) + 'px';
+    el.style.width = bw + 'px';
+    el.style.height = bh + 'px';
     const [fx, fy] = P((e.w || 1) / 2, (e.h || 1) / 2);
-    el.style.transformOrigin = `${f(fx - art.x)}px ${f(fy - art.y)}px`;
+    el.style.transformOrigin = `${f(fx - bx)}px ${f(fy - by)}px`;
     if (art.anchors.crystal) {
       const c = document.createElement('div');
       c.className = 'ow-crystal';
-      c.style.left = f(art.anchors.crystal[0] - art.x - 20) + 'px';
-      c.style.top = f(art.anchors.crystal[1] - art.y - 20) + 'px';
+      c.style.left = f(art.anchors.crystal[0] - bx - 20) + 'px';
+      c.style.top = f(art.anchors.crystal[1] - by - 20) + 'px';
       c.innerHTML = '<svg viewBox="-20 -20 40 40" width="40" height="40" aria-hidden="true"><ellipse rx="12" ry="4" cy="2" class="ow-crys-ring"/><polygon points="0,-15 -8,-1 1,4" class="ow-crys-t"/><polygon points="0,-15 1,4 8,-1" class="ow-crys-l"/><polygon points="0,13 -8,-1 1,4" class="ow-crys-l"/><polygon points="0,13 1,4 8,-1" class="ow-crys-r"/><polygon points="0,-15 -8,-1 -4.5,-3" fill="#fff" opacity=".55"/></svg>';
       el.appendChild(c);
     }
     if (art.anchors.smoke) {
       const s = document.createElement('div');
       s.className = 'ow-smoke';
-      s.style.left = f(art.anchors.smoke[0] - art.x) + 'px';
-      s.style.top = f(art.anchors.smoke[1] - art.y) + 'px';
+      s.style.left = f(art.anchors.smoke[0] - bx) + 'px';
+      s.style.top = f(art.anchors.smoke[1] - by) + 'px';
       s.innerHTML = '<i></i><i></i><i></i>';
       el.appendChild(s);
     }
@@ -143,12 +161,19 @@ export class Scene {
       const box = e.kind === 'char' ? [-32, -60, 64, 66] : [-12, e.stage === 2 ? -22 : -16, 24, e.stage === 2 ? 24 : 18];
       Object.assign(n.el.style, { left: f(X + box[0]) + 'px', top: f(Y + box[1]) + 'px', width: box[2] + 'px', height: box[3] + 'px' });
       n.el.style.transformOrigin = `${-box[0]}px ${-box[1]}px`;
+    } else if (e.kind === 'frost') {
+      const [X, Y] = P(e.c, e.r);
+      n.X = X; n.Y = Y;
+      const [bx, by, bw, bh] = FROST_BOX;
+      Object.assign(n.el.style, { left: f(X + bx) + 'px', top: f(Y + by) + 'px', width: bw + 'px', height: bh + 'px' });
+      n.el.style.transformOrigin = `${-bx}px ${16 - by}px`;
     } else {
       const [X, Y] = P(e.c, e.r);
       n.X = X; n.Y = Y;
       if (n.art) {
-        n.el.style.left = f(X + n.art.x) + 'px';
-        n.el.style.top = f(Y + n.art.y) + 'px';
+        const [bx, by] = n.box || [n.art.x, n.art.y];
+        n.el.style.left = f(X + bx) + 'px';
+        n.el.style.top = f(Y + by) + 'px';
         this.drawShadow(n, n.art, e);
       }
     }
@@ -159,17 +184,18 @@ export class Scene {
     const prev = n.e;
     let changed = false;
     if (first || prev.r !== e.r || prev.c !== e.c || prev.u !== e.u || prev.v !== e.v) { this.place(n, e); changed = !first; }
-    const key = e.kind === 'char' ? `char|${e.who}` : e.kind === 'germ' ? `germ|${e.stage}` : artKey(e);
+    const key = e.kind === 'char' ? `char|${e.who}` : e.kind === 'germ' ? `germ|${e.stage}` : e.kind === 'frost' ? 'frost' : `${artKey(e)}|${e.interactive ? 1 : 0}`;
     if (key !== n.key) {
       if (e.kind === 'germ' && !first) this.place(n, e);
       this.draw(n, e); n.key = key; changed = changed || !first;
     }
     if (!first && prev.sector !== e.sector) this.L.groups[e.sector].appendChild(n.el);
+    if (!first && prev.model !== e.model && e.model) { n.el.classList.remove(`m-${prev.model}`); n.el.classList.add(`m-${e.model}`); }
     const z = zOf(e) + (n.last.sel ? 3000 : 0);
     if (n.last.z !== z) { n.el.style.zIndex = z; n.last.z = z; }
     const label = e.interactive && this.hooks.label ? this.hooks.label(e) : null;
     if (label && n.last.label !== label) { n.el.setAttribute('aria-label', label); n.last.label = label; }
-    for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit], ['neuf', e.placed]]) {
+    for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit], ['neuf', e.placed], ['mure', e.plot?.ripe]]) {
       if (n.last[attr] !== !!val) { n.el.toggleAttribute(`data-${attr}`, !!val); n.last[attr] = !!val; }
     }
     this.syncHalo(n, e);
@@ -214,6 +240,7 @@ export class Scene {
     if (!n) return null;
     const e = n.e;
     if (e.kind === 'char' || e.kind === 'germ') return [n.X, n.Y - 20 * lift];
+    if (!n.art) return [n.X, n.Y + 16 - 8 * lift]; // case de givre : milieu du losange
     const [fx, fy] = P((e.w || 1) / 2, (e.h || 1) / 2);
     const art = n.art;
     const top = art.y;

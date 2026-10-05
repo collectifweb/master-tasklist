@@ -83,11 +83,13 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
   const sectors = {};
   for (const id of SECTOR_IDS) sectors[id] = sectorView(id, g);
 
+  // crop null = parcelle vide (sol seul). Sous un voile, stage peut valoir x,5 : on montre le stade entier atteint.
   const plots = (Array.isArray(g.plots) ? g.plots : []).slice(0, PLOT_SLOTS.length).map((p, i) => {
-    const crop = ['courge', 'patate', 'ble'].includes(p && p.crop) ? p.crop : 'courge';
-    const need = CROP_STAGES[crop] ?? 2;
+    const crop = ['courge', 'patate', 'ble'].includes(p && p.crop) ? p.crop : null;
+    const need = crop ? CROP_STAGES[crop] ?? 2 : 0;
     const slot = Number.isInteger(p && p.slot) && p.slot < PLOT_SLOTS.length ? p.slot : i;
-    return { id: String((p && p.id) ?? `parcelle-${i}`), crop, need, stage: Math.max(0, Math.min(need, num(p && p.stage))), slot };
+    const stage = crop ? Math.floor(Math.max(0, Math.min(need, num(p && p.stage))) + 1e-9) : 0;
+    return { id: String((p && p.id) ?? `parcelle-${i}`), crop, need, stage, slot, ripe: !!crop && stage >= need };
   });
 
   // une construction qui porte l'identifiant d'un repère fixe (ex. { id: 'tour', state: 'reparee' }) en donne l'état
@@ -128,6 +130,24 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
   const lisiere = days.includes(today) || !!(g.daily && g.daily.day === today && g.daily.lisiere);
   const posts = postsFor(sectors);
 
+  // Avis annoncé : le Front avance de l'annonce (progress 0) à la veille du jour J (progress 1)
+  const cur = g.avis && g.avis.current;
+  let avis = null;
+  if (cur && SECTOR_IDS.includes(cur.sector) && cur.day) {
+    const from = cur.announcedOn || today;
+    const total = Math.max(1, daysBetween(from, cur.day));
+    let left = total;
+    try { left = Math.max(0, daysBetween(today, cur.day)); } catch { left = total; }
+    avis = {
+      id: String(cur.id ?? 'avis'), sector: cur.sector, day: cur.day, announcedOn: from, force: num(cur.force),
+      braseros: Math.max(0, Math.min(3, Math.round(num(cur.braseros)))), daysLeft: left,
+      progress: Math.max(0, Math.min(1, (total - left) / Math.max(1, total - 1))),
+    };
+  }
+  const veils = (g.avis && Array.isArray(g.avis.veils) ? g.avis.veils : [])
+    .filter((x) => x && SECTOR_IDS.includes(x.sector) && num(x.cells) > 0)
+    .map((x) => ({ avis: x.avis ?? null, sector: x.sector, cells: Math.min(2, Math.round(num(x.cells))) }));
+
   return {
     today,
     sectors,
@@ -138,8 +158,11 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
     refletAnchors,
     lisiere,
     posts,
+    avis,
+    veils,
     landmarkState,
-    tourRepaired: ['reparee', 'repare', 'reparer'].includes(landmarkState.tour) || sectors.place.stage >= 1,
+    // semaine 3 : la Tour se répare en la construisant (objectif du chapitre 1), plus au palier de la Place
+    tourRepaired: ['reparee', 'repare', 'reparer'].includes(landmarkState.tour),
     filLibre: Math.max(0, num(g.filLibre)),
     confidence: num(g.resources && g.resources.confidence),
     chapter: num(g.chapter && g.chapter.number) || 1,

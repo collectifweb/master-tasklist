@@ -5,7 +5,7 @@
 //   plan.render(game, tasks); plan.focus(); plan.destroy();
 import { SECTOR_ORDER, LANDMARKS } from './layout.js';
 import { deriveView } from './view.js';
-import { makeTexts, levelKey, fmt } from './texts.js';
+import { makeTexts, levelKey, fmt, avisName, avisWhen } from './texts.js';
 
 let uid = 0;
 
@@ -59,19 +59,25 @@ export function createWorldPlan(container, options = {}) {
     lines.push(t('monde.plan.stage', { etat: lvl, detail: val }));
     if (sv.stage === 0) lines.push(`${t('monde.tiles', { n: sv.lit })}.`);
     if (sv.next) lines.push(t('sector.level.next', { palier: t(levelKey(sv.stage + 1)), n: sv.next.lueur }));
-    const built = LANDMARKS.filter((L) => L.sector === s).map((L) => {
+    // l'établi non construit est un chantier sur la carte : il n'entre pas dans « Construit »
+    const chantier = LANDMARKS.some((L) => L.sector === s && L.model === 'etabli') && v.landmarkState?.etabli !== 'construit';
+    const built = LANDMARKS.filter((L) => L.sector === s && !(L.model === 'etabli' && chantier)).map((L) => {
       if (L.model === 'tour') return t(v.tourRepaired ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
       return t(`monde.obj.${L.model}`);
     });
     for (const p of v.placements) if (p.sector === s) built.push(t(`monde.obj.${p.model}`));
     if (built.length) lines.push(t('monde.plan.built', { liste: names(built) }));
+    if (chantier) lines.push(t('monde.plan.chantier'));
     if (s === 'champs' && v.plots.length) {
       const plots = v.plots.map((p) => {
-        const st = p.stage <= 0 ? t('monde.crop.state.0') : p.stage >= p.need ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
+        if (!p.crop) return t('monde.plan.plot.empty');
+        const st = p.stage <= 0 ? t('monde.crop.state.0') : p.ripe ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
         return `${t(`monde.crop.${p.crop}`)} (${st})`;
       });
       lines.push(t('monde.plan.plots', { liste: plots.join(', ') }));
     }
+    const veil = v.veils.find((x) => x.sector === s);
+    if (veil) lines.push(veil.cells === 1 ? t('monde.plan.voile.one') : t('monde.plan.voile.other', { n: veil.cells }));
     return { title: name, lines, canShow: true };
   }
 
@@ -101,6 +107,9 @@ export function createWorldPlan(container, options = {}) {
     // résumé
     const sum = [v.lisiere ? t('monde.plan.lisiere.on') : t('monde.plan.lisiere.off')];
     if (v.filLibre > 0) sum.push(t('monde.plan.fil', { n: fmt(v.filLibre) }));
+    if (v.avis) {
+      sum.push(t('monde.plan.avis', { nom: avisName(t, v.avis.id), au_secteur: t(`sector.${v.avis.sector}.in`), quand: avisWhen(t, v.avis.daysLeft), n: v.avis.braseros }));
+    }
     if (v.crates.length) sum.push(v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length }));
     const sk = sum.join('|');
     if (last.summary !== sk) {

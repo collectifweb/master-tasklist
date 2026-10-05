@@ -144,6 +144,51 @@ export function terrainSVG() {
   return `<svg class="ow-terrain" viewBox="${TERRAIN.x} ${TERRAIN.y} ${TERRAIN.w} ${TERRAIN.h}" width="${TERRAIN.w}" height="${TERRAIN.h}" aria-hidden="true" focusable="false">${o.join('')}</svg>`;
 }
 
+/** Vecteur écran (px) d'un pas d'une case le long de la normale sortante d'un bord. */
+export function edgeNormal(edge) {
+  const [x, y] = P(edge.n[0], edge.n[1]);
+  return [x, y];
+}
+
+/**
+ * Front de givre d'un Avis, au pied du bord visé (sur le lac). Dessiné collé au rivage ; world.js le recule le long
+ * de la normale selon le temps qui reste. Trois tons : banquise (dessus), tranche des glaçons, liseré d'encre de givre.
+ */
+export function frontSVG(edge, seed = 3) {
+  const R = rng(seed);
+  const drop = edge.face ? D : 0;
+  const at = (t, off) => {
+    const u = edge.a[0] + (edge.b[0] - edge.a[0]) * t + edge.n[0] * off;
+    const v = edge.a[1] + (edge.b[1] - edge.a[1]) * t + edge.n[1] * off;
+    const [x, y] = P(u, v);
+    return [x, y + drop];
+  };
+  const n = 16;
+  const inner = [], outer = [], teeth = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    inner.push(at(t, i % 2 ? 0.34 : 0.14 + R() * 0.06));
+    outer.push(at(t, 0.95 + Math.sin(i * 1.3) * 0.08));
+  }
+  for (let i = 1; i < n; i += 2) {
+    const tip = inner[i - 1], mid = inner[i], nxt = inner[i + 1];
+    const base = at(i / n, 0.58);
+    teeth.push(`<polygon points="${pts([tip, mid, base])}" class="ow-front-l"/><polygon points="${pts([mid, nxt, base])}" class="ow-front-r"/>`);
+  }
+  const band = pts(inner.concat(outer.slice().reverse()));
+  let flakes = '';
+  for (const t of [0.22, 0.5, 0.78]) {
+    const [x, y] = at(t, 0.68);
+    flakes += `<g class="ow-front-flake" transform="translate(${f(x)} ${f(y)})"><path d="M0,-5.5V5.5M-4.8,-2.75L4.8,2.75M-4.8,2.75L4.8,-2.75M-1.6,-4.4L0,-3 1.6,-4.4M-1.6,4.4L0,3 1.6,4.4"/></g>`;
+  }
+  let floes = '';
+  for (const [t, off, s] of [[0.12, 1.35, 1], [0.4, 1.55, 0.8], [0.66, 1.3, 1.1], [0.9, 1.6, 0.7]]) {
+    const [x, y] = at(t, off);
+    floes += `<polygon points="${pts([[x - 9 * s, y], [x - 2 * s, y - 4 * s], [x + 9 * s, y - 1 * s], [x + 3 * s, y + 4 * s]])}" class="ow-front-floe"/>`;
+  }
+  return `${floes}<polygon points="${band}" class="ow-front-band"/>${teeth.join('')}<polyline points="${pts(inner)}" class="ow-front-crest"/>${flakes}`;
+}
+
 /** Losange d'une case en coordonnées écran (pour vagues de couleur et anneaux). */
 export function cellDiamond(r, c, inset = 0) {
   return [P(c + inset, r + inset), P(c + 1 - inset, r + inset), P(c + 1 - inset, r + 1 - inset), P(c + inset, r + 1 - inset)];

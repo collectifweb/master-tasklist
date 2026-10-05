@@ -1,27 +1,42 @@
 // L'île de l'Orée, en DOM et SVG, sans dépendance.
 //
-//   const world = createWorld(conteneur, { texts, anchors, announce, onImpact, onSelect, now });
+//   const world = createWorld(conteneur, { texts, anchors, announce, onImpact, onSelect, onHarvest, threadFrom, now });
 //   world.render(game, tasks);   // met à jour ce qui a changé (différence par identifiant)
-//   world.play(events);          // joue les événements de core/quests.js, dans l'ordre ; sautables
+//   world.play(events);          // joue les événements du cœur (quests, build, avis, chapters), dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
 //   world.focusSector('champs');
 //   world.destroy();
 //
 // Appeler render(game, tasks) PUIS play(events) dans la même tâche (ou play d'abord) : le nouvel état
 // est retenu pendant que les animations le dévoilent, puis appliqué en entier à la fin.
+//
+// onSelect(info) — un toucher (ou Entrée) sur la carte. Formes de `info` :
+//   { type: 'sector', id }                                   plaque de secteur
+//   { type: 'plot', id, sector, crop, stage, ripe }          parcelle (crop null = vide ; ripe : l'interface propose « Récolter »)
+//   { type: 'landmark', id, sector, model, state }           repère fixe (tour, etabli, relais, bastion, atelier…) ;
+//                                                            l'établi non construit : model 'chantier', state null
+//   { type: 'placement', id, sector, model }                 construction du joueur ({model}-{n})
+//   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou personnage (taskId null)
+// onHarvest(plotId) — glisser le doigt (ou la souris) sur une parcelle mûre. Le monde n'applique rien lui-même :
+//   l'hôte appelle harvest() du cœur puis rejoue ses événements ('recolte'). Équivalent bouton : onSelect 'plot'.
+//
+// Événements que play() sait jouer (un type inconnu est ignoré) : reward, fil-libre, secteur-seuil, lisiere-allumee,
+// lisiere-retiree, chapitre, secteur-ouvert, construction, parcelle, semis, recolte, brasero, souffler, avis-annonce,
+// avis-resolu, voile-leve, reflet, veille, surplus, etape ; sans animation : partage, reserve, objectif-atteint,
+// chapitre-fin.
 import { P, f, pts } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   CELLS, LIT_ORDER, SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, LISIERE_POSTS, CHARACTERS, DECOR,
-  PLOT_SLOTS, CRATE_SPOTS, sectorAt, germCell,
+  PLOT_SLOTS, CRATE_SPOTS, AVIS_EDGE, VEIL_CELLS, braseroSpots, sectorAt, germCell,
 } from './layout.js';
 import { deriveView } from './view.js';
-import { terrainSVG, TERRAIN, BOUNDS, sectorPolygon } from './terrain.js';
+import { terrainSVG, TERRAIN, BOUNDS, sectorPolygon, frontSVG, edgeNormal } from './terrain.js';
 import { Scene } from './scene.js';
 import { createTicker, createBus } from './ticker.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, levelKey, fmt } from './texts.js';
+import { makeTexts, levelKey, fmt, avisName, avisWhen } from './texts.js';
 import { playEvents, cloneView } from './moments.js';
 
 export { createWorldPlan } from './plan.js';
@@ -31,7 +46,23 @@ const FOOT = { tunnel: [1, 2], atelier: [2, 1], registres: [2, 2], maison: [2, 2
 const LIGHT = { lanterne: 'lantern', relais: 'core', bastion: 'lantern', etabli: 'lamp', registres: 'window', maison: 'window', tour: 'crystal' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
 const AMBIENT_MS = 9000; // l'île respire quelques secondes après chaque activité, puis s'immobilise
+const FRONT_FAR = 1.8; // recul du Front de givre à l'annonce (cases), jusqu'au rivage la veille de l'Avis
+const SWIPE_PX = 18; // glissé qui récolte une parcelle mûre
+const LANDMARK_IDS = new Set(LANDMARKS.map((l) => l.id));
 let uid = 0;
+
+/** Flocon à six branches (grille de 24), pour le Front et le badge d'Avis. */
+function flakePath(cx = 12, cy = 12, r = 9) {
+  let d = '';
+  for (let k = 0; k < 6; k++) {
+    const t = (k * Math.PI) / 3 - Math.PI / 2;
+    const c = Math.cos(t), s = Math.sin(t);
+    const bx = cx + c * r * 0.6, by = cy + s * r * 0.6, w = r * 0.26;
+    d += `M${f(cx)} ${f(cy)}L${f(cx + c * r)} ${f(cy + s * r)}`;
+    d += `M${f(bx + c * w - s * w)} ${f(by + s * w + c * w)}L${f(bx)} ${f(by)}L${f(bx + c * w + s * w)} ${f(by + s * w - c * w)}`;
+  }
+  return d;
+}
 
 /** Pictos de secteur (grille de 24, trait arrondi, currentColor). */
 export const SECTOR_GLYPH = {
@@ -42,6 +73,7 @@ export const SECTOR_GLYPH = {
   'maison-commune': 'M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5',
   relais: 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16zM12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6',
   brume: 'M7 17.5h10a3.8 3.8 0 0 0 .4-7.6A5.2 5.2 0 0 0 7.5 9 4.3 4.3 0 0 0 7 17.5zM5 20.5h8M15 20.5h4',
+  givre: flakePath(),
 };
 
 function glyph(id, cls = '') {
@@ -64,11 +96,12 @@ export function entitiesFor(v, tasks = []) {
   for (const L of LANDMARKS) {
     const vis = S[L.sector].visibility;
     if (vis === 'brume') continue;
-    const e = { ...L, interactive: vis === 'open', light: LIGHT[L.model] ?? null, allume: false };
+    const e = { ...L, landmark: true, interactive: vis === 'open', light: LIGHT[L.model] ?? null, allume: false };
     if (L.model === 'tour') { e.variant = v.tourRepaired ? 1 : 0; e.allume = open('place') && v.tourRepaired; }
     else if (L.model === 'atelier') e.variant = S.atelier.stage === 0 ? 'abime' : '';
     else if (L.model === 'relais') e.allume = open('place');
     else if (L.model === 'lanterne') e.allume = lanterns(L.sector);
+    else if (L.model === 'etabli' && v.landmarkState?.etabli !== 'construit') { e.model = 'chantier'; e.light = null; }
     else if (e.light) e.allume = open(L.sector) && (S[L.sector].stage >= 1 || !!v.veille);
     if (v.reflets?.has?.(L.id)) e.reluit = true;
     list.push(e);
@@ -79,12 +112,27 @@ export function entitiesFor(v, tasks = []) {
       const slot = PLOT_SLOTS[p.slot];
       if (!slot) continue;
       list.push({ id: `${p.id}:sol`, model: 'parcelle', sector: 'champs', r: slot.r, c: slot.c, w: 2, h: 2, ground: true });
+      // la culture porte la cible de toucher, même vide (crop null : aucun dessin, l'interface propose « Semer »)
       list.push({
         id: p.id, model: 'culture', sector: 'champs', r: slot.r, c: slot.c, w: 2, h: 2, crop: p.crop,
-        progress: Math.round((p.stage / Math.max(1, p.need)) * 100) / 100, seed: p.slot + 3, interactive: true, plot: p,
+        progress: p.crop ? Math.round((p.stage / Math.max(1, p.need)) * 100) / 100 : 0, seed: p.slot + 3, interactive: true, plot: p,
         reluit: v.reflets?.has?.(`plot:${p.slot}`) || false,
       });
     }
+  }
+  // Avis annoncé : trois braseros sur le rebord du secteur visé, face au Front ; allumés un à un
+  if (v.avis && open(v.avis.sector)) {
+    braseroSpots(v.avis.sector).forEach(([u, vv], i) => {
+      const lit = i < v.avis.braseros;
+      list.push({ id: `brasero-${i + 1}`, model: 'brasero', sector: v.avis.sector, r: vv - 0.5, c: u - 0.5, variant: lit ? 1 : 0, placed: true, light: 'lantern', allume: lit });
+    });
+  }
+  // Voile : cases couvertes de givre
+  for (const vl of v.veils || []) {
+    if (!open(vl.sector)) continue;
+    (VEIL_CELLS[vl.sector] || []).slice(0, vl.cells).forEach(([r, c], k) => {
+      list.push({ id: `givre-${vl.sector}-${k}`, kind: 'frost', model: 'givre', sector: vl.sector, r, c, seed: r * 13 + c });
+    });
   }
   for (const p of v.placements) {
     if (S[p.sector]?.visibility !== 'open') continue;
@@ -172,7 +220,10 @@ export function createWorld(container, options = {}) {
     const poly = pts(sectorPolygon(s));
     vm += `<g class="ow-veil" data-sector="${s}" hidden><polygon class="ow-veil-fill" points="${poly}"/><polygon class="ow-veil-pat" points="${poly}" fill="url(#ow-ash-${id})"/><polygon class="ow-veil-edge" points="${poly}"/></g>`;
   }
+  vm += '<g class="ow-front" hidden><g class="ow-front-move"></g></g>';
   veils.innerHTML = vm;
+  const frontHost = veils.querySelector('.ow-front');
+  const frontMove = frontHost.firstElementChild;
 
   const fxg = el('div', 'ow-fxg', { 'aria-hidden': 'true' });
   const flashSvg = doc.createElementNS(SVGNS, 'svg');
@@ -286,9 +337,11 @@ export function createWorld(container, options = {}) {
     if (e.model === 'tour') return t(e.variant ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
     if (e.model === 'culture') {
       const p = e.plot;
-      const state = p.stage <= 0 ? t('monde.crop.state.0') : p.stage >= p.need ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
-      return `${t('monde.obj.parcelle')} : ${t(`monde.crop.${p.crop}`)}, ${state}`;
+      if (!p.crop) return `${t('monde.obj.parcelle')} : ${t('monde.crop.empty')}`;
+      const state = p.stage <= 0 ? t('monde.crop.state.0') : p.ripe ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
+      return `${t('monde.obj.parcelle')} : ${t(`monde.crop.${p.crop}`)}, ${state}${p.ripe ? `. ${t('monde.crop.ripe.hint')}` : ''}`;
     }
+    if (e.model === 'chantier') return t('monde.obj.chantier');
     if (e.crate) {
       const d = e.crate.days;
       const when = d < 0 ? t('monde.crate.passed') : d === 0 ? t('monde.crate.today') : t('monde.crate.days', { n: d });
@@ -343,16 +396,45 @@ export function createWorld(container, options = {}) {
     }
   }
 
+  // ---- Front de givre (Avis annoncé) : posé au rivage du bord visé, reculé selon le temps qui reste
+  let frontSector = null;
+  function frontShift(progress, extra = 0) {
+    const [nx, ny] = edgeNormal(AVIS_EDGE[frontSector]);
+    const d = FRONT_FAR * (1 - Math.max(0, Math.min(1, progress))) + extra;
+    return `translate(${f(nx * d)}px, ${f(ny * d)}px)`;
+  }
+  function applyFront(v) {
+    const a = v.avis;
+    const s = a && AVIS_EDGE[a.sector] && v.sectors[a.sector]?.visibility !== 'brume' ? a.sector : null;
+    if (!s) {
+      if (!frontHost.hasAttribute('hidden')) frontHost.setAttribute('hidden', '');
+      return;
+    }
+    if (frontSector !== s) { frontSector = s; frontMove.innerHTML = frontSVG(AVIS_EDGE[s]); frontHost.dataset.sector = s; }
+    if (frontHost.hasAttribute('hidden')) frontHost.removeAttribute('hidden');
+    const tr = frontShift(a.progress);
+    if (frontMove.style.transform !== tr) frontMove.style.transform = tr;
+  }
+
+  // ---- Avis : nom, échéance en mots
+  function avisBadge(a) {
+    const nom = avisName(t, a.id);
+    return a.daysLeft <= 0 ? t('monde.avis.badge.0', { nom }) : a.daysLeft === 1 ? t('monde.avis.badge.1', { nom }) : t('monde.avis.badge', { nom, n: a.daysLeft });
+  }
+
   // ---- plaques de secteur
-  function plaqueModel(sv) {
+  function plaqueModel(sv, avis) {
     const name = sectorName(sv.id);
     if (sv.visibility === 'brume') {
       return { vis: 'brume', name: t('monde.mist'), line: '', etat: '', stage: 0, progress: 0, label: t('monde.mist.hint') };
     }
+    // repère d'Avis : picto de givre + texte court, aussi lu dans l'étiquette du bouton
+    const av = avis && avis.sector === sv.id ? { text: avisBadge(avis), label: t('monde.avis.label', { nom: avisName(t, avis.id), au_secteur: t(`sector.${sv.id}.in`), quand: avisWhen(t, avis.daysLeft) }) } : null;
+    const withAvis = (label) => (av ? `${label} ${av.label}` : label);
     if (sv.visibility === 'cendre') {
       const n = fmt(sv.lueur);
       const line = sv.lueur > 0 ? t('monde.plaque.reserve', { n }) : t('sector.closed');
-      return { vis: 'cendre', name, line, etat: '', stage: 0, progress: 0, label: t('monde.plaque.label', { secteur: name, etat: t('sector.closed'), detail: sv.lueur > 0 ? t('monde.plaque.reserve', { n }) : t('monde.plan.opens', { n: sv.chapter }) }) };
+      return { vis: 'cendre', name, line, etat: '', stage: 0, progress: 0, avis: av, label: withAvis(t('monde.plaque.label', { secteur: name, etat: t('sector.closed'), detail: sv.lueur > 0 ? t('monde.plaque.reserve', { n }) : t('monde.plan.opens', { n: sv.chapter }) })) };
     }
     const lvl = t(levelKey(sv.stage));
     const nx = sv.next;
@@ -362,20 +444,20 @@ export function createWorld(container, options = {}) {
     const detail = nx ? t('sector.level.next', { palier: t(levelKey(sv.stage + 1)), n: nx.lueur }) : '';
     const tilesTxt = sv.stage === 0 ? ` ${t('monde.tiles', { n: sv.lit })}.` : '';
     return {
-      vis: 'open', name, line, etat: sv.etat, stage: sv.stage, progress, lvl,
-      label: t('monde.plaque.label', { secteur: name, etat: lvl, detail: `${line}.${tilesTxt} ${detail}`.trim() }),
+      vis: 'open', name, line, etat: sv.etat, stage: sv.stage, progress, lvl, avis: av,
+      label: withAvis(t('monde.plaque.label', { secteur: name, etat: lvl, detail: `${line}.${tilesTxt} ${detail}`.trim() })),
     };
   }
   function makePlaque(s) {
     const b = el('button', 'ow-plaque', { type: 'button', 'data-sector': s, tabindex: '-1' });
-    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true"></span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-pips" aria-hidden="true"><i></i><i></i><i></i></span><span class="ow-plaque-val num"></span></span></span><span class="ow-plaque-bar" aria-hidden="true"><i></i></span>`;
+    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true"></span><i class="ow-plaque-mark" aria-hidden="true" hidden>${glyph('givre')}</i><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-pips" aria-hidden="true"><i></i><i></i><i></i></span><span class="ow-plaque-val num"></span></span><span class="ow-plaque-avis" hidden>${glyph('givre')}<span class="ow-plaque-avis-txt"></span></span></span><span class="ow-plaque-bar" aria-hidden="true"><i></i></span>`;
     plaques.appendChild(b);
     plaqueEls[s] = b;
     return b;
   }
-  function updatePlaque(sv) {
+  function updatePlaque(sv, avis = shown?.avis ?? null) {
     const b = plaqueEls[sv.id] || makePlaque(sv.id);
-    const m = plaqueModel(sv);
+    const m = plaqueModel(sv, avis);
     const key = JSON.stringify(m);
     if (plaqueLast[sv.id] === key) return false;
     const prev = plaqueLast[sv.id] ? JSON.parse(plaqueLast[sv.id]) : null;
@@ -383,16 +465,25 @@ export function createWorld(container, options = {}) {
     b.dataset.vis = m.vis;
     if (m.etat) b.dataset.etat = m.etat; else delete b.dataset.etat;
     b.dataset.stage = String(m.stage);
+    b.toggleAttribute('data-avis', !!m.avis);
     b.setAttribute('aria-label', m.label);
     if (!prev || prev.vis !== m.vis) b.querySelector('.ow-plaque-icon').innerHTML = glyph(m.vis === 'brume' ? 'brume' : sv.id);
     b.querySelector('.ow-plaque-name').textContent = m.name;
     b.querySelector('.ow-plaque-val').textContent = m.line;
+    b.querySelector('.ow-plaque-mark').hidden = !m.avis;
+    b.querySelector('.ow-plaque-avis').hidden = !m.avis;
+    b.querySelector('.ow-plaque-avis-txt').textContent = m.avis ? m.avis.text : '';
     b.querySelector('.ow-plaque-bar i').style.transform = `scaleX(${m.progress.toFixed(3)})`;
+    // le texte change de longueur : la plaque se remesure et se replace (sinon elle déborde sous la colonne de zoom)
+    if (!first && prev && (prev.line !== m.line || prev.name !== m.name || !!prev.avis !== !!m.avis || prev.avis?.text !== m.avis?.text)) {
+      plaqueSize[sv.id] = [b.offsetWidth, b.offsetHeight];
+      placePlaques();
+    }
     return true;
   }
   function applyPlaques(v) {
     let changed = false;
-    for (const s of SECTOR_ORDER) changed = updatePlaque(v.sectors[s]) || changed;
+    for (const s of SECTOR_ORDER) changed = updatePlaque(v.sectors[s], v.avis) || changed;
     changed = sizePlaques() || changed;
     if (changed && !first) { measurePlaques(); placePlaques(); }
   }
@@ -439,7 +530,11 @@ export function createWorld(container, options = {}) {
       vl = Math.max(m, Math.min(camera.W - w - m, vl));
       vt = Math.max(camera.top + m, Math.min(camera.H - camera.bottom - h - m, vt));
       const z = zoomBox;
-      if (vl + w > z[0] && vl < z[2] && vt + h > z[1] && vt < z[3]) vl = Math.max(m, z[0] - w);
+      if (vl + w > z[0] && vl < z[2] && vt + h > z[1] && vt < z[3]) {
+        // à gauche de la colonne de zoom si elle y tient entière, sinon au-dessus d'elle
+        if (z[0] - w >= m) vl = z[0] - w;
+        else vt = Math.max(camera.top + m, z[1] - h);
+      }
       b.style.transform = `translate(${f(vl + camera.sx)}px, ${f(vt + camera.sy)}px)`;
     }
   }
@@ -448,6 +543,7 @@ export function createWorld(container, options = {}) {
     applySectors(v);
     applyTiles(v);
     applyVeils(v);
+    applyFront(v);
     applyPlaques(v);
     const res = scene.sync(entitiesFor(v, tasks), { quiet });
     if (!quiet && enter) {
@@ -497,6 +593,7 @@ export function createWorld(container, options = {}) {
     measurePlaques();
     placePlaques();
     placeTag();
+    placeSkip();
     const lv = camera.levels();
     zOut.disabled = camera.s <= lv[0] + 0.001;
     zIn.disabled = camera.s >= lv[lv.length - 1] - 0.001;
@@ -619,6 +716,22 @@ export function createWorld(container, options = {}) {
     }
   }
 
+  // ---------------------------------------------------------------------------- bouton « Passer l'animation »
+  // Il doit rester touchable : sous la zone réservée du haut par défaut ; si l'interface le recouvre (panneau ouvert
+  // en compact), il remonte dans la bande libre juste au-dessus, puis tout en haut. Vérifié par un test de toucher.
+  function placeSkip() {
+    if (skipBtn.hidden || destroyed) return;
+    const h = skipBtn.offsetHeight || 44;
+    for (const top of [camera.top + 8, camera.top - h, 8]) {
+      skipBtn.style.top = f(Math.max(0, top)) + 'px';
+      const r = skipBtn.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const ok = [r.top + 6, r.top + r.height / 2, r.bottom - 6].every((y) => { const hit = doc.elementFromPoint(x, y); return hit && skipBtn.contains(hit); });
+      if (ok) return;
+    }
+    skipBtn.style.top = '';
+  }
+
   // ---------------------------------------------------------------------------- ambiance
   function wake(ms = AMBIENT_MS) {
     if (destroyed) return;
@@ -673,13 +786,27 @@ export function createWorld(container, options = {}) {
       rovingTo(b);
       select(b.dataset.id === selected ? null : b.dataset.id);
       if (selected && n) {
-        const info = { type: 'object', id: n.id, sector: n.e.sector, model: n.e.kind === 'char' ? n.e.who : n.e.model, taskId: n.e.crate?.taskId ?? null };
+        const info = selectInfo(n.e);
         options.onSelect?.(info);
         bus.emit('select', info);
       }
       return;
     }
     if (ev.target.closest('.ow-scroller')) select(null);
+  }
+  function selectInfo(e) {
+    if (e.plot) return { type: 'plot', id: e.plot.id, sector: e.sector, crop: e.plot.crop, stage: e.plot.stage, ripe: e.plot.ripe };
+    if (e.landmark) return { type: 'landmark', id: e.id, sector: e.sector, model: e.model, state: e.model === 'chantier' ? null : (shown?.landmarkState?.[e.id] ?? null) };
+    if (e.placed && !e.kind) return { type: 'placement', id: e.id, sector: e.sector, model: e.model };
+    return { type: 'object', id: e.id, sector: e.sector, model: e.kind === 'char' ? e.who : e.model, taskId: e.crate?.taskId ?? null };
+  }
+  /** Glissé sur une parcelle mûre : petit écrasement de la culture, puis l'hôte décide (onHarvest). */
+  function harvestGesture(eid) {
+    const n = scene.get(eid);
+    if (!n || !n.e.plot?.ripe) return;
+    fx.anim(n.el, [{ transform: 'scale(1)' }, { transform: 'scale(1.06, .9)' }, { transform: 'scale(1)' }], { duration: reduced ? 1 : 200, easing: 'ease-out' });
+    options.onHarvest?.(n.e.plot.id);
+    bus.emit('harvest', { plotId: n.e.plot.id });
   }
   function rovingTo(n) {
     for (const x of rovingItems()) if (x !== n && x.tabIndex === 0) x.tabIndex = -1;
@@ -717,10 +844,16 @@ export function createWorld(container, options = {}) {
   let drag = null;
   const touches = new Map();
   let pinch = null;
+  let swipe = null; // glissé de récolte commencé sur une parcelle mûre
   function onPointerDown(ev) {
     if (playing || queued) { skip(); }
     clearVeille();
     wake();
+    const ripe = !playing && (ev.pointerType !== 'mouse' || ev.button === 0) && ev.target.closest?.('.ow-ent.is-btn[data-mure]');
+    if (ripe && !touches.size) {
+      swipe = { id: ripe.dataset.id, pid: ev.pointerId, x: ev.clientX, y: ev.clientY, done: false };
+      if (ev.pointerType !== 'touch') return; // pas de déplacement de carte depuis une parcelle mûre
+    }
     if (ev.pointerType === 'touch') {
       touches.set(ev.pointerId, [ev.clientX, ev.clientY]);
       if (touches.size === 2) {
@@ -735,6 +868,11 @@ export function createWorld(container, options = {}) {
     drag = { x: ev.clientX, y: ev.clientY, sl: scroller.scrollLeft, st: scroller.scrollTop, moved: false };
   }
   function onPointerMove(ev) {
+    if (swipe && swipe.pid === ev.pointerId && !swipe.done && touches.size < 2
+      && Math.hypot(ev.clientX - swipe.x, ev.clientY - swipe.y) > SWIPE_PX) {
+      swipe.done = true;
+      harvestGesture(swipe.id);
+    }
     if (ev.pointerType === 'touch' && touches.has(ev.pointerId)) {
       touches.set(ev.pointerId, [ev.clientX, ev.clientY]);
       if (pinch && touches.size === 2) {
@@ -751,6 +889,10 @@ export function createWorld(container, options = {}) {
     if (drag.moved) camera.scrollToView(drag.sl - dx, drag.st - dy, false);
   }
   function onPointerUp(ev) {
+    if (swipe && swipe.pid === ev.pointerId) {
+      if (swipe.done) { suppressClick = true; win.setTimeout(() => { suppressClick = false; }, 0); }
+      swipe = null;
+    }
     if (ev.pointerType === 'touch') { touches.delete(ev.pointerId); if (touches.size < 2) pinch = null; return; }
     if (drag && drag.moved) { suppressClick = true; win.setTimeout(() => { suppressClick = false; }, 0); }
     if (drag) delete root.dataset.glisse;
@@ -811,6 +953,10 @@ export function createWorld(container, options = {}) {
     setActive,
     threadFrom: null,
     objName,
+    // semaine 3 : Front de givre, Avis, bouton de saut
+    frontHost, frontMove, frontShift,
+    avisName: (aid) => avisName(t, aid), avisWhen: (n) => avisWhen(t, n),
+    onStep: placeSkip,
   };
 
   function originFrom(from) {
@@ -832,6 +978,8 @@ export function createWorld(container, options = {}) {
     root.dataset.joue = '1';
     root.dataset.ambient = 'on';
     skipBtn.hidden = false;
+    placeSkip();
+    win.setTimeout(placeSkip, 320); // un panneau qui s'ouvre en glissant peut le recouvrir après coup
     clearVeille();
     fx.reset();
     if (pending) { tasks = pending.tasks; target = derive(pending); }
@@ -883,7 +1031,7 @@ export function createWorld(container, options = {}) {
     focusSector,
     /** Termine les animations en cours en 150 ms au plus. */
     skip,
-    /** Écoute : 'impact' (gain arrivé), 'select', 'render', 'played'. Renvoie la fonction de retrait. */
+    /** Écoute : 'impact' (gain arrivé), 'select', 'harvest' ({ plotId }), 'render', 'played'. Renvoie la fonction de retrait. */
     on: (type, fn) => bus.on(type, fn),
     get playing() { return playing > 0 || queued > 0; },
     destroy() {

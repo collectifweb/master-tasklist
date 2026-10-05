@@ -1,4 +1,4 @@
-// Primitives d'effets : fils de lumière, anneaux, éclats, poussière, flocons de cendre, faisceaux.
+// Primitives d'effets : fils de lumière, anneaux, éclats, poussière, flocons de cendre ou de givre, faisceaux.
 // Particules préparées d'avance (réserves d'éléments), animées par la Web Animations API sur transform et
 // opacity (compositeur). Les fils sont redessinés par la boucle unique (ticker), image par image.
 // Tout est « sautable » : skip() termine ce qui joue en 150 ms au plus.
@@ -225,6 +225,7 @@ export class Fx {
   flakes(points, { dur = 1100 } = {}) {
     const all = points.map(([x, y], i) => {
       const el = this.flakePool.take();
+      el.className = 'ow-flake';
       const dx = rand(-40, 40), up = rand(40, 90), dr = rand(-260, 260);
       return this.anim(el, [
         { transform: `translate(${f(x)}px, ${f(y)}px) rotate(0deg) scale(1)`, opacity: 0.95 },
@@ -234,6 +235,33 @@ export class Fx {
         .finished.then(() => this.flakePool.give(el), () => this.flakePool.give(el));
     });
     return Promise.all(all);
+  }
+
+  /** Neige de givre qui se pose sur des points (px monde), poussée par `drift` [dx, dy]. Même réserve que la cendre. */
+  snow(points, { dur = 1200, drift = [0, 0] } = {}) {
+    const all = points.map(([x, y], i) => {
+      const el = this.flakePool.take();
+      el.className = 'ow-flake is-snow';
+      const fall = rand(46, 80), dx = drift[0] + rand(-12, 12), dy = drift[1];
+      return this.anim(el, [
+        { transform: `translate(${f(x - dx)}px, ${f(y - fall - dy)}px) rotate(0deg) scale(.6)`, opacity: 0 },
+        { transform: `translate(${f(x - dx * 0.45)}px, ${f(y - fall * 0.45 - dy * 0.45)}px) rotate(90deg) scale(1)`, opacity: 1, offset: 0.4 },
+        { transform: `translate(${f(x)}px, ${f(y)}px) rotate(180deg) scale(.7)`, opacity: 0 },
+      ], { duration: dur * rand(0.8, 1.1), delay: i * 45, easing: 'cubic-bezier(.3,.2,.5,1)', fill: 'backwards' })
+        .finished.then(() => this.flakePool.give(el), () => this.flakePool.give(el));
+    });
+    return Promise.all(all);
+  }
+
+  /** Pièce de passage dans la scène (graine, fruit, panier, sceau) en (x, y) px monde ; l'appelant l'anime puis la retire. */
+  piece(cls, html, x, y) {
+    const el = document.createElement('i');
+    el.className = `ow-piece ${cls}`;
+    el.innerHTML = html;
+    el.style.left = f(x) + 'px';
+    el.style.top = f(y) + 'px';
+    this.L.world.appendChild(el);
+    return el;
   }
 
   /** Faisceaux de lumière qui percent le sol (px monde). */

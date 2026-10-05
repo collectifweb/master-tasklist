@@ -156,6 +156,47 @@ export const MODEL_SECTOR = {
   registres: 'archives', maison: 'maison-commune',
 };
 
+// ---------------------------------------------------------------- Avis (givre)
+/**
+ * Bord de l'île par où arrive le Front de givre d'un Avis, selon le secteur visé : segment a → b sur le bord
+ * (grille [u, v]), normale sortante n, `face` = le socle de ce bord est visible (le lac commence à son pied).
+ * La Place n'a pas de bord : son Front vient du quai.
+ */
+export const AVIS_EDGE = {
+  champs: { a: [0.5, 12], b: [5.5, 12], n: [0, 1], face: true },
+  atelier: { a: [12, 6.5], b: [12, 11.5], n: [1, 0], face: true },
+  archives: { a: [12, 0.5], b: [12, 5.5], n: [1, 0], face: true },
+  'maison-commune': { a: [0, 0.5], b: [0, 5.5], n: [-1, 0], face: false },
+  relais: { a: [0.5, 0], b: [5.5, 0], n: [0, -1], face: false },
+  place: { a: [4.5, 12], b: [7.5, 12], n: [0, 1], face: true },
+};
+
+/** Cases que le givre d'un Voile couvre (2 au plus), [r, c]. Aux Champs : le rang avant de la première parcelle. */
+export const VEIL_CELLS = {
+  champs: [[9, 2], [9, 3]],
+  atelier: [[8, 8], [9, 8]],
+  archives: [[3, 7], [3, 8]],
+  'maison-commune': [[4, 3], [3, 3]],
+  relais: [[3, 4], [3, 5]],
+  place: [[7, 5], [6, 4]],
+};
+
+/**
+ * Braseros (3 au plus), [u, v], allumés dans cet ordre. Aux Champs, le rebord est pris par les parcelles : ils se
+ * rangent sur les cases libres le long de la route, du rivage vers l'intérieur. Ailleurs : sur le rebord, face au
+ * Front, à 20, 50 et 80 % du bord, un peu en retrait.
+ */
+const BRASERO_SPOTS = { champs: [[5.5, 11.5], [4.6, 11.62], [5.45, 9.45]] }; // Solène se tient en (4,6 ; 10,7)
+export function braseroSpots(sector) {
+  if (BRASERO_SPOTS[sector]) return BRASERO_SPOTS[sector];
+  const e = AVIS_EDGE[sector];
+  if (!e) return [];
+  return [0.2, 0.5, 0.8].map((t) => [
+    e.a[0] + (e.b[0] - e.a[0]) * t - e.n[0] * 0.32,
+    e.a[1] + (e.b[1] - e.a[1]) * t - e.n[1] * 0.32,
+  ]);
+}
+
 /** Caisses d'échéance : posées au bord de la route avant (u = 6), de la place vers le quai. */
 export const CRATE_SPOTS = [[6.42, 8.35], [5.6, 8.9], [6.45, 9.6], [5.58, 10.3], [6.4, 11.0]];
 

@@ -4,8 +4,10 @@
 import { createWorld, createWorldPlan } from './world.js';
 import { createInitialState } from '../core/state.js';
 import { completeQuest, remballerQuest } from '../core/quests.js';
-import { directFilLibre, advanceChapter, stageForLueur, stageName } from '../core/economy.js';
-import { gameDay } from '../core/time.js';
+import { directFilLibre, advanceChapter, stageForLueur, stageName, CROP_STAGES } from '../core/economy.js';
+import { build, sow, harvest, shareHarvest, storeReserve, souffler } from '../core/build.js';
+import { advanceTime, lightBrasero, liftVeil } from '../core/avis.js';
+import { gameDay, addDays } from '../core/time.js';
 
 const $ = (s) => document.querySelector(s);
 const app = $('#app');
@@ -45,10 +47,12 @@ function fictiveGame(now) {
   g.sectors.atelier.open = true;
   g.lueur = { place: 160, champs: 420, atelier: 118, archives: 45, 'maison-commune': 0, relais: 0 };
   for (const id of Object.keys(g.sectors)) if (g.sectors[id].open) g.sectors[id].stage = stageForLueur(g.lueur[id]);
-  g.resources = { energy: 22, materials: 64, confidence: 9 };
+  g.resources = { energy: 90, materials: 200, confidence: 9 };
   g.filLibre = 12;
-  g.plots = [{ id: 'parcelle-a', crop: 'courge', stage: 1, slot: 0 }, { id: 'parcelle-b', crop: 'ble', stage: 2, slot: 1 }];
-  g.placements = [{ id: 'tunnel-1', model: 'tunnel', sector: 'champs' }];
+  // une parcelle vide (sol seul), une courge mûre (panier au coin), du blé en pousse ; ni établi ni tunnel
+  g.plots = [{ id: 'parcelle-1', crop: null, stage: 0, slot: 0 }, { id: 'parcelle-2', crop: 'courge', stage: 2, slot: 1 }, { id: 'parcelle-3', crop: 'ble', stage: 2, slot: 2 }];
+  g.placements = [];
+  g.lastSeenDay = gameDay(new Date(now));
   return g;
 }
 
@@ -78,10 +82,16 @@ function hud(g) {
   }
 }
 let pendingHud = null;
+window.__harvested = [];
+window.__selections = [];
 const world = createWorld($('#world'), {
   texts, anchors, announce, now: () => new Date(now),
   onImpact: () => { if (pendingHud) { hud(pendingHud); pendingHud = null; } },
+  // le monde n'applique rien : l'hôte appelle le cœur puis rejoue ses événements
+  onHarvest: (plotId) => { window.__harvested.push(plotId); actions.recolter(plotId); },
+  onSelect: (info) => { window.__selections.push(info); if (info.type === 'plot') selectedPlot = info.id; },
 });
+let selectedPlot = null;
 const plan = createWorldPlan($('#plan'), { texts, anchors, now: () => new Date(now), onFocusSector: (s) => world.focusSector(s) });
 
 function show(result, extra = []) {
@@ -109,6 +119,35 @@ function complete(id) {
   const r = completeQuest(tasks, structuredClone(game), ledger, { id, gameRevision: 0 }, new Date(now));
   lastDone.push(id);
   return show(r);
+}
+
+/** Appelle une fonction du cœur (tasks, game, ledger, params, now) et joue ses événements ; erreur → annonce. */
+function core(fn, params = {}) {
+  try {
+    return show(fn(tasks, structuredClone(game), ledger, { gameRevision: 0, ...params }, new Date(now)));
+  } catch (err) { announce(err.message); return null; }
+}
+const at = (day) => new Date(`${day}T12:00:00`).getTime();
+/** Démo : fait arriver le jour de l'Avis annoncé (en l'annonçant d'abord s'il le faut). */
+function resolveAvis(result) {
+  if (!game.avis.current) announceAvis();
+  const cur = game.avis.current;
+  if (!cur) return null;
+  const g = structuredClone(game);
+  // valeurs forcées pour la démo : Force nulle (tenu) ou hors d'atteinte (voilé, absent)
+  g.avis.current.force = result === 'tenu' ? 0 : 999;
+  g.lastSeenDay = result === 'absent' ? addDays(cur.day, -5) : addDays(cur.day, -1);
+  game = g;
+  now = at(cur.day);
+  return core(advanceTime);
+}
+function announceAvis() {
+  if (game.avis.current) { announce('Un Avis est déjà annoncé.'); return null; }
+  const g = structuredClone(game);
+  g.chapter.startDay = addDays(gameDay(new Date(now)), -10); // le Premier gel s'annonce au 5e jour du chapitre 2
+  g.avis.history = [];
+  game = g;
+  return core(advanceTime);
 }
 
 const actions = {
@@ -161,6 +200,53 @@ const actions = {
       return show(r);
     } catch (err) { announce(err.message); }
   },
+  // ---- potager
+  semer: () => {
+    const plot = game.plots.find((p) => !p.crop);
+    if (!plot) { announce('Aucune parcelle vide.'); return; }
+    const crops = ['courge', 'ble', 'patate'];
+    return core(sow, { crop: crops[game.plots.indexOf(plot) % 3], plotId: plot.id });
+  },
+  parcelle: () => core(build, { id: 'parcelle' }),
+  recolter: (plotId) => {
+    const ripe = (p) => p.crop && p.stage >= (CROP_STAGES[p.crop] ?? 2);
+    const id = typeof plotId === 'string' ? plotId : game.plots.find((p) => p.id === selectedPlot && ripe(p))?.id ?? game.plots.find(ripe)?.id;
+    if (!id) { announce('Rien à récolter pour l’instant.'); return; }
+    return core(harvest, { plotId: id });
+  },
+  pousser: () => {
+    // démo seulement : chaque culture semée gagne un stade
+    const g = structuredClone(game);
+    for (const p of g.plots) if (p.crop) p.stage = Math.min(CROP_STAGES[p.crop] ?? 2, p.stage + 1);
+    return show({ game: g, tasks, events: [] });
+  },
+  reserve: () => core(storeReserve, { n: 1 }),
+  partage: () => {
+    const crop = Object.keys(game.garden.pantry).find((k) => game.garden.pantry[k] > 0);
+    if (!crop) { announce('Le garde-manger est vide.'); return; }
+    return core(shareHarvest, { crop, n: 1 });
+  },
+  // ---- constructions
+  etabli: () => core(build, { id: 'etabli' }),
+  tour: () => core(build, { id: 'tour' }),
+  tunnel: () => core(build, { id: 'tunnel' }),
+  erable: () => core(build, { id: 'erable' }),
+  cloture: () => core(build, { id: 'cloture' }),
+  lanterne: () => core(build, { id: 'lanterne' }),
+  // ---- Avis
+  avis: () => announceAvis(),
+  jour: () => { now += 86400000; return core(advanceTime); },
+  brasero: () => core(lightBrasero),
+  souffler: () => core(souffler),
+  'avis-tenu': () => resolveAvis('tenu'),
+  'avis-voile': () => resolveAvis('voile'),
+  'avis-absent': () => resolveAvis('absent'),
+  lever: () => {
+    const v = game.avis.veils[0];
+    if (!v) { announce('Aucune case sous le givre.'); return; }
+    return core(liftVeil, { sector: v.sector });
+  },
+  muets: () => world.play([{ type: 'objectif-atteint', chapter: 2, id: 'demo' }, { type: 'chapitre-fin', chapter: 2 }, { type: 'type-inconnu' }, { type: 'partage', crop: 'ble', n: 1, pantry: 0 }]),
   motion: (b) => {
     const on = b.getAttribute('aria-pressed') !== 'true';
     b.setAttribute('aria-pressed', String(on));
@@ -198,4 +284,8 @@ hud(game);
 world.render(game, tasks);
 plan.render(game, tasks);
 window.__world = world;
-window.__demo = { actions, get game() { return game; }, get tasks() { return tasks; } };
+window.__demo = {
+  actions, get game() { return game; }, get tasks() { return tasks; },
+  /** Modifie l'état fictif sans événement (ex. mettre une réserve à 0 pour un scénario), puis l'affiche. */
+  patch(fn) { const g = structuredClone(game); fn(g); game = g; world.render(game, tasks); plan.render(game, tasks); },
+};

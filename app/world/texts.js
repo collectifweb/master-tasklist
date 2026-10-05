@@ -63,6 +63,33 @@ const DEFAULTS = {
   'monde.crop.state.0': 'semée', 'monde.crop.state.mid': 'pousse {s} sur {n}', 'monde.crop.state.ripe': 'mûre',
   'monde.crate.days': 'dans {n} jours', 'monde.crate.today': 'aujourd’hui', 'monde.crate.passed': 'elle attend au bord du chemin',
 
+  // semaine 3 : potager, constructions, Avis
+  'monde.crop.empty': 'vide, prête à semer',
+  'monde.crop.ripe.hint': 'Le panier attend la récolte',
+  'monde.obj.chantier': 'Chantier de l’établi',
+  'monde.obj.brasero': 'Brasero',
+  'monde.parcelle': 'Une nouvelle parcelle est prête aux Champs.',
+  'monde.semis': 'Semis de {culture} aux Champs.',
+  'monde.recolte': 'Récolte rentrée : {culture}.',
+  'monde.souffler': 'Un souffle sur la cendre : {n} Lueur rejoint le Fil libre.',
+  'monde.tour.reparee': 'La Tour de signal est réparée.',
+  'monde.avis.default': 'Avis',
+  'monde.avis.premier_gel': 'Premier gel',
+  'monde.avis.badge': '{nom} · {n} j',
+  'monde.avis.badge.1': '{nom} · demain',
+  'monde.avis.badge.0': '{nom} · aujourd’hui',
+  'monde.avis.when': 'dans {n} jours',
+  'monde.avis.when.1': 'demain',
+  'monde.avis.when.0': 'aujourd’hui',
+  'monde.avis.label': 'Avis : {nom} {au_secteur} {quand}.',
+  'monde.avis.annonce': 'Avis : {nom} arrive {au_secteur} {quand}. Le givre approche du rivage.',
+  'monde.avis.tenu': '{nom} est passé {au_secteur} : les rangs ont tenu.',
+  'monde.avis.voile': '{nom} est passé {au_secteur} : deux cases restent sous le givre quelques jours.',
+  'monde.avis.absent': '{nom} est passé {au_secteur} pendant ton absence. Rien n’a été perdu.',
+  'monde.brasero': 'Brasero allumé {au_secteur} : {n} sur {max}.',
+  'monde.voile.leve': 'Le givre se lève {au_secteur}.',
+  'monde.voile.leve.case': 'Une case dégivrée {au_secteur} ; encore {n} sous le givre.',
+
   // plan accessible
   'monde.plan.title': 'Plan de l’Orée',
   'monde.plan.intro': 'La même carte, en liste. Chaque secteur, son palier, sa Lueur et ce qui y est construit.',
@@ -77,6 +104,11 @@ const DEFAULTS = {
   'monde.plan.show': 'Voir sur la carte',
   'monde.plan.show.label': 'Voir {secteur} sur la carte',
   'monde.plan.stage': '{etat} · {detail}.',
+  'monde.plan.avis': 'Avis : {nom} {au_secteur} {quand}. Braseros allumés : {n} sur 3.',
+  'monde.plan.voile.one': '1 case sous le givre.',
+  'monde.plan.voile.other': '{n} cases sous le givre.',
+  'monde.plan.chantier': 'Chantier : l’établi n’est pas encore construit.',
+  'monde.plan.plot.empty': 'parcelle vide',
 };
 
 function flatten(obj, prefix = '', out = {}) {
@@ -100,6 +132,10 @@ export function makeTexts(...sources) {
   t.has = (key) => key in table;
   return t;
 }
+
+/** Nom d'un Avis (clé monde.avis.{id}, sinon « Avis ») et son échéance en mots. */
+export const avisName = (t, id) => (t.has(`monde.avis.${id}`) ? t(`monde.avis.${id}`) : t('monde.avis.default'));
+export const avisWhen = (t, n) => (n <= 0 ? t('monde.avis.when.0') : n === 1 ? t('monde.avis.when.1') : t('monde.avis.when', { n }));
 
 const LEVEL_KEYS = ['monde.stage.0', 'sector.level.repair', 'sector.level.thrive', 'sector.level.autonomous'];
 export const levelKey = (stage) => LEVEL_KEYS[Math.max(0, Math.min(3, stage))];
