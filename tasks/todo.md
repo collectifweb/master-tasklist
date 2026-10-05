@@ -176,11 +176,15 @@ Pour le joueur : trois écrans d'accueil, cinq premiers pas guidés, et un bande
 
 ### Lot 6 — Bilans passés et « Jour suivant »
 Pour le joueur : le bilan garde l'historique des semaines. Dans la version d'essai seulement, un bouton fait passer au jour suivant.
-- [ ] Le bilan de chaque semaine finie est figé et gardé (deux ans au plus). La migration recompte les semaines passées.
-- [ ] Réglage « bac à sable » écrit par le seul script de l'essai dans sa configuration serveur. La production refuse une partie qui porte un décalage de date.
-- [ ] Toutes les lectures de la date du jeu passent par une seule horloge : date réelle, plus le décalage en version d'essai.
-- [ ] [impeccable] historique dans la feuille du bilan ; bouton « Jour suivant ».
-- [ ] Tests : bouton absent par défaut, présent en essai ; la date avance d'un jour et les cultures poussent ; décalage refusé en production.
+- [x] Le bilan de chaque semaine finie est figé et gardé (deux ans au plus). La migration recompte les semaines passées.
+- [x] Réglage « bac à sable » écrit par le seul script de l'essai dans sa configuration serveur. La production refuse une partie qui porte un décalage de date.
+- [x] Toutes les lectures de la date du jeu passent par une seule horloge : date réelle, plus le décalage en version d'essai.
+- [x] [impeccable] historique dans la feuille du bilan ; bouton « Jour suivant ».
+- [x] Tests : bouton absent par défaut, présent en essai ; la date avance d'un jour et les cultures poussent ; décalage refusé en production.
+- *Fait le 5 octobre (commits 30c2a11, bfeae52, 44c5784 ; cache v5). Vérifié par moi : 260 tests `node --test`. D'après le journal de l'agent (relu, pas relancé) : tous les scénarios navigateur réussis aux trois largeurs, dont le nouveau 28 « jour suivant » (69 vérifications). /impeccable : guides du skill chargés (routing, shape, operate, craft-floor), captures regardées ; pas de critique ni d'audit complet.*
+- *Essai en ligne, vérifié vers 18 h 30 : le script de l'essai écrit `define('SANDBOX', true);` dans son `config.php` ; l'API de l'essai dit `sandbox: true`, celle de la production non ; bouton présent (44 px, 0 erreur console), pas touché pour ne pas déranger la partie d'Alex. Le script de production contrôle désormais que la production n'est jamais en bac à sable.*
+- *Décidé : pas de bouton « Revenir à aujourd'hui » ; si la partie d'essai doit repartir de zéro, je la réinitialise côté serveur. Les dates décalées de l'essai restent dans sa propre liste fictive (dossier de données de l'essai), qu'Hermes ne synchronise pas. Le décalage vaut N × 24 h : autour d'un changement d'heure, un toucher pourrait sauter ou répéter un jour (déduit du code, accepté pour un outil d'essai). Les cultures n'existent pas encore : « les cultures poussent » sera vérifié au lot 4.*
+- *Pour le lot 8 (`app/ARCHITECTURE.md`) : `SANDBOX`, code `sandbox_only`, `horloge`, `figerBilans`, `js/horloge.js`, option `sandbox` du serveur de test.*
 
 ### Lot 7 — Rappel du matin (ntfy)
 Pour le joueur : chaque jour à 8 h, une notification au texte général ; la toucher ouvre l'Orée.

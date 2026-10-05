@@ -28,3 +28,8 @@
 
 - **Un plafond qui efface les compteurs les plus anciens ouvre un contournement.** Pour borner le fichier des essais ratés, j'avais gardé les 500 entrées les plus récentes : quelqu'un qui alterne entre 501 adresses fait effacer chaque compteur avant qu'il atteigne le seuil. Règle : ne jamais évincer une information de sécurité encore utile ; borner la taille par une limite commune, pas par l'oubli.
 - **Contrôler puis compter en deux temps laisse passer des requêtes simultanées.** Le blocage lisait l'état sans verrou, puis comptait l'échec : 12 codes envoyés ensemble, 10 jugés au lieu de 5. Règle : la décision et la mise à jour d'un compteur de sécurité se font sous le même verrou, et un test l'éprouve avec des requêtes réellement parallèles.
+
+## Tests navigateur
+
+- **L'écran se met à jour avant la fin de l'envoi.** Le scénario 1 lisait le registre du serveur dès que l'Énergie s'affichait : il a échoué une fois à 1280 (lot 2), alors que l'agent l'avait vu au vert. Règle : tout contrôle qui lit le serveur après un geste dans l'interface attend l'écriture (`L.waitFor`), au lieu de la supposer faite.
+- **`setsid` peut rendre la main tout de suite.** Lancé depuis un chef de groupe de processus, il se dédouble et revient aussitôt : un marqueur « FIN » écrit juste après arrive avant la fin de la série (lot 6). Règle : `setsid --wait`, ou écrire le marqueur dans le même sous-shell que la commande, et vérifier qu'aucun `node ui-…` ne tourne encore avant de lire le résultat.
