@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeText, DOMAINS, SECTORS, SECTOR_IDS, PLACE_ID, groupedDomain, sectorOf, sectorOfTask, sectorInfo,
-  normalizeTask, normalizeTasks, clampScale, STATUSES,
+  normalizeText, DOMAINS, QUARTIERS, QUARTIER_IDS, PLACE_ID, groupedDomain, quartierOf, quartierOfTask, quartierInfo,
+  quartierOfSector, normalizeTask, normalizeTasks, clampScale, STATUSES,
 } from '../../core/index.js';
 import { T0, task } from './helpers.mjs';
 
@@ -11,39 +11,51 @@ test('normalizeText retire accents, casse et apostrophes', () => {
   assert.equal(normalizeText(null), '');
 });
 
-test('domaines regroupés : Jardin et Ferme → Champs ; Professionnel → Archives', () => {
-  assert.equal(sectorOf('Jardin'), 'champs');
-  assert.equal(sectorOf('Ferme'), 'champs');
+test('domaines regroupés : Jardin et Ferme → Champs ; Professionnel → Mairie', () => {
+  assert.equal(quartierOf('Jardin'), 'champs');
+  assert.equal(quartierOf('Ferme'), 'champs');
   assert.equal(groupedDomain('Jardin'), 'Terrain');
-  assert.equal(sectorOf('Professionnel'), 'archives');
+  assert.equal(quartierOf('Professionnel'), 'mairie');
   assert.equal(groupedDomain('professionnel'), 'Administratif');
-  assert.equal(SECTORS[sectorOf('Jardin')].name, 'Champs');
-  assert.equal(SECTORS[sectorOf('Professionnel')].name, 'Archives');
+  assert.equal(QUARTIERS[quartierOf('Jardin')].name, 'Champs');
+  assert.equal(QUARTIERS[quartierOf('Professionnel')].name, 'Mairie');
 });
 
-test('domaines regroupés : vide ou inconnu → Place du Bastion', () => {
-  for (const d of ['', null, undefined, 'Personnel', 'Autre']) {
-    assert.equal(sectorOf(d), PLACE_ID);
-    assert.equal(sectorInfo(sectorOf(d)).name, 'Place du Bastion');
+test('domaines regroupés : vide ou inconnu → Place du village', () => {
+  for (const d of ['', null, undefined, 'Personnel', 'Autre', 'constructor', 'toString']) {
+    assert.equal(quartierOf(d), PLACE_ID);
+    assert.equal(quartierInfo(quartierOf(d)).name, 'Place du village');
   }
 });
 
-test('les cinq domaines vont à leur secteur', () => {
-  assert.deepEqual(DOMAINS.map(sectorOf), ['champs', 'atelier', 'archives', 'maison-commune', 'relais']);
-  assert.equal(sectorOf('VEHICULE'), 'relais');
-  assert.equal(SECTOR_IDS.length, 6);
+test('six quartiers : les cinq domaines vont à leur quartier, la Place reçoit le reste', () => {
+  assert.deepEqual(DOMAINS.map(quartierOf), ['champs', 'atelier', 'mairie', 'ecole', 'garage']);
+  assert.deepEqual(QUARTIER_IDS, ['champs', 'atelier', 'mairie', 'ecole', 'garage', 'place']);
+  assert.deepEqual(QUARTIER_IDS.map((id) => QUARTIERS[id].name), ['Champs', 'Atelier', 'Mairie', 'École', 'Garage', 'Place du village']);
+  assert.deepEqual(QUARTIER_IDS.map((id) => QUARTIERS[id].domain), [...DOMAINS, null]);
+  assert.equal(quartierOf('VEHICULE'), 'garage');
+  assert.equal(quartierOf('enfants'), 'ecole');
+});
+
+test('anciens secteurs (v1) reliés aux quartiers', () => {
+  assert.deepEqual(
+    ['champs', 'atelier', 'archives', 'maison-commune', 'relais', 'place'].map(quartierOfSector),
+    ['champs', 'atelier', 'mairie', 'ecole', 'garage', 'place'],
+  );
+  for (const v of ['mairie', 'nimporte', 'constructor', undefined, null]) assert.equal(quartierOfSector(v), null, String(v));
 });
 
 test('le regroupement ne réécrit pas le domaine dans la tâche', () => {
   const t = task({ domain: 'Jardin' });
   const copy = structuredClone(t);
-  assert.equal(sectorOfTask(t), 'champs');
+  assert.equal(quartierOfTask(t), 'champs');
   assert.deepEqual(t, copy);
   assert.equal(normalizeTask(t, T0).domain, 'Jardin');
 });
 
-test('sectorInfo retombe sur la Place pour un identifiant inconnu', () => {
-  assert.equal(sectorInfo('nimporte').id, 'place');
+test('quartierInfo retombe sur la Place pour un identifiant inconnu', () => {
+  assert.equal(quartierInfo('nimporte').id, 'place');
+  assert.equal(quartierInfo('constructor').id, 'place');
 });
 
 test('clampScale borne à 1-10 et arrondit', () => {

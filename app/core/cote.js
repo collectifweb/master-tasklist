@@ -1,7 +1,7 @@
 // Cote (le rang d'une quête), tris, filtres, cartes du Fil du jour, « Pourquoi ? ».
 // Le jeu n'influence jamais la Cote.
 import { daysBetween, daysUntil, dayOnly, gameDay, weekEnd } from './time.js';
-import { normalizeText, sectorOfTask } from './domains.js';
+import { normalizeText, quartierOfTask } from './domains.js';
 
 const ratio = (n) => Math.round(n * 10) / 10;
 
@@ -120,7 +120,7 @@ export function sortTasks(tasks, sortId, now) {
 
 /**
  * filters : { status = 'todo' | 'done' | 'archived' | 'all', quick (L ≤ 2), lowEnergy (D ≤ 3),
- * thisWeek (échéance au plus tard dimanche, retards compris), sector (id), search }.
+ * thisWeek (échéance au plus tard dimanche, retards compris), quartier (id), search }.
  */
 export function filterTasks(tasks, filters = {}, now) {
   const status = filters.status ?? 'todo';
@@ -134,7 +134,7 @@ export function filterTasks(tasks, filters = {}, now) {
       const dl = dayOnly(t.deadline);
       if (!dl || dl > end) return false;
     }
-    if (filters.sector && sectorOfTask(t) !== filters.sector) return false;
+    if (filters.quartier && quartierOfTask(t) !== filters.quartier) return false;
     if (q) {
       const hay = normalizeText([t.task, t.notes, t.domain].filter(Boolean).join(' '));
       if (!hay.includes(q)) return false;

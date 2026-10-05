@@ -80,14 +80,10 @@ test('« Déjà faite » : plein tarif pour 3 par jour, puis 50 %', () => {
   assert.deepEqual([0, 1, 2, 3, 4].map(alreadyDoneRate), [1, 1, 1, 0.5, 0.5]);
 });
 
-test('montants : ⚡ 0,3·PE, ▣ 0,5·PE, Lueur 75 % secteur / 25 % Fil libre', () => {
-  const a = amountsForPe(20, 0);
-  assert.deepEqual(a, { pe: 20, energy: 6, materials: 10, lueurSector: 15, filLibre: 5 });
-  // au-delà du plafond de 45 PE, ⚡ et ▣ baissent mais pas la Lueur
-  const b = amountsForPe(20, 90);
-  assert.equal(b.energy, 1.2);
-  assert.equal(b.materials, 2);
-  assert.equal(b.lueurSector + b.filLibre, 20);
+test('montants : ⚡ 0,3·PE, ▣ 0,5·PE, rien d’autre (ni Lueur ni Fil libre)', () => {
+  assert.deepEqual(amountsForPe(20, 0), { pe: 20, energy: 6, materials: 10 });
+  // au-delà du plafond de 45 PE du jour, ⚡ et ▣ baissent ; les PE restent ceux de la quête
+  assert.deepEqual(amountsForPe(20, 90), { pe: 20, energy: 1.2, materials: 2 });
 });
 
 test('étapes : 40 % pour les étapes, 60 % pour la complétion, total identique', () => {

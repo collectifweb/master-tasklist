@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildIndex, findAnchors, inferDomain, reflectObject, DOMAINS, sectorOf, normalizeText } from '../../core/index.js';
+import { buildIndex, findAnchors, inferDomain, reflectObject, DOMAINS, quartierOf, quartierOfSector, normalizeText } from '../../core/index.js';
 
 const dico = JSON.parse(readFileSync(new URL('../../content/fr-CA/ancres.json', import.meta.url), 'utf8'));
 
@@ -12,10 +12,10 @@ test('dictionnaire : une quarantaine d’ancres, plus de 140 mots-clés, 5 domai
   assert.deepEqual([...new Set(dico.anchors.map((a) => a.domain))].sort(), [...DOMAINS].sort());
 });
 
-test('dictionnaire : chaque ancre est reliée au secteur de son domaine, identifiants uniques', () => {
+test('dictionnaire : chaque ancre est reliée au quartier de son domaine (ancien secteur), identifiants uniques', () => {
   const ids = new Set();
   for (const a of dico.anchors) {
-    assert.equal(a.sector, sectorOf(a.domain), a.id);
+    assert.equal(quartierOfSector(a.sector), quartierOf(a.domain), a.id); // ancres.json garde l'ancien secteur (lot 2)
     assert.ok(!ids.has(a.id), 'doublon ' + a.id);
     ids.add(a.id);
     assert.ok(a.label && a.keywords.length >= 2, a.id);
@@ -41,7 +41,7 @@ test('buildIndex met l’index en cache', () => {
 test('inferDomain : « frigo » → Maison, glacière de l’Atelier', () => {
   const r = inferDomain('Dégivrer le FRIGO', dico);
   assert.equal(r.domain, 'Maison');
-  assert.equal(r.sector, 'atelier');
+  assert.equal(r.quartier, 'atelier');
   assert.equal(r.anchor, 'glaciere');
 });
 
@@ -51,9 +51,9 @@ test('inferDomain : gouttière, pneus, impôts, lunch (accents, casse, pluriel)'
   assert.equal(inferDomain('Changer les pneus', dico).domain, 'Véhicule');
   assert.equal(inferDomain('Poser les pneus d’hiver', dico).anchor, 'pneus');
   assert.equal(inferDomain('Faire les impôts', dico).domain, 'Administratif');
-  assert.equal(inferDomain('IMPOTS 2026', dico).sector, 'archives');
+  assert.equal(inferDomain('IMPOTS 2026', dico).quartier, 'mairie');
   assert.equal(inferDomain('Préparer les lunchs', dico).domain, 'Enfants');
-  assert.equal(inferDomain('Préparer les lunchs', dico).sector, 'maison-commune');
+  assert.equal(inferDomain('Préparer les lunchs', dico).quartier, 'ecole');
 });
 
 test('inferDomain : expressions de plusieurs mots (« rendez-vous ») et aucun résultat', () => {

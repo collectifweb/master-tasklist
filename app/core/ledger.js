@@ -1,10 +1,12 @@
 // Registre des gains : clés uniques, construction des entrées, totaux du jour.
-// Le registre est en ajout seul. Une entrée : { key, at, day, type, taskId?, occurrence?, pe, energy,
-// materials, lueur: { sector, amount }, filLibre } (+ `alreadyDone` sur un gain « Déjà faite »,
-// `bonus` = nom du bonus sur une entrée `bonus`, `stepId` sur une étape).
+// Le registre est en ajout seul. Une entrée : { key, at, day, type, taskId?, occurrence?, pe, energy, materials,
+// quartier? } (`quartier` sur les gains de quête et d'étape et leurs annulations ; + `alreadyDone` sur un gain
+// « Déjà faite », `bonus` = nom du bonus sur une entrée `bonus`, `stepId` sur une étape).
+// Les entrées écrites en v1 portent `lueur: { sector, amount }` et `filLibre` au lieu de `quartier` : le registre
+// n'est jamais réécrit, quartierOfEntry lit les deux formes.
 import { gameDay, hoursBetween, toISO } from './time.js';
 import { amountsForPe, round1, round2, alreadyDoneRate } from './reward.js';
-import { sectorOfTask } from './domains.js';
+import { QUARTIERS, quartierOfTask, quartierOfSector } from './domains.js';
 
 export const REVERSE_WINDOW_HOURS = 24;
 
@@ -57,13 +59,20 @@ function base(key, type, now, extra = {}) {
   return { key, at: toISO(now), day: gameDay(now), type, ...extra };
 }
 
-function fromAmounts(a, sector) {
-  return { pe: a.pe, energy: a.energy, materials: a.materials, lueur: { sector, amount: a.lueurSector }, filLibre: a.filLibre };
+function fromAmounts(a, quartier) {
+  return { pe: a.pe, energy: a.energy, materials: a.materials, quartier };
+}
+
+/** Quartier d'une entrée : `quartier` (v2), ou l'ancien secteur `lueur.sector` traduit (v1) ; null sinon (bonus, entrée minimale). */
+export function quartierOfEntry(entry) {
+  if (!entry) return null;
+  if (entry.quartier !== undefined) return Object.hasOwn(QUARTIERS, entry.quartier) ? entry.quartier : null;
+  return quartierOfSector(entry.lueur && entry.lueur.sector);
 }
 
 /** Totaux d'une journée de jeu à partir du registre (la référence des plafonds). */
 export function dayTotals(ledger, day) {
-  const t = { pe: 0, energy: 0, materials: 0, filLibre: 0, alreadyDone: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
+  const t = { pe: 0, energy: 0, materials: 0, alreadyDone: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
   for (const e of ledger) {
     if (e.day !== day) continue;
     if (e.type === 'reward' || e.type === 'step' || e.type === 'reverse') t.pe += e.pe || 0;
@@ -77,7 +86,6 @@ export function dayTotals(ledger, day) {
     }
     t.energy += e.energy || 0;
     t.materials += e.materials || 0;
-    t.filLibre += e.filLibre || 0;
   }
   t.pe = Math.max(0, round2(t.pe));
   t.bonusEnergy = round1(t.bonusEnergy);
@@ -95,7 +103,7 @@ export function buildRewardEntry({ task, occurrence, pe, alreadyDone = false }, 
   const entry = base(key, 'reward', now, {
     taskId: task.id,
     occurrence,
-    ...fromAmounts(amountsForPe(paid, tot.pe), sectorOfTask(task)),
+    ...fromAmounts(amountsForPe(paid, tot.pe), quartierOfTask(task)),
   });
   if (alreadyDone) entry.alreadyDone = true;
   return entry;
@@ -110,7 +118,7 @@ export function buildStepEntry({ task, occurrence, stepId, pe }, ledger, now) {
     taskId: task.id,
     occurrence,
     stepId,
-    ...fromAmounts(amountsForPe(pe, tot.pe), sectorOfTask(task)),
+    ...fromAmounts(amountsForPe(pe, tot.pe), quartierOfTask(task)),
   });
 }
 
@@ -151,8 +159,7 @@ export function buildReverseEntry(ledger, taskId, occurrence, now) {
     pe: -sum((e) => e.pe || 0),
     energy: -sum((e) => e.energy || 0),
     materials: -sum((e) => e.materials || 0),
-    lueur: { sector: reward.lueur.sector, amount: -sum((e) => (e.lueur ? e.lueur.amount : 0)) },
-    filLibre: -sum((e) => e.filLibre || 0),
+    quartier: quartierOfEntry(reward),
   };
 }
 
@@ -173,7 +180,7 @@ export function buildBonusEntry(type, ledger, now, extra = {}) {
   if (hasKey(ledger, key)) return null;
   return base(key, 'bonus', now, {
     bonus: type, ...extra,
-    pe: 0, energy: def.energy, materials: 0, lueur: { sector: 'place', amount: 0 }, filLibre: 0,
+    pe: 0, energy: def.energy, materials: 0,
   });
 }
 
@@ -185,6 +192,6 @@ export function buildAjoutRefund(ledger, taskId, now) {
   if (hasKey(ledger, key)) return null;
   return {
     key, at: toISO(now), day: given.day, type: 'bonus', bonus: 'ajout', taskId, reverses: [given.key],
-    pe: 0, energy: -given.energy, materials: 0, lueur: { sector: 'place', amount: 0 }, filLibre: 0,
+    pe: 0, energy: -given.energy, materials: 0,
   };
 }

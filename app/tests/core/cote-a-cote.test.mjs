@@ -186,7 +186,7 @@ test('bilan de la semaine : temps relevé par domaine à côté des heures estim
   assert.equal(b.domaines.length, 1);
   assert.deepEqual(
     { ...b.domaines[0] },
-    { sector: b.domaines[0].sector, domain: b.domaines[0].domain, quetes: 2, minutes: 30, heures: 0.5, minutesReleve: 40, heuresReleve: 0.7 },
+    { quartier: 'atelier', domain: 'Maison', quetes: 2, minutes: 30, heures: 0.5, minutesReleve: 40, heuresReleve: 0.7 },
   );
   // sans aucune séance : relevé à 0, la forme ne change pas
   const vide = weeklyReview([], fresh().game, [], plusHours(T0, 2));

@@ -5,7 +5,7 @@ import {
   createQuest, updateQuest, startQuest, pauseQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
   remballerQuest, archiveQuest, unarchiveQuest, deleteQuest, claimBonus, openApp, newTaskId,
   normalizeTask, normalizeTasks, dayOnly, daysUntil, isValidDay, addMonths, orderByCote, bonusPe, questPe,
-  applyEntry, retractLisiere, createInitialState, hydrateLedger, cote,
+  hydrateLedger, cote,
 } from '../../core/index.js';
 import { T0, task, fresh, step, plusHours, sum } from './helpers.mjs';
 
@@ -231,48 +231,16 @@ test('bonus ×1,2 : poser une échéance puis terminer aussitôt ne donne rien',
 });
 
 // 10
-test('remballer la seule quête du jour retire la lisière, sa Confiance et la semaine tenue qui repasse sous 4', () => {
-  const w = fresh([task({ id: 'c' })]);
-  let s = step(w, completeQuest, { id: 'c' });
-  assert.equal(s.world.game.resources.confidence, 1);
-  s = step(s.world, remballerQuest, { id: 'c' }, plusHours(T0, 0.1));
-  assert.deepEqual(s.world.game.lisiereDays, []);
-  assert.equal(s.world.game.resources.confidence, 0);
-  assert.equal(s.world.game.daily.lisiere, false);
-  assert.ok(s.r.events.some((e) => e.type === 'lisiere-retiree'));
-  // la quête peut encore être terminée (0 gain) mais ne rallume pas la lisière du jour : le gain est 0
-  const re = step(s.world, completeQuest, { id: 'c' }, plusHours(T0, 0.2));
-  assert.deepEqual(re.r.entries, []);
-});
-
-test('remballer ne retire pas la lisière s’il reste une autre quête comptée ce jour-là', () => {
+test('remballer retire la tâche du quartier ; refaite ensuite, elle ne rapporte rien et ne recompte pas', () => {
   let w = fresh([task({ id: 'a' }), task({ id: 'b' })]);
   w = step(w, completeQuest, { id: 'a' }).world;
   w = step(w, completeQuest, { id: 'b' }).world;
-  const s = step(w, remballerQuest, { id: 'b' }, plusHours(T0, 0.1));
-  assert.deepEqual(s.world.game.lisiereDays, ['2026-10-06']);
-  assert.equal(s.world.game.resources.confidence, 1);
-  // remballer la 2e ensuite (la 1re déjà annulée) retire alors la lisière
-  const t = step(s.world, remballerQuest, { id: 'a' }, plusHours(T0, 0.2));
-  assert.deepEqual(t.world.game.lisiereDays, []);
-  assert.equal(t.world.game.resources.confidence, 0);
-});
-
-test('remballer le 4e jour d’une semaine tenue retire aussi la Confiance de la semaine', () => {
-  let w = fresh([]);
-  const jours = ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08'];
-  for (const [i, j] of jours.entries()) {
-    const now = j + 'T14:00:00Z';
-    w = step(w, createQuest, { id: 'q' + i, task: 'Fictive ' + i }, now).world;
-    w = step(w, completeQuest, { id: 'q' + i }, plusHours(now, 1)).world;
-  }
-  assert.equal(w.game.resources.confidence, 5); // 4 jours + semaine tenue
-  assert.equal(w.game.weeksHeld.length, 1);
-  const s = step(w, remballerQuest, { id: 'q3' }, '2026-10-08T16:00:00Z');
-  assert.equal(s.world.game.resources.confidence, 3);
-  assert.deepEqual(s.world.game.weeksHeld, []);
-  assert.ok(s.r.events.some((e) => e.type === 'semaine-retiree'));
-  assert.deepEqual(retractLisiere(w.game, '2026-12-25').events, []); // jour jamais allumé : rien
+  assert.equal(w.game.quartiers.atelier, 2);
+  let s = step(w, remballerQuest, { id: 'b' }, plusHours(T0, 0.1));
+  assert.equal(s.world.game.quartiers.atelier, 1);
+  s = step(s.world, completeQuest, { id: 'b' }, plusHours(T0, 0.2));
+  assert.deepEqual(s.r.entries, []);
+  assert.equal(s.world.game.quartiers.atelier, 1);
 });
 
 // 11
@@ -282,53 +250,15 @@ test('claimBonus n’accepte que plan, plan-honore et ajout', () => {
   for (const type of ['plan', 'plan-honore', 'ajout']) assert.equal(step(w, claimBonus, { type }).r.entries.length, 1);
 });
 
-// 12
-test('Confiance : le +1 se décide sur le jour de l’entrée, pas sur l’instant courant', () => {
-  const g = createInitialState(T0);
-  const e = (key, day) => ({ key, at: T0, day, type: 'reward', pe: 5, energy: 0, materials: 0, lueur: { sector: 'atelier', amount: 0 }, filLibre: 0 });
-  let r = applyEntry(g, e('a', '2026-10-07'), '2026-10-07T14:00:00Z');
-  r = applyEntry(r.game, e('b', '2026-10-06'), '2026-10-06T14:00:00Z'); // horloge en retard
-  r = applyEntry(r.game, e('c', '2026-10-07'), '2026-10-07T15:00:00Z');
-  assert.equal(r.game.resources.confidence, 2);
-  assert.deepEqual([...r.game.lisiereDays].sort(), ['2026-10-06', '2026-10-07']);
-  // un instant courant du jour suivant n'allume pas ce jour-là une seconde fois
-  const r2 = applyEntry(r.game, e('d', '2026-10-07'), '2026-10-08T14:00:00Z');
-  assert.equal(r2.game.resources.confidence, 2);
-});
-
 // 13
-test('remballer au plafond annule ce qui a réellement été appliqué, surplus au Fil libre compris', () => {
+test('remballer annule exactement le gain : sans plafond de stock, rien n’est parti ailleurs', () => {
   const w = fresh([task({ id: 's', priority: 10, length: 10, difficulty: 10 })]);
-  w.game.resources.energy = 40;
-  w.game.resources.materials = 150;
+  w.game.resources = { energy: 40, materials: 150, food: 5 };
   let s = step(w, completeQuest, { id: 's' });
-  assert.equal(s.world.game.resources.energy, 40);
-  assert.ok(s.world.game.filLibre > 6.25); // Lueur + surplus
+  assert.deepEqual(s.world.game.resources, { energy: 49.5, materials: 162.5, food: 5 }); // +7,5 ⚡ +12,5 ▣ et « Bon fil » +2 ⚡
   s = step(s.world, remballerQuest, { id: 's' }, plusHours(T0, 0.1));
-  assert.equal(s.world.game.resources.energy, 40);
-  assert.equal(s.world.game.resources.materials, 150);
-  assert.equal(s.world.game.filLibre, 0);
-  assert.equal(s.world.game.lueur.atelier, 0);
-});
-
-test('remballer à moitié au plafond : seule la part réellement entrée est retirée', () => {
-  const w = fresh([task({ id: 's', priority: 10, length: 10, difficulty: 10 })]);
-  w.game.resources.energy = 38; // +7,5 ⚡ : 2 entrent, 5,5 vont au Fil libre (2,75)
-  let s = step(w, completeQuest, { id: 's' });
-  assert.equal(s.world.game.resources.energy, 40);
-  s = step(s.world, remballerQuest, { id: 's' }, plusHours(T0, 0.1));
-  assert.equal(s.world.game.resources.energy, 38);
-  assert.equal(s.world.game.filLibre, 0);
-  assert.equal(s.world.game.resources.materials, 15);
-});
-
-test('remballer : l’état garde ce qui a été appliqué pendant 48 h seulement', () => {
-  const w = fresh([task({ id: 'a' }), task({ id: 'b' })]);
-  let s = step(w, completeQuest, { id: 'a' });
-  assert.ok(s.world.game.recentApplied['reward:a:1']);
-  s = step(s.world, completeQuest, { id: 'b' }, plusHours(T0, 50));
-  assert.equal(s.world.game.recentApplied['reward:a:1'], undefined);
-  assert.ok(s.world.game.recentApplied['reward:b:1']);
+  assert.deepEqual(s.world.game.resources, { energy: 40, materials: 150, food: 5 });
+  assert.equal(s.world.game.quartiers.atelier, 0);
 });
 
 // 14

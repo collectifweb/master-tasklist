@@ -98,7 +98,7 @@ test('les sept tris existent et trient', () => {
   assert.throws(() => sortTasks([a], 'nimporte', T0));
 });
 
-test('filtres : 15 min, peu d’énergie, cette semaine, secteur, recherche, statut', () => {
+test('filtres : 15 min, peu d’énergie, cette semaine, quartier, recherche, statut', () => {
   const ts = [
     task({ id: 'a', length: 2, difficulty: 2, domain: 'Maison', task: 'Changer l’ampoule', deadline: '2026-10-11' }),
     task({ id: 'b', length: 3, difficulty: 4, domain: 'Jardin', task: 'Tailler la haie', deadline: '2026-10-12' }),
@@ -111,8 +111,8 @@ test('filtres : 15 min, peu d’énergie, cette semaine, secteur, recherche, sta
   assert.equal(ids({ quick: true }), 'ac');
   assert.equal(ids({ lowEnergy: true }), 'ac');
   assert.equal(ids({ thisWeek: true }), 'ac'); // dimanche 11 octobre inclus, retards compris, pas le 12
-  assert.equal(ids({ sector: 'champs' }), 'b');
-  assert.equal(ids({ sector: 'place' }), 'c');
+  assert.equal(ids({ quartier: 'champs' }), 'b');
+  assert.equal(ids({ quartier: 'place' }), 'c');
   assert.equal(ids({ search: 'AMPOULE' }), 'a');
   assert.equal(ids({ search: 'fuite' }), 'c');
   assert.equal(ids({ search: 'élaguer' }), '');

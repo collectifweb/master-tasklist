@@ -1,11 +1,10 @@
 // Points d'effort (PE), gel de P/L/D, bonus plafonnés, plafond quotidien dégressif,
-// conversion en Énergie / Matériaux / Lueur, partage étapes / complétion, « Déjà faite ».
+// conversion en Énergie / Matériaux, partage étapes / complétion, « Déjà faite ».
 import { daysBetween, dayOnly, gameDay, hoursBetween, toISO } from './time.js';
 import { taskAgeDays } from './cote.js';
 
 export const ENERGY_PER_PE = 0.3;
 export const MATERIALS_PER_PE = 0.5;
-export const LUEUR_SECTOR_SHARE = 0.75;
 export const STEPS_SHARE = 0.4;
 export const MAX_STEPS = 12;
 export const BONUS_CAP = 0.4;
@@ -106,18 +105,11 @@ export function alreadyDoneRate(countToday) {
 
 /**
  * Montants d'un gain de `pe` PE, compte tenu des PE déjà gagnés aujourd'hui.
- * ⚡ = 0,3·PE comptés, ▣ = 0,5·PE comptés ; Lueur = 100 % des PE (sans plafond) : 75 % au secteur, 25 % au Fil libre.
+ * ⚡ = 0,3·PE comptés, ▣ = 0,5·PE comptés (PE comptés : après le plafond quotidien dégressif).
  */
 export function amountsForPe(pe, dayPeBefore = 0) {
   const eff = cappedPe(dayPeBefore, pe);
-  const sectorAmount = round2(pe * LUEUR_SECTOR_SHARE);
-  return {
-    pe: round2(pe),
-    energy: round1(eff * ENERGY_PER_PE),
-    materials: round1(eff * MATERIALS_PER_PE),
-    lueurSector: sectorAmount,
-    filLibre: round2(pe - sectorAmount),
-  };
+  return { pe: round2(pe), energy: round1(eff * ENERGY_PER_PE), materials: round1(eff * MATERIALS_PER_PE) };
 }
 
 // ---- Étapes ------------------------------------------------------------

@@ -4,7 +4,7 @@
 //   game    : l'état du jeu après l'opération
 //   ops     : opérations à envoyer telles quelles à l'API (task.upsert, task.delete, ledger.append, game.set)
 //   entries : nouvelles entrées du registre (déjà dans ops)
-//   events  : événements pour l'interface (reward, lisiere-allumee, secteur-seuil, etape, plaque…)
+//   events  : événements pour l'interface (reward, quartier-niveau, etape, plaque, seance-fin…)
 // `params.gameRevision` (facultatif) est repris dans game.set comme `baseGameRevision`.
 // Un champ qu'on vide est écrit `null` (l'API conserve les champs absents).
 // Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant
@@ -18,8 +18,8 @@ import {
   buildRewardEntry, buildStepEntry, buildReverseEntry, buildBonusEntry, buildAjoutRefund,
   canReverse, stepsPaid, unknownStepsCount, hasKey, rewardKey, reverseKey, findEntry,
 } from './ledger.js';
-import { applyEntry, retractLisiere } from './economy.js';
-import { startSeance, stopSeance } from './cote-a-cote.js';
+import { applyEntry } from './economy.js';
+import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -31,7 +31,7 @@ function deepEqual(a, b) {
   return ka.length === kb.length && ka.every((k) => k in b && deepEqual(a[k], b[k]));
 }
 
-/** Contexte d'une opération (partagé avec build.js, avis.js, chapters.js, letters.js) : voir `result()`. */
+/** Contexte d'une opération (partagé avec letters.js et cote-a-cote.js) : voir `result()`. */
 export class Ctx {
   constructor(tasks, game, ledger, params, now) {
     this.now = now;
@@ -72,12 +72,11 @@ export class Ctx {
     if (entry.type !== 'reverse' && (entry.pe > 0 || entry.energy > 0 || entry.materials > 0)) {
       this.events.push({
         type: 'reward', source, taskId: entry.taskId ?? null,
-        pe: entry.pe, energy: entry.energy, materials: entry.materials,
-        lueur: entry.lueur ? entry.lueur.amount : 0, filLibre: entry.filLibre, sector: entry.lueur ? entry.lueur.sector : null,
+        pe: entry.pe, energy: entry.energy, materials: entry.materials, quartier: entry.quartier ?? null,
         ...extra,
       });
     }
-    const r = applyEntry(this.game, entry, this.now);
+    const r = applyEntry(this.game, entry);
     this.game = r.game;
     this.events.push(...r.events);
   }
@@ -431,16 +430,7 @@ export function remballerQuest(tasks, game, ledger, params, now) {
   if (!canReverse(ctx.ledger, t.id, occ, now)) {
     throw new Error(findEntry(ctx.ledger, rewardKey(t.id, occ)) ? 'Trop tard pour remballer : plus de 24 h se sont écoulées.' : 'Cette quête n’a rien rapporté, il n’y a rien à remballer.');
   }
-  const entry = buildReverseEntry(ctx.ledger, t.id, occ, now);
-  ctx.append(entry, 'reverse');
-  // plus aucune quête comptée ce jour de jeu : la lisière de ce jour, sa Confiance (et la semaine tenue) sont retirées
-  const encore = ctx.ledger.some((e) => e.type === 'reward' && e.day === entry.day && e.key !== rewardKey(t.id, occ)
-    && !hasKey(ctx.ledger, reverseKey(e.taskId, e.occurrence)));
-  if (!encore) {
-    const r = retractLisiere(ctx.game, entry.day);
-    ctx.game = r.game;
-    ctx.events.push(...r.events);
-  }
+  ctx.append(buildReverseEntry(ctx.ledger, t.id, occ, now), 'reverse'); // −1 tâche au quartier (economy.js)
   if (recurring) {
     const p = t.lastDone.prev;
     ctx.put({ ...t, ...p, status: 'todo', occurrence: occ, doneAt: null, lastDone: null });
@@ -516,5 +506,18 @@ export function openApp(tasks, game, ledger, params, now) {
     }
   }
   ctx.game = { ...ctx.game, lastOpenDay: day };
+  return ctx.result();
+}
+
+/**
+ * Passage du temps, à appeler à l'ouverture (après openApp), au changement de jour de jeu et après les gestes du jeu.
+ * Note le jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis ferme une
+ * séance côte à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js). Idempotente : rejouée avec le
+ * même instant, elle ne fait rien. Événement : 'seance-fin' (raison 'oubliee').
+ */
+export function advanceTime(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  if (!ctx.game.lastSeenDay || ctx.day > ctx.game.lastSeenDay) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
+  tidySeances(ctx);
   return ctx.result();
 }

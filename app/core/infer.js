@@ -1,6 +1,6 @@
 // Domaine deviné à l'ajout d'une quête, à partir du dictionnaire content/fr-CA/ancres.json
 // (passé en paramètre : core/ ne lit aucun fichier). Insensible à la casse et aux accents.
-import { normalizeText, sectorOf, groupedDomain } from './domains.js';
+import { normalizeText, quartierOf, groupedDomain } from './domains.js';
 
 function stem(token) {
   return token.length > 3 ? token.replace(/[sx]$/, '') : token;
@@ -48,7 +48,7 @@ export function findAnchors(title, dictionary) {
 }
 
 /**
- * Devine le domaine : { domain, sector, anchor } ou null si rien ne correspond.
+ * Devine le domaine : { domain, quartier, anchor, anchorLabel } ou null si rien ne correspond.
  * Le domaine qui compte le plus de mots-clés l'emporte ; à égalité, le premier mot du titre.
  */
 export function inferDomain(title, dictionary) {
@@ -61,7 +61,7 @@ export function inferDomain(title, dictionary) {
     if (!best || counts.get(a.domain) > counts.get(best.domain)) best = a;
   }
   const domain = groupedDomain(best.domain) ?? best.domain;
-  return { domain, sector: sectorOf(domain), anchor: best.id, anchorLabel: best.label };
+  return { domain, quartier: quartierOf(domain), anchor: best.id, anchorLabel: best.label };
 }
 
 /** Objet-reflet (ancre) que la quête fait reluire, ou null. */

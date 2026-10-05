@@ -59,30 +59,33 @@ test('lettre du matin : sans quête ouverte, et au retour après une absence (bo
   assert.notEqual(lettres.matin.find((x) => x.id === snow.id).periode, 'automne');
 });
 
-test('Jour du recyclage : heures estimées par domaine, quêtes, jours de lisière, ratio laissé à null', () => {
+test('Jour du recyclage : heures estimées par quartier, quêtes, jours travaillés, ratio laissé à null', () => {
   const tasks = [
     task({ id: 'm', domain: 'Maison', length: 5 }), task({ id: 'j', domain: 'Jardin', length: 6 }), task({ id: 'x', domain: '', length: 2 }),
+    task({ id: 'v', domain: 'Véhicule', length: 1 }),
   ];
-  const r = (id, day, sector) => ({ key: `reward:${id}:1`, type: 'reward', taskId: id, occurrence: 1, day, pe: 8, lueur: { sector, amount: 6 } });
+  const r = (id, day, quartier) => ({ key: `reward:${id}:1`, type: 'reward', taskId: id, occurrence: 1, day, pe: 8, quartier });
   const ledger = [
     r('m', '2026-10-05', 'atelier'), r('j', '2026-10-07', 'champs'), r('x', '2026-10-11', 'place'),
     r('vieux', '2026-10-04', 'atelier'), // semaine d'avant
     r('supprimee', '2026-10-08', 'atelier'), // quête supprimée depuis : comptée, sans durée
-    { ...r('m2', '2026-10-09', 'atelier'), key: 'reward:m2:1' }, { key: 'reverse:m2:1', type: 'reverse', day: '2026-10-09' },
+    r('m2', '2026-10-09', 'atelier'), { key: 'reverse:m2:1', type: 'reverse', day: '2026-10-09' }, // remballée : exclue
+    // gain écrit en v1 : l'ancien secteur est lu comme son quartier
+    { key: 'reward:v:1', type: 'reward', taskId: 'v', occurrence: 1, day: '2026-10-07', pe: 5, lueur: { sector: 'relais', amount: 4 }, filLibre: 1 },
+    { key: 'reward:ancien:1' }, // entrée minimale (plus de 60 jours) : sans jour, hors bilan
   ];
-  const game = fresh().game;
-  game.lisiereDays = ['2026-10-04', '2026-10-05', '2026-10-07', '2026-10-11'];
-  const b = weeklyReview(tasks, game, ledger, at('2026-10-11', 18)); // dimanche
+  const b = weeklyReview(tasks, fresh().game, ledger, at('2026-10-11', 18)); // dimanche
   assert.equal(b.dimanche, true);
   assert.deepEqual(b.semaine, { start: '2026-10-05', end: '2026-10-11' });
-  assert.equal(b.quetes, 4);
-  assert.deepEqual(b.domaines.map((d) => [d.sector, d.domain, d.quetes, d.minutes, d.heures]), [
-    ['champs', 'Terrain', 1, 120, 2], ['atelier', 'Maison', 2, 60, 1], ['place', null, 1, 15, 0.3],
+  assert.equal(b.quetes, 5);
+  assert.deepEqual(b.domaines.map((d) => [d.quartier, d.domain, d.quetes, d.minutes, d.heures]), [
+    ['champs', 'Terrain', 1, 120, 2], ['atelier', 'Maison', 2, 60, 1], ['place', null, 1, 15, 0.3], ['garage', 'Véhicule', 1, 5, 0.1],
   ]);
   assert.equal(b.heures, 3.3);
-  assert.equal(b.joursLisiere, 3);
+  assert.equal(b.joursTravailles, 4); // 5, 7, 8 et 11 octobre ; le 9 n'a qu'une quête remballée
+  assert.equal('joursLisiere' in b, false);
   assert.equal(b.ratioJeuQuetes, null);
-  assert.equal(weeklyReview(tasks, game, ledger, at('2026-10-08')).dimanche, false);
+  assert.equal(weeklyReview(tasks, fresh().game, ledger, at('2026-10-08')).dimanche, false);
 });
 
 test('Jour du recyclage : quêtes ouvertes depuis plus de 60 jours à trier, archivées par archiveQuest', () => {

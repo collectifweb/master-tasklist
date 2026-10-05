@@ -151,7 +151,7 @@ test('toggleStep : refus sur une quête terminée ou une étape inconnue', () =>
   assert.throws(() => toggleStep(w.tasks, w.game, w.ledger, { id: 't1', stepId: 'zz' }, T0));
 });
 
-test('completeQuest : gain, lisière allumée, +1 Confiance, opérations pour l’API', () => {
+test('completeQuest : gain, +1 tâche au quartier, opérations pour l’API', () => {
   const w = fresh([task({ priority: 6, length: 1, difficulty: 1 })]);
   const { world, r } = step(w, completeQuest, { id: 't1', gameRevision: 7 });
   assert.equal(world.tasks[0].status, 'done');
@@ -161,21 +161,17 @@ test('completeQuest : gain, lisière allumée, +1 Confiance, opérations pour l�
   assert.equal(r.ops[1].entries[0].key, rewardKey('t1', 1));
   assert.equal(r.entries[0].pe, 6);
   const ev = r.events.find((e) => e.type === 'reward');
-  assert.deepEqual({ ...ev }, { type: 'reward', source: 'quete', taskId: 't1', pe: 6, energy: 1.8, materials: 3, lueur: 4.5, filLibre: 1.5, sector: 'atelier' });
-  assert.ok(r.events.some((e) => e.type === 'lisiere-allumee'));
-  assert.equal(world.game.resources.confidence, 1);
-  assert.equal(world.game.resources.energy, 11.8);
-  assert.equal(world.game.lueur.atelier, 4.5);
-  assert.equal(world.game.filLibre, 1.5);
+  assert.deepEqual({ ...ev }, { type: 'reward', source: 'quete', taskId: 't1', pe: 6, energy: 1.8, materials: 3, quartier: 'atelier' });
+  assert.equal(world.game.quartiers.atelier, 1);
+  assert.deepEqual(world.game.resources, { energy: 11.8, materials: 23, food: 5 });
   assert.equal(questPe(world.tasks[0], T0).pe, 6);
 });
 
-test('une seule lisière par jour : la 2e quête ne redonne pas de Confiance', () => {
-  let w = fresh([task({ id: 'a' }), task({ id: 'b' })]);
-  w = step(w, completeQuest, { id: 'a' }).world;
-  const s = step(w, completeQuest, { id: 'b' });
-  assert.equal(s.r.events.some((e) => e.type === 'lisiere-allumee'), false);
-  assert.equal(s.world.game.resources.confidence, 1);
+test('chaque quête payée compte au quartier de son domaine, plusieurs fois le même jour', () => {
+  let w = fresh([task({ id: 'a' }), task({ id: 'b' }), task({ id: 'c', domain: 'Ferme' }), task({ id: 'd', domain: 'Personnel' })]);
+  for (const id of ['a', 'b', 'c', 'd']) w = step(w, completeQuest, { id }).world;
+  assert.deepEqual(w.game.quartiers, { champs: 1, atelier: 2, mairie: 0, ecole: 0, garage: 0, place: 1 });
+  assert.deepEqual(w.ledger.filter((e) => e.type === 'reward').map((e) => e.quartier), ['atelier', 'atelier', 'champs', 'place']);
 });
 
 test('completeQuest : refuse une quête déjà terminée ou archivée', () => {
@@ -198,7 +194,7 @@ test('terminer, rouvrir puis terminer de nouveau rapporte 0', () => {
   assert.deepEqual(second.r.events.find((e) => e.type === 'sans-gain'), { type: 'sans-gain', taskId: 't1', reason: 'deja-recompensee' });
   assert.equal(second.world.tasks[0].status, 'done');
   assert.deepEqual(second.world.game.resources, gameApres.resources);
-  assert.deepEqual(second.world.game.lueur, gameApres.lueur);
+  assert.deepEqual(second.world.game.quartiers, gameApres.quartiers);
   assert.equal(sum(second.world.ledger, (e) => e.pe), premier.r.entries[0].pe);
   assert.ok(!second.r.ops.some((o) => o.type === 'ledger.append'));
   // ... même le lendemain
@@ -219,10 +215,8 @@ test('remballer dans les 24 h annule le gain', () => {
   assert.equal(s.world.tasks[0].doneAt, null);
   assert.equal(sum(s.world.ledger, (e) => e.pe), 0);
   assert.equal(sum(s.world.ledger, (e) => e.energy), 0);
-  assert.equal(s.world.game.resources.energy, 10);
-  assert.equal(s.world.game.resources.materials, 15);
-  assert.equal(s.world.game.lueur.atelier, 0);
-  assert.equal(s.world.game.filLibre, 0);
+  assert.deepEqual(s.world.game.resources, { energy: 10, materials: 20, food: 5 });
+  assert.equal(s.world.game.quartiers.atelier, 0);
   assert.deepEqual(kinds(s.r), ['task.upsert', 'ledger.append', 'game.set']);
   // terminer à nouveau ensuite rapporte 0
   const refait = step(s.world, completeQuest, { id: 't1' }, plusHours(T0, 21));
@@ -260,10 +254,10 @@ test('« Déjà faite » : 3 par jour à plein tarif, puis 50 %', () => {
     assert.equal(w.tasks[i].alreadyDone, true);
   }
   assert.deepEqual(pes, [6, 6, 6, 3, 3]);
-  assert.equal(w.game.resources.confidence, 1); // une seule lisière ce jour-là
+  assert.equal(w.game.quartiers.place, 5); // sans domaine : la Place du village
 });
 
-test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45 PE du jour, la Lueur non', () => {
+test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45 PE du jour, la tâche compte toujours', () => {
   let w = fresh([1, 2, 3, 4].map((i) => task({ id: 'g' + i, priority: 10, length: 10, difficulty: 10 })));
   const rewards = [];
   for (let i = 1; i <= 4; i++) {
@@ -276,26 +270,23 @@ test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45
   assert.equal(rewards[1].energy, 6.8); // 20 PE à 100 % + 5 PE à 50 % = 22,5 × 0,3 = 6,75
   assert.equal(rewards[2].energy, 3.8); // 25 PE à 50 % = 12,5 × 0,3 = 3,75, arrondi à 0,1
   assert.ok(Math.abs(rewards[3].energy - 2.85) < 0.06); // 15 PE à 50 %, 10 PE à 20 % = 9,5 × 0,3
-  assert.ok(rewards.every((e) => e.lueur.amount === 18.75 && e.filLibre === 6.25));
+  assert.ok(rewards.every((e) => e.quartier === 'atelier'));
+  assert.equal(w.game.quartiers.atelier, 4);
 });
 
-test('surplus au plafond vers le Fil libre à 2 pour 1 (via une quête)', () => {
+test('aucun plafond de stock : tout le gain entre, même avec de grosses réserves', () => {
   const w = fresh([task({ priority: 10, length: 10, difficulty: 10 })]);
-  w.game.resources.energy = 38;
-  const s = step(w, completeQuest, { id: 't1' }); // +7,5 ⚡ : 2 de place, 5,5 de surplus
-  assert.equal(s.world.game.resources.energy, 40);
-  const ev = s.r.events.find((e) => e.type === 'surplus');
-  assert.equal(ev.energy, 5.5);
-  assert.equal(ev.filLibre, 2.75);
-  // 6,25 (Lueur) + 2,75 (surplus de la quête) + 1 (le « Bon fil » de +2 ⚡ tombe aussi au plafond)
-  assert.equal(s.world.game.filLibre, 10);
+  w.game.resources = { energy: 400, materials: 900, food: 5 };
+  const s = step(w, completeQuest, { id: 't1' }); // +7,5 ⚡ et +12,5 ▣, plus le « Bon fil » (+2 ⚡)
+  assert.deepEqual(s.world.game.resources, { energy: 409.5, materials: 912.5, food: 5 });
+  assert.equal(s.r.events.some((e) => e.type === 'surplus'), false);
 });
 
-test('seuil de secteur : l’événement secteur-seuil sort au franchissement', () => {
-  const w = fresh([task({ priority: 10, length: 10, difficulty: 10, domain: 'Jardin' })]);
-  w.game.lueur.champs = 140;
+test('niveau de quartier : l’événement quartier-niveau sort à la 5e tâche', () => {
+  const w = fresh([task({ domain: 'Jardin' })]);
+  w.game.quartiers.champs = 4;
   const s = step(w, completeQuest, { id: 't1' });
-  assert.deepEqual(s.r.events.filter((e) => e.type === 'secteur-seuil'), [{ type: 'secteur-seuil', sector: 'champs', stage: 'reparer' }]);
+  assert.deepEqual(s.r.events.filter((e) => e.type === 'quartier-niveau'), [{ type: 'quartier-niveau', quartier: 'champs', niveau: 1 }]);
 });
 
 test('quête longue : plaque datée à la fin', () => {
