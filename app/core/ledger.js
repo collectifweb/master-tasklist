@@ -1,0 +1,167 @@
+// Registre des gains : clés uniques, construction des entrées, totaux du jour.
+// Le registre est en ajout seul. Une entrée : { key, at, day, type, taskId?, occurrence?, pe, energy,
+// materials, lueur: { sector, amount }, filLibre } (+ `alreadyDone` sur un gain « Déjà faite »,
+// `bonus` = nom du bonus sur une entrée `bonus`, `stepId` sur une étape).
+import { gameDay, hoursBetween, toISO } from './time.js';
+import { amountsForPe, round1, round2, alreadyDoneRate } from './reward.js';
+import { sectorOfTask } from './domains.js';
+
+export const REVERSE_WINDOW_HOURS = 24;
+
+/** Bonus hors tâches : montant en ⚡, plafond par jour du type, compte dans les 5 ⚡ quotidiens ou non. */
+export const BONUSES = {
+  ouverture: { energy: 1, perDay: 1, capped: true },
+  plan: { energy: 2, perDay: 1, capped: true },
+  'plan-honore': { energy: 2, perDay: 1, capped: true },
+  ajout: { energy: 1, perDay: 2, capped: true },
+  retour: { energy: 10, perDay: 1, capped: false },
+  'bon-fil': { energy: 2, perDay: 1, capped: false },
+};
+export const BONUS_DAILY_ENERGY_CAP = 5;
+
+export const rewardKey = (taskId, occurrence) => `reward:${taskId}:${occurrence}`;
+export const stepKey = (taskId, occurrence, stepId) => `step:${taskId}:${occurrence}:${stepId}`;
+export const reverseKey = (taskId, occurrence) => `reverse:${taskId}:${occurrence}`;
+export const bonusKey = (type, day, n) => `bonus:${type}:${day}` + (n === undefined || n === null ? '' : `:${n}`);
+
+export function hasKey(ledger, key) {
+  return ledger.some((e) => e.key === key);
+}
+
+export function findEntry(ledger, key) {
+  return ledger.find((e) => e.key === key) ?? null;
+}
+
+function base(key, type, now, extra = {}) {
+  return { key, at: toISO(now), day: gameDay(now), type, ...extra };
+}
+
+function fromAmounts(a, sector) {
+  return { pe: a.pe, energy: a.energy, materials: a.materials, lueur: { sector, amount: a.lueurSector }, filLibre: a.filLibre };
+}
+
+/** Totaux d'une journée de jeu à partir du registre (la référence des plafonds). */
+export function dayTotals(ledger, day) {
+  const t = { pe: 0, energy: 0, materials: 0, filLibre: 0, alreadyDone: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
+  for (const e of ledger) {
+    if (e.day !== day) continue;
+    if (e.type === 'reward' || e.type === 'step' || e.type === 'reverse') t.pe += e.pe || 0;
+    if (e.type === 'reward') {
+      t.rewards++;
+      if (e.alreadyDone) t.alreadyDone++;
+    }
+    if (e.type === 'bonus' && BONUSES[e.bonus]) {
+      if (BONUSES[e.bonus].capped) t.bonusEnergy += e.energy || 0;
+      if (e.energy > 0) t.bonusCount[e.bonus] = (t.bonusCount[e.bonus] || 0) + 1;
+    }
+    t.energy += e.energy || 0;
+    t.materials += e.materials || 0;
+    t.filLibre += e.filLibre || 0;
+  }
+  t.pe = Math.max(0, round2(t.pe));
+  t.bonusEnergy = round1(t.bonusEnergy);
+  return t;
+}
+
+/** Entrée `reward` : gain de complétion d'une occurrence. `pe` = PE à payer ici (déjà net des étapes). Renvoie null si la clé existe. */
+export function buildRewardEntry({ task, occurrence, pe, alreadyDone = false }, ledger, now) {
+  const key = rewardKey(task.id, occurrence);
+  if (hasKey(ledger, key)) return null;
+  const day = gameDay(now);
+  const tot = dayTotals(ledger, day);
+  let paid = pe;
+  if (alreadyDone) paid = round2(pe * alreadyDoneRate(tot.alreadyDone));
+  const entry = base(key, 'reward', now, {
+    taskId: task.id,
+    occurrence,
+    ...fromAmounts(amountsForPe(paid, tot.pe), sectorOfTask(task)),
+  });
+  if (alreadyDone) entry.alreadyDone = true;
+  return entry;
+}
+
+/** Entrée `step` : une étape cochée. Renvoie null si la clé existe. */
+export function buildStepEntry({ task, occurrence, stepId, pe }, ledger, now) {
+  const key = stepKey(task.id, occurrence, stepId);
+  if (hasKey(ledger, key)) return null;
+  const tot = dayTotals(ledger, gameDay(now));
+  return base(key, 'step', now, {
+    taskId: task.id,
+    occurrence,
+    stepId,
+    ...fromAmounts(amountsForPe(pe, tot.pe), sectorOfTask(task)),
+  });
+}
+
+/** PE déjà payés par les étapes d'une occurrence (positifs, hors annulations). */
+export function stepsPaid(ledger, taskId, occurrence) {
+  return round2(ledger.filter((e) => e.type === 'step' && e.taskId === taskId && e.occurrence === occurrence)
+    .reduce((s, e) => s + (e.pe || 0), 0));
+}
+
+/** Gain total (gain de complétion + étapes) d'une occurrence, ou null s'il n'y a pas de gain. */
+export function occurrenceEntries(ledger, taskId, occurrence) {
+  return ledger.filter((e) => (e.type === 'reward' || e.type === 'step') && e.taskId === taskId && e.occurrence === occurrence);
+}
+
+/** Peut-on remballer ? Gain trouvé, pas déjà annulé, écrit il y a moins de 24 h. */
+export function canReverse(ledger, taskId, occurrence, now) {
+  const reward = findEntry(ledger, rewardKey(taskId, occurrence));
+  if (!reward) return false;
+  if (hasKey(ledger, reverseKey(taskId, occurrence))) return false;
+  return hoursBetween(reward.at, now) < REVERSE_WINDOW_HOURS;
+}
+
+/** Entrée `reverse` : annule (montants négatifs) le gain de complétion, des étapes et du « Bon fil ». Jour = jour du gain annulé. */
+export function buildReverseEntry(ledger, taskId, occurrence, now) {
+  const key = reverseKey(taskId, occurrence);
+  const reward = findEntry(ledger, rewardKey(taskId, occurrence));
+  if (!reward || hasKey(ledger, key)) return null;
+  // le « Bon fil » gagné avec cette quête, le même jour, est annulé aussi
+  const parts = [
+    ...occurrenceEntries(ledger, taskId, occurrence),
+    ...ledger.filter((e) => e.type === 'bonus' && e.bonus === 'bon-fil' && e.taskId === taskId && e.day === reward.day),
+  ];
+  const sum = (f) => round2(parts.reduce((s, e) => s + f(e), 0));
+  return {
+    key, at: toISO(now), day: reward.day, type: 'reverse', taskId, occurrence,
+    pe: -sum((e) => e.pe || 0),
+    energy: -sum((e) => e.energy || 0),
+    materials: -sum((e) => e.materials || 0),
+    lueur: { sector: reward.lueur.sector, amount: -sum((e) => (e.lueur ? e.lueur.amount : 0)) },
+    filLibre: -sum((e) => e.filLibre || 0),
+  };
+}
+
+/**
+ * Entrée `bonus` hors tâches. `n` numérote les occurrences du jour (clé `bonus:{type}:{jour}:{n}`).
+ * Renvoie null si le plafond du type ou des 5 ⚡ quotidiens est atteint.
+ */
+export function buildBonusEntry(type, ledger, now, extra = {}) {
+  const def = BONUSES[type];
+  if (!def) throw new Error('Bonus inconnu : ' + type);
+  const day = gameDay(now);
+  const tot = dayTotals(ledger, day);
+  const done = tot.bonusCount[type] || 0;
+  if (done >= def.perDay) return null;
+  if (def.capped && tot.bonusEnergy + def.energy > BONUS_DAILY_ENERGY_CAP) return null;
+  const n = def.perDay > 1 ? done + 1 : undefined;
+  const key = bonusKey(type, day, n);
+  if (hasKey(ledger, key)) return null;
+  return base(key, 'bonus', now, {
+    bonus: type, ...extra,
+    pe: 0, energy: def.energy, materials: 0, lueur: { sector: 'place', amount: 0 }, filLibre: 0,
+  });
+}
+
+/** Reprise du bonus « ajout complet » si la quête est supprimée dans les 24 h. */
+export function buildAjoutRefund(ledger, taskId, now) {
+  const given = ledger.find((e) => e.type === 'bonus' && e.bonus === 'ajout' && e.taskId === taskId && e.energy > 0);
+  if (!given || hoursBetween(given.at, now) >= REVERSE_WINDOW_HOURS) return null;
+  const key = `bonus:ajout-reprise:${given.day}:${taskId}`;
+  if (hasKey(ledger, key)) return null;
+  return {
+    key, at: toISO(now), day: given.day, type: 'bonus', bonus: 'ajout', taskId,
+    pe: 0, energy: -given.energy, materials: 0, lueur: { sector: 'place', amount: 0 }, filLibre: 0,
+  };
+}
