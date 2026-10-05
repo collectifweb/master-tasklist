@@ -116,6 +116,13 @@ Synchronisation     : `tasks-sync.timer` toutes les minutes
 
 La configuration réelle (dossier des tâches, hôte, port, clé, chemin distant) vit **hors du dépôt**, dans `~/.config/oree/sync.env` (modèle : `sync.env.example`). Rien de tout cela ne doit être versionné.
 
+**Écritures simultanées avec la nouvelle app** (`app/api/api.php`, qui écrit aussi `tasks.json`) :
+- Le script prend sur le serveur le même verrou que l'app (`tasks.json.lock`, à côté du fichier) avant de remplacer la liste. Il vérifie aussi que la liste distante n'a pas changé depuis sa lecture : sinon il renonce sans rien écraser (code 6) et réessaie à la minute suivante.
+- Il retient comme référence l'empreinte du contenu réellement transféré, jamais une empreinte relue après coup.
+- Si les deux côtés ont changé, il s'arrête sur un conflit (code 4) et garde une copie locale : à résoudre à la main.
+- Banc d'essai sans serveur : `bash tests/sync-tasks-remote.test.sh sync-tasks-remote.sh`.
+- **Le serveur doit avoir `flock`.** La machine d'Hermes doit utiliser cette version du script.
+
 ```bash
 # Synchroniser immédiatement dans les deux directions
 ./sync-tasks-remote.sh sync
