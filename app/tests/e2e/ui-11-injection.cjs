@@ -9,7 +9,7 @@ const evil = (id, extra) => ({
   recurrence: { every: P1, interval: P2 }, ...extra,
 });
 L.runScenario('11. injection : aucune donnée hostile ne s’exécute', async ({ R, srv, newPage }) => {
-  srv.writeTasks([evil('x1'), evil('x2', { priority: 3, recurrence: { every: 'week', interval: P1 } }), evil('x3', { status: 'done', doneAt: new Date().toISOString() })]);
+  srv.writeTasks([evil('x1', { deadline: day(2) }), evil('x2', { priority: 3, recurrence: { every: 'week', interval: P1 } }), evil('x3', { status: 'done', doneAt: new Date().toISOString() })]);
   const { page } = await newPage();
   await page.addInitScript(() => { Object.defineProperty(window, '__xss', { configurable: true, set() { window.__hit = true; }, get() { return undefined; } }); });
   await page.goto(srv.url);

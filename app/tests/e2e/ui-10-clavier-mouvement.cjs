@@ -61,6 +61,7 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
   await pr.click('#fil-quest [data-action="complete"]');
   await pr.waitForTimeout(250);
   const moving = await pr.evaluate(() => document.getAnimations().filter((a) => {
+    if (a.playState !== 'running') return false; // les boucles du décor sont en pause en mouvement réduit
     const k = a.effect && a.effect.getKeyframes ? a.effect.getKeyframes() : [];
     return k.some((f) => f.transform && f.transform !== 'none' && !/^(translate[XY]?\((calc\(0 ?\* ?-?[\d.]+px\)|-?0(px)?)\)|translate\(0(px)?, ?0(px)?\)|matrix\(1, 0, 0, 1, 0, 0\)|scale\(1\))$/.test(String(f.transform).trim()));
   }).map((a) => a.animationName || a.constructor.name));

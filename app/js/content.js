@@ -1,5 +1,4 @@
 // Textes (content/fr-CA/*.json), gabarits, et choix des répliques de personnages sans répétition sur 7 jours.
-import { S } from './strings.js';
 import { daysBetween, localParts, gameDay, SECTORS } from '../core/index.js';
 
 const BASE = new URL('content/fr-CA/', document.baseURI).href;
@@ -28,7 +27,7 @@ export function fillStrict(text, vars = {}) {
 }
 
 export function t(key, vars) {
-  const raw = content.ui[key] ?? S[key];
+  const raw = content.ui[key];
   if (raw === undefined) return key;
   return String(raw).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? String(vars[k]) : ''));
 }

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/world.css">
 <link rel="stylesheet" href="css/app.css">
 <script type="module" src="js/main.js"></script>
 </head>
@@ -25,7 +26,7 @@
       </svg>
     </div>
     <div class="world-stage">
-      <svg class="world-island" viewBox="0 0 400 270" role="img" aria-label="L'île de l'Orée, vue de loin : emplacement réservé au monde de la semaine 2">
+      <svg class="world-island" viewBox="0 0 400 270" role="img" aria-label="L'île de l'Orée, vue de loin">
         <ellipse cx="200" cy="246" rx="176" ry="22" fill="#1d3336" opacity=".16"/>
         <g stroke="#b6e1d9" stroke-width="2.2" stroke-linecap="round" opacity=".75">
           <path d="M36 196h30M326 206h34M84 238h28M268 250h30"/>
@@ -86,7 +87,6 @@
           <polygon points="287,134 295,111 295,137" fill="#c4bdb0"/><polygon points="295,137 295,111 303,134" fill="#9a9284"/>
         </g>
       </svg>
-      <p class="world-caption">Emplacement du monde · l’île arrive en semaine 2</p>
     </div>
     <div class="world-live" id="world-live" hidden></div>
   </div>
@@ -125,6 +125,7 @@
   </div>
   <div class="speech" id="speech" hidden aria-hidden="true"></div>
   <p class="sr-only" role="status" aria-live="polite" id="live"></p>
+  <p class="sr-only" role="status" aria-live="polite" id="live-world"></p>
 
   <section class="panel" id="panel" aria-labelledby="panel-title">
     <span class="panel-grip" aria-hidden="true"></span>
@@ -226,6 +227,8 @@
             <p class="empty-text"></p>
             <button class="btn btn--quiet" type="button" data-action="clear-filters"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-x"/></svg>Retirer les filtres</button>
           </div>
+          <p class="plan-link"><button class="btn btn--quiet btn--small" type="button" data-action="end-visit"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-lueur"/></svg>Finir la visite</button>
+          <button class="btn btn--quiet btn--small" type="button" data-action="open-plan" hidden><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-steps"/></svg>Plan accessible</button></p>
         </section>
       </div>
     </div>
@@ -237,6 +240,8 @@
 <dialog class="sheet sheet--small" id="dlg-why" aria-labelledby="why-t"></dialog>
 <dialog class="sheet sheet--small" id="dlg-confirm" aria-label="Confirmation"></dialog>
 <dialog class="sheet sheet--small" id="dlg-token" aria-labelledby="tok-t"></dialog>
+<dialog class="sheet sheet--small" id="dlg-veille" aria-labelledby="veille-t"></dialog>
+<dialog class="sheet" id="dlg-plan" aria-labelledby="plan-t"></dialog>
 <dialog class="sheet sheet--small" id="dlg-help" aria-labelledby="help-t"></dialog>
 
 <noscript><p style="padding:24px">Cette application a besoin de JavaScript.</p></noscript>

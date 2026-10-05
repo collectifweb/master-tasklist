@@ -16,6 +16,8 @@ const AUDIT = () => {
   // une boîte fermée (dialog non ouvert) est déjà display:none
   for (const el of document.querySelectorAll('button, a[href], summary, select, input:not([type=hidden]):not([type=radio]):not([type=checkbox]), textarea, label.seg-option, label.sector-option, label.check-row, .step label')) {
     if (!vis(el)) continue;
+    // objets de la carte (sprites cliquables du monde) : leur équivalent à cible de 44 px est le Plan accessible ; mesurés à part
+    if (el.closest('.ow-ent')) continue;
     const r = el.getBoundingClientRect();
     const name = (el.getAttribute('aria-label') || el.textContent || el.id || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 40);
     if (r.width < 43.5 || r.height < 43.5) out.small.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]} « ${name} » ${Math.round(r.width)}×${Math.round(r.height)}`);

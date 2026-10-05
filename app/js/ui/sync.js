@@ -9,6 +9,10 @@ export function createSync(root, { onRetry }) {
   const app = $('#app');
   let hideTimer = null;
   let noticeTimer = null;
+  // le panneau replié doit grandir de la hauteur réelle de cette zone, sinon « Fait » passe sous le bord de l'écran
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => app.style.setProperty('--status-h', `${Math.ceil(root.getBoundingClientRect().height)}px`)).observe(root);
+  }
 
   function status() {
     app.dataset.status = !el.hidden || !noticeEl.hidden ? '1' : '';

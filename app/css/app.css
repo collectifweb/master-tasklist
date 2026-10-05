@@ -24,13 +24,24 @@
 .panel-status:not(:has(> :not([hidden]))) {
   display: none;
 }
-/* Quand un message est affiché, le panneau replié gagne sa hauteur : « Fait » reste visible */
+/* Quand un message est affiché, le panneau replié gagne sa hauteur : « Fait » reste visible.
+   --status-h est la hauteur réelle de la zone d'état, mesurée par ui/sync.js (le message hors ligne tient sur 3 lignes). */
 .app[data-status] {
-  --panel-peek: calc(clamp(248px, 30dvh, 300px) + 56px);
+  --panel-peek: calc(clamp(248px, 30dvh, 300px) + var(--status-h, 56px));
 }
 @media (min-width: 700px) {
   .app[data-status] {
-    --panel-peek: calc(clamp(272px, 26dvh, 340px) + 56px);
+    --panel-peek: calc(clamp(272px, 26dvh, 340px) + var(--status-h, 56px));
+  }
+}
+/* Panneau replié : rien ne peut le faire défiler en douce (focus, saut d'ancre). Le contenu caché reste caché. */
+.app {
+  overflow: clip;
+}
+@media (max-width: 999px) and (not ((min-width: 700px) and (orientation: landscape))) {
+  /* disposition compacte seulement : en colonne latérale, la liste défile normalement */
+  .app[data-panel="peek"] .panel-scroll {
+    overflow: clip;
   }
 }
 .panel-status .sync .btn--icon {
@@ -41,7 +52,8 @@
 .speech {
   position: absolute;
   z-index: var(--z-lane);
-  top: calc(var(--world-safe-top) + var(--sp-1));
+  /* sous le bouton « Passer l'animation » du monde (44 px + marges), qui occupe le coin haut droit pendant les animations */
+  top: calc(var(--world-safe-top) + var(--sp-2) + var(--target) + var(--sp-2));
   left: calc(var(--sp-2) + var(--safe-left));
   display: grid;
   gap: 2px;
@@ -83,4 +95,53 @@
 /* Quête en lecture seule : la raison s'écrit sous les boutons grisés */
 .fil-quest > .btn-reason {
   grid-column: 1 / -1;
+}
+
+/* Plan accessible : lien discret en bas de la liste */
+.plan-link {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding-top: var(--sp-4);
+}
+.plan-link > [hidden] {
+  display: none;
+}
+#dlg-plan .sheet-head {
+  justify-content: flex-end;
+}
+
+/* « L'Orée veille » : fin de visite, la prochaine quête en grand */
+.veille {
+  display: grid;
+  gap: var(--sp-3);
+}
+.veille-reply {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-16);
+}
+.veille-label {
+  margin-top: var(--sp-2);
+  font-size: var(--text-14);
+  font-weight: var(--w-heavy);
+  color: var(--text-soft);
+}
+.veille-quest {
+  font-family: var(--font-display);
+  font-size: var(--text-28, 1.75rem);
+  font-weight: var(--w-bold);
+  line-height: var(--lh-snug);
+  overflow-wrap: anywhere;
+}
+.veille-meta {
+  color: var(--text-soft);
+}
+.veille-saved {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-14);
+  color: var(--text-soft);
 }

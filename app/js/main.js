@@ -1,8 +1,8 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, isPinned } from '../core/index.js';
+import { SORTS, gameDay, isPinned, topCards } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
-import { loadContent, t } from './content.js';
+import { loadContent, t, content, pickReply, replyVars } from './content.js';
 import { $, $$, reducedMotion, setText, inlineSprite } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
 import { createAnnounce, summarize, gainList } from './ui/announce.js';
@@ -12,7 +12,7 @@ import { renderFil, renderAlts, renderList } from './ui/quests.js';
 import { num } from './ui/format.js';
 import {
   wireDialogs, openAdd, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
-  confirmDelete, confirmRemballer, openToken, openHelp, closeSheet, handleStep,
+  confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
 
@@ -26,7 +26,10 @@ const announce = createAnnounce($('.announce-lane'), $('#live'));
 const speech = createSpeech(app);
 const sync = createSync($('.panel-status'), {});
 let world = null;
+let worldPlan = null;
 let started = false;
+let touchFrom = null; // [x, y] du bouton « Fait » touché : le fil de lumière part de là
+let prevGame = null;
 
 const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: new Date() });
 const findTask = (id) => (id ? store.view.tasks.find((x) => x.id === id) || null : null);
@@ -44,10 +47,21 @@ function renderAll({ deferHud = false } = {}) {
   refreshFiche(c);
   setText($('#panel-date'), new Intl.DateTimeFormat('fr-CA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Montreal' })
     .format(new Date(gameDay(c.now) + 'T12:00:00Z')));
-  clearTimeout(hudTimer);
-  if (deferHud && !reducedMotion()) hudTimer = setTimeout(() => hud.render(c.game, { animate: true }), 320);
-  else hud.render(c.game, { animate: true });
+  // Les compteurs montent à l'impact du fil de lumière (onImpact du monde), pas avant. Sans monde : 320 ms de retard.
+  // Filet : si l'impact n'arrive jamais (animation interrompue), les compteurs se mettent à jour au plus tard après 6 s.
+  // Un rendu sans gain (la réponse du serveur, par exemple) ne doit pas griller l'impact : il attend lui aussi.
+  if (deferHud && world) { hudPending = true; clearTimeout(hudTimer); hudTimer = setTimeout(flushHud, 6000); }
+  else if (hudPending) { /* l'impact ou le filet mettra les compteurs à jour */ }
+  else if (deferHud && !reducedMotion()) { clearTimeout(hudTimer); hudTimer = setTimeout(flushHud, 320); }
+  else { clearTimeout(hudTimer); hud.render(c.game, { animate: true }); }
   if (world) world.render(c.game, c.tasks);
+  if (worldPlan && $('#dlg-plan').open) worldPlan.render(c.game, c.tasks);
+}
+let hudPending = false;
+function flushHud() {
+  clearTimeout(hudTimer);
+  hudPending = false;
+  if (store.view) hud.render(store.view.game, { animate: true });
 }
 
 // ───────── Réactions à une action ─────────
@@ -93,11 +107,45 @@ function react(payload) {
   if (say) announce.say(say() + replyText);
 }
 
+/** Événements du jeu + ceux que seule l'interface connaît : objet-reflet de la quête faite, secteur qui vient de s'ouvrir. */
+function worldEvents(payload, before) {
+  const events = [...((payload && payload.events) || [])];
+  if (!world || !payload || !payload.action) return events;
+  const { action, params = {}, result } = payload;
+  const done = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone);
+  if (done && result) {
+    const id = params.id || ((result.ops || []).find((o) => o.type === 'task.upsert') || {}).task?.id;
+    const gained = events.some((e) => e.type === 'reward');
+    const after = result.tasks;
+    if (gained && id) {
+      const prior = after.map((x) => (x.id === id ? { ...x, status: 'todo', doneAt: null } : x));
+      events.push(...world.refletEvents(result.game, after, prior));
+    }
+  }
+  if (before && result && result.game && !events.some((e) => e.type === 'chapitre')) {
+    for (const [sid, sec] of Object.entries(result.game.sectors || {})) {
+      if (sec.open && before.sectors && before.sectors[sid] && !before.sectors[sid].open) events.push({ type: 'secteur-ouvert', sector: sid });
+    }
+  }
+  return events;
+}
+
 store.on('change', (payload) => {
+  const before = prevGame;
+  prevGame = store.view && store.view.game ? structuredClone(store.view.game) : null;
   const events = (payload && payload.events) || [];
   renderAll({ deferHud: events.some((e) => e.type === 'reward' || e.type === 'lisiere-allumee') });
   if (payload && payload.action && started) react(payload);
-  if (world && payload && payload.events && payload.events.length) world.play(payload.events);
+  if (world && events.length) {
+    const from = touchFrom && Date.now() - touchFrom.at < 4000 ? [touchFrom.x, touchFrom.y] : undefined;
+    touchFrom = null;
+    const run = world.play(worldEvents(payload, before), { from });
+    Promise.resolve(run).then(() => {
+      if (hudPending) flushHud();
+      // plus aucune quête ouverte après un « Fait » : la visite se termine d'elle-même
+      if (payload.action === 'completeQuest' && !topCards(store.view.tasks, new Date()).first) setTimeout(endVisit, 600);
+    });
+  }
 });
 store.on('sync', (s) => sync.set(s));
 store.on('notice', (n) => sync.notice(n));
@@ -120,6 +168,50 @@ function setPanel(open) {
   toggle.setAttribute('aria-expanded', String(open));
   setText($('.panel-toggle-label', toggle), open ? t('panel.less') : t('panel.more'));
   if (!open) $('#panel-scroll').scrollTop = 0;
+}
+
+// Panneau replié : si le clavier envoie le focus sur un élément qui dépasse la partie visible, on ouvre le panneau
+// plutôt que de laisser le contenu glisser sous l'en-tête.
+document.addEventListener('focusin', (e) => {
+  // au clavier seulement : un toucher sur « Fait » pendant que le panneau finit de bouger ne doit pas l'ouvrir
+  if (app.dataset.panel !== 'peek' || !e.target.closest || !e.target.closest('#panel-scroll') || !e.target.matches(':focus-visible')) return;
+  const r = e.target.getBoundingClientRect();
+  if (r.bottom > window.innerHeight || r.top < $('#panel-scroll').getBoundingClientRect().top) setPanel(true);
+});
+
+// ───────── Monde : sélection d'un secteur, plan accessible ─────────
+/** Toucher un secteur de la carte : la liste ne montre que les quêtes de ce secteur, et le panneau s'ouvre. */
+function filterBySector(id) {
+  ui.sector = id;
+  for (const c of $$('.chip[data-sector]')) c.setAttribute('aria-pressed', String(c.dataset.sector === id));
+  renderAll();
+  setPanel(true);
+}
+function onWorldSelect(info) {
+  if (info.type === 'sector') filterBySector(info.id);
+  else if (info.taskId && findTask(info.taskId)) openFiche(ctx(), info.taskId);
+}
+/** Fin de visite : « L'Orée veille ». Fermée, elle laisse le monde allumer ses lanternes. */
+function endVisit() {
+  if (!started || document.querySelector('dialog[open]')) return;
+  const c = ctx();
+  const next = topCards(c.tasks, c.now).first;
+  const reply = pickReply('visit.end', {
+    now: c.now, chapter: c.game.chapter ? c.game.chapter.number : 1, sector: 'place', length: 0, vars: replyVars(null, 'place'),
+  }, { gate: false });
+  const sync = store.sync || {};
+  openVeille({
+    next, reply,
+    saved: (sync.state === 'idle' || sync.state === 'saved') && !sync.pending,
+    onClose: () => { if (world) world.play([{ type: 'veille' }]); },
+  });
+}
+function openPlan() {
+  if (!worldPlan) return;
+  const c = ctx();
+  worldPlan.render(c.game, c.tasks);
+  openSheet($('#dlg-plan'));
+  worldPlan.focus();
 }
 
 // ───────── Clics ─────────
@@ -165,7 +257,13 @@ document.addEventListener('click', (e) => {
     case 'res-help': return openHelp(target.dataset.res);
     case 'why': return openWhy(ctx(), id);
     case 'open': return openFiche(ctx(), id);
-    case 'complete': return run('completeQuest', { id });
+    case 'complete': {
+      const r = target.getBoundingClientRect();
+      touchFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2, at: Date.now() };
+      return run('completeQuest', { id });
+    }
+    case 'open-plan': return openPlan();
+    case 'end-visit': return endVisit();
     case 'start':
       if (!task) return;
       return run(isPinned(task) ? 'pauseQuest' : 'startQuest', { id });
@@ -284,9 +382,22 @@ async function start() {
   renderAll();
   started = true;
   run('openApp', {});
-  initWorld({ container: $('#world-live'), slot: $('.world-slot'), store, reducedMotion }).then((w) => {
+  prevGame = structuredClone(store.view.game);
+  initWorld({
+    container: $('#world-live'), slot: $('.world-slot'), content,
+    now: () => new Date(), reducedMotion,
+    announce: (text) => { const el = $('#live-world'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 60); },
+    onImpact: () => { if (hudPending) flushHud(); },
+    onSelect: onWorldSelect,
+  }).then((w) => {
     world = w;
-    if (world) world.render(store.view.game, store.view.tasks);
+    if (!world) return;
+    world.render(store.view.game, store.view.tasks);
+    const host = $('#dlg-plan');
+    host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${t('plan.close')}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
+    worldPlan = world.plan($('#plan-host'), { onFocusSector: (sid) => { closeSheet(host); setPanel(false); world.focusSector(sid); } });
+    host.setAttribute('aria-labelledby', $('#plan-host .ow-plan-title').id);
+    $('[data-action="open-plan"]').hidden = false;
   });
 }
 

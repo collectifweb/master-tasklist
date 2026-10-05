@@ -1,25 +1,48 @@
-// Pont vers le monde (app/world/world.js, écrit à part). S'il manque ou échoue, l'illustration statique reste en place.
-// Contrat attendu : createWorld(container, options) → { render(game, tasks), play(events), setReducedMotion(bool), focusSector(id), destroy() }.
-export async function initWorld({ container, slot, reducedMotion }) {
-  let mod;
+// Pont vers le monde (app/world/world.js). S'il manque ou échoue, l'illustration statique de la coquille reste en place.
+// Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
+//
+//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion });
+//   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now)
+//   w.plan(conteneur, { onFocusSector }) → { render, focus, destroy }
+export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion }) {
+  let mod, view;
   try {
-    mod = await import('../world/world.js');
-  } catch {
-    return null; // pas de monde : l'illustration statique de la coquille reste
+    [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
+  } catch (e) {
+    console.warn('monde absent :', e && e.message);
+    return null; // pas de monde : l'illustration statique reste
   }
   try {
-    const world = mod.createWorld(container, { reducedMotion: reducedMotion() });
+    const texts = content.ui;
+    const anchors = content.ancres;
+    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now });
+    world.setReducedMotion(reducedMotion());
     container.hidden = false;
     slot.dataset.world = 'live';
-    const safe = (fn) => (...args) => {
-      try { return fn.apply(world, args); } catch (e) { console.warn('monde :', e); }
+    const safe = (fn, fallback) => (...args) => {
+      try { return fn.apply(world, args); } catch (e) { console.warn('monde :', e); return fallback; }
+    };
+    const reflets = (game, tasks) => {
+      try { return view.deriveView(game, tasks, { now: now(), anchors }).reflets; } catch { return new Set(); }
     };
     return {
       render: safe(world.render),
-      play: safe(world.play),
-      setReducedMotion: safe(world.setReducedMotion || (() => {})),
-      focusSector: safe(world.focusSector || (() => {})),
-      destroy: safe(world.destroy || (() => {})),
+      play: safe(world.play, Promise.resolve()),
+      setReducedMotion: safe(world.setReducedMotion),
+      focusSector: safe(world.focusSector),
+      skip: safe(world.skip),
+      on: safe(world.on, () => {}),
+      get playing() { return world.playing; },
+      /** Objets de la carte qui se mettent à reluire à cause de la quête qui vient d'être faite (événements « reflet »). */
+      refletEvents(game, tasksAfter, tasksBefore) {
+        const before = reflets(game, tasksBefore);
+        return [...reflets(game, tasksAfter)].filter((id) => !before.has(id)).map((objectId) => ({ type: 'reflet', objectId }));
+      },
+      plan(host, { onFocusSector } = {}) {
+        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector });
+        return { render: safe(p.render), focus: safe(p.focus), destroy: safe(p.destroy) };
+      },
+      destroy: safe(world.destroy),
     };
   } catch (e) {
     console.warn('monde indisponible :', e);

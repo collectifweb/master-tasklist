@@ -25,30 +25,31 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 - [x] Ouvrir la demande de fusion de `ccr-06402b21-chsulu` vers `main` (n° 5) ; Alex la relit et la fusionne. Le travail continue sur `feat/lisiere-rallumee`, partie de cette branche.
 - [x] Lire, sans rien modifier, la configuration du serveur par SSH : `tasks-api.php`, emplacement de `tasks.json`, sauvegardes existantes, version de PHP, façon dont Hermes écrit.
-- [ ] Poser les fondations visuelles de `app/` avec /impeccable, en partant de la palette de 006.
+- [x] Poser les fondations visuelles de `app/` avec /impeccable, en partant de la palette de 006.
 - [x] Inscrire les décisions ci-dessus dans `RECOMMANDATION.md` (section 10) et `SUITE.md`.
 
 ## Semaine 1 — L'utile, sans le monde
 
-- [ ] `app/core/`, testé :
+- [x] `app/core/`, testé :
   - migration sans perte de champ (échéance, notes, statut archivé conservés) ;
   - Cote, Points d'effort, plafonds quotidiens ;
   - registre des gains en ajout seul : terminer, rouvrir puis terminer de nouveau rapporte 0 ;
   - temps réel (journée de Montréal) ;
   - domaines regroupés → secteurs.
-- [ ] `api.php` :
+- [x] `api.php` :
   - chaque opération porte un identifiant, la rejouer ne double rien ;
   - verrou de fichier, numéro de révision, écriture atomique, 14 sauvegardes ;
   - `tasks.json` reste la référence ; `game-state.json` et `ledger.jsonl` à côté.
-- [ ] Registre des quêtes au moins aussi complet que l'app actuelle : tris, filtres, recherche, création, modification, suppression, notes, étapes, récurrence, archiver, remballer.
-- [ ] Ajout rapide avec domaine deviné, Fil du jour, « Pourquoi ? ».
+- [x] Registre des quêtes au moins aussi complet que l'app actuelle : tris, filtres, recherche, création, modification, suppression, notes, étapes, récurrence, archiver, remballer.
+- [x] Ajout rapide avec domaine deviné, Fil du jour, « Pourquoi ? ».
 - [ ] Jalon : utilisable au quotidien sur une copie locale des vraies tâches.
 
 ## Semaine 2 — Le monde
 
-- [ ] Île de 12×12 en DOM/SVG, reprise du prototype `dom-svg`, mise à jour élément par élément (plus de régénération complète).
-- [ ] Place, Champs et Atelier ouverts, deux secteurs sous la cendre, Fil libre.
-- [ ] Fanal et deux personnages ; animations 1 à 5, 11 et 12, avec leur version en mouvement réduit.
+- [x] Île de 12×12 en DOM/SVG, reprise du prototype `dom-svg`, mise à jour élément par élément (plus de régénération complète).
+- [x] Place, Champs et Atelier ouverts, deux secteurs sous la cendre, Fil libre.
+- [x] Fanal et deux personnages ; animations 1 à 5, 11 et 12, avec leur version en mouvement réduit.
+- [x] Brancher le monde dans l'app : fil de lumière parti du bouton touché, compteurs à l'impact, secteur touché = filtre, plan accessible, écran « L'Orée veille » ; 14 scénarios Playwright aux 3 largeurs.
 - [ ] Essai sur le vrai téléphone d'Alex : on garde le SVG, ou on passe à PixiJS si l'animation tombe sous 45 images par seconde.
 
 ## Semaine 3 — Le jeu

@@ -453,6 +453,29 @@ export function openHelp(name) {
   openSheet(dlg);
 }
 
+/**
+ * « L'Orée veille » : écran de fin de visite. La prochaine quête en grand, une réplique, et rien d'autre.
+ * `saved` : true seulement quand tout est bien enregistré (sinon la phrase de réassurance n'est pas écrite).
+ * `onClose` : appelé à la fermeture (le monde allume alors ses lanternes).
+ */
+export function openVeille({ next, reply, saved, onClose }) {
+  const dlg = $('#dlg-veille');
+  const m = next ? taskModel(next, { now: new Date() }) : null;
+  dlg.innerHTML = `
+    <header class="sheet-head"><h2 class="sheet-title" id="veille-t">${esc(t('visit.end.title'))}</h2>
+      <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('visit.end.close'))}">${icon('x')}</button></header>
+    <div class="sheet-body veille">
+      ${reply ? `<p class="veille-reply"><span class="speech-name">${esc(reply.nom)}</span><span class="veille-text">${esc(reply.texte)}</span></p>` : ''}
+      ${m ? `<p class="veille-label">${esc(t('visit.end.next'))}</p>
+        <p class="veille-quest">${esc(next.task)}</p>
+        <p class="veille-meta">${esc(m.sectorName)} · ${esc(durationText(next.length))}</p>` : `<p class="veille-text">${esc(t('visit.end.empty'))}</p>`}
+      ${saved ? `<p class="veille-saved">${icon('cloud-ok')}${esc(t(m ? 'visit.end.sub' : 'visit.end.saved'))}</p>` : ''}
+    </div>
+    <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="button" data-close>${esc(t('visit.end.show'))}</button></footer>`;
+  dlg.addEventListener('close', () => { if (onClose) onClose(); }, { once: true });
+  openSheet(dlg);
+}
+
 /** Câblage commun : fermeture au fond, Échap animé, bouton data-close. */
 export function wireDialogs() {
   for (const d of $$('dialog.sheet')) {
