@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobile/tablette) transformée en jeu de gestion de ferme agro-futuriste. Les tâches terminées produisent des ressources qui servent à développer la ferme. Toute la documentation, le code UI et les messages sont en français. Lire `PRODUCT.md` avant toute décision de produit ou de game design : c’est le cahier des charges (économie à trois ressources, aléas récupérables, bonus plafonnés, contraintes d’hébergement).
 
-Deux applications cohabitent :
+Trois applications cohabitent :
+
+- **`app/` — la nouvelle app « La lisière rallumée »**, en cours de développement sur la branche `feat/lisiere-rallumee`. C'est elle qui doit remplacer l'app historique. Modules ES sans outil de construction : `core/` (logique pure testée), `js/` (interface), `world/` (île isométrique DOM/SVG), `content/fr-CA/` (tous les textes), `api/api.php` (opérations avec verrou, révisions et sauvegardes). Contrat technique : `app/ARCHITECTURE.md` ; design : `app/DESIGN.md` ; plan et bilan : `tasks/todo.md` ; leçons : `tasks/lessons.md`.
 
 - **`index.html` (racine)** — application historique en production. Un seul fichier HTML/JS inline, sans module. Elle lit `tasks.json` par `fetch`, écrit par `POST tasks.json` (corps = tableau complet de tâches), avec repli `localStorage['familytasks']`. En production, l’écriture passe par `tasks-api.php` sur l’hébergement LiteSpeed/PHP ; ce fichier n’est **pas** dans le dépôt.
 - **`sketches/006-oree-vivante/`** — itération active du jeu (« Orée vivante »). Sandbox local : aucun appel réseau. Les tâches de départ sont une copie statique dans `js/data.js` (`SOURCE_TASKS`) et l’état vit seulement dans `localStorage`.
@@ -30,6 +32,11 @@ python3 -m http.server 8080
 # « Authorization: Bearer $TASKS_WRITE_TOKEN » ; sans jeton, il est en lecture seule.
 # L’app historique n’envoie pas encore ce jeton : tester l’écriture avec curl.
 TASKS_WRITE_TOKEN=dev python3 tasks-server.py
+
+# Nouvelle app : tests de la logique et de l'API (Node 24 : motifs entre guillemets, pas un dossier)
+node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
+# Nouvelle app : 21 scénarios navigateur aux 3 largeurs (plus de 10 minutes ; Playwright est une bibliothèque)
+PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
 
 # Vérifications attendues avant commit (README / CONTRIBUTING)
 for f in sketches/006-oree-vivante/js/*.js; do node --check "$f"; done
