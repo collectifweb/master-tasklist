@@ -2,7 +2,7 @@
 /**
  * Modèle de réglages. Copier en `config.php` (ignoré par Git) et adapter.
  * Ordre de priorité : variables d'environnement (OREE_TASKS_FILE, OREE_DATA_DIR,
- * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1), puis ce fichier,
+ * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1, OREE_SANDBOX=1), puis ce fichier,
  * puis les valeurs par défaut.
  */
 
@@ -27,6 +27,11 @@
 
 // Permet à l'API de CRÉER tasks.json s'il est absent (essais seulement ; sinon 503 tasks_missing).
 // define('ALLOW_CREATE_TASKS', false);
+
+// VERSION D'ESSAI seulement (jamais en production) : les réponses portent `sandbox: true`, l'app montre le bouton
+// « Jour suivant », et une partie qui porte un décalage de date (`horloge`) est acceptée. Sans ce réglage, l'API la
+// refuse (409 sandbox_only).
+// define('SANDBOX', true);
 
 /*
  * Hébergement LiteSpeed/Apache : l'en-tête Authorization n'arrive parfois pas à PHP.

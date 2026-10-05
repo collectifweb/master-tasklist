@@ -91,6 +91,7 @@ function load_config(): array
         'hash' => '',
         'allow_open' => false,
         'allow_create' => false,
+        'sandbox' => false, // version d'essai : « Jour suivant » permis (décalage de date dans la partie)
     ];
     $file = __DIR__ . '/config.php';
     if (is_file($file)) {
@@ -100,12 +101,13 @@ function load_config(): array
         if (defined('TOKEN_HASH') && is_string(TOKEN_HASH)) $cfg['hash'] = TOKEN_HASH;
         if (defined('ALLOW_OPEN')) $cfg['allow_open'] = (bool)ALLOW_OPEN;
         if (defined('ALLOW_CREATE_TASKS')) $cfg['allow_create'] = (bool)ALLOW_CREATE_TASKS;
+        if (defined('SANDBOX')) $cfg['sandbox'] = (bool)SANDBOX;
     }
     foreach (['tasks' => 'OREE_TASKS_FILE', 'data' => 'OREE_DATA_DIR', 'hash' => 'OREE_TOKEN_HASH'] as $k => $name) {
         $v = getenv($name);
         if (is_string($v) && $v !== '') $cfg[$k] = $v;
     }
-    foreach (['allow_open' => 'OREE_ALLOW_OPEN', 'allow_create' => 'OREE_ALLOW_CREATE_TASKS'] as $k => $name) {
+    foreach (['allow_open' => 'OREE_ALLOW_OPEN', 'allow_create' => 'OREE_ALLOW_CREATE_TASKS', 'sandbox' => 'OREE_SANDBOX'] as $k => $name) {
         $v = getenv($name);
         if (is_string($v) && $v !== '') $cfg[$k] = ($v === '1');
     }
@@ -475,7 +477,8 @@ function read_ops(string $file): array
     return $out;
 }
 
-function state_payload(array $t, array $g, array $l): array
+/** Charge utile des réponses ; `sandbox: true` seulement en version d'essai (l'interface montre alors « Jour suivant »). */
+function state_payload(array $t, array $g, array $l, bool $sandbox): array
 {
     return [
         'revision' => sha1($t['raw']),
@@ -484,7 +487,7 @@ function state_payload(array $t, array $g, array $l): array
         'gameRevision' => $g['rev'],
         'ledger' => $l['recent'],
         'ledgerKeys' => array_map('strval', array_keys($l['keys'])),
-    ];
+    ] + ($sandbox ? ['sandbox' => true] : []);
 }
 
 // ---------- Opérations ----------
@@ -659,6 +662,10 @@ function handle(): void
         if (!is_int($body->client ?? null) || $body->client < MIN_CLIENT) {
             throw new ApiError(409, 'client_outdated', 'L’app a été mise à jour : recharge la page.');
         }
+        // Décalage de date (« Jour suivant ») : version d'essai seulement, pour qu'il n'atteigne jamais la production.
+        if (!$cfg['sandbox'] && $parsed['game'] !== null && isset($parsed['game']->horloge)) {
+            throw new ApiError(409, 'sandbox_only', 'Le décalage de date ne sert qu’à la version d’essai. Rien n’a été enregistré.');
+        }
     }
 
     prepare_data_dir($dataDir);
@@ -672,7 +679,7 @@ function handle(): void
         $g = read_game($gameFile);
         $l = read_ledger($ledgerFile);
         flock($lock, LOCK_UN);
-        respond(200, state_payload($t, $g, $l));
+        respond(200, state_payload($t, $g, $l, $cfg['sandbox']));
     }
 
     $lock = lock_file($dataDir . '/.lock', LOCK_EX);
@@ -684,7 +691,7 @@ function handle(): void
                 throw new ApiError(409, 'op_id_reused', 'Cet identifiant d’opération a déjà servi pour une autre requête. Rien n’a été enregistré.');
             }
             $t = read_tasks($cfg);
-            respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, read_game($gameFile), read_ledger($ledgerFile)));
+            respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, read_game($gameFile), read_ledger($ledgerFile), $cfg['sandbox']));
         }
     }
 
@@ -701,7 +708,7 @@ function handle(): void
     }
     if ($parsed['game'] !== null && $parsed['baseRev'] !== $g['rev']) {
         $t = read_tasks($cfg);
-        respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.'] + state_payload($t, $g, $l));
+        respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.'] + state_payload($t, $g, $l, $cfg['sandbox']));
     }
 
     // Écritures, dans l'ordre : tasks.json, game-state.json, registre, ops.json. Annulées en cas d'échec.
@@ -734,7 +741,7 @@ function handle(): void
         $ops[] = ['id' => $body->opId, 'h' => $opsHash];
         $ops = array_slice($ops, -MAX_OPS_KEPT);
         $opsJson = jenc($ops) . "\n";
-        $responseJson = jenc(['ok' => true, 'applied' => $body->opId] + state_payload($t, $g2, $l2), JSON_UNESCAPED_SLASHES);
+        $responseJson = jenc(['ok' => true, 'applied' => $body->opId] + state_payload($t, $g2, $l2, $cfg['sandbox']), JSON_UNESCAPED_SLASHES);
 
         if ($newGameJson !== null) {
             $prevRaw = $g['raw'];
