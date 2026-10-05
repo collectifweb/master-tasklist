@@ -13,7 +13,7 @@ const SHELL = [
   'img/icon-512.png',
   'design/icons.svg',
   'css/tokens.css', 'css/base.css', 'css/components.css', 'css/world.css', 'css/app.css',
-  'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js',
+  'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js', 'js/horloge.js',
   'js/ui/announce.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/glyphs.js',
   'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js',
   'core/index.js', 'core/cote.js', 'core/cote-a-cote.js', 'core/domains.js', 'core/economy.js',

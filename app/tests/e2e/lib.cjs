@@ -40,7 +40,8 @@ function quietState(core, now = new Date(), { letters = true } = {}) {
   return g;
 }
 
-async function startServer({ tasks, game, ledger } = {}) {
+/** sandbox: true = version d'essai (réglage OREE_SANDBOX de l'API : bouton « Jour suivant ») ; jamais par défaut. */
+async function startServer({ tasks, game, ledger, sandbox = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'oree-ui-'));
   fs.cpSync(path.join(REPO, 'app'), path.join(root, 'app'), {
     recursive: true,
@@ -56,7 +57,7 @@ async function startServer({ tasks, game, ledger } = {}) {
   if (ledger) fs.writeFileSync(path.join(dataDir, 'ledger.jsonl'), ledger.map((e) => JSON.stringify(e)).join('\n') + (ledger.length ? '\n' : ''));
   const port = await freePort();
   const proc = spawn('php', ['-S', `127.0.0.1:${port}`, '-t', root], {
-    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8' }, stdio: 'ignore',
+    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', OREE_SANDBOX: sandbox ? '1' : '' }, stdio: 'ignore',
   });
   const base = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 100; i++) {
@@ -248,15 +249,16 @@ const QUIET_REVIEW = (day) => { try { if (!localStorage.getItem('oree.recycle.v1
  * Options : tasks ; game (objet ou fonction (core) → objet) ; ledger ; fresh: true = premier lancement réel
  * (aucun état posé : intro, lettre et bilan peuvent s'ouvrir). Par défaut, état « calme » (quietState).
  * quietReview (vrai sauf avec fresh) : le bilan du dimanche est noté comme déjà vu sur l'appareil.
+ * sandbox : serveur en version d'essai (voir startServer).
  */
-async function runScenario(name, fn, { tasks, game, ledger, fresh = false, quietReview = !fresh } = {}) {
+async function runScenario(name, fn, { tasks, game, ledger, fresh = false, quietReview = !fresh, sandbox = false } = {}) {
   const R = reporter(name);
   const b = await launch();
   const core = await import(require('node:url').pathToFileURL(path.join(REPO, 'app', 'core', 'index.js')).href);
   for (const size of sizes) {
     console.log(`-- ${size[0]}x${size[1]}`);
     const seed = typeof game === 'function' ? game(core) : game || (fresh ? null : quietState(core));
-    const srv = await startServer({ tasks, game: seed, ledger: typeof ledger === 'function' ? ledger(core) : ledger });
+    const srv = await startServer({ tasks, game: seed, ledger: typeof ledger === 'function' ? ledger(core) : ledger, sandbox });
     const pages = [];
     const mk = async (opts, ctxOpts) => {
       const c = await newPage(b, size, ctxOpts);

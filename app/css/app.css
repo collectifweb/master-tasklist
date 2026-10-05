@@ -119,6 +119,45 @@
   justify-content: flex-end;
 }
 
+/* Version d'essai seulement : « Jour suivant ». Papier creusé et drapeau, à part des gestes du jeu ; absent ailleurs. */
+.essai {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-3);
+  margin-top: var(--sp-4);
+  padding: 0 var(--sp-1) 0 var(--sp-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
+}
+.essai[hidden] {
+  display: none;
+}
+.essai-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-2) 0;
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.essai-text b {
+  color: var(--text);
+  font-weight: var(--w-bold);
+}
+.essai-text .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.essai .btn {
+  margin-left: auto;
+}
+
 /* « Tout est enregistré, à demain » : fin de visite, la prochaine quête en grand */
 .veille {
   display: grid;
@@ -294,11 +333,13 @@
   height: 18px;
   color: var(--text-muted);
 }
-.review-domains .why-line dd {
+.review-domains .why-line dd,
+.review-weeks .why-line dd {
   font-size: var(--text-16);
 }
-/* Temps relevé avec Fanal (Côte à côte) : sous les heures estimées, en métadonnée, jamais en chiffre vedette */
-.review-domains .why-line dd small {
+/* Temps relevé avec Fanal (Côte à côte), heures d'une semaine passée : en métadonnée, jamais en chiffre vedette */
+.review-domains .why-line dd small,
+.review-weeks .why-line dd small {
   display: block;
   margin-top: var(--sp-1);
   font: var(--w-regular) var(--text-14) / 1.35 var(--font-ui);
@@ -343,4 +384,37 @@
   .review-old {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+/* Semaines passées : une ligne par semaine figée, la plus récente en haut. Les sept disques redisent en motif les jours
+   travaillés, écrits juste à côté ; les semaines plus anciennes sont repliées. */
+.review-past {
+  display: grid;
+  gap: var(--sp-2);
+}
+.review-week-dates {
+  font-weight: var(--w-semibold);
+}
+.review-weeks .why-line dt small {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px var(--sp-2);
+  margin-top: 2px;
+}
+.review-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.review-pip {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--c-ash);
+  border-radius: 50%;
+}
+.review-pip.is-on {
+  border-color: var(--c-sage-deep);
+  background: var(--c-sage-deep);
+}
+.review-older .disclosure-body .why-line:last-child {
+  border-bottom: 0;
 }

@@ -436,5 +436,17 @@
   "review.keep.aria": "Garder « {quete} »",
   "review.archive": "Archiver",
   "review.archive.aria": "Archiver « {quete} »",
-  "review.kept": "On garde « {quete} ». Elle ne reviendra pas ici avant 4 semaines."
+  "review.kept": "On garde « {quete} ». Elle ne reviendra pas ici avant 4 semaines.",
+  "review.past.title": "Semaines passées",
+  "review.past.none": "Chaque semaine finie s’ajoutera ici, la plus récente en haut.",
+  "review.past.days.one": "{n} jour travaillé sur 7",
+  "review.past.days.other": "{n} jours travaillés sur 7",
+  "review.past.older": "Semaines plus anciennes",
+  "review.past.show": "Voir",
+  "essai.titre": "Version d’essai.",
+  "essai.decalage.none": "La date du jeu suit la vraie date.",
+  "essai.decalage.one": "Date du jeu avancée de {n} jour.",
+  "essai.decalage.other": "Date du jeu avancée de {n} jours.",
+  "essai.jour": "Jour suivant",
+  "essai.jour.sr": "Jour suivant : {date}."
 }

@@ -1,5 +1,6 @@
 // 20. Jour du recyclage v1 : le dimanche, le bilan de la semaine s'ouvre une fois (heures estimées par domaine,
 // quêtes, jours travaillés), les quêtes ouvertes depuis plus de 60 jours se gardent ou s'archivent ; ton informatif.
+// Lot 6 : l'historique montre les semaines passées figées dans la partie, la plus récente en haut.
 const L = require('./lib.cjs');
 
 // prochain dimanche (ou aujourd'hui), 10 h à Montréal
@@ -18,12 +19,20 @@ const TASKS = [
   { id: 'old1', task: 'Trier la boîte de câbles', domain: 'Maison', difficulty: 3, length: 3, priority: 2, status: 'todo', created: ymd(-90) },
   { id: 'old2', task: 'Repeindre le banc du jardin', domain: 'Terrain', difficulty: 5, length: 6, priority: 2, status: 'todo', created: ymd(-75) },
 ];
+// deux semaines passées figées dans la partie (du plus ancien au plus récent, comme game.bilans)
+const bilan = (lundi, quetes, jours) => ({ // lundi : décalage en jours depuis SUNDAY (−20 = lundi d'il y a deux semaines)
+  semaine: { start: ymd(lundi), end: ymd(lundi + 6) },
+  quetes, heures: quetes / 2, minutesReleve: 0, heuresReleve: 0, joursTravailles: jours,
+  domaines: [{ quartier: 'atelier', domain: 'Maison', quetes, minutes: quetes * 30, heures: quetes / 2, minutesReleve: 0, heuresReleve: 0 }],
+});
+const BILANS = [bilan(-20, 2, 2), bilan(-13, 5, 3)];
 const review = (page) => page.evaluate(() => {
   const d = document.getElementById('dlg-review');
   return {
     open: d.open && !d.classList.contains('is-closing'),
     text: d.textContent.replace(/\s+/g, ' ').trim(),
     olds: [...d.querySelectorAll('.review-old')].map((li) => li.dataset.quest),
+    weeks: [...d.querySelectorAll('.review-weeks .why-line')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
   };
 });
 
@@ -40,6 +49,8 @@ L.runScenario('20. jour du recyclage', async ({ R, srv, newPage, shot }) => {
   R.check('les 2 quêtes ouvertes depuis plus de 60 jours, la plus ancienne d’abord', r.olds.join() === 'old1,old2', r.olds.join());
   R.check('« ouverte depuis 90 jours », « Garder » et « Archiver »', /ouverte depuis 90 jours/.test(r.text) && /Garder/.test(r.text) && /Archiver/.test(r.text));
   R.check('ton informatif : aucune expression bannie', !/tu n’as pas|tu n'as pas|manqué|négligé|en retard/i.test(r.text));
+  R.check('historique : « Semaines passées », la plus récente en haut', /Semaines passées/.test(r.text) && r.weeks.length === 2
+    && /5 quêtes/.test(r.weeks[0]) && /3 jours travaillés sur 7/.test(r.weeks[0]) && /2 quêtes/.test(r.weeks[1]), r.weeks.join(' | '));
   await shot(page, '20-bilan');
 
   await page.click('#dlg-review [data-action="review-keep"][data-id="old1"]');
@@ -74,5 +85,5 @@ L.runScenario('20. jour du recyclage', async ({ R, srv, newPage, shot }) => {
 }, {
   tasks: TASKS,
   quietReview: false,
-  game: (core) => L.quietState(core, SUNDAY),
+  game: (core) => ({ ...L.quietState(core, SUNDAY), bilans: BILANS }),
 });

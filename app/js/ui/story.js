@@ -11,6 +11,7 @@ import { openSheet, closeSheet } from './sheets.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
 const KEEP_DAYS = 28; // « Garder » : la quête ne revient pas dans le bilan avant 4 semaines
+const PAST_SHOWN = 6; // semaines passées visibles d'emblée ; les plus anciennes sont repliées
 
 function readReview() {
   try { const v = JSON.parse(localStorage.getItem(REVIEW_KEY)); return v && typeof v === 'object' ? v : {}; } catch { return {}; }
@@ -87,6 +88,25 @@ export function createStory(app) {
     return new Set(Object.keys(kept).filter((id) => daysBetween(kept[id], today) < KEEP_DAYS));
   }
 
+  /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), quêtes et heures. */
+  function weekHtml(b) {
+    const pips = Array.from({ length: 7 }, (_, i) => `<span class="review-pip${i < b.joursTravailles ? ' is-on' : ''}"></span>`).join('');
+    return `<div class="why-line"><dt><span class="review-week-dates">${esc(t('review.week', { debut: shortDate(b.semaine.start), fin: shortDate(b.semaine.end) }))}</span><small><span class="review-pips" aria-hidden="true">${pips}</span>${esc(tn('review.past.days', b.joursTravailles, { n: b.joursTravailles }))}</small></dt><dd>${esc(tn('review.domain.quests', b.quetes, { n: b.quetes }))}<small>${esc(t('review.domain.hours', { h: num(b.heures) }))}</small></dd></div>`;
+  }
+  /** Semaines passées, la plus récente en haut : les PAST_SHOWN dernières, puis les autres dans un bloc replié. */
+  function pastHtml(game) {
+    const weeks = (Array.isArray(game.bilans) ? game.bilans : []).filter((b) => b && b.semaine && b.semaine.start).reverse();
+    const recent = weeks.slice(0, PAST_SHOWN), older = weeks.slice(PAST_SHOWN);
+    return `<section class="review-past" aria-labelledby="review-past-t">
+        <h3 class="act-section-title" id="review-past-t">${esc(t('review.past.title'))}</h3>
+        ${weeks.length ? `<dl class="why-ledger review-weeks">${recent.map(weekHtml).join('')}</dl>` : `<p class="act-text">${esc(t('review.past.none'))}</p>`}
+        ${older.length ? `<details class="disclosure review-older">
+          <summary><span class="disclosure-summary">${esc(t('review.past.older'))} <b>(${older.length})</b></span><span class="disclosure-action">${esc(t('review.past.show'))} ${icon('chevron-down')}</span></summary>
+          <div class="disclosure-body"><dl class="why-ledger review-weeks">${older.map(weekHtml).join('')}</dl></div>
+        </details>` : ''}
+      </section>`;
+  }
+
   function reviewHtml(c) {
     const r = weeklyReview(c.tasks, c.game, c.ledger, c.now);
     const kept = keptNow(c);
@@ -118,6 +138,7 @@ export function createStory(app) {
           <p class="review-days">${icon('calendar')}<span>${esc(jours)}</span></p>
           ${domains ? `<dl class="why-ledger review-domains">${domains}</dl>` : ''}
         </section>
+        ${pastHtml(c.game)}
         ${old.length ? `<section class="review-sort" aria-labelledby="review-old-t">
           <h3 class="act-section-title" id="review-old-t">${esc(t('review.old.title'))}</h3>
           <p class="act-text">${esc(t('review.old.text'))}</p>

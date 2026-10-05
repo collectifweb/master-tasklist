@@ -5,6 +5,7 @@
 import * as core from '../core/index.js';
 import { api, ApiError, newOpId } from './api-client.js';
 import { t, tn } from './content.js';
+import { brancherHorloge, maintenant } from './horloge.js';
 
 const ACTIONS = {
   createQuest: core.createQuest, updateQuest: core.updateQuest, startQuest: core.startQuest, pauseQuest: core.pauseQuest,
@@ -12,6 +13,7 @@ const ACTIONS = {
   reopenQuest: core.reopenQuest, remballerQuest: core.remballerQuest, archiveQuest: core.archiveQuest,
   unarchiveQuest: core.unarchiveQuest, deleteQuest: core.deleteQuest, claimBonus: core.claimBonus, openApp: core.openApp,
   advanceTime: core.advanceTime, markLetterShown: core.markLetterShown, migrateGame: core.migrateGame,
+  jourSuivant: core.jourSuivant,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
@@ -65,7 +67,8 @@ function convertOldQueue() {
 const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown', 'migrateGame']);
 const pendingCount = (q) => q.filter((e) => !BOOKKEEPING.has(e.name)).length;
 
-function fromResponse(r, now) {
+function fromResponse(r) {
+  const now = maintenant({ sandbox: r.sandbox, game: r.game });
   const tasks = core.normalizeTasks(r.tasks, now);
   const ledger = core.hydrateLedger(r.ledger, r.ledgerKeys);
   return {
@@ -77,6 +80,7 @@ function fromResponse(r, now) {
     gameRevision: r.gameRevision ?? null,
     ledger,
     sig: JSON.stringify([r.revision, r.gameRevision ?? null, (r.ledgerKeys || []).length]),
+    sandbox: r.sandbox === true, // version d'essai (réglage du serveur) : l'horloge lit alors le décalage de la partie
   };
 }
 
@@ -93,6 +97,7 @@ export class Store {
     this.retryTimer = null;
     this.needsToken = false;
     this.lockedUntil = 0; // blocage du serveur après trop d'essais (429) : on ne l'interroge plus avant l'heure
+    brancherHorloge(() => this.server && { sandbox: this.server.sandbox, game: (this.view || this.server).game });
     window.addEventListener('online', () => this.flush().then(() => this.refresh({ force: true })));
     window.addEventListener('offline', () => this.setSync('offline'));
     window.addEventListener('storage', (e) => {
@@ -139,7 +144,7 @@ export class Store {
     if (!core.isV1State(this.server.raw)) return;
     const q = loadQueue();
     if (q.some((e) => e.name === 'migrateGame')) return;
-    const queue = [{ opId: newOpId(), name: 'migrateGame', params: {}, at: new Date().toISOString() }, ...q];
+    const queue = [{ opId: newOpId(), name: 'migrateGame', params: {}, at: maintenant().toISOString() }, ...q];
     if (saveQueue(queue)) this.queue = queue;
   }
 
@@ -155,7 +160,7 @@ export class Store {
   }
 
   adopt(resp, skipCache) {
-    this.server = fromResponse(resp, new Date());
+    this.server = fromResponse(resp);
     if (!skipCache) {
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(resp)); } catch { /* quota : tant pis */ }
     }
@@ -181,7 +186,7 @@ export class Store {
    */
   do(name, params = {}) {
     const run = action(name);
-    const now = new Date();
+    const now = maintenant();
     const base = this.view;
     const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision }, now);
     if (result.ops.length) {
@@ -381,7 +386,7 @@ export class Store {
     try {
       const resp = await api.get();
       if (gen !== this.gen || this.flushing || loadQueue().length) return;
-      const next = fromResponse(resp, new Date());
+      const next = fromResponse(resp);
       const changed = !this.server || next.sig !== this.server.sig;
       if (changed) this.adopt(resp);
       if (this.sync.state === 'offline' || this.sync.state === 'error') this.setSync('saved');

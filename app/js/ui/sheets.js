@@ -8,6 +8,7 @@ import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion }
 import { durationText, capitalize, num } from './format.js';
 import { taskModel } from './model.js';
 import { token } from '../api-client.js';
+import { maintenant } from '../horloge.js';
 
 const QUARTIER_ORDER = ['atelier', 'champs', 'mairie', 'ecole', 'garage', 'place'];
 const DEFAULTS = { priority: 5, length: 2, difficulty: 3 };
@@ -466,7 +467,7 @@ export function openHelp(name) {
  */
 export function openVeille({ next, reply, saved, onClose }) {
   const dlg = $('#dlg-veille');
-  const m = next ? taskModel(next, { now: new Date() }) : null;
+  const m = next ? taskModel(next, { now: maintenant() }) : null;
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title" id="veille-t">${esc(t(saved ? 'visit.end.title' : 'visit.end.title.pending'))}</h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('visit.end.close'))}">${icon('x')}</button></header>

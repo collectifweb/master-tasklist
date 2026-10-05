@@ -2,7 +2,8 @@
 import { SORTS, gameDay, isPinned, topCards, SEANCE_MAX_MINUTES } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
-import { loadContent, t, content, pickReply, replyVars } from './content.js';
+import { maintenant, decalage, enEssai } from './horloge.js';
+import { loadContent, t, tn, content, pickReply, replyVars } from './content.js';
 import { $, $$, esc, reducedMotion, setText, inlineSprite } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
 import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.js';
@@ -39,7 +40,7 @@ let worldPlan = null;
 let started = false;
 let touchFrom = null; // [x, y] du bouton « Fait » touché : le fil de lumière part de là
 
-const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: new Date() });
+const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: maintenant() });
 const story = createStory({
   ctx: () => (store.view ? ctx() : null),
   run: (action, params) => run(action, params),
@@ -64,8 +65,8 @@ function renderAll({ deferHud = false } = {}) {
   renderAlts($('#panel-scroll'), c, cards);
   renderList($('#panel-scroll'), c, ui);
   refreshFiche(c);
-  setText($('#panel-date'), new Intl.DateTimeFormat('fr-CA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Montreal' })
-    .format(new Date(gameDay(c.now) + 'T12:00:00Z')));
+  setText($('#panel-date'), panelDate(c.now));
+  renderEssai();
   // Les compteurs montent à l'impact du fil de lumière (onImpact du monde), pas avant. Sans monde : 320 ms de retard.
   // Filet : si l'impact n'arrive jamais (animation interrompue), les compteurs se mettent à jour au plus tard après 6 s.
   // Un rendu sans gain (la réponse du serveur, par exemple) ne doit pas griller l'impact : il attend lui aussi.
@@ -75,6 +76,22 @@ function renderAll({ deferHud = false } = {}) {
   else { clearTimeout(hudTimer); hud.render(c.game, { animate: true }); }
   if (world) world.render(c.game, c.tasks);
   if (worldPlan && $('#dlg-plan').open) worldPlan.render(c.game, c.tasks);
+}
+const panelDate = (now) => new Intl.DateTimeFormat('fr-CA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Montreal' })
+  .format(new Date(gameDay(now) + 'T12:00:00Z'));
+/** Outil de la version d'essai (« Jour suivant ») : montré seulement si le serveur l'a dit, avec le décalage en cours. */
+function renderEssai() {
+  const box = $('#essai');
+  box.hidden = !enEssai();
+  if (box.hidden) return;
+  const n = decalage();
+  setText($('#essai-decalage'), n ? tn('essai.decalage', n) : t('essai.decalage.none'));
+}
+/** « Jour suivant » : la date du jeu avance d'un jour, puis le nouveau jour se joue comme un vrai (tickDay). */
+function jourSuivant() {
+  if (!enEssai() || !run('jourSuivant', {})) return;
+  tickDay();
+  announce.say(after(t('essai.jour.sr', { date: panelDate(maintenant()) }))); // après les gains de l'ouverture du jour
 }
 let hudPending = false;
 function flushHud() {
@@ -91,7 +108,7 @@ function react(payload) {
   const taskId = params.id || created || (events.find((e) => e.type === 'reward' && e.taskId) || {}).taskId || null;
   const task = findTask(taskId) || (result && result.tasks.find((x) => x.id === taskId)) || null;
   const title = task ? task.task : '';
-  const reply = speech.react({ action, params, events, task, now: now || new Date() });
+  const reply = speech.react({ action, params, events, task, now: now || maintenant() });
   const replyText = reply ? ` ${reply.nom} : ${reply.texte}` : '';
   const gains = gainList(s);
   const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
@@ -180,7 +197,7 @@ store.on('change', (payload) => {
     Promise.resolve(run).then(() => {
       if (hudPending) flushHud();
       // plus aucune quête ouverte après un « Fait » : la visite se termine d'elle-même
-      if (payload.action === 'completeQuest' && !topCards(store.view.tasks, new Date()).first) setTimeout(endVisit, 600);
+      if (payload.action === 'completeQuest' && !topCards(store.view.tasks, maintenant()).first) setTimeout(endVisit, 600);
     });
   }
 });
@@ -363,6 +380,7 @@ document.addEventListener('click', (e) => {
     case 'notice-close': return sync.closeNotice();
     case 'offer-close': return sync.closeOffer();
     case 'reload': return start();
+    case 'jour-suivant': return jourSuivant();
   }
 });
 
@@ -447,10 +465,10 @@ async function start() {
   // ouverture du jour, puis le temps du jeu ; l'accueil vient quand le monde est prêt
   run('openApp', {});
   advanceTime();
-  playedDay = gameDay(new Date());
+  playedDay = gameDay(maintenant());
   initWorld({
     container: $('#world-live'), slot: $('.world-slot'), content,
-    now: () => new Date(), reducedMotion,
+    now: maintenant, reducedMotion,
     announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,
@@ -474,7 +492,7 @@ async function start() {
 let playedDay = null;
 function tickDay() {
   if (!started || !store.view) return;
-  const day = gameDay(new Date());
+  const day = gameDay(maintenant());
   if (day !== playedDay) {
     playedDay = day;
     run('openApp', {});
@@ -489,7 +507,7 @@ setInterval(() => { if (started) { tickDay(); renderAll(); } }, 60000); // duré
 document.addEventListener('visibilitychange', () => {
   if (!started || document.visibilityState !== 'visible') return;
   store.refresh({ force: true });
-  if (gameDay(new Date()) !== playedDay) tickDay();
+  if (gameDay(maintenant()) !== playedDay) tickDay();
   else advanceTime(); // idempotente : ne fait rien si rien n'a bougé
 });
 
