@@ -56,7 +56,7 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   R.check('appareil périmé : toujours un seul gain pour la quête', srv.ledger().filter((e) => e.key === `reward:${id3}:1`).length === 1);
   R.check('appareil périmé : il se recale sur l’état du serveur (quête terminée, plus dans « À faire »)', await dev2.locator(`#quest-list > li[data-task-id="${id3}"]`).count() === 0);
   R.check('appareil périmé : un message explique ce qui s’est passé', await dev2.isVisible('#notice'), await dev2.textContent('#notice'));
-  R.check('appareil périmé : file d’attente vide', await dev2.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').length) === 0);
+  R.check('appareil périmé : file d’attente vide', await dev2.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v2') || '[]').length) === 0);
   const gx = srv.game();
   const ledx = srv.ledger();
   const sumx = 10 + ledx.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step').reduce((s, e) => s + (e.energy || 0), 0);

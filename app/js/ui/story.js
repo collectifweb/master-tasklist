@@ -2,7 +2,7 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
+import { morningLetter, passageLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
@@ -171,8 +171,9 @@ export function createStory(app) {
   }
 
   /**
-   * Montre ce qui attend, une feuille à la fois : lettre du matin (pas le premier jour), puis le bilan le dimanche
-   * (une fois par appareil). Si une autre feuille est ouverte, attend sa fermeture.
+   * Montre ce qui attend, une feuille à la fois : lettre de passage à la v2 (une seule fois, partie convertie), sinon
+   * lettre du matin (pas le premier jour ; la lettre de passage en tient lieu le jour où elle est montrée), puis le
+   * bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend sa fermeture.
    */
   function welcome() {
     if (welcoming) return;
@@ -185,7 +186,10 @@ export function createStory(app) {
     if (!c || !c.game) return;
     const next = () => { welcoming = false; refocus(); setTimeout(welcome, 50); };
     const today = gameDay(c.now);
-    if (content.lettres && c.game.startDay !== today) {
+    const passage = content.lettres ? passageLetter(content.lettres, c.game, { prenom: prenom() || null }) : null;
+    if (passage) { welcoming = true; openLetter(passage, next); return; }
+    const passageToday = (content.lettres?.passage ?? []).some((l) => (c.game.letters ?? {})[l.id] === today);
+    if (content.lettres && c.game.startDay !== today && !passageToday) {
       const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null });
       if (letter && !letter.seen) { welcoming = true; openLetter(letter, next); return; }
     }

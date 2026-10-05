@@ -4,14 +4,14 @@
 // Chaque action passe par core/quests.js (fonctions pures), s'affiche tout de suite, puis part à l'API.
 import * as core from '../core/index.js';
 import { api, ApiError, newOpId } from './api-client.js';
-import { t } from './content.js';
+import { t, tn } from './content.js';
 
 const ACTIONS = {
   createQuest: core.createQuest, updateQuest: core.updateQuest, startQuest: core.startQuest, pauseQuest: core.pauseQuest,
   addStep: core.addStep, removeStep: core.removeStep, toggleStep: core.toggleStep, completeQuest: core.completeQuest,
   reopenQuest: core.reopenQuest, remballerQuest: core.remballerQuest, archiveQuest: core.archiveQuest,
   unarchiveQuest: core.unarchiveQuest, deleteQuest: core.deleteQuest, claimBonus: core.claimBonus, openApp: core.openApp,
-  advanceTime: core.advanceTime, markLetterShown: core.markLetterShown,
+  advanceTime: core.advanceTime, markLetterShown: core.markLetterShown, migrateGame: core.migrateGame,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
@@ -22,8 +22,9 @@ function action(name) {
   return ACTIONS[name];
 }
 
-const QUEUE_KEY = 'oree.queue.v1';
-const CACHE_KEY = 'oree.cache.v1';
+const QUEUE_KEY = 'oree.queue.v2';
+const OLD_QUEUE_KEY = 'oree.queue.v1'; // file de la v1 : convertie une seule fois au démarrage (convertOldQueue)
+const CACHE_KEY = 'oree.cache.v1'; // réponse brute de l'API, même format qu'en v1 : sa partie v1 est convertie à la lecture
 const TICK_KEY = 'oree.tick.v1';
 export const POLL_MS = 30000;
 const RETRY_MS = 30000;
@@ -40,17 +41,41 @@ function saveQueue(q) {
   try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); return true; } catch { return false; }
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Une seule fois : la file hors ligne de la v1 passe dans celle de la v2 (core.convertQueueV1). Les gestes sur les
+ * quêtes sont gardés et leur effet recalculé par le cœur v2 à l'envoi ; les gestes de jeu v1 sont écartés et renvoyés
+ * pour le message. L'ancienne file n'est retirée qu'une fois la nouvelle enregistrée (sinon : au prochain lancement).
+ */
+function convertOldQueue() {
+  let raw;
+  try { raw = localStorage.getItem(OLD_QUEUE_KEY); } catch { return []; }
+  if (raw === null) return [];
+  let old;
+  try { old = JSON.parse(raw); } catch { old = []; }
+  const { queue, dropped } = core.convertQueueV1(old, hasAction);
+  const current = loadQueue();
+  const have = new Set(current.map((e) => e.opId));
+  if (!saveQueue([...current, ...queue.filter((e) => !have.has(e.opId))])) return [];
+  try { localStorage.removeItem(OLD_QUEUE_KEY); } catch { /* ignoré */ }
+  return dropped;
+}
 // Tenue du jeu (ouverture, passage du temps, lettre montrée) : elle part avec la file, mais n'est pas
 // un « changement » du joueur ; l'indicateur hors ligne ne la compte pas (« 1 changement » après une quête faite).
-const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown']);
+const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown', 'migrateGame']);
 const pendingCount = (q) => q.filter((e) => !BOOKKEEPING.has(e.name)).length;
 
 function fromResponse(r, now) {
+  const tasks = core.normalizeTasks(r.tasks, now);
+  const ledger = core.hydrateLedger(r.ledger, r.ledgerKeys);
   return {
-    tasks: core.normalizeTasks(r.tasks, now),
-    game: r.game ? core.migrateState(r.game, now) : core.createInitialState(now),
+    tasks,
+    // une partie v1 est convertie pour l'affichage (quartiers recomptés depuis la liste et le registre) ; `raw` garde la
+    // partie telle qu'enregistrée, pour que migrateGame l'enregistre convertie
+    game: r.game ? core.migrateState(r.game, now, { tasks, ledger }) : core.createInitialState(now),
+    raw: r.game ?? null,
     gameRevision: r.gameRevision ?? null,
-    ledger: core.hydrateLedger(r.ledger, r.ledgerKeys),
+    ledger,
     sig: JSON.stringify([r.revision, r.gameRevision ?? null, (r.ledgerKeys || []).length]),
   };
 }
@@ -58,6 +83,7 @@ function fromResponse(r, now) {
 export class Store {
   constructor() {
     this.server = null;
+    this.dropped = convertOldQueue(); // gestes de jeu v1 écartés, annoncés au chargement
     this.queue = loadQueue();
     this.view = null;
     this.listeners = {};
@@ -99,7 +125,22 @@ export class Store {
       if (err.status === 0) this.setSync('offline'); else this.setSync('error', t('state.error.server'));
     }
     this.adopt(resp, fromCache);
+    this.queueMigration();
+    if (this.dropped.length) {
+      const gestes = [...new Set(this.dropped)].map((n) => t('migration.geste.' + n)).join(', ');
+      this.emit('notice', { kind: 'error', text: tn('migration.queue.dropped', this.dropped.length, { gestes }) });
+      this.dropped = [];
+    }
     if (this.queue.length) this.flush();
+  }
+
+  /** La partie du serveur est encore en version 1 : son enregistrement converti part en tête de file (tenue, une fois). */
+  queueMigration() {
+    if (!core.isV1State(this.server.raw)) return;
+    const q = loadQueue();
+    if (q.some((e) => e.name === 'migrateGame')) return;
+    const queue = [{ opId: newOpId(), name: 'migrateGame', params: {}, at: new Date().toISOString() }, ...q];
+    if (saveQueue(queue)) this.queue = queue;
   }
 
   /** Secondes de blocage qui restent (0 = pas bloqué). */
@@ -202,8 +243,10 @@ export class Store {
 
         if (!e.body) {
           let r;
+          // migrateGame compare à la partie brute du serveur (encore v1 ?), les autres actions à la partie convertie
+          const game = e.name === 'migrateGame' ? this.server.raw : this.server.game;
           try {
-            r = action(e.name)(this.server.tasks, this.server.game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
+            r = action(e.name)(this.server.tasks, game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
           } catch (err) {
             this.dropHead(e.opId);
             this.recompute();
@@ -278,6 +321,8 @@ export class Store {
         return 'continue';
       }
       case 'op_id_reused':
+        // geste repris de la file v1 : son opId a déjà été appliqué par l'ancienne app, rien n'est refait
+        if (e.v1) { this.dropHead(e.opId); this.recompute(); this.emit('change', {}); return 'continue'; }
         this.patchHead(e.opId, { body: null, opId: newOpId() });
         return 'continue';
       case 'busy':

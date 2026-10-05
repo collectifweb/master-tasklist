@@ -19,7 +19,7 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   R.check('l’action est visible tout de suite (ressources en hausse)', (await L.resValue(page, 'energie')) > e0);
   R.check('rien n’est parti vers le serveur', posts.length === base && !srv.ledger().some((e) => e.key === `reward:${id}:1`) && srv.readTasks().find((t) => t.id === id).status === 'todo');
   // la quête, plus la tenue du jeu qui la suit (passage du temps) : seule la quête compte comme changement
-  const q = await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').map((e) => e.name));
+  const q = await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v2') || '[]').map((e) => e.name));
   R.check('la file d’attente est gardée dans localStorage (une quête faite)', q.filter((n) => n === 'completeQuest').length === 1 && q.every((n) => ['completeQuest', 'advanceTime'].includes(n)), q.join());
   await shot(page, '06-hors-ligne');
   await context.setOffline(false);
@@ -58,6 +58,6 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   await page.waitForTimeout(800);
   const notice = await page.evaluate(() => { const n = document.getElementById('notice'); return n.hidden ? '' : n.textContent.trim(); });
   R.check('stockage plein : « Fait » est refusé, avec un message clair', /stockage de cet appareil est plein/.test(notice), notice);
-  R.check('… la quête reste à faire, rien n’est gagné, rien n’est en file', await page.getAttribute('#fil-quest', 'data-task-id') === id2 && (await L.resValue(page, 'energie')) === e2 && await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').length === 0) && srv.readTasks().find((t) => t.id === id2).status === 'todo');
+  R.check('… la quête reste à faire, rien n’est gagné, rien n’est en file', await page.getAttribute('#fil-quest', 'data-task-id') === id2 && (await L.resValue(page, 'energie')) === e2 && await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v2') || '[]').length === 0) && srv.readTasks().find((t) => t.id === id2).status === 'todo');
   await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith('autre-app-')) localStorage.removeItem(k); });
 });

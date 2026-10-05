@@ -71,7 +71,7 @@ L.runScenario('21. application installable et lancement hors ligne', async ({ R,
   const done = await page.getAttribute('#fil-quest', 'data-task-id');
   await page.click('#fil-quest [data-action="complete"]');
   R.check('la quête faite part au serveur', await L.waitFor(() => srv.readTasks().find((x) => x.id === done)?.status === 'done', 5000));
-  await L.waitFor(() => page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').length === 0), 4000);
+  await L.waitFor(() => page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v2') || '[]').length === 0), 4000);
   await L.closeWelcome(page, 1200);
   const next = await page.getAttribute('#fil-quest', 'data-task-id');
   const cache = await page.evaluate(async (v) => {
