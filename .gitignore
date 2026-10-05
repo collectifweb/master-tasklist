@@ -16,3 +16,7 @@ sketches/**/review/
 .codex/
 .impeccable/review/
 .impeccable/live/
+
+# Nouvelle app : données du jeu et réglages locaux de l’API
+app/api/data/
+app/api/config.php
