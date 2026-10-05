@@ -1,6 +1,6 @@
 # L'Orée — bible du jeu
 
-*Proposition v2 du 5 octobre 2026, à valider par Alex. Une fois validée, elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et sert de guide à Hermes pour écrire la suite.*
+*Version 2, validée par Alex le 5 octobre 2026 (ses décisions sont au §15). Elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et sert de guide à Hermes pour écrire la suite.*
 
 Les nombres de ce document sont des exemples de départ, à équilibrer à l'usage.
 
@@ -64,7 +64,7 @@ Chaque domaine de ta vie a son quartier au village. Les tâches d'un domaine fon
 |---|---|
 | Terrain | Les Champs |
 | Maison | L'Atelier |
-| Administratif | Le Bureau de poste |
+| Administratif | La Mairie |
 | Enfants | L'École |
 | Véhicule | Le Garage |
 | Autre | La Place du village |
@@ -122,7 +122,7 @@ Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
 ## 8. Les imprévus, bons et mauvais
 
-Ils sont tirés d'un catalogue, au plus deux par semaine.
+Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière (de un à quatre selon l'allure, §9).
 
 | Bons | Mauvais (toujours réparables) |
 |---|---|
@@ -141,7 +141,39 @@ Ils sont tirés d'un catalogue, au plus deux par semaine.
 - il n'y a aucune alerte pendant la trêve des Fêtes ;
 - il n'y a aucune perte quand tu t'absentes plus de deux jours.
 
-## 9. Ce qu'on voit à l'écran
+## 9. Le jeu suit ton rythme
+
+Le village s'adapte à ta façon de jouer. Il ne t'accable pas quand tu ralentis, et il ne s'endort pas quand tu fonces.
+
+**L'allure du village.** Chaque matin, l'app regarde deux choses :
+
+- le nombre de tâches terminées sur les 14 derniers jours ;
+- tes réserves, comparées au prix de ce que ton rang permet de construire.
+
+Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein régime**. Par exemple, moins d'une tâche par jour en moyenne, c'est « au ralenti » ; plus de cinq par jour, ou des réserves qui dépassent trois fois le prix du plus gros bâtiment accessible, c'est « plein régime ». L'allure ne change que d'un cran par semaine, pour éviter les à-coups. Le bilan de la semaine l'affiche avec sa raison : « Allure : plein régime (68 tâches en 14 jours, greniers pleins). »
+
+**Au retour d'une absence de 5 jours ou plus** :
+
+- trois jours de reprise, sans imprévu mauvais ; les alertes météo en cours sont repoussées d'autant ;
+- Fanal t'écrit une lettre de retour qui raconte ce qui s'est passé, sans reproche ;
+- la commande du visiteur en cours est ramenée à la taille « au ralenti ».
+
+**Au ralenti** : au plus un imprévu par semaine, plutôt un bon ; des commandes petites ; un objectif de saison réduit ; Fanal met en avant tes quêtes les plus courtes.
+
+**Régulier** : les règles de base de cette bible.
+
+**Plein régime** :
+
+- jusqu'à quatre imprévus par semaine, plus exigeants, mais toujours réparables ;
+- des commandes plus grosses, contre des récompenses plus rares ;
+- des **grands chantiers** sur plusieurs semaines (un phare, une digue, un pont, un monument) qui avalent beaucoup d'Énergie et de Matériaux et laissent une trace permanente sur l'île ;
+- des améliorations de bâtiments, au niveau 2 puis 3, qui coûtent cher.
+
+**Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
+
+**Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes en tient compte quand il révise la semaine qui vient (§12). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
+
+## 10. Ce qu'on voit à l'écran
 
 - **Le bandeau d'objectifs**, toujours visible :
   - **Aujourd'hui** : ta prochaine quête ;
@@ -154,10 +186,11 @@ Ils sont tirés d'un catalogue, au plus deux par semaine.
   - « Finir la visite » disparaît : la visite se termine d'elle-même ;
   - « Plan accessible » devient « Carte en liste » ;
   - l'écran « L'Orée veille » devient « Tout est enregistré, à demain ».
-- **Le bilan de la semaine**, avec l'historique des semaines passées.
+- **Le bilan de la semaine**, avec l'historique des semaines passées et l'allure du village (§9).
+- **Le rappel du matin** : chaque jour à 8 h, heure de Montréal, une notification arrive par l'app gratuite ntfy (sur F-Droid) ; la toucher ouvre l'Orée. Le texte reste général, sans titre de tâche : il passe par le serveur public de ntfy, où le nom du canal fait office de mot de passe.
 - **Dans le bac à sable seulement**, un bouton « Jour suivant » pour simuler les jours 2, 3, 4.
 
-## 10. Le départ, et une version publique un jour
+## 11. Le départ, et une version publique un jour
 
 On ne commence pas avec une liste vide. Le village démarre avec un petit stock (par exemple 10 Énergie, 20 Matériaux, 5 Nourriture), et cinq **quêtes d'initiation**. Elles appartiennent au jeu, pas à ta vraie liste : elles ne s'écrivent jamais dans `tasks.json`.
 
@@ -169,14 +202,21 @@ On ne commence pas avec une liste vide. Le village démarre avec un petit stock 
 
 Chacune enseigne un geste et donne un petit coup de pouce. Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
 
-## 11. Hermes, l'auteur du village
+## 12. Hermes, l'auteur du village
 
-**Chaque dimanche soir** (tâche planifiée), Hermes écrit la chronique de la semaine suivante dans un fichier du serveur. Elle contient :
+**Deux semaines d'avance.** Hermes garde toujours deux chroniques prêtes sur le serveur : celle de la semaine qui vient et celle d'après. Chaque dimanche soir (tâche planifiée), il :
+
+1. relit la chronique de la semaine qui vient et l'ajuste si besoin, selon l'allure du village (§9), ce que tu as accompli et la météo annoncée ;
+2. écrit la chronique de la semaine suivante.
+
+Si Hermes tombe en panne, l'Orée a deux semaines de réserve. Au-delà, l'app prend son contenu de base, sans trou.
+
+Une chronique contient :
 
 - 7 lettres du matin de Fanal ;
 - le visiteur de la semaine et sa commande ;
 - 0 à 2 imprévus, choisis dans le catalogue ;
-- une « nouvelle du village » qui fait écho à ce que tu as accompli, par domaine.
+- une « nouvelle du village » qui fait écho à ce que tu as accompli, par domaine ; écrite deux semaines d'avance, elle est mise à jour lors de la révision du dimanche.
 
 L'app vérifie ce fichier avant de l'utiliser : la forme, les entrées du catalogue et des quantités bornées. S'il est absent ou invalide, l'app prend son contenu de base. Hermes ne peut donc ni casser l'équilibre du jeu ni toucher à tes tâches.
 
@@ -191,7 +231,7 @@ L'app vérifie ce fichier avant de l'utiliser : la forme, les entrées du catalo
 
 Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositions de code, par cohérence avec la façon dont l'app a été construite.
 
-## 12. Ce qu'on garde, ce qui change, ce qui part
+## 13. Ce qu'on garde, ce qui change, ce qui part
 
 **On garde** :
 
@@ -217,22 +257,23 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 
 **À mettre à jour après validation** :
 
-- `PRODUCT.md` : économie à quatre ressources, Bastion retiré ;
+- `PRODUCT.md` : économie à quatre ressources, Bastion retiré, allure du village ;
 - `app/ARCHITECTURE.md` ;
 - les textes de `app/content/fr-CA/`.
 
-## 13. Plan des douze premières semaines
+## 14. Plan des douze premières semaines
 
 | Semaines | Construction | Ce qui se passe dans le jeu |
 |---|---|---|
 | 1 et 2 | Nouveau vocabulaire, quatre ressources, rang et habitants, bâtiments du campement et du hameau, fiches à trois lignes, quêtes d'initiation, bandeau d'objectifs, bilans passés, « Jour suivant » au bac à sable, rappel quotidien | Automne : premier gel, remplir le grenier |
-| 3 et 4 | Visiteurs et commandes, catalogue d'imprévus, alertes météo, île vivante (habitants au travail) | Premiers visiteurs au quai |
+| 3 et 4 | Visiteurs et commandes, catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
 | 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée | Prêt avant le 1er décembre |
-| 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; première chronique écrite par lui | Décembre |
-| 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, réglages selon ton usage | Fêtes, puis grands froids de janvier |
+| 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
+| 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 14. Questions ouvertes
+## 15. Décisions d'Alex du 5 octobre 2026
 
-1. Les quartiers : la Place du village pour les tâches sans domaine, ça te va ? Et Bureau de poste ou Mairie pour l'Administratif ?
-2. Le rappel quotidien : ton téléphone utilise Brave sans services Google. D'après les sources relevées le 5 octobre (pas encore essayé sur ton téléphone), Brave passe par Google pour ses notifications, donc elles n'arriveraient pas. Proposition : l'app gratuite ntfy (sur F-Droid) reçoit le rappel du serveur, et toucher la notification ouvre l'Orée. Ça te va ?
-3. L'heure du rappel ?
+1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
+2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google ; d'après les sources relevées le 5 octobre (pas encore essayé sur ce téléphone), les notifications de Brave passent par Google et n'arriveraient pas.
+3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12).
+4. **Le jeu suit le rythme d'usage** : allure du village et reprise après une absence (§9).

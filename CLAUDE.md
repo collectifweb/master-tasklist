@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet en bref
 
-Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobile/tablette) transformée en jeu de gestion de ferme agro-futuriste. Les tâches terminées produisent des ressources qui servent à développer la ferme. Toute la documentation, le code UI et les messages sont en français. Lire `PRODUCT.md` avant toute décision de produit ou de game design : c’est le cahier des charges (économie à trois ressources, aléas récupérables, bonus plafonnés, contraintes d’hébergement).
+Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobile/tablette) transformée en jeu de gestion de ferme agro-futuriste. Les tâches terminées produisent des ressources qui servent à développer la ferme. Toute la documentation, le code UI et les messages sont en français. Lire `PRODUCT.md` avant toute décision de produit ou de game design : c’est le cahier des charges (aléas récupérables, bonus plafonnés, contraintes d’hébergement). Le récit, l’économie à quatre ressources et le plan de la v2 sont dans `docs/BIBLE-JEU.md`, validée par Alex le 5 octobre 2026.
 
 Trois applications cohabitent :
 

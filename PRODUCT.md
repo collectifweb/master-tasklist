@@ -39,11 +39,12 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - Concevoir une gamification profonde et extensible: quêtes, progression, récompenses et futurs systèmes de jeu.
 - Donner aux points une utilité concrète: construire, améliorer, défendre, débloquer ou résoudre des événements dans le monde du jeu.
 - Inclure une boucle de gestion avec objectifs, ressources, aléas et obstacles. Exemples confirmés: ferme évolutive, récoltes menacées, insectes, réparations, dépenses de points et choix de développement.
-- Prévoir une narration en chapitres et de vrais enjeux virtuels récupérables, sans toucher aux tâches ni données réelles en cas d’échec dans le jeu.
+- Prévoir une narration (rangs du village, saisons réelles, visiteurs, chroniques hebdomadaires d’Hermes) et de vrais enjeux virtuels récupérables, sans toucher aux tâches ni données réelles en cas d’échec dans le jeu.
+- Adapter le jeu au rythme d’usage : lever le pied après une absence ou à rythme lent, offrir plus de débouchés et de défis à rythme soutenu, sans jamais changer le prix de l’existant ni ce que rapporte une tâche.
 - Autoriser de petits bonus plafonnés pour certaines actions utiles autres que terminer une tâche, notamment l’ajout d’une vraie tâche, la planification et le retour quotidien.
 - Prévoir l’évolution du modèle de données au-delà de `tasks.json`, sans perdre les tâches actuelles.
 - Rester sans courriel.
-- Les notifications navigateur sont facultatives, discrètes et configurables, notamment pour un rappel quotidien.
+- Les notifications sont facultatives, discrètes et configurables. Le rappel quotidien passe par l’app gratuite ntfy (téléphone sans services Google), avec un texte général sans titre de tâche.
 - L’interface doit être ergonomique, lisible et attrayante sur mobile et tablette.
 - L’hébergement actuel est un environnement web LiteSpeed/PHP avec fichiers statiques et endpoint d’écriture PHP. Une évolution technique doit préserver un déploiement fiable sur cet environnement ou fournir une migration explicitement vérifiée.
 - Le produit n’est pas multiutilisateur à ce stade.
@@ -55,15 +56,14 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - L’expérience doit rester adulte, crédible et agréable à utiliser souvent, sans ressembler à une interface infantile ou à une couche de points décorative.
 - La direction visuelle Vecteur est la préférence actuelle d’Alex parmi les prototypes: interface animée, précise, énergique et lisible.
 - Le Potager est la boucle de gestion la plus prometteuse: ferme réellement développable, objectifs, animations, événements et aléas à contrer.
-- Le Bastion est une piste forte pour la narration, les mystères, les obstacles et la progression à long terme.
-- Monde principal confirmé: une colonie agro-tech. L’interface reprend l’énergie visuelle de Vecteur; la ferme fournit la boucle de gestion; le Bastion devient le système de défense et le mystère narratif.
+- Monde principal confirmé le 5 octobre 2026 : un village du Nord québécois au bord d’un lac, relancé avec des outils d’aujourd’hui, qui grandit sans fin (bible : `docs/BIBLE-JEU.md`). Le Bastion et son mystère sont abandonnés.
 - Les aléas ont des conséquences virtuelles réelles mais récupérables: récoltes perdues, bâtiments endommagés ou délais supplémentaires. Ils ne suppriment jamais une tâche, une donnée réelle ou une progression permanente.
-- Économie confirmée à trois ressources: énergie pour les actions immédiates, matériaux pour construire et réparer, réputation pour les déblocages, relations et chapitres narratifs.
+- Économie confirmée à quatre ressources : Énergie et Matériaux gagnés par les tâches, Nourriture tirée des récoltes, Habitants qui font monter le rang du village.
 - Le jeu doit convenir aux visites de quelques secondes comme aux sessions stratégiques plus longues, sans obliger Alex à consacrer une durée quotidienne fixe.
 - Le futurisme doit être réconcilié avec la ferme par un monde agro-futuriste cohérent, plus chaleureux et incarné. Éviter qu’une interface sci-fi sombre paraisse simplement posée par-dessus un jeu agricole.
-- Le storytelling doit expliquer dès les premières minutes ce que le joueur gère, pourquoi la Colonie existe, ce qu’est le Bastion, quels sont les objectifs immédiats et à long terme, et comment la Réputation fait progresser le monde et le récit.
+- Le récit doit expliquer dès les premières minutes ce que le joueur gère, pourquoi le village est à relancer, quels sont les objectifs immédiats et à long terme, et comment les Habitants font progresser le village.
 - La ferme doit devenir un véritable espace de jeu manipulable, inspiré de Township et Blocky Farm: carte visible, éléments cliquables, placement de bâtiments et décorations, parcelles développées progressivement et obstacles à contrer avec les ressources gagnées.
-- Le laboratoire et l’application restent temporairement sans mot de passe HTTP. Un système de connexion par code unique devra remplacer cette protection avant la mise en production définitive.
+- L’application en ligne est protégée par un code d’accès unique, avec blocage temporaire après plusieurs mauvais codes (en production depuis le 5 octobre 2026).
 
 ## Evidence on Hand
 
