@@ -5,7 +5,8 @@ import { niveauQuartier, NIVEAUX_QUARTIER, QUARTIER_PALIER } from '../core/villa
 import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
 import { currentSeance } from '../core/cote-a-cote.js';
-import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK } from './layout.js';
+import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
+import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
 export const REFLET_DAYS = 14;
@@ -31,10 +32,40 @@ export function sectorView(id, game) {
 }
 
 /**
- * Vue complète. options : { now (Date|ISO, obligatoire), anchors (content/fr-CA/ancres.json, facultatif) }.
- * Ne lit que des champs connus et tolère un état partiel (quartiers absents).
+ * Bâtiments de l'île, un par emplacement (EMPLACEMENTS), dans l'ordre du catalogue :
+ * { id, type, bati, etat, refus, reste, occupants }. etat : 'vide' (pas encore bâti), 'bati', et pour une culture
+ * 'seme' | 'pousse' | 'mure' ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
+ * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets).
  */
-export function deriveView(game, tasks = [], { now, anchors } = {}) {
+export function batimentsView(game, ledger = [], now = new Date()) {
+  const g = { ...game, resources: { energy: 0, materials: 0, food: 0, ...(game.resources || {}) } };
+  const debout = new Set(batimentsDuVillage(g).map((b) => b.id));
+  let loges = logements(g).habitants;
+  const out = [];
+  for (const type of BATIMENT_IDS) {
+    EMPLACEMENTS[type].forEach((_, i) => {
+      const id = `${type}-${i + 1}`;
+      const b = { id, type, bati: debout.has(id), etat: 'vide', refus: null, reste: 0, occupants: 0 };
+      if (!b.bati) b.refus = refusConstruire(g, type);
+      else if (BATIMENTS[type].culture) {
+        const c = etatCulture(g, ledger, id, now);
+        b.etat = !c.semee ? 'bati' : c.mure ? 'mure' : c.jours > 0 ? 'pousse' : 'seme';
+        b.reste = c.reste;
+      } else {
+        b.etat = 'bati';
+        if (type === 'chalet') { b.occupants = Math.min(BATIMENTS.chalet.loge, loges); loges -= b.occupants; }
+      }
+      out.push(b);
+    });
+  }
+  return out;
+}
+
+/**
+ * Vue complète. options : { now (Date|ISO, obligatoire), anchors (content/fr-CA/ancres.json, facultatif),
+ * ledger (registre, pour les cultures ; facultatif) }. Ne lit que des champs connus et tolère un état partiel.
+ */
+export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const g = game || {};
   const today = gameDay(now ?? new Date());
   const sectors = {};
@@ -73,5 +104,6 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
   const seanceTask = seance && !seance.oubliee ? list.find((t) => t && String(t.id) === seance.taskId && t.status === 'todo') : null;
   const fanal = seanceTask ? { taskId: seance.taskId, sector: quartierOfTask(seanceTask) } : null;
 
-  return { today, sectors, crates, reflets, refletAnchors, fanal };
+  const batiments = batimentsView(g, Array.isArray(ledger) ? ledger : [], now ?? new Date());
+  return { today, sectors, crates, reflets, refletAnchors, fanal, batiments };
 }

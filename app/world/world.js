@@ -1,7 +1,7 @@
 // L'île de l'Orée, en DOM et SVG, sans dépendance.
 //
 //   const world = createWorld(conteneur, { texts, anchors, announce, onImpact, onSelect, threadFrom, now });
-//   world.render(game, tasks);   // met à jour ce qui a changé (différence par identifiant)
+//   world.render(game, tasks, ledger); // met à jour ce qui a changé (différence par identifiant) ; ledger : cultures
 //   world.play(events);          // joue les événements du cœur, dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
 //   world.focusSector('champs'); // cadre un quartier
@@ -14,7 +14,8 @@
 //
 // onSelect(info) — un toucher (ou Entrée) sur la carte. Formes de `info` :
 //   { type: 'sector', id, sector }                           plaque de quartier (id = sector)
-//   { type: 'landmark', id, sector, model }                  repère fixe (halle, tour, atelier, mairie, école…)
+//   { type: 'landmark', id, sector, model }                  repère fixe (lanterne, établi, clôture, convoi…)
+//   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
 // Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-niveau, reflet, veille, etape,
@@ -26,22 +27,23 @@
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
-  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, FANAL_SPOTS, sectorAt,
+  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, FANAL_SPOTS, sectorAt, EMPLACEMENTS,
 } from './layout.js';
 import { deriveView } from './view.js';
-import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal } from './terrain.js';
+import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
 import { Scene } from './scene.js';
+import { artFor } from './models.js';
 import { createTicker, createBus } from './ticker.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, tachesText } from './texts.js';
+import { makeTexts, tachesText, batimentNom, batimentEtat } from './texts.js';
 import { playEvents, cloneView } from './moments.js';
 import { QUARTIERS } from '../core/domains.js';
 
 export { createWorldPlan } from './plan.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const LIGHT = { lanterne: 'lantern', bastion: 'lantern', etabli: 'lamp', registres: 'window', maison: 'window', tour: 'crystal' };
+const LIGHT = { lanterne: 'lantern', etabli: 'lamp', chalet: 'window', grenier: 'window' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
 const AMBIENT_MS = 9000; // l'île respire quelques secondes après chaque activité, puis s'immobilise
 const FRONT_FAR = 1.8; // recul du front de givre à l'annonce (cases), jusqu'au rivage la veille (en sommeil)
@@ -73,9 +75,25 @@ export function entitiesFor(v, tasks = []) {
   const list = [];
   for (const L of LANDMARKS) {
     const e = { ...L, landmark: true, interactive: true, light: LIGHT[L.model] ?? null, allume: false };
-    if (L.model === 'tour') e.variant = 0; // vieille tour de guet, pas encore réparée
-    else if (e.light) e.allume = !!v.veille; // lanternes, fenêtres et lampe s'allument quand tout est enregistré
+    if (e.light) e.allume = !!v.veille; // lanternes, fenêtres et lampe s'allument quand tout est enregistré
     if (v.reflets?.has?.(L.id)) e.reluit = true;
+    list.push(e);
+  }
+  // bâtiments du joueur, un par emplacement : debout, ou chalet vide, atelier abîmé, vieux quai, piquets d'un chantier
+  for (const b of v.batiments || []) {
+    const slot = EMPLACEMENTS[b.type][Number(b.id.slice(b.type.length + 1)) - 1];
+    const lac = slot.lac ? D / 32 : 0; // au niveau de l'eau : décalé d'autant que le socle est épais
+    const e = {
+      id: b.id, sector: slot.sector || sectorAt(Math.floor(slot.r), Math.floor(slot.c)),
+      r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, batiment: b, light: null, allume: false,
+    };
+    if (b.type === 'chalet') Object.assign(e, { model: 'chalet', variant: !b.bati ? 'vide' : b.occupants ? 'habite' : '' });
+    else if (b.type === 'atelier') Object.assign(e, { model: 'atelier', variant: b.bati ? '' : 'abime' });
+    else if (b.type === 'quai') Object.assign(e, { model: 'quai', variant: b.bati ? '' : 'vieux' });
+    else if (!b.bati) Object.assign(e, { model: 'piquets', variant: `${slot.w}x${slot.h}` });
+    else Object.assign(e, { model: b.type, variant: b.etat === 'bati' ? '' : b.etat });
+    if (b.bati && LIGHT[e.model] && (b.type !== 'chalet' || b.occupants)) { e.light = LIGHT[e.model]; e.allume = !!v.veille; }
+    if (v.reflets?.has?.(b.id)) e.reluit = true;
     list.push(e);
   }
   for (const d of DECOR) list.push(d);
@@ -224,7 +242,7 @@ export function createWorld(container, options = {}) {
   function sectorName(s) { return t(`quartier.${s}.name`); }
   function objName(e) {
     if (e.kind === 'char') return t(e.pose ? `monde.obj.${e.who}.travail` : `monde.obj.${e.who}`);
-    if (e.model === 'tour') return t(e.variant ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
+    if (e.batiment) return `${batimentNom(t, e.batiment)}, ${batimentEtat(t, e.batiment)}`;
     if (e.crate) {
       const d = e.crate.days;
       const when = d < 0 ? t('monde.crate.passed') : d === 0 ? t('monde.crate.today') : t('monde.crate.days', { n: d });
@@ -376,7 +394,7 @@ export function createWorld(container, options = {}) {
     return res;
   }
 
-  function derive(p) { return deriveView(p.game, p.tasks, { now: nowOf(), anchors: options.anchors }); }
+  function derive(p) { return deriveView(p.game, p.tasks, { now: nowOf(), anchors: options.anchors, ledger: p.ledger }); }
 
   function applyPending() {
     if (!pending || destroyed) return;
@@ -616,6 +634,7 @@ export function createWorld(container, options = {}) {
   }
   function selectInfo(e) {
     if (e.landmark) return { type: 'landmark', id: e.id, sector: e.sector, model: e.model };
+    if (e.batiment) return { type: 'batiment', id: e.id, sector: e.sector, model: e.model, batiment: e.batiment.type };
     return { type: 'object', id: e.id, sector: e.sector, model: e.kind === 'char' ? e.who : e.model, taskId: e.crate?.taskId ?? null };
   }
   function rovingTo(n) {
@@ -797,10 +816,21 @@ export function createWorld(container, options = {}) {
 
   // ---------------------------------------------------------------------------- interface publique
   const api = {
+    /**
+     * Dessin d'un objet de la carte (bâtiment), dans l'état du dernier render() : SVG autonome pour une fiche
+     * (matières lues par la classe ow-thumb). Chaîne vide si l'objet n'existe pas.
+     */
+    thumb(id) {
+      if (!pending) return '';
+      const e = entitiesFor(derive(pending), pending.tasks).find((x) => x.id === id);
+      if (!e || !e.model) return '';
+      const a = artFor(e);
+      return `<svg class="ow-thumb" viewBox="${a.x} ${a.y} ${a.w} ${a.h}" width="${a.w}" height="${a.h}" focusable="false" aria-hidden="true">${a.svg}</svg>`;
+    },
     /** Mémorise le nouvel état ; l'applique au prochain micro-temps, ou à la fin des animations en cours. */
-    render(game, taskList = []) {
+    render(game, taskList = [], ledger = []) {
       if (destroyed) return;
-      pending = { game, tasks: Array.isArray(taskList) ? taskList : [] };
+      pending = { game, tasks: Array.isArray(taskList) ? taskList : [], ledger: Array.isArray(ledger) ? ledger : [] };
       if (scheduled) return;
       scheduled = true;
       queueMicrotask(() => {

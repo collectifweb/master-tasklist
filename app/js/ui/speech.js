@@ -21,6 +21,8 @@ export function situationFor(action, params, events, task) {
     case 'startQuest': return 'quest.start';
     case 'remballerQuest': return 'quest.undo';
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
+    case 'construire': return 'batiment.construit';
+    case 'accueillir': return 'famille.arrive';
     default: return null;
   }
 }

@@ -40,15 +40,16 @@ export const SECTOR_CENTER = {
 
 /**
  * Ancre des plaques de secteur (grille). Les secteurs du premier plan accrochent leur plaque sous leur rebord,
- * sur la face du socle (hang) : elle ne cache ni les emplacements de construction ni les cultures.
+ * sur la face du socle (hang) : elle ne cache ni les emplacements de construction ni les cultures. Celles du fond
+ * (École, Garage) se posent sur la lisière d'arbres du bord, au-dessus des chalets et du convoi.
  */
 export const PLAQUE_ANCHOR = {
   place: [5.0, 7.6],
   champs: [4.8, 11.95, 'hang'],
   atelier: [11.95, 11.95, 'hang'],
-  mairie: [11.95, 3.2, 'hang'],
-  ecole: [1.0, 4.4],
-  garage: [3.8, 0.9],
+  mairie: [11.95, 5.0, 'hang'],
+  ecole: [0.15, 3.0],
+  garage: [3.0, 0.15],
 };
 
 /** Contour d'un secteur en coordonnées de grille (polygone du bord des cases), pour les éclats. */
@@ -81,13 +82,10 @@ export function sectorOutline(id) {
 }
 
 // ---------------------------------------------------------------- repères fixes
-// model, secteur, emprise (r, c, h = rangées, w = colonnes). Décor fixe : les bâtiments du joueur arrivent plus tard.
+// model, secteur, emprise (r, c, h = rangées, w = colonnes). Décor fixe ; les bâtiments du joueur sont dans EMPLACEMENTS.
 export const LANDMARKS = [
-  { id: 'bastion', model: 'bastion', sector: 'place', r: 4, c: 4, h: 2, w: 2 },
-  { id: 'tour', model: 'tour', sector: 'place', r: 4, c: 7, h: 1, w: 1 },
   { id: 'lanterne-p1', model: 'lanterne', sector: 'place', r: 7, c: 4, h: 1, w: 1, village: true },
   { id: 'lanterne-p2', model: 'lanterne', sector: 'place', r: 6.15, c: 7, h: 1, w: 1, village: true },
-  { id: 'atelier', model: 'atelier', sector: 'atelier', r: 9, c: 9, h: 1, w: 2 },
   { id: 'etabli', model: 'etabli', sector: 'atelier', r: 7, c: 9, h: 1, w: 1 },
   { id: 'glaciere', model: 'glaciere', sector: 'atelier', r: 8, c: 7, h: 1, w: 1 },
   { id: 'lanterne-a1', model: 'lanterne', sector: 'atelier', r: 10, c: 8, h: 1, w: 1, village: true },
@@ -96,34 +94,32 @@ export const LANDMARKS = [
   { id: 'cloture-c3', model: 'cloture', sector: 'champs', r: 7.35, c: 2, h: 1, w: 1 },
   { id: 'cloture-c4', model: 'cloture', sector: 'champs', r: 7.35, c: 3, h: 1, w: 1, end: true },
   { id: 'lanterne-c1', model: 'lanterne', sector: 'champs', r: 6, c: 3, h: 1, w: 1, village: true },
-  { id: 'registres', model: 'registres', sector: 'mairie', r: 1, c: 8, h: 2, w: 2 },
   { id: 'lanterne-x1', model: 'lanterne', sector: 'mairie', r: 4, c: 10, h: 1, w: 1, village: true },
-  { id: 'maison', model: 'maison', sector: 'ecole', r: 3, c: 1, h: 2, w: 2 },
-  { id: 'convoi', model: 'caisse', sector: 'garage', r: 1, c: 4, h: 1, w: 1 },
+  { id: 'convoi', model: 'caisse', sector: 'garage', r: 2.4, c: 4.3, h: 1, w: 1 },
 ];
 
 /**
  * Emplacements des bâtiments du joueur (core/batiments.js) : un par bâtiment possible, dans l'ordre des identifiants
  * (chalet-1, chalet-2…). Emprise en grille comme les repères. Un emplacement vide reste visible : chalet vide, atelier
- * abîmé, vieux quai, ou piquets d'un chantier possible. Le quai est posé sur le lac, au bout de la route avant.
+ * abîmé, vieux quai, ou piquets d'un chantier possible. Le quai est posé sur le lac, au bout de la route avant
+ * (lac : dessiné au niveau de l'eau, au pied du socle) ; il appartient à la Place, dont il est le front.
  */
 export const EMPLACEMENTS = {
-  chalet: [{ r: 4.2, c: 4.2, h: 1.2, w: 1.2 }, { r: 4.2, c: 6.7, h: 1.2, w: 1.2 }, { r: 3, c: 1, h: 1.6, w: 1.6 }],
-  parcelle: [{ r: 8.2, c: 2.5, h: 1.6, w: 1.6 }, { r: 8.2, c: 0.5, h: 1.6, w: 1.6 }, { r: 10.2, c: 2.5, h: 1.6, w: 1.6 }],
+  chalet: [{ r: 4.2, c: 4.2, h: 1.2, w: 1.2 }, { r: 4.2, c: 6.7, h: 1.2, w: 1.2 }, { r: 4.2, c: 1.8, h: 1.2, w: 1.2 }],
+  parcelle: [{ r: 8.4, c: 0.4, h: 1.6, w: 1.6 }, { r: 10.3, c: 0.4, h: 1.6, w: 1.6 }, { r: 10.3, c: 2.4, h: 1.6, w: 1.6 }],
   atelier: [{ r: 9, c: 9, h: 1, w: 2 }],
-  serre: [{ r: 10.2, c: 0.3, h: 1.5, w: 1.9 }],
-  eolienne: [{ r: 2.6, c: 10.4, h: 1, w: 1 }],
+  serre: [{ r: 10.3, c: 9.7, h: 1.5, w: 1.9 }],
+  eolienne: [{ r: 0.5, c: 10.6, h: 1, w: 1 }],
   grenier: [{ r: 1, c: 8, h: 2, w: 2 }],
-  quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true }],
+  quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true, sector: 'place' }],
 };
 
 /** Objets-reflets : ancre de content/fr-CA/ancres.json → objet de la carte. Par défaut, le repère du quartier. */
 export const ANCHOR_OBJECT = {
-  glaciere: 'glaciere', garage: 'etabli', cloture: 'cloture-c1', poubelle: 'caisse:0',
-  impots: 'registres', classeur: 'registres', facture: 'registres', lit: 'maison', jouets: 'maison',
+  glaciere: 'glaciere', garage: 'etabli', cloture: 'cloture-c1', poubelle: 'caisse:0', lit: 'chalet-3', jouets: 'chalet-3',
 };
 export const SECTOR_LANDMARK = {
-  place: 'bastion', champs: 'cloture-c1', atelier: 'atelier', mairie: 'registres', ecole: 'maison', garage: 'convoi',
+  place: 'chalet-1', champs: 'cloture-c1', atelier: 'atelier-1', mairie: 'grenier-1', ecole: 'chalet-3', garage: 'convoi',
 };
 
 // ---------------------------------------------------------------- front de givre (en sommeil)
@@ -141,8 +137,12 @@ export const AVIS_EDGE = {
   place: { a: [4.5, 12], b: [7.5, 12], n: [0, 1], face: true },
 };
 
-/** Caisses d'échéance : posées au bord de la route avant (u = 6), de la place vers le quai. */
-export const CRATE_SPOTS = [[6.42, 8.35], [5.6, 8.9], [6.45, 9.6], [5.58, 10.3], [6.4, 11.0]];
+/**
+ * Caisses d'échéance : au bord de la route de droite (v = 6), de la Place vers le bord de l'île. Pas sur la route
+ * avant : la plaque de la Place les y recouvrait (lot 4). Côté Mairie le long du chalet, puis côté Atelier une fois
+ * passé l'établi, qui les cachait.
+ */
+export const CRATE_SPOTS = [[9.25, 5.5], [9.85, 5.5], [10.45, 5.5], [10.8, 6.45], [11.4, 6.45]];
 
 /** Fanal, vieux robot de déneigement, sur la Place. */
 export const FANAL_HOME = [6.85, 6.55];
@@ -167,7 +167,7 @@ function isFree(u, v) {
   const r = Math.floor(v), c = Math.floor(u);
   if (Math.abs(u - 6) < 0.6 || Math.abs(v - 6) < 0.6) return false; // routes
   if (r >= 4 && r <= 7 && c >= 4 && c <= 7) return false; // place
-  for (const e of LANDMARKS) if (v >= e.r - 0.2 && v < e.r + (e.h || 1) + 0.1 && u >= e.c - 0.2 && u < e.c + (e.w || 1) + 0.1) return false;
+  for (const e of [...LANDMARKS, ...Object.values(EMPLACEMENTS).flat()]) if (v >= e.r - 0.2 && v < e.r + (e.h || 1) + 0.1 && u >= e.c - 0.2 && u < e.c + (e.w || 1) + 0.1) return false;
   for (const [cu, cv] of CRATE_SPOTS) if (Math.abs(u - cu) < 0.7 && Math.abs(v - cv) < 0.7) return false;
   return true;
 }

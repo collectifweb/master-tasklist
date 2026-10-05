@@ -1,12 +1,12 @@
 // Carte en liste : la même île, en liste. Mêmes données que la carte (view.js), lisible au lecteur d'écran
-// et au clavier. Les boutons « Voir sur la carte » et « Ses quêtes » forment un seul arrêt de tabulation
-// (↑ ↓ Début Fin).
+// et au clavier. Les boutons « Voir sur la carte », « Ses quêtes » et « Ouvrir la fiche » (bâtiments) forment un
+// seul arrêt de tabulation (↑ ↓ Début Fin).
 //
-//   const plan = createWorldPlan(conteneur, { texts, anchors, now, onFocusSector, onFilter });
-//   plan.render(game, tasks); plan.focus(); plan.destroy();
+//   const plan = createWorldPlan(conteneur, { texts, anchors, now, onFocusSector, onFilter, onBatiment });
+//   plan.render(game, tasks, ledger); plan.focus(); plan.destroy();
 import { SECTOR_ORDER } from './layout.js';
 import { deriveView } from './view.js';
-import { makeTexts, tachesText } from './texts.js';
+import { makeTexts, tachesText, batimentNom, batimentEtat } from './texts.js';
 import { QUARTIERS } from '../core/domains.js';
 
 let uid = 0;
@@ -31,7 +31,10 @@ export function createWorldPlan(container, options = {}) {
   const intro = el('p', 'ow-plan-intro', t('monde.plan.intro'));
   const summary = el('ul', 'ow-plan-summary');
   const list = el('ol', 'ow-plan-sectors');
-  root.append(h, intro, summary, list);
+  const hb = el('h3', 'ow-plan-subtitle', t('bat.plan.titre'));
+  const introB = el('p', 'ow-plan-intro', t('bat.plan.intro'));
+  const blist = el('ol', 'ow-plan-bats');
+  root.append(h, intro, summary, list, hb, introB, blist);
   container.appendChild(root);
 
   const items = {};
@@ -71,14 +74,32 @@ export function createWorldPlan(container, options = {}) {
     return items[s];
   }
 
+  const bats = {};
+  function makeBat(id) {
+    const li = el('li', 'ow-plan-bat');
+    const name = el('p', 'ow-plan-bat-name');
+    const etat = el('p', 'ow-plan-bat-etat');
+    const btn = el('button', 'ow-plan-show ow-plan-open', t('bat.fiche.ouvrir'));
+    btn.type = 'button';
+    btn.dataset.bat = id;
+    btn.tabIndex = -1;
+    const text = el('div', 'ow-plan-bat-text');
+    text.append(name, etat);
+    li.append(text, btn);
+    blist.appendChild(li);
+    bats[id] = { li, name, etat, btn };
+    return bats[id];
+  }
+
   function roving() {
-    const btns = SECTOR_ORDER.flatMap((s) => (items[s] ? [items[s].btn, items[s].quests] : []));
+    const btns = SECTOR_ORDER.flatMap((s) => (items[s] ? [items[s].btn, items[s].quests] : []))
+      .concat(Object.values(bats).map((b) => b.btn));
     if (!btns.some((b) => b.tabIndex === 0) && btns[0]) btns[0].tabIndex = 0;
     return btns;
   }
 
-  function render(game, tasks = []) {
-    const v = deriveView(game, tasks, { now: nowOf(), anchors: options.anchors });
+  function render(game, tasks = [], ledger = []) {
+    const v = deriveView(game, tasks, { now: nowOf(), anchors: options.anchors, ledger });
     // résumé : les caisses d'échéance (rien quand il n'y en a pas)
     const sum = v.crates.length ? [v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length })] : [];
     const sk = sum.join('|');
@@ -98,6 +119,18 @@ export function createWorldPlan(container, options = {}) {
         it.body.replaceChildren(...m.lines.map((x) => el('p', '', x)));
       }
     }
+    // bâtiments : un par emplacement, même nom et même état que sur la carte
+    for (const b of v.batiments) {
+      const it = bats[b.id] || makeBat(b.id);
+      const nom = batimentNom(t, b);
+      const etat = batimentEtat(t, b);
+      if (last[b.id] !== nom + etat) {
+        last[b.id] = nom + etat;
+        it.name.textContent = nom;
+        it.etat.textContent = etat.charAt(0).toUpperCase() + etat.slice(1);
+        it.btn.setAttribute('aria-label', t('bat.fiche.ouvrir.label', { nom }));
+      }
+    }
     roving();
   }
 
@@ -105,7 +138,8 @@ export function createWorldPlan(container, options = {}) {
     const b = ev.target.closest('.ow-plan-show');
     if (!b) return;
     for (const x of roving()) x.tabIndex = x === b ? 0 : -1;
-    if ('filter' in b.dataset) options.onFilter?.(b.dataset.sector);
+    if (b.dataset.bat) options.onBatiment?.(b.dataset.bat);
+    else if ('filter' in b.dataset) options.onFilter?.(b.dataset.sector);
     else options.onFocusSector?.(b.dataset.sector);
   }
   function onKey(ev) {

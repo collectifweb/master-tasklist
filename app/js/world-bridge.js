@@ -2,9 +2,10 @@
 // Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
 //
 //   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion });
-//   onSelect({ type: 'sector' | 'object' | 'landmark', id, sector?, taskId? }) : sector est le quartier touché.
-//   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
-//   w.plan(conteneur, { onFocusSector, onFilter }) → { render, focus, destroy }
+//   onSelect({ type: 'sector' | 'object' | 'landmark' | 'batiment', id, sector?, taskId? }) : sector est le quartier touché.
+//   w.render(game, tasks, ledger); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
+//   w.thumb(id) → dessin SVG d'un bâtiment pour sa fiche
+//   w.plan(conteneur, { onFocusSector, onFilter, onBatiment }) → { render, focus, destroy }
 export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion }) {
   let mod, view;
   try {
@@ -32,6 +33,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
       setReducedMotion: safe(world.setReducedMotion),
       focusSector: safe(world.focusSector),
       clearSelection: safe(world.clearSelection),
+      thumb: safe(world.thumb, ''),
       skip: safe(world.skip),
       on: safe(world.on, () => {}),
       get playing() { return world.playing; },
@@ -40,8 +42,8 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
         const before = reflets(game, tasksBefore);
         return [...reflets(game, tasksAfter)].filter((id) => !before.has(id)).map((objectId) => ({ type: 'reflet', objectId }));
       },
-      plan(host, { onFocusSector, onFilter } = {}) {
-        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector, onFilter });
+      plan(host, { onFocusSector, onFilter, onBatiment } = {}) {
+        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector, onFilter, onBatiment });
         return { render: safe(p.render), focus: safe(p.focus), destroy: safe(p.destroy) };
       },
       destroy: safe(world.destroy),

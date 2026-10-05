@@ -134,3 +134,16 @@ test('état abîmé : un bâtiment inconnu ou en double ne compte qu’une fois,
   w.game.batiments = null;
   assert.equal(compte(w.game, 'chalet'), 0);
 });
+
+test('construire à un emplacement choisi (le chalet touché sur la carte), refusé s’il est pris ou inconnu', () => {
+  let w = riche();
+  w = { ...w, game: step(w, construire, { type: 'chalet', id: 'chalet-3' }, NOW).world.game };
+  assert.deepEqual(w.game.batiments, [{ id: 'chalet-3', type: 'chalet' }]);
+  // sans emplacement : le premier libre
+  assert.deepEqual(bati(w, 'chalet').batiments.map((b) => b.id), ['chalet-3', 'chalet-1']);
+  assert.throws(() => step(w, construire, { type: 'chalet', id: 'chalet-3' }, NOW), { message: 'Cet emplacement est déjà bâti.' });
+  assert.throws(() => step(riche(), construire, { type: 'parcelle', id: 'parcelle-1' }, NOW), { message: 'Cet emplacement est déjà bâti.' });
+  for (const id of ['chalet-4', 'chalet-0', 'parcelle-2', 'chalet-1x', 7]) {
+    assert.throws(() => step(riche(), construire, { type: 'chalet', id }, NOW), { message: 'Emplacement inconnu.' }, String(id));
+  }
+});

@@ -84,7 +84,8 @@ async function targets(page) {
     for (const [el, r] of items) {
       if (!visible(r)) continue;
       n++;
-      if (r.width < 44 || r.height < 44) small.push(`${el.dataset.id || el.dataset.sector || el.className} ${r.width.toFixed(0)}×${r.height.toFixed(0)}`);
+      // 43,99 : une position au dixième de pixel peut donner 44 − 1/65 536 px (arrondi du moteur), pas une cible plus petite
+      if (r.width < 43.99 || r.height < 43.99) small.push(`${el.dataset.id || el.dataset.sector || el.className} ${r.width.toFixed(0)}×${r.height.toFixed(0)}`);
     }
     return { n, small, lod: document.querySelector('.ow').dataset.lod };
   });
@@ -125,7 +126,7 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     // ---- six quartiers ouverts, leur niveau sur la plaque ; plus rien de la v1 ; front de givre en sommeil
     r.start = await page.evaluate(() => ({
       plaques: [...document.querySelectorAll('.ow-plaque')].map((b) => `${b.dataset.sector}:${b.dataset.niveau}`),
-      v1: document.querySelectorAll('.ow-veil, .ow-mist, .ow-pips, .ow-plaque-avis, .ow-ent.m-brasero, .ow-ent.m-givre, .ow-ent.m-culture, .ow-ent.m-parcelle, .ow-ent.m-chantier, .ow-ent.m-relais, .ow-ent.m-tunnel, .ow-ent.m-solene, .ow-ent.m-milo, .ow-germ').length,
+      v1: document.querySelectorAll('.ow-veil, .ow-mist, .ow-pips, .ow-plaque-avis, .ow-ent.m-brasero, .ow-ent.m-givre, .ow-ent.m-culture, .ow-ent.m-chantier, .ow-ent.m-relais, .ow-ent.m-tunnel, .ow-ent.m-solene, .ow-ent.m-milo, .ow-germ').length,
       chars: [...document.querySelectorAll('.ow-ent[data-id]')].filter((e) => e.querySelector('.ow-char-bob')).map((e) => e.dataset.id),
       front: document.querySelector('.ow-front').hasAttribute('hidden'),
     }));
@@ -141,11 +142,11 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     await page.waitForTimeout(800);
     r.selPlaque = await lastSel(page);
     check(`${tag} toucher une plaque → onSelect sector`, r.selPlaque && r.selPlaque.type === 'sector' && r.selPlaque.id === 'mairie' && r.selPlaque.sector === 'mairie', r.selPlaque);
-    await tap(page, 'registres');
+    await tap(page, 'grenier-1');
     r.selMairie = await lastSel(page);
-    check(`${tag} toucher la Mairie → onSelect landmark du quartier`, r.selMairie && r.selMairie.type === 'landmark' && r.selMairie.id === 'registres' && r.selMairie.sector === 'mairie', r.selMairie);
+    check(`${tag} toucher l'emplacement du grenier → onSelect batiment du quartier`, r.selMairie && r.selMairie.type === 'batiment' && r.selMairie.id === 'grenier-1' && r.selMairie.sector === 'mairie', r.selMairie);
     r.tagMairie = await page.evaluate(() => document.querySelector('.ow-tag').textContent);
-    check(`${tag} étiquette du repère : son nom v2`, r.tagMairie === 'Mairie', r.tagMairie);
+    check(`${tag} étiquette du bâtiment : son nom et son état`, /^Emplacement du grenier, /.test(r.tagMairie), r.tagMairie);
     await page.evaluate(() => window.__world.clearSelection());
     await focus(page, 'place');
     await tap(page, 'fanal');

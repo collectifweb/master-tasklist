@@ -175,19 +175,29 @@ function pay(g, cout) {
   g.resources.materials = round1(g.resources.materials - (cout.materials || 0));
 }
 
-/** Construit. params : { type }. Événement { type: 'construction', id, batiment, cout }. */
+/**
+ * Construit. params : { type, id } ; id (facultatif) = l'emplacement touché sur la carte (chalet-3…), sinon le premier
+ * libre. Événement { type: 'construction', id, batiment, cout }.
+ */
 export function construire(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const type = params.type;
   const refus = refusConstruire(ctx.game, type);
   if (refus) throw new Error(refus);
+  const taken = new Set(batimentsDuVillage(ctx.game).map((b) => b.id));
+  let id = params.id;
+  if (id !== undefined && id !== null) {
+    const k = typeof id === 'string' && id.startsWith(`${type}-`) ? Number(id.slice(type.length + 1)) : NaN;
+    if (!(Number.isInteger(k) && k >= 1 && k <= BATIMENTS[type].max && id === `${type}-${k}`)) throw new Error('Emplacement inconnu.');
+    if (taken.has(id)) throw new Error('Cet emplacement est déjà bâti.');
+  } else {
+    let k = 1;
+    while (taken.has(`${type}-${k}`)) k++;
+    id = `${type}-${k}`;
+  }
   const g = structuredClone(ctx.game);
   const cout = { ...BATIMENTS[type].cout };
   pay(g, cout);
-  const taken = new Set(batimentsDuVillage(g).map((b) => b.id));
-  let k = 1;
-  while (taken.has(`${type}-${k}`)) k++;
-  const id = `${type}-${k}`;
   g.batiments = [...list(g.batiments), { id, type }];
   ctx.game = g;
   ctx.events.push({ type: 'construction', id, batiment: type, cout });

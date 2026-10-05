@@ -126,8 +126,8 @@
 .ow-edge-front { stroke: rgb(255 250 225 / 0.32); }
 
 /* détails des modèles */
-.ow .rim { stroke: rgb(255 251 238 / 0.5); stroke-width: 0.8; }
-.ow .win { fill: var(--win-day); stroke: none; }
+.ow .rim, .ow-thumb .rim { stroke: rgb(255 251 238 / 0.5); stroke-width: 0.8; }
+.ow .win, .ow-thumb .win { fill: var(--win-day); stroke: none; }
 .ow [data-allume] .win { fill: var(--c-lantern); }
 .ow[data-veille] [data-allume] .win { fill: var(--win-night); }
 .ow .lampg { fill: var(--lampg-off); stroke: none; }
@@ -230,6 +230,16 @@
   15% { opacity: 0.8; }
   100% { transform: translate(10px, -34px) scale(1.7); opacity: 0; }
 }
+
+/* rotor de l'éolienne : tourne seulement quand l'île est éveillée (voir « ambiance » plus bas) */
+.ow-rotor {
+  transform-box: view-box;
+  animation: ow-rotor 7s linear infinite;
+  animation-play-state: paused;
+}
+@keyframes ow-rotor { to { transform: rotate(360deg); } }
+/* ombre du panier d'une culture mûre */
+.ow-basket-shadow { fill: rgb(66 43 25 / 0.18); stroke: none; }
 
 /* ---------------------------------------------------------------- halos, crépuscule */
 .ow-halo {
@@ -481,7 +491,7 @@
 
 /* ---------------------------------------------------------------- ambiance : seulement après une activité,
    jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob) {
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo,
@@ -553,3 +563,24 @@
 .ow-plan-show:active { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
 .ow-plan-show:focus { outline: none; }
 .ow-plan-show:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+/* bâtiments : nom et état à gauche, « Ouvrir la fiche » à droite (dessous quand c'est étroit) */
+.ow-plan-subtitle {
+  margin: var(--sp-6) 0 var(--sp-1);
+  font-family: var(--font-display);
+  font-size: var(--text-18, 1.125rem);
+  font-weight: var(--w-heavy);
+  line-height: var(--lh-snug);
+}
+.ow-plan-bats { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--c-line); }
+.ow-plan-bat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.ow-plan-bat-text { flex: 1 1 12rem; min-width: 0; }
+.ow-plan-bat-name { margin: 0; font-weight: var(--w-semibold); }
+.ow-plan-bat-etat { margin: 0; font-size: var(--text-14); color: var(--text-soft); }
+.ow-plan-bat .ow-plan-open { flex: none; }

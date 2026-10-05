@@ -1,7 +1,7 @@
 // Terrain : UN seul SVG (lac, socle en strates, dessus en cases). Le dessus est dessiné en coordonnées de
 // grille dans un groupe par secteur (data-sector : la zone de carte d'un quartier), projeté par une matrice
 // affine. Chaque case est un <g class="ow-tile"> de deux triangles (aplats low-poly).
-import { P, f, pts, rng, HW, HH, Art } from './iso.js';
+import { P, f, pts, rng, HW, HH } from './iso.js';
 import { N, CELLS, SECTOR_ORDER, ROADS, groundDetails, sectorOutline } from './layout.js';
 
 export const D = 74; // épaisseur visible du socle
@@ -119,15 +119,11 @@ export function terrainSVG() {
     mairie: [lipStrip(B, Rt, b1R, 6 / 12, 1).replace('SIDE', 'r')],
   };
 
-  // quai et barque sous la route avant
+  // échelle et barque sous la route avant ; le quai lui-même est un bâtiment (vieux quai à rebâtir, models.js)
   const lt = lerp(L, B, 6 / 12);
   let rungs = '';
   for (let d = 8; d < D - 2; d += 7) rungs += `M${f(lt[0] - 4)},${f(lt[1] + d - 2)}l8,4`;
   o.push(`<path d="M${f(lt[0] - 4)},${f(lt[1] - 1)}v${D}M${f(lt[0] + 4)},${f(lt[1] + 3)}v${D}${rungs}" class="k-woodd-l" stroke-width="1.3"/>`);
-  const dock = new Art();
-  for (const [u, v] of [[5.6, 12.1], [6.4, 12.1], [5.6, 12.85], [6.4, 12.85]]) dock.box(u - 0.04, v - 0.04, 0.08, 0.08, -D - 4, 6, 'woodd', { cast: false });
-  dock.box(5.52, 12.02, 0.96, 0.9, -D + 1.5, 2.5, 'woodb', { rim: true, cast: false });
-  o.push(dock.o.join(''));
   const [bx, by] = P(7.05, 12.55, -D);
   o.push(`<path d="M${f(bx - 22)},${f(by - 6)}Q${f(bx)},${f(by + 9)} ${f(bx + 22)},${f(by + 5)}L${f(bx + 18)},${f(by - 3)}Q${f(bx)},${f(by - 13)} ${f(bx - 22)},${f(by - 6)}Z" class="woodb-l"/>`);
   o.push(`<path d="M${f(bx - 17)},${f(by - 5.5)}Q${f(bx)},${f(by + 3)} ${f(bx + 17)},${f(by + 1)}Q${f(bx)},${f(by - 9)} ${f(bx - 17)},${f(by - 5.5)}Z" class="woodd-t"/>`);

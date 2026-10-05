@@ -14,10 +14,15 @@ const live = $('#live');
 async function loadJSON(url) {
   try { const r = await fetch(url); return r.ok ? await r.json() : null; } catch { return null; }
 }
-const [texts, anchors] = await Promise.all([
+const [texts, anchors, batiments] = await Promise.all([
   loadJSON('../content/fr-CA/interface.json'),
   loadJSON('../content/fr-CA/ancres.json'),
+  loadJSON('../content/fr-CA/batiments.json'),
 ]);
+// noms des bâtiments sous bat.<groupe>.<clé>, comme le fait js/content.js pour l'app
+for (const [groupe, textes] of Object.entries(batiments || {})) {
+  if (texts && textes && typeof textes === 'object') for (const [k, v] of Object.entries(textes)) texts[`bat.${groupe}.${k}`] = v;
+}
 
 const DAY_MS = 86400000;
 const iso = (d) => new Date(d).toISOString();
@@ -92,8 +97,8 @@ function show(result, extra = []) {
   ({ game, tasks } = result);
   if (result.entries) ledger = ledger.concat(result.entries);
   pendingHud = game;
-  world.render(game, tasks);
-  plan.render(game, tasks);
+  world.render(game, tasks, ledger);
+  plan.render(game, tasks, ledger);
   const events = [...extra, ...(result.events || [])];
   const run = world.play(events);
   run.then(() => { if (pendingHud) { hud(pendingHud); pendingHud = null; } });
@@ -157,8 +162,8 @@ const actions = {
   reset: () => {
     reset();
     hud(game);
-    world.render(game, tasks);
-    plan.render(game, tasks);
+    world.render(game, tasks, ledger);
+    plan.render(game, tasks, ledger);
   },
   panel: (b) => {
     const open = app.dataset.panel !== 'open';

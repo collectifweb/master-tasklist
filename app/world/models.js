@@ -1,8 +1,9 @@
 // Modèles low-poly en aplats à trois tons (dessus -t, face +v -l, face +u -r). Repère local : (0,0,0) = coin
 // arrière de l'emprise. Chaque fonction renvoie { svg, x, y, w, h, shadow, anchors } (voir iso.js : Art.done).
-// Les modèles du décor fixe : bastion (grande halle), tour, lanterne, cloture, caisse, atelier, etabli, erable,
-// glaciere, registres (mairie), maison (école). Décor : epinette, arbre, buisson, rocher. Fanal : characterSVG().
-import { Art, P, f, pts, rng } from './iso.js';
+// Les modèles du décor fixe : lanterne, cloture, caisse, etabli, erable, glaciere. Bâtiments du joueur : chalet,
+// parcelle, atelier, serre, eolienne, grenier, quai, et piquets (chantier possible). Décor : epinette, arbre, buisson,
+// rocher. Fanal : characterSVG().
+import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
 // ---------------------------------------------------------------- primitives
 
@@ -49,99 +50,6 @@ const rectV = (a, V, u0, u1, z0, z1, cls, ex) => a.poly([[u0, V, z0], [u1, V, z0
 const rectU = (a, U, v0, v1, z0, z1, cls, ex) => a.poly([[U, v0, z0], [U, v1, z0], [U, v1, z1], [U, v0, z1]], cls, ex);
 
 // ---------------------------------------------------------------- Place du village
-
-export function bastion() {
-  const a = new Art();
-  a.box(0.1, 0.1, 1.8, 1.8, 0, 5, 'stoned', { rim: true });
-  // donjon
-  const u = 0.32, v = 0.26, du = 1.2, dv = 1.12, H = 36;
-  a.box(u, v, du, dv, 5, H, 'stone');
-  for (let k = 1; k < 4; k++) {
-    a.seg([u, v + dv, 5 + k * 9], [u + du, v + dv, 5 + k * 9], 'k-stoned-l', 0.7);
-    a.seg([u + du, v, 5 + k * 9], [u + du, v + dv, 5 + k * 9], 'k-stoned-r', 0.7);
-  }
-  // créneaux
-  for (let uu = u + 0.02; uu + 0.16 <= u + du + 0.01; uu += 0.27) a.box(uu, v + dv - 0.14, 0.16, 0.14, 5 + H, 6, 'stone', { rim: true });
-  for (let vv = v + 0.02; vv + 0.16 <= v + dv - 0.2; vv += 0.27) a.box(u + du - 0.14, vv, 0.14, 0.16, 5 + H, 6, 'stone', { rim: true });
-  // porte voûtée sur la face avant gauche
-  const g0 = u + 0.42, g1 = u + 0.78, V = v + dv;
-  const arch = [];
-  for (let k = 0; k <= 6; k++) { const t = Math.PI * (k / 6); arch.push([(g0 + g1) / 2 - Math.cos(t) * (g1 - g0) / 2, V, 21 + Math.sin(t) * 5]); }
-  a.poly([[g0, V, 5], [g1, V, 5], ...arch.reverse(), [g0, V, 21]], 'wooddk-l');
-  for (const t of [0.25, 0.5, 0.75]) a.seg([g0 + (g1 - g0) * t, V, 5], [g0 + (g1 - g0) * t, V, 24], 'k-woodd-l', 0.8);
-  a.seg([g0, V, 12], [g1, V, 12], 'k-woodd-l', 0.8);
-  // bande de runes et fentes de tir
-  a.seg([u + 0.04, V, 30], [u + du - 0.04, V, 30], 'rune', 1.3);
-  rectU(a, u + du, v + 0.3, v + 0.42, 18, 28, 'win');
-  rectU(a, u + du, v + 0.7, v + 0.82, 18, 28, 'win');
-  // marches
-  a.box(g0 - 0.06, V, (g1 - g0) + 0.12, 0.22, 0, 3, 'stoned', { rim: true, cast: false });
-  // tourelle d'angle avec toit conique
-  const tr = a.prism(u + du + 0.02, v + dv + 0.02, 0.22, 5, H + 12, 'stone', 8, { rim: true });
-  void tr;
-  const [tx, ty] = P(u + du + 0.02, v + dv + 0.02, 5 + H + 12);
-  cone(a, tx, ty + 2, 15, 24, 'roofb');
-  a.castS(tx, ty - 22, H + 40);
-  // mât et fanion
-  const [mx, my] = P(u + 0.35, v + 0.3, 5 + H);
-  a.raw(`<path d="M${f(mx)},${f(my)}V${f(my - 26)}" class="k-wooddk-l" stroke-width="1.4"/>`);
-  a.raw(`<path d="M${f(mx)},${f(my - 26)}l13,4 -13,4z" class="gold-t"/><path d="M${f(mx)},${f(my - 22)}l13,0 -13,4z" class="gold-r"/>`);
-  a.ext(mx - 2, my - 28); a.ext(mx + 14, my - 16);
-  a.anchor('light', (g0 + g1) / 2, V + 0.1, 24);
-  return a.done();
-}
-
-/** Tour de veille. `reparee` : pylône complet et cristal ; sinon tronquée, cristal tombé au pied. */
-export function tour(reparee = false) {
-  const a = new Art();
-  a.box(0.14, 0.14, 0.72, 0.72, 0, 10, 'stone', { rim: true });
-  a.box(0.22, 0.22, 0.56, 0.56, 10, 4, 'stoned', { rim: true });
-  a.seg([0.18, 0.86, 5], [0.82, 0.86, 5], 'rune', 1.4);
-  a.seg([0.86, 0.18, 5], [0.86, 0.82, 5], 'rune', 1.4);
-  const z0 = 14, zTop = 98, z1 = reparee ? zTop : 60;
-  const B = [[0.3, 0.3], [0.7, 0.3], [0.7, 0.7], [0.3, 0.7]], T = [[0.44, 0.44], [0.56, 0.44], [0.56, 0.56], [0.44, 0.56]];
-  const L = (i, t) => [B[i][0] + (T[i][0] - B[i][0]) * t, B[i][1] + (T[i][1] - B[i][1]) * t, z0 + (zTop - z0) * t];
-  const tMax = (z1 - z0) / (zTop - z0);
-  const lv = [0, 0.22, 0.46, 0.72, 1].filter((t) => t <= tMax + 1e-6);
-  a.seg(L(0, 0), L(0, tMax), 'k-panel-r', 1.4);
-  for (let k = 0; k < lv.length - 1; k++) {
-    a.seg(L(0, lv[k]), L(1, lv[k + 1]), 'k-panel-r', 0.7); a.seg(L(1, lv[k]), L(0, lv[k + 1]), 'k-panel-r', 0.7);
-    a.seg(L(0, lv[k]), L(3, lv[k + 1]), 'k-panel-r', 0.7); a.seg(L(3, lv[k]), L(0, lv[k + 1]), 'k-panel-r', 0.7);
-  }
-  a.seg(L(1, 0), L(1, tMax), 'k-panel-r', 2); a.seg(L(3, 0), L(3, tMax), 'k-panel-l', 2);
-  for (let k = 0; k < lv.length - 1; k++) {
-    a.seg(L(3, lv[k]), L(2, lv[k + 1]), 'k-tech-l', 0.9); a.seg(L(2, lv[k]), L(3, lv[k + 1]), 'k-tech-l', 0.9);
-    a.seg(L(2, lv[k]), L(1, lv[k + 1]), 'k-panel-l', 0.9); a.seg(L(1, lv[k]), L(2, lv[k + 1]), 'k-panel-l', 0.9);
-  }
-  for (const t of lv.slice(1)) { a.seg(L(3, t), L(2, t), 'k-tech-l', 1.1); a.seg(L(2, t), L(1, t), 'k-panel-l', 1.1); }
-  a.seg(L(2, 0), L(2, tMax), 'k-tech-t', 2.3);
-  for (const [u, v] of [[0.3, 0.3], [0.7, 0.3], [0.7, 0.7], [0.3, 0.7]]) a.cast(u, v, 14);
-  if (reparee) {
-    const pz = 62;
-    a.seg(L(3, 0.58), [0.0, 0.76, pz + 3], 'k-panel-l', 1.2);
-    a.poly([[-0.2, 0.56, pz], [0.12, 0.56, pz], [0.12, 0.96, pz + 7], [-0.2, 0.96, pz + 7]], 'panel-t');
-    a.seg(L(1, 0.58), [0.78, 0.02, pz + 3], 'k-panel-r', 1.2);
-    a.poly([[0.58, -0.2, pz], [0.98, -0.2, pz], [0.98, 0.12, pz + 7], [0.58, 0.12, pz + 7]], 'panel-l');
-    a.box(0.36, 0.36, 0.28, 0.28, zTop, 3, 'woodb', { rim: true });
-    a.cast(0.5, 0.5, zTop + 34);
-    a.ext(...P(0.5, 0.5, zTop + 42));
-    a.anchor('crystal', 0.5, 0.5, zTop + 19);
-    a.anchor('light', 0.5, 0.5, zTop + 19);
-  } else {
-    // montant cassé, planches et cristal éteint au pied
-    const top = L(2, tMax);
-    a.seg(top, [top[0] + 0.22, top[1] - 0.1, top[2] + 9], 'k-tech-t', 2);
-    a.seg(L(3, tMax), [0.26, 0.62, z1 - 6], 'k-panel-l', 1.4);
-    a.box(0.78, 0.62, 0.32, 0.08, 0, 2.5, 'woodd', { rim: true });
-    a.box(0.7, 0.8, 0.08, 0.26, 0, 2.5, 'woodb', { rim: true });
-    const [cx, cy] = P(0.92, 0.95, 2);
-    a.spoly([[cx - 8, cy - 2], [cx + 1, cy - 9], [cx + 6, cy - 1], [cx - 2, cy + 3]], 'glass-l');
-    a.spoly([[cx + 1, cy - 9], [cx + 6, cy - 1], [cx + 9, cy - 5]], 'glass-r');
-    a.ext(cx + 10, cy + 4);
-    a.anchor('light', 0.92, 0.95, 4);
-  }
-  return a.done(4);
-}
 
 export function lanterne() {
   const a = new Art();
@@ -270,46 +178,241 @@ export function erable(seed = 1, m = 'maple') {
   return a.done();
 }
 
-// ---------------------------------------------------------------- Mairie et École
+// ---------------------------------------------------------------- bâtiments du joueur (lot 4)
+// Chaque bâtiment a un état lisible par sa forme, pas seulement sa couleur : chalet vide aux fenêtres
+// condamnées, piquets et cordeau d'un chantier possible, panier posé au coin d'une culture mûre, vieux quai troué.
 
-export function registres() {
+/** Chalet, emprise 1,2 × 1,2. etat : 'vide' (à rebâtir : fenêtres condamnées, toit percé), '' ou 'habite' (fumée). */
+export function chalet(etat = '') {
+  const vide = etat === 'vide';
   const a = new Art();
-  a.box(0.1, 0.1, 1.8, 1.8, 0, 4, 'stoned', { rim: true });
-  const u = 0.3, v = 0.25, du = 1.4, dv = 1.05, H = 26;
-  a.box(u, v, du, dv, 4, H, 'stone');
-  rectU(a, u + du, v + 0.25, v + 0.45, 12, 22, 'win');
-  rectU(a, u + du, v + 0.62, v + 0.82, 12, 22, 'win');
+  const u = 0.16, v = 0.24, du = 0.9, dv = 0.78, H = 16;
+  a.box(u - 0.05, v - 0.05, du + 0.1, dv + 0.1, 0, 3, 'stoned', { rim: true });
+  a.box(u, v, du, dv, 3, H - 3, 'woodb', { top: false });
+  // rondins
+  for (let z = 5.6; z < H - 0.5; z += 2.6) {
+    a.seg([u, v + dv, z], [u + du, v + dv, z], 'k-woodd-l', 0.7, ' opacity=".5"');
+    a.seg([u + du, v, z], [u + du, v + dv, z], 'k-woodd-r', 0.7, ' opacity=".5"');
+  }
   const V = v + dv;
-  rectV(a, V, u + 0.55, u + 0.85, 4, 20, 'wooddk-l');
-  // portique : colonnes devant la face avant
-  for (const cu of [u + 0.12, u + 0.45, u + 0.95, u + 1.28]) a.prism(cu, V + 0.2, 0.06, 4, H, 'stone', 6);
-  a.box(u - 0.04, v, du + 0.08, dv + 0.32, 4 + H, 4, 'stoned', { rim: true });
-  const rf = roofU(a, u - 0.04, v, du + 0.08, dv + 0.32, 4 + H + 4, 15, 'roofb', 'stone', 0.06);
-  const [ox, oy] = P(u + du + 0.04, rf.vm, 4 + H + 9);
-  a.raw(`<circle cx="${f(ox)}" cy="${f(oy)}" r="3.2" class="win"/>`);
-  a.box(u + 0.5, V, 0.4, 0.38, 0, 2.5, 'stoned', { cast: false, rim: true });
-  a.anchor('light', u + 0.7, V + 0.1, 16);
+  rectV(a, V, u + 0.34, u + 0.54, 3, 13, vide ? 'wooddk-l' : 'woodd-l');
+  if (vide) {
+    // fenêtres condamnées : deux planches en croix
+    rectV(a, V, u + 0.66, u + 0.84, 7, 12, 'wooddk-l');
+    a.seg([u + 0.64, V + 0.01, 7.4], [u + 0.86, V + 0.01, 11.6], 'k-woodb-l', 1.6);
+    a.seg([u + 0.64, V + 0.01, 11.6], [u + 0.86, V + 0.01, 7.4], 'k-woodb-l', 1.6);
+    rectU(a, u + du, v + 0.28, v + 0.5, 7, 12, 'wooddk-r');
+    a.seg([u + du + 0.01, v + 0.26, 7.4], [u + du + 0.01, v + 0.52, 11.6], 'k-woodb-r', 1.6);
+  } else {
+    rectV(a, V, u + 0.66, u + 0.84, 7, 12, 'win');
+    rectU(a, u + du, v + 0.28, v + 0.5, 7, 12, 'win');
+    a.box(u + 0.64, V, 0.22, 0.06, 5.6, 1.6, 'woodd', { cast: false });
+    const [fx, fy] = P(u + 0.75, V + 0.03, 7.4);
+    a.raw(`<circle cx="${f(fx - 2.4)}" cy="${f(fy)}" r="1.4" class="fl2-t"/><circle cx="${f(fx + 1.2)}" cy="${f(fy - 0.4)}" r="1.4" class="fl1-t"/>`);
+  }
+  roofU(a, u, v, du, dv, H, 13, 'roof', 'woodb', 0.09, () => {
+    if (!vide) a.box(u + 0.66, v + 0.12, 0.12, 0.12, H + 3, 11, 'stoned', { rim: true });
+  });
+  if (vide) {
+    // toit percé et planche appuyée au mur
+    a.poly([[u + 0.2, v + dv + 0.02, H + 1.5], [u + 0.46, v + dv - 0.08, H + 3.5], [u + 0.42, v + dv - 0.22, H + 7], [u + 0.24, v + dv - 0.16, H + 5]], 'wooddk-l');
+    a.seg([u + du + 0.22, v + dv - 0.1, 0], [u + du + 0.01, v + dv - 0.22, 11], 'k-woodb-r', 2);
+  }
+  const r = a.done(3);
+  if (!vide) r.anchors.light = P(u + 0.75, V + 0.03, 10);
+  if (etat === 'habite') r.anchors.smoke = P(u + 0.72, v + 0.18, H + 15);
+  return r;
+}
+
+/** Piquets et cordeau : un chantier possible, sur une emprise w (u) × h (v). */
+export function piquets(w = 1, h = 1) {
+  const a = new Art();
+  const i = 0.16;
+  const c = [[i, i], [w - i, i], [w - i, h - i], [i, h - i]];
+  for (const [x, y] of [[0, 0], [w, 0], [w, h], [0, h]]) a.ext(...P(x, y));
+  a.seg([...c[0], 6], [...c[1], 6], 'k-rope-t', 0.9);
+  a.seg([...c[0], 6], [...c[3], 6], 'k-rope-t', 0.9);
+  for (const [u, v] of c) a.box(u - 0.03, v - 0.03, 0.06, 0.06, 0, 9, 'woodd', { rim: true });
+  a.seg([...c[3], 6], [...c[2], 6], 'k-rope-l', 0.9);
+  a.seg([...c[1], 6], [...c[2], 6], 'k-rope-r', 0.9);
+  // fanion sur le piquet avant
+  a.poly([[c[2][0], c[2][1], 9], [c[2][0], c[2][1], 14], [c[2][0] - 0.16, c[2][1], 11.5]], 'paper-l');
+  a.seg([...c[2], 9], [...c[2], 14.5], 'k-woodd-l', 0.9);
+  // petite pile de planches
+  const pu = w / 2 - 0.2, pv = h / 2 - 0.08;
+  a.box(pu, pv, 0.4, 0.16, 0, 1.8, 'woodb', { rim: true });
+  a.box(pu + 0.04, pv + 0.02, 0.34, 0.12, 1.8, 1.8, 'woodb', { rim: true });
+  const r = a.done(2);
+  r.shadow = null;
+  return r;
+}
+
+/** Panier tressé : repère « mûre », reconnaissable par sa forme. (x, y) = milieu du fond, en px. */
+function panier(x, y, s = 1) {
+  const rw = 9.5 * s, w = 7.2 * s, ry = 3.4 * s, top = y - 8 * s, band = 1.5 * s;
+  let o = `<ellipse cx="${f(x)}" cy="${f(y + 0.6 * s)}" rx="${f(w + 1.5 * s)}" ry="${f(2.6 * s)}" class="ow-basket-shadow"/>`;
+  o += `<path d="M${f(x - rw * 0.78)},${f(top + 0.6 * s)}Q${f(x)},${f(top - 12 * s)} ${f(x + rw * 0.78)},${f(top + 0.6 * s)}" class="k-woodd-l" stroke-width="${f(1.5 * s)}" stroke-linecap="round"/>`;
+  o += `<ellipse cx="${f(x)}" cy="${f(top)}" rx="${f(rw)}" ry="${f(ry)}" class="wooddk-t"/>`;
+  o += `<ellipse cx="${f(x - 2.4 * s)}" cy="${f(top - 1.6 * s)}" rx="${f(4 * s)}" ry="${f(3 * s)}" class="squash-l"/><ellipse cx="${f(x + 2.8 * s)}" cy="${f(top - 1.2 * s)}" rx="${f(3.4 * s)}" ry="${f(2.6 * s)}" class="squash-r"/>`;
+  o += `<polygon points="${pts([[x - rw, top], [x, top + ry], [x, y + 1.6 * s], [x - w, y]])}" class="woodb-l"/>`;
+  o += `<polygon points="${pts([[x, top + ry], [x + rw, top], [x + w, y], [x, y + 1.6 * s]])}" class="woodb-r"/>`;
+  for (const k of [0.42, 0.74]) {
+    const yl = top + (y - top) * k;
+    o += `<path d="M${f(x - rw + (rw - w) * k)},${f(yl)}L${f(x)},${f(yl + ry * (1 - k * 0.5))}L${f(x + rw - (rw - w) * k)},${f(yl)}" class="k-woodd-l" stroke-width="${f(0.7 * s)}" fill="none" opacity=".8"/>`;
+  }
+  o += `<polygon points="${pts([[x - rw, top], [x, top + ry], [x + rw, top], [x + rw, top + band], [x, top + ry + band], [x - rw, top + band]])}" class="woodd-l"/>`;
+  return o;
+}
+
+// Un plant, du semis à la récolte. Stade : 'seme' (buttes et graines), 'pousse' (feuillage), 'mure' (légume).
+function plant(stade, x, y, crop) {
+  if (stade === 'seme') return `<ellipse cx="${f(x)}" cy="${f(y)}" rx="4" ry="1.8" class="soilr-t"/><path d="M${f(x)},${f(y - 0.5)}q-1.6,-2.4 -3.2,-2M${f(x)},${f(y - 0.5)}q1.4,-2.6 3,-2.5" class="k-sprout-l" stroke-width="1.2" stroke-linecap="round"/>`;
+  const leaf = (dx, dy, w, cls) => `<path d="M${f(x)},${f(y)}Q${f(x + dx - w)},${f(y + dy * 0.4)} ${f(x + dx)},${f(y + dy)}Q${f(x + dx + w)},${f(y + dy * 0.5)} ${f(x)},${f(y)}Z" class="${cls}"/>`;
+  let s = `<ellipse cx="${f(x)}" cy="${f(y + 0.5)}" rx="7" ry="3" class="leafd-r" opacity=".45"/>`;
+  s += leaf(-7, -4, 3, 'leaf-l') + leaf(7, -3.5, 3, 'leaf-r') + leaf(-2, -8, 3.2, 'leafb-t') + leaf(3, -7, 3, 'leaf-t');
+  if (stade !== 'mure') return s;
+  if (crop === 'chou') return s + `<circle cx="${f(x)}" cy="${f(y - 4)}" r="4.2" class="leafb-l"/><path d="M${f(x - 3)},${f(y - 4)}q3,-3.4 6,0" class="k-leafd-t" stroke-width="1"/>`;
+  return s + `<ellipse cx="${f(x + 3)}" cy="${f(y - 1.5)}" rx="5.4" ry="4.2" class="squash-l"/><path d="M${f(x + 3)},${f(y - 5.7)}A5.4,4.2 0 0 1 ${f(x + 3)},${f(y + 2.7)}Z" class="squash-r"/><path d="M${f(x + 3)},${f(y - 5.6)}v-2.2" class="k-woodd-l" stroke-width="1.3"/><ellipse cx="${f(x + 1.4)}" cy="${f(y - 3)}" rx="1.6" ry="1.1" class="squash-t"/>`;
+}
+
+/** Parcelle du potager, emprise 1,6 × 1,6 : terre bordée de planches, et la culture à son stade ('' = rien de semé). */
+export function parcelle(stade = '') {
+  const a = new Art();
+  const u0 = 0.1, v0 = 0.1, s = 1.4;
+  for (const [x, y] of [[0, 0], [1.6, 0], [1.6, 1.6], [0, 1.6]]) a.ext(...P(x, y));
+  a.box(u0 - 0.05, v0 - 0.05, s + 0.1, s + 0.1, 0, 2.2, 'woodd', { cast: false });
+  let g = `<g transform="matrix(${HW},${HH},${-HW},${HH},0,0)" stroke-width=".02">`;
+  g += `<rect x="${u0}" y="${v0}" width="${s}" height="${s}" class="soil-t" stroke="none"/>`;
+  for (const pv of [0.38, 0.73, 1.08, 1.43]) g += `<path d="M${u0 + 0.1},${pv - 0.1}H${u0 + s - 0.1}" class="k-soilf-t" stroke-width=".07" stroke-linecap="round"/><path d="M${u0 + 0.1},${pv}H${u0 + s - 0.1}" class="k-soilr-t" stroke-width=".1" stroke-linecap="round"/>`;
+  g += '</g>';
+  // le dessus de terre est relevé de la hauteur de la bordure
+  a.raw(`<g transform="translate(0 -2.2)">${g}</g>`);
+  if (stade) {
+    const grid = [0.42, 0.77, 1.12, 1.47].flatMap((v) => [0.45, 0.85, 1.25].map((u) => [u, v - 0.1]));
+    grid.sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
+    for (const [u, v] of grid) {
+      const [x, y] = P(u, v, 2.2);
+      a.raw(plant(stade, x, y, (Math.round(u * 10) + Math.round(v * 10)) % 2 ? 'courge' : 'chou'));
+      a.ext(x - 9, y - 14);
+    }
+  }
+  if (stade === 'mure') {
+    const [bx, by] = P(1.62, 1.5);
+    a.raw(panier(bx, by, 1.05));
+    a.ext(bx - 12, by - 24); a.ext(bx + 12, by + 4);
+  }
+  const r = a.done(2);
+  r.shadow = null;
+  return r;
+}
+
+/** Petite serre : tunnel de bois et de toile, emprise 1,9 (u) × 1,5 (v), porte et tuyau de poêle sur le pignon. */
+export function serre(stade = '') {
+  const a = new Art();
+  const u0 = 0.12, u1 = 1.72, v0 = 0.16, v1 = 1.3, vm = (v0 + v1) / 2;
+  a.box(u0, v0 - 0.04, u1 - u0, 0.07, 0, 3, 'woodd', { rim: true });
+  a.box(u0, v1 - 0.03, u1 - u0, 0.07, 0, 3, 'woodd', { rim: true });
+  const arch = [[v0, 2], [v0 + 0.1, 15], [vm, 23], [v1 - 0.1, 15], [v1, 2]];
+  const cls = ['canvas-r', 'canvas-t', 'canvas-t', 'canvas-l'];
+  for (let k = 0; k < 4; k++) {
+    const [va, za] = arch[k], [vb, zb] = arch[k + 1];
+    a.poly([[u0, va, za], [u1, va, za], [u1, vb, zb], [u0, vb, zb]], cls[k], ' fill-opacity=".9"');
+  }
+  for (const u of [u0, u0 + 0.4, u0 + 0.8, u0 + 1.2, u1]) {
+    for (let k = 1; k < 4; k++) a.seg([u, arch[k][0], arch[k][1]], [u, arch[k + 1][0], arch[k + 1][1]], 'k-woodd-l', 0.8);
+  }
+  a.seg([u0, vm, 23], [u1, vm, 23], 'k-woodd-l', 0.8);
+  // pignon (face +u), porte et tuyau du poêle
+  a.poly(arch.map(([v, z]) => [u1, v, z]), 'canvas-r', ' fill-opacity=".94"');
+  for (let k = 0; k < 4; k++) a.seg([u1, arch[k][0], arch[k][1]], [u1, arch[k + 1][0], arch[k + 1][1]], 'k-woodd-r', 0.9);
+  rectU(a, u1, vm - 0.14, vm + 0.14, 2, 14, 'woodd-r');
+  a.box(u0 + 0.3, vm - 0.04, 0.08, 0.08, 20, 9, 'metal', { rim: true });
+  for (const [x, y] of [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]) a.cast(x, y, 2);
+  a.cast(u0, vm, 23); a.cast(u1, vm, 23);
+  // ce qui pousse : des godets devant la porte ; mûr : le panier
+  if (stade) {
+    for (const dv of [-0.2, 0, 0.2]) {
+      const [x, y] = P(u1 + 0.14, vm + dv);
+      a.raw(`<polygon points="${pts([[x - 3, y - 4], [x + 3, y - 4], [x + 2.2, y], [x - 2.2, y]])}" class="soilr-l"/>${plant(stade === 'mure' ? 'pousse' : stade, x, y - 4, 'chou')}`);
+      a.ext(x - 8, y - 14); a.ext(x + 8, y + 2);
+    }
+  }
+  if (stade === 'mure') {
+    const [bx, by] = P(u1 + 0.1, v1 + 0.12);
+    a.raw(panier(bx, by, 1.05));
+    a.ext(bx - 12, by - 24); a.ext(bx + 12, by + 4);
+  }
+  return a.done(2);
+}
+
+/** Éolienne, emprise 1 × 1 : mât, nacelle et rotor à trois pales (tourne quand l'île est éveillée). */
+export function eolienne() {
+  const a = new Art();
+  a.box(0.3, 0.3, 0.4, 0.4, 0, 3, 'stoned', { rim: true });
+  a.prism(0.5, 0.5, 0.07, 3, 62, 'metal', 6);
+  a.box(0.42, 0.36, 0.16, 0.3, 64, 6, 'metal', { rim: true });
+  const [hx, hy] = P(0.5, 0.68, 67);
+  let blades = '';
+  for (let k = 0; k < 3; k++) {
+    const t = (k / 3) * Math.PI * 2 - Math.PI / 2;
+    const c = Math.cos(t), s = Math.sin(t), L = 30, W = 3.2;
+    const tip = [hx + c * L, hy + s * L];
+    const p1 = [hx - s * W, hy + c * W], p2 = [hx + c * L * 0.3 - s * W * 1.1, hy + s * L * 0.3 + c * W * 1.1];
+    blades += `<polygon points="${pts([p1, p2, tip, [hx + s * 1, hy - c * 1]])}" class="${k === 1 ? 'metal-r' : 'metal-l'}"/>`;
+  }
+  a.raw(`<g class="ow-rotor" style="transform-origin:${f(hx)}px ${f(hy)}px">${blades}<circle cx="${f(hx)}" cy="${f(hy)}" r="3.2" class="tech-t"/></g>`);
+  a.ext(hx - 31, hy - 31); a.ext(hx + 31, hy + 31);
+  a.castS(hx, hy, 67); a.cast(0.45, 0.45, 0); a.cast(0.55, 0.55, 0);
+  return a.done(2);
+}
+
+/** Grenier, emprise 2 × 2 : grange de planches, grande porte et porte de fenil sur le pignon. */
+export function grenier() {
+  const a = new Art();
+  const u = 0.25, v = 0.3, du = 1.45, dv = 1.25, H = 22;
+  a.box(u - 0.06, v - 0.06, du + 0.12, dv + 0.12, 0, 3, 'stoned', { rim: true });
+  a.box(u, v, du, dv, 3, H - 3, 'woodb', { top: false });
+  for (let uu = u + 0.11; uu < u + du - 0.04; uu += 0.11) a.seg([uu, v + dv, 3.5], [uu, v + dv, H], 'k-woodd-l', 0.6, ' opacity=".45"');
+  for (let vv = v + 0.11; vv < v + dv - 0.04; vv += 0.11) a.seg([u + du, vv, 3.5], [u + du, vv, H], 'k-woodd-r', 0.6, ' opacity=".45"');
+  const V = v + dv, U = u + du, vm = v + dv / 2;
+  rectV(a, V, u + 0.25, u + 0.5, 11, 16, 'win');
+  rectV(a, V, u + 0.95, u + 1.2, 11, 16, 'win');
+  // grande porte à deux battants, écharpes en X
+  rectU(a, U, vm - 0.36, vm + 0.36, 3, 16, 'woodd-r');
+  a.seg([U, vm, 3], [U, vm, 16], 'k-wooddk-r', 1);
+  for (const [a0, a1] of [[vm - 0.36, vm], [vm, vm + 0.36]]) {
+    a.seg([U, a0, 3.5], [U, a1, 15.5], 'k-woodb-r', 1.1);
+    a.seg([U, a0, 15.5], [U, a1, 3.5], 'k-woodb-r', 1.1);
+  }
+  roofU(a, u, v, du, dv, H, 20, 'roofb', 'woodb', 0.1, () => {
+    // porte de fenil, foin qui dépasse
+    rectU(a, U, vm - 0.16, vm + 0.16, H + 2, H + 9, 'hay-r');
+    a.seg([U, vm - 0.16, H + 9], [U, vm + 0.16, H + 9], 'k-woodd-r', 1.2);
+  });
+  a.box(U + 0.08, v + 0.1, 0.22, 0.22, 0, 5, 'hay', { rim: true }); // botte de foin
+  a.anchor('light', u + 0.37, V + 0.03, 14);
   return a.done(3);
 }
 
-export function maison() {
+/** Quai, emprise 1 × 0,9, posé sur le lac. etat : 'vieux' (planches manquantes, poteaux cassés) ou neuf. */
+export function quai(etat = '') {
+  const vieux = etat === 'vieux';
   const a = new Art();
-  const u = 0.2, v = 0.45, du = 1.6, dv = 0.95, H = 20;
-  a.box(u - 0.05, v - 0.05, du + 0.1, dv + 0.1, 0, 3, 'stoned', { rim: true });
-  a.box(u, v, du, dv, 3, H - 3, 'woodb', { top: false });
-  for (let vv = v + 0.12; vv < v + dv - 0.04; vv += 0.12) a.seg([u + du, vv, 3.5], [u + du, vv, H], 'k-woodd-r', 0.6, ' opacity=".45"');
-  const V = v + dv;
-  rectV(a, V, u + 0.7, u + 0.92, 3, 16, 'woodd-l');
-  rectV(a, V, u + 0.2, u + 0.46, 9, 15, 'win');
-  rectV(a, V, u + 1.16, u + 1.42, 9, 15, 'win');
-  a.box(u + 0.18, V, 0.3, 0.08, 7, 2.2, 'woodd', { cast: false });
-  a.box(u + 1.14, V, 0.3, 0.08, 7, 2.2, 'woodd', { cast: false });
-  const [fx1, fy1] = P(u + 0.33, V + 0.04, 9.6), [fx2, fy2] = P(u + 1.29, V + 0.04, 9.6);
-  a.raw(`<circle cx="${f(fx1 - 3)}" cy="${f(fy1)}" r="1.5" class="fl3-t"/><circle cx="${f(fx1 + 1)}" cy="${f(fy1 - 0.5)}" r="1.5" class="fl2-t"/><circle cx="${f(fx2)}" cy="${f(fy2)}" r="1.5" class="fl1-t"/>`);
-  roofU(a, u, v, du, dv, H, 20, 'roof', 'woodb', 0.09, () => a.box(u + 0.3, v + 0.12, 0.14, 0.14, H + 4, 18, 'stoned', { rim: true }));
-  a.box(u + 1.7, v + 0.1, 0.14, 0.5, 0, 6, 'woodd', { rim: true }); // banc
-  a.anchor('light', u + 0.81, V + 0.05, 17);
-  return a.done(3);
+  const posts = [[0.08, 0.1, 6], [0.88, 0.1, vieux ? 3 : 6], [0.08, 0.86, vieux ? 2 : 6], [0.88, 0.86, 6]];
+  for (const [u, v, h] of posts) a.box(u - 0.04, v - 0.04, 0.08, 0.08, -4, h + 4, 'woodd', { cast: false });
+  if (vieux) {
+    a.box(0, 0.02, 0.96, 0.32, 1.5, 2.5, 'woodb', { rim: true, cast: false });
+    a.box(0.5, 0.36, 0.46, 0.2, 1.5, 2.5, 'woodd', { rim: true, cast: false });
+    a.poly([[0.06, 0.62, 0], [0.4, 0.62, 2.5], [0.4, 0.8, 2.5], [0.06, 0.8, 0]], 'woodd-t'); // planche tombée
+  } else {
+    a.box(0, 0.02, 0.96, 0.9, 1.5, 2.5, 'woodb', { rim: true, cast: false });
+    for (let vv = 0.17; vv < 0.9; vv += 0.15) a.seg([0, vv, 4], [0.96, vv, 4], 'k-woodd-t', 0.6, ' opacity=".55"');
+    a.prism(0.82, 0.74, 0.06, 4, 7, 'woodd', 6, { rim: true }); // bitte d'amarrage
+    a.seg([0.82, 0.74, 9], [0.5, 1.15, 0], 'k-rope-t', 1);
+  }
+  const r = a.done(2);
+  r.shadow = null;
+  return r;
 }
 
 // ---------------------------------------------------------------- décor
@@ -397,17 +500,20 @@ export function characterSVG() {
 /** Construit l'art d'une entité (voir scene.js). Mis en cache par clé : un même modèle n'est dessiné qu'une fois. */
 export function artFor(e) {
   switch (e.model) {
-    case 'bastion': return bastion();
-    case 'tour': return tour(!!e.variant);
     case 'lanterne': return lanterne();
     case 'cloture': return cloture(!!e.end);
     case 'caisse': return caisse(e.seed || 1);
     case 'glaciere': return glaciere();
     case 'etabli': return etabli();
     case 'atelier': return atelier(e.variant === 'abime');
+    case 'chalet': return chalet(e.variant || '');
+    case 'parcelle': return parcelle(e.variant || '');
+    case 'serre': return serre(e.variant || '');
+    case 'eolienne': return eolienne();
+    case 'grenier': return grenier();
+    case 'quai': return quai(e.variant || '');
+    case 'piquets': return piquets(e.w || 1, e.h || 1);
     case 'erable': return erable(e.seed || 1);
-    case 'registres': return registres();
-    case 'maison': return maison();
     case 'epinette': return epinette(e.seed || 1, e.s || 1);
     case 'arbre': return arbre(e.seed || 1, e.m || 'leaf', e.s || 1);
     case 'buisson': return buisson(e.seed || 1, e.m || 'leaf');
@@ -416,7 +522,7 @@ export function artFor(e) {
   }
 }
 
-export const MODEL_IDS = ['bastion', 'tour', 'lanterne', 'cloture', 'caisse', 'atelier', 'etabli', 'erable', 'glaciere', 'registres', 'maison'];
+export const MODEL_IDS = ['lanterne', 'cloture', 'caisse', 'atelier', 'etabli', 'erable', 'glaciere', 'chalet', 'parcelle', 'serre', 'eolienne', 'grenier', 'quai', 'piquets'];
 
 /** Hauteur approximative (px monde) au-dessus du sol, pour viser le haut d'un objet. */
 export function artTop(art) { return art.y; }

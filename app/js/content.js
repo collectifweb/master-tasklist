@@ -10,7 +10,11 @@ export async function loadContent() {
     if (!r.ok) throw new Error('Texte introuvable : ' + f);
     return r.json();
   };
-  const [ui, repliques, ancres] = await Promise.all([get('interface.json'), get('repliques.json'), get('ancres.json')]);
+  const [ui, repliques, ancres, batiments] = await Promise.all([get('interface.json'), get('repliques.json'), get('ancres.json'), get('batiments.json')]);
+  // bâtiments : bat.<groupe>.<clé> (bat.chalet.nom, bat.fiche.quoi…), lus aussi par le monde
+  for (const [groupe, textes] of Object.entries(batiments)) {
+    if (textes && typeof textes === 'object') for (const [k, v] of Object.entries(textes)) ui[`bat.${groupe}.${k}`] = v;
+  }
   content.ui = ui;
   content.repliques = repliques;
   content.ancres = ancres;

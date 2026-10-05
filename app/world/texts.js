@@ -31,10 +31,9 @@ const DEFAULTS = {
   'monde.reflet': '{objet} reluit {au_secteur}.',
   'monde.select.object': '{objet}, {au_secteur}.',
 
-  'monde.obj.bastion': 'Grande halle', 'monde.obj.tour': 'Tour de guet', 'monde.obj.tour.abimee': 'Vieille tour de guet',
   'monde.obj.lanterne': 'Lanterne', 'monde.obj.cloture': 'Clôture', 'monde.obj.caisse': 'Caisse d’échéance',
   'monde.obj.convoi': 'Pièces de rechange', 'monde.obj.atelier': 'Atelier', 'monde.obj.etabli': 'Établi',
-  'monde.obj.erable': 'Érable', 'monde.obj.glaciere': 'Glacière', 'monde.obj.registres': 'Mairie', 'monde.obj.maison': 'École',
+  'monde.obj.erable': 'Érable', 'monde.obj.glaciere': 'Glacière',
   'monde.obj.fanal': 'Fanal, vieux robot de déneigement', 'monde.obj.fanal.travail': 'Fanal, au travail avec toi',
   'monde.crate.days': 'dans {n} jours', 'monde.crate.today': 'aujourd’hui', 'monde.crate.passed': 'elle attend au bord du chemin',
 
@@ -69,6 +68,24 @@ export function makeTexts(...sources) {
   };
   t.has = (key) => key in table;
   return t;
+}
+
+/** Nom d'un bâtiment de la carte selon son état : « Chalet », « Chalet vide », « Emplacement de l’éolienne ». */
+export function batimentNom(t, b) {
+  return t(`bat.${b.type}.${b.bati ? 'nom' : 'vide'}`);
+}
+
+/**
+ * Où en est un bâtiment (vue de view.js), en quelques mots : « à rebâtir », « verrouillé : Hameau : encore 2
+ * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 »… Le même texte sur la carte et dans la liste.
+ */
+export function batimentEtat(t, b, { loge = 2 } = {}) {
+  if (!b.bati) return b.refus ? t('bat.etat.verrou', { raison: b.refus }) : t('bat.etat.libre', { geste: t(`bat.${b.type}.geste`).toLowerCase() });
+  if (b.etat === 'mure') return t('bat.etat.mure');
+  if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
+  if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
+  if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: loge });
+  return t('bat.etat.debout');
 }
 
 /** « 7 tâches Terrain », « 1 tâche Maison », « 3 autres tâches » (Place du village, sans domaine). */

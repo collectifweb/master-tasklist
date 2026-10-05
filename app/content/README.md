@@ -8,6 +8,7 @@ Tout le texte visible de « La lisière rallumée » vit ici, en JSON UTF-8, ave
 | `fr-CA/lettres.json` | Les lettres de Fanal : matin, matin sans quête, retour |
 | `fr-CA/chapitres.json` | L'introduction, les chapitres 1 et 2 et l'Avis « Premier gel » |
 | `fr-CA/interface.json` | Les petits textes d'interface (boutons, tris, états, confirmations…) |
+| `fr-CA/batiments.json` | Les bâtiments du village : noms, fiches à trois lignes (ce que c'est, ce que ça fait, maintenant), états et annonces. Lus sous `bat.<groupe>.<clé>` ; les raisons de refus viennent de `core/batiments.js` |
 | `fr-CA/ancres.json` | Les objets-ancres et mots-clés qui servent à deviner le domaine. Tenu à part, voir le fichier lui-même |
 
 Vérifier un fichier après modification : `python3 -m json.tool app/content/fr-CA/repliques.json > /dev/null`.

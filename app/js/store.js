@@ -14,6 +14,7 @@ const ACTIONS = {
   unarchiveQuest: core.unarchiveQuest, deleteQuest: core.deleteQuest, claimBonus: core.claimBonus, openApp: core.openApp,
   advanceTime: core.advanceTime, markLetterShown: core.markLetterShown, migrateGame: core.migrateGame,
   jourSuivant: core.jourSuivant,
+  construire: core.construire, semer: core.semer, recolter: core.recolter, accueillir: core.accueillir,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */

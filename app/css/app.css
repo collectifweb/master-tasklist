@@ -263,6 +263,42 @@
   margin: 0;
 }
 
+/* Fiche d'un bâtiment : son dessin de la carte, son nom, puis les trois lignes de l'aide */
+.bat-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.bat-thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-md);
+  background: var(--c-sage-wash);
+}
+.bat-thumb[hidden] { display: none; }
+.bat-thumb svg { width: 56px; height: 56px; overflow: visible; }
+[data-bati="false"] .bat-thumb { background: var(--c-sunken); }
+.bat-body .help-line dd p { margin: 0; }
+.bat-body .bat-raison {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: var(--sp-2);
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.bat-raison .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+.bat-foot[hidden] { display: none; }
+
 /* ───────── Lettre du matin ───────── */
 .letter-title {
   display: flex;

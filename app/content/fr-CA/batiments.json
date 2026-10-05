@@ -1,0 +1,109 @@
+{
+  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur.",
+  "chalet": {
+    "nom": "Chalet",
+    "vide": "Chalet vide",
+    "quoi": "Un chalet de bois rond, chauffé et habité.",
+    "quoiVide": "Un vieux chalet de l’Orée, vide depuis des années. Le toit est percé, mais les murs tiennent.",
+    "fait": "Loge {loge} habitants.",
+    "geste": "Rebâtir"
+  },
+  "parcelle": {
+    "nom": "Parcelle du potager",
+    "vide": "Coin de potager à défricher",
+    "quoi": "Un carré de terre noire, bordé de planches.",
+    "quoiVide": "Un coin de terre envahi d’herbes, piqueté pour agrandir le potager.",
+    "fait": "De mai à octobre, une récolte de {recolte} Nourriture après {jours} jours travaillés. Le 1er novembre, ce qui est en terre mûrit d’un coup.",
+    "geste": "Défricher"
+  },
+  "atelier": {
+    "nom": "Atelier",
+    "vide": "Atelier abîmé",
+    "quoi": "L’atelier du village : établi, outils et grande porte.",
+    "quoiVide": "L’ancien atelier, la toiture arrachée par le vent.",
+    "fait": "Une fois réparé, il permet de bâtir la petite serre et, au hameau, l’éolienne.",
+    "geste": "Réparer",
+    "maintenant": "Il est réparé : rien à y faire pour l’instant."
+  },
+  "serre": {
+    "nom": "Petite serre",
+    "vide": "Emplacement de la petite serre",
+    "quoi": "Un tunnel de bois et de toile, avec un petit poêle.",
+    "quoiVide": "Un terrain plat et ensoleillé, piqueté pour une petite serre.",
+    "fait": "Toute l’année, une récolte de {recolte} Nourriture après {jours} jours travaillés. De novembre à avril, chaque semis coûte aussi {chauffage} Énergie de chauffage.",
+    "geste": "Bâtir"
+  },
+  "eolienne": {
+    "nom": "Éolienne",
+    "vide": "Emplacement de l’éolienne",
+    "quoi": "Un mât et trois pales, sur la butte qui prend le vent du lac.",
+    "quoiVide": "La butte qui prend le vent du lac, piquetée pour une éolienne.",
+    "fait": "{n} Énergie de plus chaque jour où tu termines au moins une quête.",
+    "geste": "Bâtir",
+    "maintenant": "Elle tournera à ta première quête terminée aujourd’hui.",
+    "maintenant.fait": "Elle a tourné aujourd’hui : {n} Énergie de plus."
+  },
+  "grenier": {
+    "nom": "Grenier",
+    "vide": "Emplacement du grenier",
+    "quoi": "Une grange de planches, son fenil plein de foin.",
+    "quoiVide": "Un grand terrain plat, piqueté pour un grenier.",
+    "fait": "Garde {n} Nourriture de plus en réserve.",
+    "geste": "Bâtir",
+    "maintenant": "Réserve : {stock} Nourriture sur {max}."
+  },
+  "quai": {
+    "nom": "Quai",
+    "vide": "Vieux quai",
+    "quoi": "Un quai de planches neuves, sur le lac.",
+    "quoiVide": "Le vieux quai du lac : des planches manquent, un poteau est cassé.",
+    "fait": "Les visiteurs accosteront ici avec leurs commandes (bientôt).",
+    "geste": "Rebâtir",
+    "maintenant": "Il est rebâti. Les visiteurs ne sont pas encore arrivés."
+  },
+  "etat": {
+    "libre": "à {geste}",
+    "verrou": "verrouillé : {raison}",
+    "mure": "mûr, à récolter",
+    "pousse.one": "mûr dans {n} jour travaillé",
+    "pousse.other": "mûr dans {n} jours travaillés",
+    "rien": "rien de semé",
+    "chalet.zero": "prêt pour une famille",
+    "chalet.one": "{n} habitant sur {max}",
+    "chalet.other": "{n} habitants sur {max}",
+    "debout": "debout"
+  },
+  "fiche": {
+    "quoi": "Ce que c’est",
+    "fait": "Ce que ça fait",
+    "maintenant": "Maintenant",
+    "cout": "Coûte {cout}.",
+    "semer": "Semer",
+    "semer.cout": "Rien n’est semé. Semer coûte {cout}.",
+    "semer.chauffage": "Rien n’est semé. Semer coûte {semis} Énergie, plus {chauffage} Énergie de chauffage jusqu’à la fin d’avril.",
+    "recolter": "Récolter",
+    "pousse.one": "Semé le {date}. Mûr dans {n} jour travaillé : un jour où tu termines au moins une quête.",
+    "pousse.other": "Semé le {date}. Mûr dans {n} jours travaillés : des jours où tu termines au moins une quête.",
+    "mure": "C’est mûr : {n} Nourriture à récolter.",
+    "accueillir": "Accueillir une famille",
+    "chalet.zero": "Personne n’y vit encore. Accueillir une famille coûte {n} Nourriture.",
+    "chalet.one": "{occupants} habitant sur {loge}. Accueillir une famille coûte {n} Nourriture.",
+    "chalet.other": "{occupants} habitants sur {loge}. Accueillir une famille coûte {n} Nourriture.",
+    "ouvrir": "Ouvrir la fiche",
+    "ouvrir.label": "Ouvrir la fiche : {nom}",
+    "fermer": "Fermer la fiche"
+  },
+  "sr": {
+    "construction": "{nom} : c’est bâti. {cout} dépensés.",
+    "semis": "Semé : {nom}. {cout} dépensés.",
+    "recolte": "Récolte : {n} Nourriture.",
+    "recolte.perdu": "Récolte : {n} Nourriture. {perdu} n’ont pas tenu dans le stockage.",
+    "famille": "Une famille s’installe. Le village compte {n} habitants.",
+    "famille.one": "Une famille s’installe. Le village compte 1 habitant.",
+    "rang": "Nouveau rang : {rang}."
+  },
+  "plan": {
+    "titre": "Bâtiments",
+    "intro": "Chaque emplacement de l’île, ce qui s’y trouve et ce qu’on peut y faire."
+  }
+}

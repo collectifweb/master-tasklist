@@ -123,6 +123,26 @@
         {"id": "quest.undo.05", "voix": "fanal", "texte": "Remballée sans bruit. Elle t’attend tranquillement."}
       ]
     },
+    "batiment.construit": {
+      "quand": "Un bâtiment vient d’être bâti, rebâti ou réparé (chalet, parcelle, atelier, serre, éolienne, grenier, quai).",
+      "frequence": 1,
+      "variantes": [
+        {"id": "batiment.construit.01", "voix": "fanal", "texte": "Ça tient debout. J’ai cogné dessus pour vérifier."},
+        {"id": "batiment.construit.02", "voix": "fanal", "texte": "Un chantier de fini. L’Orée a meilleure mine."},
+        {"id": "batiment.construit.03", "voix": "fanal", "texte": "Bien bâti. Je ramasse les copeaux, c’est ma partie."},
+        {"id": "batiment.construit.04", "voix": "fanal", "texte": "Les planches ont trouvé leur place. Moi aussi, un peu."}
+      ]
+    },
+    "famille.arrive": {
+      "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
+      "frequence": 1,
+      "variantes": [
+        {"id": "famille.arrive.01", "voix": "fanal", "texte": "Du monde nouveau! J’ai déneigé l’entrée, par habitude."},
+        {"id": "famille.arrive.02", "voix": "fanal", "texte": "Bienvenue à l’Orée. Il y a de la fumée à la cheminée, enfin."},
+        {"id": "famille.arrive.03", "voix": "fanal", "texte": "Une famille de plus. Le village parle plus fort, j’aime ça."},
+        {"id": "famille.arrive.04", "voix": "fanal", "texte": "Ils ont apporté une tarte. J’en mange pas, mais c’est gentil."}
+      ]
+    },
     "deadline.soon": {
       "quand": "Une fois par quête, quand son échéance passe à 7 jours ou moins (la quête devient une caisse sur la route).",
       "frequence": 1,

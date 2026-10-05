@@ -75,7 +75,7 @@ export function paletteCSS(tokenRoot) {
   };
 
   let s = '';
-  s += `.ow{${decl(Object.keys(base))};--lampg-off:#6d6b5f;--lampg-on:${tk.lantern};--win-day:#4f7f82;--win-night:#ffd98c}`;
+  s += `.ow,.ow-thumb{${decl(Object.keys(base))};--lampg-off:#6d6b5f;--lampg-on:${tk.lantern};--win-day:#4f7f82;--win-night:#ffd98c}`;
   // classes de remplissage et de trait
   for (const m of Object.keys(base)) {
     for (const k of SHADES) s += `.${m}-${k}{fill:var(--${m}-${k});stroke:var(--${m}-${k})}.k-${m}-${k}{stroke:var(--${m}-${k});fill:none}`;
