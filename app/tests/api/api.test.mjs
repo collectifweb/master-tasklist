@@ -166,7 +166,8 @@ const cptFile = (s) => join(s.dataDir, 'lockout.json');
 test('blocage : 4 jetons faux puis le bon → 200 et compteur remis à zéro', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
   for (let i = 0; i < 4; i++) assert.equal((await s.get(bad)).status, 401);
   assert.equal((await s.get(good)).status, 200);
-  assert.equal(existsSync(cptFile(s)), false, 'plus aucune entrée après un bon jeton');
+  const moi = createHash('sha256').update('127.0.0.1').digest('hex');
+  assert.ok(!(moi in JSON.parse(readFileSync(cptFile(s), 'utf8'))), 'plus d’entrée pour cette adresse après un bon jeton');
   // le compteur repart de zéro : 4 nouveaux faux ne bloquent pas
   for (let i = 0; i < 4; i++) assert.equal((await s.get(bad)).status, 401);
   assert.equal((await s.get(good)).status, 200);
@@ -217,7 +218,7 @@ test('blocage : le blocage expire, et les vieilles entrées sont purgées', () =
   writeFileSync(cptFile(s), JSON.stringify({ 'autre-cle': { fails: [now - 90000], until: now - 90000 } }));
   assert.equal((await s.get(bad)).status, 401);
   const after = JSON.parse(readFileSync(cptFile(s), 'utf8'));
-  assert.ok(!('autre-cle' in after) && Object.keys(after).length === 1);
+  assert.deepEqual(Object.keys(after).sort(), ['*', createHash('sha256').update('127.0.0.1').digest('hex')].sort());
 }));
 
 test('blocage : fichier de compteurs abîmé → aucun blocage', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
@@ -260,16 +261,35 @@ test('blocage : clé par adresse IPv4, et par préfixe /64 en IPv6', () => withS
   assert.notEqual(key('::ffff:203.0.113.7'), key('::ffff:203.0.113.8'));
 }));
 
-test('blocage : le fichier de compteurs ne grossit pas sans limite', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+test('blocage : seules les entrées sans information sont purgées (jamais un compteur vivant)', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
   assert.equal((await s.get(good)).status, 200); // crée le dossier de données
   const now = Math.floor(Date.now() / 1000);
-  const many = {};
-  for (let i = 0; i < 700; i++) many['cle-' + i] = { fails: [now - 600 + (i % 500)] };
-  writeFileSync(cptFile(s), JSON.stringify(many));
+  const moi = createHash('sha256').update('127.0.0.1').digest('hex');
+  // 700 entrées échues (aucun échec dans les 15 dernières minutes) : purgées
+  const stale = {};
+  for (let i = 0; i < 700; i++) stale['vieille-' + i] = { fails: [now - 1000 - i] };
+  writeFileSync(cptFile(s), JSON.stringify(stale));
   assert.equal((await s.get(bad)).status, 401);
-  const after = JSON.parse(readFileSync(cptFile(s), 'utf8'));
-  assert.ok(Object.keys(after).length <= 500, `${Object.keys(after).length} entrées`);
-  assert.ok(createHash('sha256').update('127.0.0.1').digest('hex') in after, 'la clé qui vient d’échouer est gardée');
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(cptFile(s), 'utf8'))).sort(), ['*', moi].sort());
+  // 600 compteurs vivants d'autres adresses + 4 échecs ici : le 5e bloque bien cette adresse (pas d'éviction)
+  const live = {};
+  for (let i = 0; i < 600; i++) live['vivante-' + i] = { fails: [now - 60] };
+  live[moi] = { fails: [now - 50, now - 40, now - 30, now - 20] };
+  writeFileSync(cptFile(s), JSON.stringify(live));
+  assert.equal((await s.get(bad)).status, 401);
+  assert.equal((await s.get(good)).status, 429);
+  assert.ok('vivante-599' in JSON.parse(readFileSync(cptFile(s), 'utf8')));
+}));
+
+test('blocage : budget commun de 20 jetons faux en 15 min, toutes adresses confondues', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  assert.equal((await s.get(good)).status, 200); // crée le dossier de données
+  const now = Math.floor(Date.now() / 1000);
+  writeFileSync(cptFile(s), JSON.stringify({ '*': { fails: Array.from({ length: 19 }, (_, i) => now - 100 + i) } }));
+  assert.equal((await s.get(bad)).status, 401); // 20e jeton faux jugé
+  const r = await s.get(good);
+  assert.equal(r.status, 429, 'plus aucun jeton jugé, même le bon');
+  assert.ok(Number(r.headers.get('retry-after')) > 880);
+  assert.equal((await s.get()).status, 429);
 }));
 
 test('tasks.json corrompu : 503 et fichier intact', () => withServer({ tasksRaw: '[{"id": "a1", "task": ' }, async (s) => {
