@@ -1,0 +1,86 @@
+/*
+ * La lisière rallumée : ajouts propres à l'app (semaine 1).
+ * Charger après tokens.css, base.css et components.css. Aucun jeton nouveau : tout vient de tokens.css.
+ * Composants ajoutés ici parce que la page de référence n'en a pas : la bulle de réplique (.speech),
+ * la zone d'état du panneau (.panel-status) et le conteneur du monde vivant (.world-live).
+ */
+
+/* Monde vivant : posé sur l'illustration statique, qui disparaît quand le monde répond */
+.world-live {
+  position: absolute;
+  inset: 0;
+}
+.world-slot[data-world="live"] .world-backdrop,
+.world-slot[data-world="live"] .world-stage {
+  display: none;
+}
+
+/* Zone d'état du panneau : connexion et messages courts, sous l'en-tête */
+.panel-status {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--gutter) 0;
+}
+.panel-status:not(:has(> :not([hidden]))) {
+  display: none;
+}
+/* Quand un message est affiché, le panneau replié gagne sa hauteur : « Fait » reste visible */
+.app[data-status] {
+  --panel-peek: calc(clamp(248px, 30dvh, 300px) + 56px);
+}
+@media (min-width: 700px) {
+  .app[data-status] {
+    --panel-peek: calc(clamp(272px, 26dvh, 340px) + 56px);
+  }
+}
+.panel-status .sync .btn--icon {
+  margin-left: auto;
+}
+
+/* Réplique d'un personnage : bulle posée sur le monde, sous la voie d'annonce. Elle ne capte aucun toucher. */
+.speech {
+  position: absolute;
+  z-index: var(--z-lane);
+  top: calc(var(--world-safe-top) + var(--sp-1));
+  left: calc(var(--sp-2) + var(--safe-left));
+  display: grid;
+  gap: 2px;
+  max-width: min(380px, calc(100% - 2 * var(--sp-2) - var(--world-cover-right)));
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+  font-size: var(--text-14);
+  line-height: var(--lh-snug);
+  pointer-events: none;
+}
+.speech[hidden] {
+  display: none;
+}
+.speech.is-shown {
+  animation: speech-in var(--t-short) var(--ease-out);
+}
+.speech-name {
+  font-size: var(--text-12);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.02em;
+  color: var(--c-glass-ink);
+}
+@keyframes speech-in {
+  from { opacity: 0; transform: translateY(calc(var(--motion) * -8px)); }
+}
+@media (min-width: 700px) {
+  .speech {
+    left: max(var(--gutter), calc((100% - 720px) / 2));
+  }
+}
+@media (min-width: 1000px), (min-width: 700px) and (orientation: landscape) {
+  .speech {
+    left: calc(var(--gutter) + var(--safe-left));
+  }
+}
+
+/* Quête en lecture seule : la raison s'écrit sous les boutons grisés */
+.fil-quest > .btn-reason {
+  grid-column: 1 / -1;
+}

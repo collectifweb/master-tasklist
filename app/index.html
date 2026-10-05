@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8ccbe0">
+<title>La lisière rallumée</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/app.css">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<h1 class="sr-only">La lisière rallumée</h1>
+
+<main class="app" id="app" data-panel="peek">
+
+  <div class="world-slot">
+    <div class="world-backdrop" aria-hidden="true">
+      <svg class="world-horizon" viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true">
+        <polygon fill="#9fb7a6" points="0,30 0,20 5,11 10,21 14,9 18,20 23,9 27,19 32,12 37,19 43,7 48,19 53,8 57,21 63,9 69,21 73,7 77,20 81,11 86,20 92,11 99,20 105,10 111,20 115,12 119,20 125,9 131,20 137,9 143,20 149,8 155,20 161,9 167,21 173,10 179,21 183,9 188,21 192,9 197,19 203,7 209,20 215,10 222,21 228,8 234,20 240,6 247,20 253,12 259,21 265,6 270,21 275,10 280,21 284,9 288,19 293,12 297,21 301,10 306,20 312,11 319,20 325,6 330,21 337,10 344,20 349,6 354,21 358,11 363,20 367,9 372,20 377,12 382,20 387,8 392,21 398,9 400,21 400,30"/>
+        <polygon fill="#6f8f7c" points="0,30 0,26 8,17 15,27 24,11 32,27 38,14 45,25 52,17 60,25 66,16 72,26 77,17 82,25 87,14 93,25 101,13 110,25 116,14 122,26 127,11 133,27 140,14 146,25 152,15 157,26 166,16 174,25 183,13 192,25 199,17 206,26 215,11 224,27 230,14 236,25 244,13 252,27 258,15 265,27 274,11 282,27 291,12 299,26 306,14 313,25 318,15 323,26 331,10 339,26 348,10 356,27 363,15 369,26 375,16 381,27 390,11 398,26 400,20 400,30"/>
+      </svg>
+    </div>
+    <div class="world-stage">
+      <svg class="world-island" viewBox="0 0 400 270" role="img" aria-label="L'île de l'Orée, vue de loin : emplacement réservé au monde de la semaine 2">
+        <ellipse cx="200" cy="246" rx="176" ry="22" fill="#1d3336" opacity=".16"/>
+        <g stroke="#b6e1d9" stroke-width="2.2" stroke-linecap="round" opacity=".75">
+          <path d="M36 196h30M326 206h34M84 238h28M268 250h30"/>
+        </g>
+        <!-- socle en strates -->
+        <polygon points="30,120 200,205 200,213 30,128" fill="#86a556"/>
+        <polygon points="30,128 200,213 200,251 30,166" fill="#a3683f"/>
+        <polygon points="30,148 200,233 200,251 30,166" fill="#8c5a3b"/>
+        <polygon points="200,205 370,120 370,128 200,213" fill="#6f8c47"/>
+        <polygon points="200,213 370,128 370,166 200,251" fill="#7a492d"/>
+        <polygon points="200,233 370,148 370,166 200,251" fill="#64412e"/>
+        <!-- dessus -->
+        <polygon points="200,35 370,120 200,205 30,120" fill="#a9bf6c"/>
+        <polygon points="125.2,72.4 295.2,157.4 274.8,167.6 104.8,82.6" fill="#e8d29f"/>
+        <polygon points="274.8,72.4 295.2,82.6 125.2,167.6 104.8,157.4" fill="#e8d29f"/>
+        <!-- secteur encore sous la cendre -->
+        <polygon points="295.2,82.6 370,120 295.2,157.4 220.4,120" fill="#bdb6a9"/>
+        <g fill="#a39b8d">
+          <circle cx="282" cy="104" r="1.6"/><circle cx="318" cy="118" r="1.4"/><circle cx="300" cy="140" r="1.8"/>
+          <circle cx="262" cy="126" r="1.3"/><circle cx="335" cy="128" r="1.5"/><circle cx="290" cy="122" r="1.2"/>
+        </g>
+        <g fill="#d3cdc1">
+          <circle cx="306" cy="98" r="1.3"/><circle cx="275" cy="137" r="1.4"/><circle cx="324" cy="138" r="1.2"/>
+        </g>
+        <!-- Champs -->
+        <polygon points="108.2,92.8 162.6,120 150.7,125.95 96.3,98.75" fill="#a3683f"/>
+        <polygon points="87.8,103 142.2,130.2 130.3,136.15 75.9,108.95" fill="#8fc25c"/>
+        <polygon points="67.4,113.2 121.8,140.4 109.9,146.35 55.5,119.15" fill="#e6c163"/>
+        <!-- Atelier -->
+        <polygon points="172.8,75.8 203.4,91.1 203.4,67.1 172.8,51.8" fill="#d9ac6c"/>
+        <polygon points="203.4,91.1 234,75.8 234,51.8 203.4,67.1" fill="#a87b4c"/>
+        <polygon points="186,80.5 193,84 193,72 186,68.5" fill="#64412e"/>
+        <polygon points="203.4,36.5 234,51.8 218.7,47.45 188.1,32.15" fill="#56795c"/>
+        <polygon points="203.4,67.1 234,51.8 218.7,47.45" fill="#a87b4c"/>
+        <polygon points="172.8,51.8 203.4,67.1 218.7,47.45 188.1,32.15" fill="#7f9d69"/>
+        <!-- Relais (tour) -->
+        <polygon points="186.4,160.8 206.8,171 206.8,119 186.4,108.8" fill="#d4c9af"/>
+        <polygon points="206.8,171 227.2,160.8 227.2,108.8 206.8,119" fill="#b2a58a"/>
+        <polygon points="206.8,98.6 227.2,108.8 206.8,119 186.4,108.8" fill="#e6ddc6"/>
+        <circle cx="206.8" cy="96" r="9" fill="#ffd98c" opacity=".45"/>
+        <polygon points="206.8,90 212,93 206.8,108 201.6,93" fill="#f3c879"/>
+        <!-- arbres -->
+        <g>
+          <path d="M152 79V74" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="143,76 152,50 152,79" fill="#87a65b"/><polygon points="152,79 152,50 161,76" fill="#5d8150"/>
+          <path d="M231 57V52" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="222,54 231,28 231,57" fill="#87a65b"/><polygon points="231,57 231,28 240,54" fill="#5d8150"/>
+          <path d="M254 76V71" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="245,73 254,47 254,76" fill="#87a65b"/><polygon points="254,76 254,47 263,73" fill="#5d8150"/>
+          <path d="M146 168V163" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="137,165 146,139 146,168" fill="#87a65b"/><polygon points="146,168 146,139 155,165" fill="#5d8150"/>
+          <path d="M254 168V163" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="245,165 254,139 254,168" fill="#87a65b"/><polygon points="254,168 254,139 263,165" fill="#5d8150"/>
+        </g>
+        <g>
+          <polygon points="291,105 299,82 299,108" fill="#c4bdb0"/><polygon points="299,108 299,82 307,105" fill="#9a9284"/>
+          <polygon points="243,119 251,96 251,122" fill="#c4bdb0"/><polygon points="251,122 251,96 259,119" fill="#9a9284"/>
+          <polygon points="287,134 295,111 295,137" fill="#c4bdb0"/><polygon points="295,137 295,111 303,134" fill="#9a9284"/>
+        </g>
+      </svg>
+      <p class="world-caption">Emplacement du monde · l’île arrive en semaine 2</p>
+    </div>
+    <div class="world-live" id="world-live" hidden></div>
+  </div>
+
+  
+
+  <header class="hud" aria-label="Ressources">
+    <button class="res" type="button" data-res="energie" data-action="res-help" aria-label="Énergie : 0">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-energie"/></svg></span>
+      <span class="res-value">0<span class="res-cap">/40</span></span>
+      <span class="res-label">Énergie</span>
+      <span class="res-delta" aria-hidden="true"></span>
+    </button>
+    <button class="res" type="button" data-res="materiaux" data-action="res-help" aria-label="Matériaux : 0">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-materiaux"/></svg></span>
+      <span class="res-value">0<span class="res-cap">/150</span></span>
+      <span class="res-label">Matériaux</span>
+      <span class="res-delta" aria-hidden="true"></span>
+    </button>
+    <button class="res" type="button" data-res="confiance" data-action="res-help" aria-label="Confiance : 0">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-confiance"/></svg></span>
+      <span class="res-value">0</span>
+      <span class="res-label">Confiance</span>
+      <span class="res-delta" aria-hidden="true"></span>
+    </button>
+    <button class="res" type="button" data-res="lueur" data-action="res-help" aria-label="Lueur : 0">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-lueur"/></svg></span>
+      <span class="res-value">0</span>
+      <span class="res-label">Lueur</span>
+      <span class="res-delta" aria-hidden="true"></span>
+    </button>
+  </header>
+
+  <div class="announce-lane" aria-hidden="true">
+    <p class="announce" id="announce"></p>
+  </div>
+  <div class="speech" id="speech" hidden aria-hidden="true"></div>
+  <p class="sr-only" role="status" aria-live="polite" id="live"></p>
+
+  <section class="panel" id="panel" aria-labelledby="panel-title">
+    <span class="panel-grip" aria-hidden="true"></span>
+    <header class="panel-head">
+      <h2 class="panel-title" id="panel-title">Fil du jour <small id="panel-date"></small></h2>
+      <button class="btn btn--quiet btn--icon" type="button" data-action="add" aria-label="Ajouter une quête">
+        <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-plus"/></svg>
+      </button>
+      <button class="btn btn--quiet btn--small panel-toggle" type="button" data-action="toggle-panel" aria-expanded="false" aria-controls="panel-rest">
+        <span class="panel-toggle-label">Tout voir</span>
+        <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-chevron-up"/></svg>
+      </button>
+    </header>
+
+    <div class="panel-status">
+      <div class="sync" id="sync" data-sync="saved" role="status" hidden></div>
+      <div class="sync" id="notice" data-sync="saved" role="status" hidden></div>
+    </div>
+
+    <div class="panel-scroll" id="panel-scroll">
+      <div class="skeleton" id="fil-skeleton" aria-busy="true" aria-label="Chargement des quêtes">
+        <span class="skel skel--title"></span>
+        <span class="skel skel--title-2"></span>
+        <span class="skel skel--meta"></span>
+        <div class="skel-pair"><span class="skel skel--btn"></span><span class="skel skel--btn"></span></div>
+      </div>
+
+      <div class="empty" id="load-error" hidden>
+        <span class="empty-mark"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-cloud-alert"/></svg></span>
+        <h3 class="empty-title">Impossible de charger tes quêtes</h3>
+        <p class="empty-text" id="load-error-text">Rien n’est perdu : réessaie dans un instant.</p>
+        <button class="btn btn--primary" type="button" data-action="reload"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-refresh"/></svg>Réessayer</button>
+      </div>
+
+      <div class="empty" id="fil-empty" hidden>
+        <span class="empty-mark"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-lueur"/></svg></span>
+        <h3 class="empty-title">Aucune quête ouverte</h3>
+        <p class="empty-text" id="fil-empty-text">L’Orée veille. Ajoute une vraie tâche quand elle se présente.</p>
+        <button class="btn btn--primary" type="button" data-action="add"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-plus"/></svg>Ajouter une quête</button>
+      </div>
+
+      <article class="fil-quest" id="fil-quest" data-task-id="" data-state="todo" aria-labelledby="fil-q1" hidden>
+        <h3 class="fil-title" id="fil-q1"></h3>
+        <button class="cote" type="button" data-action="why"><span class="cote-value"></span><span class="cote-label">Cote</span></button>
+        <ul class="meta"></ul>
+        <p class="fil-reason"><span></span> <button class="link-btn" type="button" data-action="why">Pourquoi ?</button></p>
+        <p class="btn-reason" id="fil-readonly" hidden><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-lock"/></svg>Cette quête n’a pas d’identifiant fiable (absent ou en double dans la liste) : elle est en lecture seule.</p>
+        <div class="fil-actions">
+          <button class="btn btn--primary" type="button" data-action="complete">Fait <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg></button>
+          <button class="btn btn--secondary" type="button" data-action="start" aria-pressed="false">
+            <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-start"/></svg><span class="start-label">Je m’y mets</span>
+          </button>
+        </div>
+      </article>
+
+      <div class="panel-rest" id="panel-rest">
+        <ul class="alts" id="alts" hidden></ul>
+
+        <section class="panel-section" aria-labelledby="list-h">
+          <h2 class="panel-section-title" id="list-h">Toutes les quêtes <small id="list-count"></small></h2>
+          <div class="toolbar">
+            <div class="search" role="search">
+              <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-search"/></svg>
+              <input class="search-input" id="search" type="search" placeholder="Chercher une quête" aria-label="Chercher une quête" autocomplete="off" enterkeyhint="search">
+              <button class="search-clear" type="button" data-action="search-clear" aria-label="Effacer la recherche" hidden>
+                <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-x"/></svg>
+              </button>
+            </div>
+            <div class="toolbar-row">
+              <fieldset class="seg">
+                <legend class="sr-only">Statut</legend>
+                <label class="seg-option"><input type="radio" name="statut" value="todo" checked><span>À faire <b data-count="todo">0</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut" value="done"><span>Faites <b data-count="done">0</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut" value="archived"><span>Archivées <b data-count="archived">0</b></span></label>
+              </fieldset>
+              <label class="sort">
+                <span class="sort-label"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-sort"/></svg>Trier</span>
+                <select class="select" id="sort" data-action="sort"></select>
+              </label>
+            </div>
+            <div class="chips" role="group" aria-label="Filtres rapides">
+              <button class="chip" type="button" aria-pressed="false" data-filter="quick"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-clock"/></svg>15 min</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="lowEnergy"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg>Peu d’énergie</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="thisWeek"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-calendar"/></svg>Cette semaine</button>
+            </div>
+            <div class="chips chips--scroll" role="group" aria-label="Secteurs">
+              <button class="chip" type="button" aria-pressed="false" data-sector="champs"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-champs"/></svg>Champs</button>
+              <button class="chip" type="button" aria-pressed="false" data-sector="atelier"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-atelier"/></svg>Atelier</button>
+              <button class="chip" type="button" aria-pressed="false" data-sector="archives"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-archives"/></svg>Archives</button>
+              <button class="chip" type="button" aria-pressed="false" data-sector="maison-commune"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-maison-commune"/></svg>Maison commune</button>
+              <button class="chip" type="button" aria-pressed="false" data-sector="relais"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-relais"/></svg>Relais du convoi</button>
+              <button class="chip" type="button" aria-pressed="false" data-sector="place"><svg class="icon chip-check" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-bastion"/></svg>Place du Bastion</button>
+            </div>
+          </div>
+
+          <ul class="quest-list" id="quest-list"></ul>
+          <div class="empty empty--inline" id="list-empty" hidden>
+            <h3 class="empty-title"></h3>
+            <p class="empty-text"></p>
+            <button class="btn btn--quiet" type="button" data-action="clear-filters"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-x"/></svg>Retirer les filtres</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog class="sheet" id="dlg-add" aria-labelledby="add-h"></dialog>
+<dialog class="sheet" id="dlg-fiche" aria-labelledby="fiche-t"></dialog>
+<dialog class="sheet sheet--small" id="dlg-why" aria-labelledby="why-t"></dialog>
+<dialog class="sheet sheet--small" id="dlg-confirm" aria-label="Confirmation"></dialog>
+<dialog class="sheet sheet--small" id="dlg-token" aria-labelledby="tok-t"></dialog>
+<dialog class="sheet sheet--small" id="dlg-help" aria-labelledby="help-t"></dialog>
+
+<noscript><p style="padding:24px">Cette application a besoin de JavaScript.</p></noscript>
+</body>
+</html>
