@@ -159,12 +159,17 @@ Pour le joueur : à la première ouverture, sa partie passe en v2 sans rien perd
 
 ### Lot 4 — Bâtiments, habitants, fiches à trois lignes
 Pour le joueur : il rebâtit des chalets, sème, récolte, accueille des familles et voit son rang monter. Chaque bâtiment dit ce qu'il est, ce qu'il fait, ce qu'on peut faire maintenant, ou ce qui manque (« Il faut d'abord un quai. »).
-- [ ] Bâtiments du campement et du hameau : coûts, rang, prérequis, emplacements sur l'île.
-- [ ] Potager de mai à octobre (au 1er novembre, ce qui est en terre mûrit d'un coup) ; serre toute l'année ; Nourriture plafonnée par le stockage.
-- [ ] Accueillir une famille : un logement libre et de la Nourriture dépensée donnent un habitant. Personne ne part.
-- [ ] Éolienne : Énergie en plus le premier jour travaillé, inscrite au registre.
-- [ ] [impeccable] chalet, serre, éolienne, grenier, quai ; fiche à trois lignes et état verrouillé.
-- [ ] Tests écrits d'abord : chaque refus avec sa raison ; simulation sur 21 jours et sur un hiver complet (aucune impasse, voir question 3).
+- [x] Bâtiments du campement et du hameau : coûts, rang, prérequis, emplacements sur l'île.
+- [x] Potager de mai à octobre (au 1er novembre, ce qui est en terre mûrit d'un coup) ; serre toute l'année ; Nourriture plafonnée par le stockage.
+- [x] Accueillir une famille : un logement libre et de la Nourriture dépensée donnent un habitant. Personne ne part.
+- [x] Éolienne : Énergie en plus le premier jour travaillé, inscrite au registre.
+- [x] [impeccable] chalet, serre, éolienne, grenier, quai ; fiche à trois lignes et état verrouillé.
+- [x] Tests écrits d'abord : chaque refus avec sa raison ; simulation sur 21 jours et sur un hiver complet (aucune impasse, voir question 3).
+- *Fait le 5 octobre (commits f62de9b, 5a45859, 857665b ; cache v6). Vérifié par moi : 306 tests `node --test` (dont `simulation.test.mjs` : Hameau en 21 jours environ ; départ le 25 octobre sans impasse d'hiver ; une année sans stock négatif). Scénarios navigateur aux trois largeurs, tous réussis (15 « potager » remis dans la série ; 17 et 18 encore de côté jusqu'au lot 5). Captures à 390 et 1280 regardées : fiche verrouillée lisible (« Hameau : encore 3 habitants. »), plus aucune plaque qui cache une caisse.*
+- *Repères de la simulation (agent, relus) : chalet 15 Matériaux, quai 25 Matériaux + 4 Énergie ; une culture mûrit en 5 jours travaillés ; une famille coûte 18 Nourriture ; éolienne +3 Énergie par jour travaillé. Départ le 25 octobre : première famille vers le jour 8, Hameau vers les jours 39 à 44, village plein (6 habitants) fin novembre ou début décembre, puis les ressources s'accumulent.*
+- *Essai en ligne, vérifié vers 19 h 20 : photo de la partie (`backups/avant-lot4-…`), envoi, ouverture dans un navigateur de téléphone simulé : cache v6, 0 erreur console, partie en version 2, liste des tâches identique à la photo.*
+- *Décidé (contestable) : les cultures poussent aux jours travaillés, pas aux jours du calendrier (bible : « Le village travaille les jours où tu travailles »). Le village est plein vers la 7e semaine : la bande de terre et les nouveaux emplacements de chalets (semaines 5-6) doivent arriver avant décembre.*
+- *Pour le lot 5 : la première famille arrive lentement (jours 8 à 11) ; les récompenses des premiers pas donnent un coup de pouce en Nourriture, sans changer le coût d'une famille. L'Énergie de l'éolienne reste acquise si Remballer laisse le jour sans quête payée : à reprendre. Quelques raisons du cœur ont une espace ordinaire avant le deux-points (« Le potager dort de novembre à avril : … ») au lieu de l'espace insécable : à corriger.*
 
 ### Lot 5 — Premiers pas, bandeau d'objectifs, accueil
 Pour le joueur : trois écrans d'accueil, cinq premiers pas guidés, et un bandeau toujours visible : aujourd'hui, cette semaine, cette saison, prochain rang.
