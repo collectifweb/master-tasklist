@@ -109,3 +109,41 @@ Un seul fichier, PHP 8.3, sans dépendance. Toutes les réponses en JSON UTF-8, 
 | `state.js` | `createInitialState`, `migrateState`. |
 
 Chaque fonction exportée a au moins un test, et les critères de RECOMMANDATION §8 sont des tests nommés (« terminer, rouvrir puis terminer de nouveau rapporte 0 », etc.).
+
+## `core/` — semaine 3, le jeu
+
+Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, ledger, params, now) → { tasks, game, ops, entries, events }` (classe `Ctx` partagée, `params.gameRevision` exigé dès qu'un `game.set` est produit, `Error` en français pour le joueur). Le contenu (`chapitres.json`, `lettres.json`) est passé en paramètre : `core/` ne lit aucun fichier. `params.chapitres` est à injecter au moment de l'appel (et du rejeu de la file), pas à stocker dans la file d'attente.
+
+| Module | Rôle |
+|---|---|
+| `build.js` | Catalogue `BUILDABLES` des chapitres 1 et 2 (Tour 20 ▣ + 6 ⚡, tunnel 15 ▣, établi 25 ▣ + 6 ⚡, parcelle 10 ▣, érable 5 ▣ ×3, clôture 3 ▣, lanterne 8 ▣), `build`, potager (`sow`, `harvest`, `storeReserve`), `souffler` (8 ⚡ → +5 Fil libre), `payCost`, `isBuilt`. Emplacements bornés par `BUILD_SLOT_COUNT` et `MAX_PLOTS`, qui suivent `world/layout.js` (vérifié par un test). |
+| `avis.js` | Avis (`AVIS`), activité et Force, Préparation détaillée (`avisPreparation`, `avisStatus` pour la jauge), `lightBrasero`, `liftVeil`, et **`advanceTime`** : lève les voiles expirés, résout l'Avis du jour, annonce le suivant, retient les objectifs et termine le chapitre (`syncChapter`), note `lastSeenDay`. Idempotente : rejouée avec le même instant, elle ne fait rien. |
+| `chapters.js` | `evalCondition` (types de `chapitres.json`), `chapterProgress`, `syncChapter` (s'appuie sur `chapterStatus`/`advanceChapter` d'`economy.js`), `storyMoments` (3 moments d'histoire par jour au plus, lignes filtrées par leur `si`), `markStorySeen`. |
+| `letters.js` | `morningLetter` (matin, sans quête, retour ; `{quete}` = quête n° 1 ; sans prénom, « , {prenom} » disparaît ; pas de répétition sur 7 jours), `markLetterShown`, `fillText`. |
+| `recycling.js` | `weeklyReview` : bilan de la semaine (heures estimées par domaine, quêtes, jours de lisière, `ratioJeuQuetes: null` tant que le temps de jeu n'est pas mesuré) et quêtes ouvertes depuis plus de 60 jours (archivage par `archiveQuest`). |
+
+**Ordre d'appel côté interface.** À l'ouverture : `openApp`, puis `advanceTime` (avec `chapitres`). Au changement de jour de jeu, et après une action qui peut atteindre un objectif (quête terminée, construction, récolte, réserve, Fil libre dirigé) : `advanceTime`. Histoire : `storyMoments` → affichage → `markStorySeen({ ids })`. Lettre : `morningLetter` → affichage → `markLetterShown({ id })`. `advanceChapter` ne s'appelle plus directement : il ignore les objectifs.
+
+**Nouvelles clés de `game`** (complétées par `migrateState` sur un état plus ancien) :
+
+| Clé | Forme |
+|---|---|
+| `plots` | `[{ id, slot, crop: 'courge' \| 'patate' \| 'ble' \| null, stage }]` ; la parcelle `parcelle-1` existe dès le départ, `crop: null` = vide ; `stage` peut valoir x,5 sous un voile |
+| `placements` | `[{ id, model, sector, state? }]` ; repères fixes : `{ id: 'tour', state: 'reparee' }`, `{ id: 'etabli', state: 'construit' }` ; sinon `id` = `{model}-{n}` |
+| `garden` | `{ pantry: { courge, patate, ble }, reserve, sown: {…}, harvested: {…}, reserved }` (garde-manger 12 au plus, réserve 6 au plus, compteurs cumulés pour les objectifs) |
+| `avis` | `{ current: { id, sector, day, announcedOn, base, force, activity, braseros } \| null, history: [{ id, day, resolvedOn, result, force, preparation }], veils: [{ avis, sector, cells, since, until }] }` |
+| `chapter.objectives` | `{ idObjectif: jour atteint }` (un objectif atteint le reste) |
+| `story` | `{ seen: [ids], day, count }` |
+| `letters` | `{ idLettre: dernier jour montré }` |
+| `lastSeenDay` | dernier jour de jeu où `advanceTime` a tourné |
+
+**Registre** : `avis:{id}` (Avis tenu, `type: 'avis'`, 15 ▣). Dépenses, semis, récoltes, réserve et Souffler n'écrivent rien au registre : ils ne font que dépenser ou convertir ce qui a déjà été gagné.
+
+**Règles retenues** (là où la recommandation laissait le choix) :
+- Activité d'un Avis = part des jours allumés sur les 28 jours avant l'annonce (depuis le début si la partie est plus jeune), rapportée à 4 jours sur 7. Force fixée à l'annonce : la jauge ne bouge que du côté Préparation.
+- Premier gel : annoncé au 5e jour du chapitre 2 (au plus tôt), 7 jours d'avance, Champs visés, base 24. Défenses : Tour +4 (tous les Avis), tunnel +6 (Avis des Champs), d'après la simulation.
+- Quêtes de la fenêtre : finies entre le jour de l'annonce et la veille de l'Avis, remballées exclues.
+- Absent = aucune visite les 2 jours de jeu avant l'Avis. Préparation ≥ Force → Tenu même absent ; sinon « absent », sans voile.
+- Tenu consomme la Réserve d'hiver ; Voilé et absent la gardent. Les braseros valent pour un seul Avis.
+- Voile : 3 jours à partir de la résolution. « Production réduite de 50 % » = les cultures des Champs poussent d'un demi-stade par jour allumé (seule production d'un secteur pour l'instant).
+- Lettre de retour : le jour où `openApp` a donné le bonus de retour.

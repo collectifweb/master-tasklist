@@ -57,10 +57,13 @@ function refreshSectors(g) {
   return events;
 }
 
+// Un stade par jour allumé ; un voile sur les Champs réduit la production de moitié (un demi-stade).
 function growPlots(g) {
+  const veiled = (g.avis?.veils ?? []).some((v) => v.sector === 'champs' && v.cells > 0);
   for (const p of g.plots) {
+    if (!p.crop) continue; // parcelle vide
     const need = CROP_STAGES[p.crop] ?? 1;
-    p.stage = Math.min(need, (p.stage || 0) + 1);
+    p.stage = Math.min(need, (p.stage || 0) + (veiled ? 0.5 : 1));
   }
 }
 
@@ -114,9 +117,10 @@ function applyReversal(g, entry, events) {
 
 /**
  * Applique une entrée du registre. Retourne { game, events }.
- * Une entrée `reward` (quête terminée) allume la lisière si le jour de l'entrée (`entry.day`, pas l'instant
- * courant) n'est pas déjà allumé : +1 Confiance, cultures arrosées, et +1 Confiance par « semaine tenue »
- * (4 jours sur 7). Une entrée qui porte `reverses` retire ce que les gains annulés ont réellement apporté.
+ * Une entrée `reward` (quête terminée) lève le voile de son secteur (événement 'voile-leve'), puis allume la lisière
+ * si le jour de l'entrée (`entry.day`, pas l'instant courant) n'est pas déjà allumé : +1 Confiance, cultures arrosées,
+ * et +1 Confiance par « semaine tenue » (4 jours sur 7). Une entrée qui porte `reverses` retire ce que les gains
+ * annulés ont réellement apporté.
  */
 export function applyEntry(game, entry, now) {
   const g = structuredClone(game);
@@ -151,6 +155,12 @@ export function applyEntry(game, entry, now) {
   }
 
   if (entry.type === 'reward' && (entry.pe || 0) >= 0) {
+    // la prochaine quête du secteur lève son voile (avant l'arrosage : les cultures poussent alors à plein)
+    const sector = entry.lueur && entry.lueur.sector;
+    if (g.avis && Array.isArray(g.avis.veils) && g.avis.veils.some((v) => v.sector === sector)) {
+      g.avis.veils = g.avis.veils.filter((v) => v.sector !== sector);
+      events.push({ type: 'voile-leve', sector, reason: 'quete', cells: 0 });
+    }
     if (g.daily.day === day) g.daily.quests += 1;
     if (!g.lisiereDays.includes(day)) {
       if (g.daily.day === day) g.daily.lisiere = true;

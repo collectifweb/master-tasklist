@@ -30,7 +30,8 @@ function deepEqual(a, b) {
   return ka.length === kb.length && ka.every((k) => k in b && deepEqual(a[k], b[k]));
 }
 
-class Ctx {
+/** Contexte d'une opération (partagé avec build.js, avis.js, chapters.js, letters.js) : voir `result()`. */
+export class Ctx {
   constructor(tasks, game, ledger, params, now) {
     this.now = now;
     this.iso = toISO(now);

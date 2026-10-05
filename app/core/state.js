@@ -34,13 +34,25 @@ export function createInitialState(now) {
     daily: { day: gameDay(now), quests: 0, lisiere: false },
     lastOpenDay: null,
     lastReturnDay: null,
-    chapter: { number: 1, startDay: gameDay(now), objectives: {} },
+    chapter: { number: 1, startDay: gameDay(now), objectives: {} }, // objectives : { idObjectif: jour atteint }
     sectors: initialSectors(),
     placements: [],
-    plots: [],
-    avis: { current: null, history: [] },
+    plots: [firstPlot()], // la première parcelle des Champs existe dès le départ ; crop null = parcelle vide
+    garden: initialGarden(),
+    avis: { current: null, history: [], veils: [] },
+    story: { seen: [], day: null, count: 0 }, // moments d'histoire déjà montrés, et combien aujourd'hui (3 au plus)
+    letters: {}, // { idLettre: dernier jour montré }
+    lastSeenDay: null, // dernier jour de jeu où advanceTime a tourné (présence, pour la règle d'absence des Avis)
     recentApplied: {}, // ce que chaque gain des 48 dernières heures a réellement appliqué (sert aux annulations)
   };
+}
+
+const firstPlot = () => ({ id: 'parcelle-1', slot: 0, crop: null, stage: 0 });
+const crops = () => ({ courge: 0, patate: 0, ble: 0 });
+
+// Potager : garde-manger (12 récoltes au plus), Réserve d'hiver (courges, 6 au plus), compteurs cumulés pour les objectifs.
+function initialGarden() {
+  return { pantry: crops(), reserve: 0, sown: crops(), harvested: crops(), reserved: 0 };
 }
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -63,6 +75,7 @@ export function migrateState(raw, now) {
   if (raw.chapter && raw.chapter.startDay) defaults.chapter.startDay = raw.chapter.startDay;
   if (raw.daily && raw.daily.day) defaults.daily.day = raw.daily.day;
   const out = merge(defaults, raw);
+  if (Array.isArray(out.plots) && !out.plots.length) out.plots = [firstPlot()]; // état d'avant le potager
   out.version = Math.max(STATE_VERSION, Number(raw.version) || 0);
   return out;
 }

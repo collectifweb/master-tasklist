@@ -69,7 +69,7 @@
           "id": "ch1.tour",
           "texte": "Réparer la Tour",
           "detail": "La Tour de veille demande {cout}.",
-          "condition": {"type": "batiment", "id": "tour", "etat": "repare"},
+          "condition": {"type": "batiment", "id": "tour", "etat": "reparee"},
           "annonce": [
             {"voix": "solene", "texte": "La Tour de veille est muette depuis longtemps. Avec des Matériaux et un peu d’Énergie, elle repartirait."}
           ],
