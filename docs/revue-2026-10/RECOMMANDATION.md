@@ -115,7 +115,7 @@ Hors plafond :
   - Sinon, **Voilé** : 2 cases voilées et production réduite de 50 %. Le voile se lève avec la prochaine quête du secteur, avec 1 ⚡ par case, ou seul en 3 jours.
   - Aucun voile ne tombe pendant une absence de 48 h ou plus.
 
-**Simulation sur 3 semaines** (`scratchpad/final/sim21c.mjs`). Elle utilise les vraies tâches de 006, 2 à 4 quêtes par jour, et une absence du jour 9 au jour 12.
+**Simulation sur 3 semaines** (`simulations/recommandation-3-semaines.mjs`). Elle utilise les vraies tâches de 006, 2 à 4 quêtes par jour, et une absence du jour 9 au jour 12.
 
 | Sem. | Quêtes | PE | ⚡ gagné (tâches + bonus) | ⚡ dépensé | ▣ gagné | ▣ dépensé | Fin ⚡/▣ | Confiance |
 |---|---|---|---|---|---|---|---|---|
@@ -189,7 +189,7 @@ Hors plafond :
 - three.js est plus beau, mais ne laisse que 23 px par case sur mobile et coûte cher en développement (4/10).
 - **On passe à Pixi** si, sur un vrai Pixel 6a et un vrai iPhone, les animations tombent sous 45 i/s ou si recolorer un secteur dépasse 50 ms.
 
-**Captures à montrer** (`scratchpad/spikes/`) :
+**Captures à montrer** (une sélection est dans `img/` ; les démos sont dans `sketches/007-spikes-rendu/`) :
 - `dom-svg/shots/` : `v3-m-jour.png`, `v3-m-soir.png`, `v3-m-nuit.png`, `v3-m-quete-a.png`, `v3-m-quete-b.png`, `v3-m-build-b.png`, `v3-m-harvest-a.png`, `v3-m-reduit.png`, `v3-d-jour.png` ;
 - pour comparer : `canvas-pixi/shots/m03-nuit.png`, `canvas-pixi/shots/m07-quete-vol.png`, `three-voxel/shots/final/m-jour.png`.
 
@@ -272,4 +272,4 @@ Hors plafond :
 6. **Calendrier réel** : neige le 15 novembre, trêve des Fêtes. Ça te convient, sachant que le premier Avis tombera vers la mi-novembre ?
 
 ---
-Fichiers : /tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/final/RECOMMANDATION.md · simulation : /tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/final/sim21c.mjs (tâches : scratchpad/final-tasks.json)
+Simulation : `simulations/recommandation-3-semaines.mjs` (données : `simulations/taches-006.json`).

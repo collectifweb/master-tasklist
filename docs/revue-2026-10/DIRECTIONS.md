@@ -1423,9 +1423,9 @@ ACCESSIBILITÉ
 - Son en option (Howler, 7 Ko), désactivé par défaut. Vibration seulement si navigator.vibrate existe (Android).
 
 CALIBRATION DES CHIFFRES
-- Deux scripts dans le scratchpad ont servi à vérifier les nombres de cette direction :
-  - /tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/village/calib.mjs : Indice et récompense sur les 27 tâches du prototype ;
-  - /tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/village/pacing.mjs : revenus sur 21 jours pour 3 profils.
+- Deux scripts ont servi à vérifier les nombres de cette direction :
+  - simulations/village-calibrage.mjs : Indice et récompense sur les 27 tâches du prototype ;
+  - simulations/village-rythme.mjs : revenus sur 21 jours pour 3 profils.
 
 ### Les 60 premières secondes
 
@@ -2752,7 +2752,7 @@ ABSENCE
 - Retour après 4 jours ou plus : réparations à moitié prix pendant 3 jours et +5 Moral.
 - Valve « Dévier le front » : une fois par chapitre, repousse un Avis de 3 jours. Demande au moins 24 h d'avance.
 
-CALIBRAGE (simulation, 200 graines par profil ; script scratchpad/directions/sim-bastion/sim3.py)
+CALIBRAGE (simulation, 200 graines par profil ; script simulations/bastion-saisons.py)
 | Profil | Rythme | Tenu | Justesse | Plié |
 |---|---|---|---|---|
 | Léger | ≈4-5 tâches/sem | 33 % | 56 % | 10 % |
@@ -3449,7 +3449,7 @@ PUITS DE LA SAISON AUTOMNE (5 oct. au 6 déc.) : environ 2 480 bûches au total
 - « Réal connaît un gars » : un tampon manquant peut être remplacé par 15 bûches.
 
 SIMULATION
-Paramètres : 400 tirages sur 63 jours. Tâches tirées selon une loi normale : L moyenne 4 (écart-type 2,2), P moyenne 6,3 (écart-type 1,4), D moyenne 4,3 (écart-type 1,8). Script dans scratchpad/directions/sim-foyer/sim2.py.
+Paramètres : 400 tirages sur 63 jours. Tâches tirées selon une loi normale : L moyenne 4 (écart-type 2,2), P moyenne 6,3 (écart-type 1,4), D moyenne 4,3 (écart-type 1,8). Script : simulations/foyer-miroir.py.
 
 | Profil | Rythme | Bûches (p10–p90) | Chaleur | Résultat |
 |---|---|---|---|---|

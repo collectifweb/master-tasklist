@@ -197,7 +197,7 @@ Recommandation : A et B tout de suite, plus un unique `<canvas>` d'effets au-des
 
 ## Fichiers produits
 
-Dossier : `/tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/motion/`
+Dossier : (captures de la session cloud, non versionnées)
 
 - **Vidéos :**
   - `s4-flows-390.webm` et `s4-flows-1280.webm` (parcours complet)

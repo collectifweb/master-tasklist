@@ -102,7 +102,7 @@ J'ai joué tout le parcours dans Chromium/Playwright à 390×844 (tactile), 834�
 15. **Fiches et registre.** En-tête illustré (objet agrandi), frise d'état (« Pousses · récolte demain »), poignée réellement glissable. Registre compact : une ligne par quête, menu « … » pour Modifier/Supprimer, regroupement par domaine. Déplacer la réinitialisation dans un menu Réglages.
 
 ## Captures
-Toutes dans `/tmp/claude-0/-home-user-master-tasklist/42a9ea1a-9618-5a6f-b0bd-aa8c4184861b/scratchpad/playtest/`.
+Toutes dans (captures de la session cloud, non versionnées).
 
 | Thème | Fichiers |
 |---|---|
