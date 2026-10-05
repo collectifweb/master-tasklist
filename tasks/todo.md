@@ -43,7 +43,7 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
   - `tasks.json` reste la référence ; `game-state.json` et `ledger.jsonl` à côté.
 - [x] Registre des quêtes au moins aussi complet que l'app actuelle : tris, filtres, recherche, création, modification, suppression, notes, étapes, récurrence, archiver, remballer.
 - [x] Ajout rapide avec domaine deviné, Fil du jour, « Pourquoi ? ».
-- [ ] Jalon : utilisable au quotidien sur une copie locale des vraies tâches. *Vérifié sur un fichier fictif de même forme (scénario `ui-13`, aucun champ perdu). L'essai sur la vraie copie attend l'accord d'Alex.*
+- [x] Jalon : utilisable au quotidien sur une copie locale des vraies tâches. *Vérifié sur un fichier fictif de même forme (scénario `ui-13`, aucun champ perdu). L'essai sur la vraie copie attend l'accord d'Alex.* *Atteint par la bascule du 5 octobre : la nouvelle app sert la vraie liste.*
 
 ## Semaine 2 — Le monde
 
@@ -51,7 +51,7 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 - [x] Place, Champs et Atelier ouverts, deux secteurs sous la cendre, Fil libre.
 - [x] Fanal et deux personnages ; animations 1 à 5, 11 et 12, avec leur version en mouvement réduit.
 - [x] Brancher le monde dans l'app : fil de lumière parti du bouton touché, compteurs à l'impact, secteur touché = filtre, plan accessible, écran « L'Orée veille » ; 14 scénarios Playwright aux 3 largeurs.
-- [ ] Essai sur le vrai téléphone d'Alex : on garde le SVG, ou on passe à PixiJS si l'animation tombe sous 45 images par seconde.
+- [x] Essai sur le vrai téléphone d'Alex : on garde le SVG, ou on passe à PixiJS si l'animation tombe sous 45 images par seconde. *Fluide sur le téléphone d'Alex (5 octobre) : on garde le SVG, PixiJS abandonné.*
 
 ## Semaine 3 — Le jeu
 
@@ -67,10 +67,10 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 - [x] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé. Banc d'essai sans serveur (`tests/sync-tasks-remote.test.sh`) : 12 sur 12 avec le script corrigé, 6 échecs sur 12 avec l'ancien.
 - [ ] Installer le script corrigé sur la machine d'Hermes (Alex).
 - [x] Essai sur une copie des vraies tâches, faite sur le serveur dans un second dossier d'essai protégé par un code. L'API relit chaque tâche à l'identique, aucun champ perdu ; vérifié sur le serveur, sans rapatrier de données.
-- [ ] Alex utilise cette copie sur son téléphone : jalon « utilisable au quotidien ».
+- [x] Alex utilise cette copie sur son téléphone : jalon « utilisable au quotidien ». *Remplacé par la bascule : Alex utilise directement la production.*
 - [x] Sauvegarder ce qui est en ligne : copie datée de la liste, de la page, de l'ancienne API et du `.htaccess` dans un dossier du site interdit au web (5 octobre 2026).
 - [x] Version d'essai dans un sous-dossier, avec une liste fictive et un code d'accès. Parcours réel vérifié en HTTPS : code demandé, quête enregistrée sur le serveur, relance hors ligne, dossier de données interdit au web.
-- [ ] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil.
+- [x] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil. *Fait le 5 octobre vers 11 h 15 (accord d'Alex) : sauvegarde datée, app dans `app/`, accueil renvoyé vers elle, accès web direct à la liste et à l'ancienne API bloqué (403). L'API sert les 27 tâches à l'identique, champ pour champ. Code d'accès choisi par Alex.*
 
 ## Critères de réussite
 

@@ -18,3 +18,8 @@
 ## Données
 
 - **Ne jamais copier les vraies tâches sur ce poste pour un essai.** Utiliser un fichier fictif de même forme (`app/tests/e2e/ui-13-forme-reelle.cjs`) ; un essai sur les vraies données demande l'accord d'Alex.
+
+## Serveur (LiteSpeed)
+
+- **Un `.htaccess` remplacé n'est pas relu instantanément.** Juste après la bascule, l'ancienne API a répondu 405 (donc exécutée) au lieu de 403 ; quelques secondes plus tard, 403 stable. Règle : refaire les contrôles d'accès après une courte pause, plusieurs fois, avant de conclure dans un sens ou dans l'autre.
+- **Un contrôle de mise en ligne ne doit jamais écrire.** Le premier script de bascule envoyait une liste vide à l'adresse de la liste de production pour vérifier qu'elle était bloquée : sans danger si le blocage tient, destructeur sinon. Règle : contrôles en lecture seule (GET), le blocage d'un fichier valant pour toutes les méthodes.
