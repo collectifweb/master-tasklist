@@ -48,7 +48,10 @@ async function call(method, payload) {
   return body;
 }
 
+/** Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas. */
+export const CLIENT_VERSION = 2;
+
 export const api = {
   get: () => call('GET'),
-  post: (opId, ops) => call('POST', { opId, ops }),
+  post: (opId, ops) => call('POST', { client: CLIENT_VERSION, opId, ops }),
 };

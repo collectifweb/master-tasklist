@@ -48,7 +48,8 @@ export async function startServer({ tasksRaw = fmt(SAMPLE), env = {}, phpArgs = 
     get: (headers = {}) => fetch(url, { headers }),
     post: (body, headers = {}) =>
       fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) }),
-    op: (ops, opId, headers) => (n++, fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ opId: opId ?? `op-${Date.now()}-${n}-${Math.random()}`, ops }) })),
+    // envoi de la v2 : il porte sa version de client (l'API refuse l'ancienne app, qui n'en envoie pas)
+    op: (ops, opId, headers) => (n++, fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ client: 2, opId: opId ?? `op-${Date.now()}-${n}-${Math.random()}`, ops }) })),
     stop() { proc.kill('SIGKILL'); rmSync(root, { recursive: true, force: true }); },
   };
 }

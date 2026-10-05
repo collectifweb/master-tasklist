@@ -23,6 +23,8 @@ const LOCKOUT_DURATION_S = 900;       // durée du blocage : 15 minutes
 const LOCKOUT_GLOBAL_MAX = 20;        // jetons faux tolérés dans la fenêtre, toutes adresses confondues
 const LOCKOUT_GLOBAL_KEY = '*';       // entrée du budget commun (une clé d'adresse est un SHA-256, jamais « * »)
 const LOCKOUT_DELAY_US = 250000;      // délai fixe après un jeton faux
+const MIN_CLIENT = 2;                 // version d'app exigée pour écrire (la v1 n'envoie pas la sienne)
+const GAME_V1_COPY = 'game-state.v1.json'; // copie de la partie v1, dans backups/ : hors de l'élagage (backup_names)
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -359,6 +361,20 @@ function backup_file(string $file, string $dataDir, string $tag, bool $oncePerDa
     foreach ($all as $f) if (!isset($keep[$f])) @unlink("$dir/$f");
 }
 
+/** Version d'une partie ; sans champ `version`, c'est une partie v1 (même règle que core/state.js). */
+function game_version(stdClass $game): float
+{
+    return isset($game->version) && (is_int($game->version) || is_float($game->version)) ? (float)$game->version : 1.0;
+}
+
+/** Copie de la partie v1 au passage en v2 : une seule fois, jamais remplacée ; un échec refuse l'écriture. */
+function keep_v1_copy(string $dataDir, string $v1Raw): void
+{
+    $dest = $dataDir . '/backups/' . GAME_V1_COPY;
+    if (is_file($dest)) return;
+    atomic_write($dest, $v1Raw, 0600);
+}
+
 // ---------- Lecture des données ----------
 
 function has_non_finite(mixed $v): bool
@@ -637,6 +653,12 @@ function handle(): void
         if (has_non_finite($body)) throw bad('Nombre non valide (infini) refusé.');
         $parsed = parse_ops($body->ops);
         $opsHash = sha1(jenc($body->ops));
+        // L'ancienne app n'envoie pas sa version : un onglet v1 resté ouvert réécrirait la partie v2 avec ses valeurs v1.
+        // Refus avant tout verrou ni écriture. Code hors de ceux que la v1 traite en conflit (aiguillage sur `code` dans
+        // son js/store.js) : elle écarte le geste avec ce message, sans nouvelle tentative.
+        if (!is_int($body->client ?? null) || $body->client < MIN_CLIENT) {
+            throw new ApiError(409, 'client_outdated', 'L’app a été mise à jour : recharge la page.');
+        }
     }
 
     prepare_data_dir($dataDir);
@@ -685,6 +707,10 @@ function handle(): void
     // Écritures, dans l'ordre : tasks.json, game-state.json, registre, ops.json. Annulées en cas d'échec.
     $undo = [];
     try {
+        // Passage de la partie de la version 1 à 2 : la partie v1 est d'abord copiée telle quelle (jamais effacée).
+        if ($parsed['game'] !== null && $g['game'] !== null && game_version($g['game']) < 2 && game_version($parsed['game']) >= 2) {
+            keep_v1_copy($dataDir, $g['raw']);
+        }
         if ($parsed['task']) {
             [$t, $u] = write_tasks($cfg, $dataDir, $parsed['task']);
             if ($u) $undo[] = $u;
