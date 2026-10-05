@@ -12,8 +12,9 @@ export const RANGS = [
 ];
 export const VILLE_PALIER = 15;
 
-/** Tâches à atteindre pour les niveaux 1 à 5 d'un quartier (niveau 0 au départ). */
+/** Tâches à atteindre pour les niveaux 1 à 5 d'un quartier (niveau 0 au départ). Au-delà : un niveau tous les 50. */
 export const NIVEAUX_QUARTIER = [5, 15, 30, 60, 100];
+export const QUARTIER_PALIER = 50;
 
 // Nombre entier ≥ 0 ; une valeur illisible compte pour 0.
 const count = (v) => Math.max(0, Math.floor(Number(v) || 0));
@@ -37,10 +38,18 @@ export function rangDuVillage(habitants) {
   return { ...rangAt(p), suivant: { ...next, encore: next.min - n } };
 }
 
-/** Niveau d'un quartier : { niveau, taches, suivant: { niveau, seuil, encore } | null } (null après le dernier niveau). */
+// Tâches à atteindre pour le niveau v (v ≥ 1).
+const seuilDe = (v) => v <= NIVEAUX_QUARTIER.length
+  ? NIVEAUX_QUARTIER[v - 1]
+  : NIVEAUX_QUARTIER[NIVEAUX_QUARTIER.length - 1] + QUARTIER_PALIER * (v - NIVEAUX_QUARTIER.length);
+
+/** Niveau d'un quartier, sans fin : { niveau, taches, suivant: { niveau, seuil, encore } }. */
 export function niveauQuartier(taches) {
   const n = count(taches);
-  const niveau = NIVEAUX_QUARTIER.filter((s) => n >= s).length;
-  const seuil = NIVEAUX_QUARTIER[niveau];
-  return { niveau, taches: n, suivant: seuil === undefined ? null : { niveau: niveau + 1, seuil, encore: seuil - n } };
+  const dernier = NIVEAUX_QUARTIER[NIVEAUX_QUARTIER.length - 1];
+  const niveau = n >= dernier
+    ? NIVEAUX_QUARTIER.length + Math.floor((n - dernier) / QUARTIER_PALIER)
+    : NIVEAUX_QUARTIER.filter((s) => n >= s).length;
+  const seuil = seuilDe(niveau + 1);
+  return { niveau, taches: n, suivant: { niveau: niveau + 1, seuil, encore: seuil - n } };
 }
