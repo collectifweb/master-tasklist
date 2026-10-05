@@ -274,7 +274,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 ## 15. Décisions d'Alex du 5 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
-2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google ; d'après les sources relevées le 5 octobre (pas encore essayé sur ce téléphone), les notifications de Brave passent par Google et n'arriveraient pas.
+2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
 3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12).
 4. **Le jeu suit le rythme d'usage** : allure du village et reprise après une absence (§9).
 5. **Calendrier** : le jeu garde le vrai calendrier. Pour que l'hiver ne bloque pas un village qui démarre (le potager dort de novembre à avril), la petite serre est construisible dès le campement. Elle produit l'hiver en consommant de l'Énergie, ce qui rend l'objectif « garder la serre allumée » jouable dès le premier hiver.
