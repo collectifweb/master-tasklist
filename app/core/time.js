@@ -68,7 +68,24 @@ export function parseDay(day) {
   return Date.UTC(y, m - 1, d);
 }
 
-/** Valeur quelconque (AAAA-MM-JJ ou ISO) → jour de jeu. Renvoie null si vide ou illisible. */
+/** Vrai si la chaîne est un jour de calendrier réel (AAAA-MM-JJ, 2026-02-30 refusé). */
+export function isValidDay(v) {
+  return isDayString(v) && dayFromMs(parseDay(v)) === v;
+}
+
+/**
+ * Pour les champs « jour » (échéance, création) : si la chaîne commence par AAAA-MM-JJ, on garde ces 10
+ * caractères, sans conversion en instant (aucune dépendance au fuseau de la machine). Date → jour de jeu.
+ * Renvoie null si illisible.
+ */
+export function dayOnly(value) {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : gameDay(value);
+  if (typeof value !== 'string') return null;
+  const m = /^(\d{4}-\d{2}-\d{2})(?!\d)/.exec(value.trim());
+  return m && isValidDay(m[1]) ? m[1] : null;
+}
+
+/** Instant (ISO complet, Date) → jour de jeu ; AAAA-MM-JJ → jour de jeu. Renvoie null si vide ou illisible. */
 export function dayOf(value) {
   if (!value) return null;
   if (isDayString(value)) return value;
@@ -80,8 +97,9 @@ export function addDays(day, n) {
 }
 
 /** Ajoute des mois en ramenant le quantième au dernier jour du mois au besoin (31 janv. + 1 mois = 28 févr.). */
-export function addMonths(day, n) {
-  const [y, m, d] = day.split('-').map(Number);
+export function addMonths(day, n, anchorDay) {
+  const [y, m, d0] = day.split('-').map(Number);
+  const d = anchorDay ?? d0;
   const idx = (y * 12 + (m - 1)) + n;
   const ny = Math.floor(idx / 12);
   const nm = (idx % 12 + 12) % 12;
@@ -100,7 +118,7 @@ export function hoursBetween(a, b) {
 
 /** Jours avant l'échéance (négatif si dépassée), ou null sans échéance. */
 export function daysUntil(deadline, now) {
-  const dl = dayOf(deadline);
+  const dl = dayOnly(deadline);
   return dl ? daysBetween(gameDay(now), dl) : null;
 }
 

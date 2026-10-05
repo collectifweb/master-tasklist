@@ -386,9 +386,9 @@ test('claimBonus : plan, plan honoré, plafond de 5 ⚡ par jour', () => {
   assert.equal(w.game.resources.energy, 14);
   const s = step(w, claimBonus, { type: 'plan' }); // déjà pris
   assert.deepEqual(s.r.ops, []);
-  w = step(w, claimBonus, { type: 'ouverture' }).world;
+  w = step(w, claimBonus, { type: 'ajout' }).world;
   assert.equal(w.game.resources.energy, 15);
-  assert.deepEqual(step(w, claimBonus, { type: 'ajout' }).r.entries, []);
+  assert.deepEqual(step(w, claimBonus, { type: 'ajout' }).r.entries, []); // plafond de 5 ⚡ atteint
 });
 
 test('openApp : +1 ⚡ par jour, retour après 3 jours (+10 ⚡) une fois par 14 jours', () => {
@@ -462,7 +462,7 @@ test('modifier la priorité n’envoie pas le titre', () => {
 
 test('terminer une quête envoie status, doneAt, frozen et updatedAt seulement', () => {
   const w = fresh([task()]);
-  const [op] = upsert(completeQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0));
+  const [op] = upsert(completeQuest(w.tasks, w.game, w.ledger, { id: 't1', gameRevision: 0 }, T0));
   assert.deepEqual(Object.keys(op).sort(), ['doneAt', 'frozen', 'id', 'status', 'updatedAt']);
 });
 
@@ -482,7 +482,7 @@ test('comparaison profonde : des étapes inchangées ne sont pas renvoyées', ()
   const w = fresh([task({ steps })]);
   const [a] = upsert(updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { notes: 'x' } }, T0));
   assert.equal('steps' in a, false);
-  const [b] = upsert(toggleStep(w.tasks, w.game, w.ledger, { id: 't1', stepId: 's1' }, T0));
+  const [b] = upsert(toggleStep(w.tasks, w.game, w.ledger, { id: 't1', stepId: 's1', gameRevision: 0 }, T0));
   assert.equal(b.steps[0].done, true);
 });
 
@@ -498,12 +498,12 @@ test('rien n’a changé : aucune opération, tâche et date intactes', () => {
 test('une nouvelle tâche est envoyée en entier ; l’entrée n’est pas modifiée', () => {
   const w = fresh([task()]);
   const avant = structuredClone(w.tasks);
-  const r = createQuest(w.tasks, w.game, w.ledger, { task: 'Nouvelle', domain: 'Maison' }, T0);
+  const r = createQuest(w.tasks, w.game, w.ledger, { task: 'Nouvelle', domain: 'Maison', gameRevision: 0 }, T0);
   const [op] = upsert(r);
   assert.ok(op.task && op.created && op.status && op.priority && op.updatedAt);
   assert.deepEqual(w.tasks, avant);
   // créée puis terminée dans la même opération (« Déjà faite ») : toujours en entier
-  const d = createQuest(w.tasks, w.game, w.ledger, { task: 'Déjà', alreadyDone: true }, T0);
+  const d = createQuest(w.tasks, w.game, w.ledger, { task: 'Déjà', alreadyDone: true, gameRevision: 0 }, T0);
   assert.equal(upsert(d).length, 1);
   assert.equal(upsert(d)[0].status, 'done');
   assert.ok(upsert(d)[0].task);
@@ -513,7 +513,7 @@ test('remballer une quête récurrente ne renvoie que les champs rétablis', () 
   const dep = task({ priority: 6, length: 1, difficulty: 1, recurrence: { every: 'week', interval: 1 }, occurrence: 1, deadline: '2026-10-06' });
   let w = fresh([dep]);
   w = step(w, completeQuest, { id: 't1' }).world;
-  const r = remballerQuest(w.tasks, w.game, w.ledger, { id: 't1' }, plusHours(T0, 1));
+  const r = remballerQuest(w.tasks, w.game, w.ledger, { id: 't1', gameRevision: 0 }, plusHours(T0, 1));
   const [op] = upsert(r);
   assert.equal('task' in op, false);
   assert.equal(op.occurrence, 1);

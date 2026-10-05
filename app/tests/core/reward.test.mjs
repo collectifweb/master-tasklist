@@ -42,7 +42,7 @@ test('freezeValues, effectiveValues et applyFreeze', () => {
 });
 
 test('bonus : ×1,2 si finie avant une échéance posée 48 h plus tôt', () => {
-  const t = task({ priority: 10, length: 10, difficulty: 10, deadline: '2026-10-10', deadlineSetAt: '2026-10-06T10:00:00Z', created: '2026-10-06' });
+  const t = task({ priority: 10, length: 10, difficulty: 10, deadline: '2026-10-10', deadlineSetAt: '2026-10-03T10:00:00Z', created: '2026-10-06' });
   const q = questPe(t, T0);
   assert.equal(q.base, 25);
   assert.equal(q.pe, 30); // 25 × 1,2

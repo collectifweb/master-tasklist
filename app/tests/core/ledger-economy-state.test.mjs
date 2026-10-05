@@ -202,7 +202,8 @@ test('Confiance : +1 par jour avec une quête (la lisière s’allume une fois),
   const days = ['2026-10-05T14:00:00Z', '2026-10-06T14:00:00Z', '2026-10-07T14:00:00Z', '2026-10-08T14:00:00Z'];
   const evs = [];
   days.forEach((d, i) => {
-    const r = applyEntries(g, [entry({ key: 'k' + i, taskId: 'x' + i }), entry({ key: 'kk' + i, taskId: 'y' + i })], d);
+    const day = d.slice(0, 10);
+    const r = applyEntries(g, [entry({ key: 'k' + i, taskId: 'x' + i, day }), entry({ key: 'kk' + i, taskId: 'y' + i, day })], d);
     g = r.game;
     evs.push(...r.events);
   });
@@ -211,7 +212,7 @@ test('Confiance : +1 par jour avec une quête (la lisière s’allume une fois),
   assert.equal(g.resources.confidence, 5); // 4 jours + 1 semaine tenue
   assert.equal(g.lisiereDays.length, 4);
   // un 5e jour de la même semaine ne redonne pas la semaine
-  const r = applyEntry(g, entry({ key: 'k9', taskId: 'z' }), '2026-10-09T14:00:00Z');
+  const r = applyEntry(g, entry({ key: 'k9', taskId: 'z', day: '2026-10-09' }), '2026-10-09T14:00:00Z');
   assert.equal(r.game.resources.confidence, 6);
 });
 

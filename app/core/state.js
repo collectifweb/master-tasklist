@@ -39,6 +39,7 @@ export function createInitialState(now) {
     placements: [],
     plots: [],
     avis: { current: null, history: [] },
+    recentApplied: {}, // ce que chaque gain des 48 dernières heures a réellement appliqué (sert aux annulations)
   };
 }
 

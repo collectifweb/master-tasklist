@@ -1,6 +1,6 @@
 // Applique les entrées du registre à l'état : plafonds de stock, surplus vers le Fil libre (2 pour 1),
 // Confiance, seuils de secteur, chapitres. Fonctions pures : l'état d'entrée n'est jamais modifié.
-import { gameDay, daysBetween, weekStart, addDays } from './time.js';
+import { gameDay, daysBetween, weekStart, addDays, parseNow } from './time.js';
 import { SECTORS } from './domains.js';
 import { round1, round2 } from './reward.js';
 
@@ -73,37 +73,88 @@ function addResource(g, key, delta) {
     g.resources[key] = round1(cur + kept);
     const surplus = delta - kept;
     if (surplus > 0) g.filLibre = round2(g.filLibre + surplus / SURPLUS_PER_FIL);
-    return surplus;
+    return { kept, surplus };
   }
   g.resources[key] = Math.max(0, round1(cur + delta));
-  return 0;
+  return { kept: delta, surplus: 0 };
+}
+
+const RECENT_HOURS = 48;
+
+function purgeRecent(g, now) {
+  const t = parseNow(now).getTime();
+  for (const [k, v] of Object.entries(g.recentApplied)) {
+    if (!v.at || t - new Date(v.at).getTime() > RECENT_HOURS * 3600000) delete g.recentApplied[k];
+  }
+}
+
+// Annulation : retire ce que les gains annulés ont réellement apporté (la part passée au Fil libre par surplus
+// comprise). Pour une clé inconnue de `recentApplied`, on retire le montant nominal de l'entrée.
+function applyReversal(g, entry, events) {
+  const nominal = { energy: 0, materials: 0, lueur: 0, filLibre: 0 };
+  const applied = { energy: 0, materials: 0, lueur: 0, filLibre: 0 };
+  for (const key of entry.reverses ?? []) {
+    const a = g.recentApplied[key];
+    if (!a) continue;
+    for (const k of Object.keys(nominal)) { nominal[k] += a.nominal[k]; applied[k] += a.applied[k]; }
+    delete g.recentApplied[key];
+  }
+  const want = {
+    energy: -(entry.energy || 0), materials: -(entry.materials || 0),
+    lueur: -(entry.lueur ? entry.lueur.amount || 0 : 0), filLibre: -(entry.filLibre || 0),
+  };
+  const remove = {};
+  for (const k of Object.keys(want)) remove[k] = round2(applied[k] + Math.max(0, want[k] - nominal[k]));
+  g.resources.energy = Math.max(0, round1(g.resources.energy - remove.energy));
+  g.resources.materials = Math.max(0, round1(g.resources.materials - remove.materials));
+  const sector = entry.lueur && entry.lueur.sector;
+  if (sector in g.lueur) g.lueur[sector] = Math.max(0, round2(g.lueur[sector] - remove.lueur));
+  g.filLibre = Math.max(0, round2(g.filLibre - remove.filLibre));
 }
 
 /**
  * Applique une entrée du registre. Retourne { game, events }.
- * Une entrée `reward` (quête terminée) allume la lisière la première fois du jour de jeu :
- * +1 Confiance, cultures arrosées, et +1 Confiance par « semaine tenue » (4 jours sur 7).
+ * Une entrée `reward` (quête terminée) allume la lisière si le jour de l'entrée (`entry.day`, pas l'instant
+ * courant) n'est pas déjà allumé : +1 Confiance, cultures arrosées, et +1 Confiance par « semaine tenue »
+ * (4 jours sur 7). Une entrée qui porte `reverses` retire ce que les gains annulés ont réellement apporté.
  */
 export function applyEntry(game, entry, now) {
   const g = structuredClone(game);
+  if (!g.recentApplied) g.recentApplied = {};
   const events = [];
-  const day = gameDay(now);
-  if (!g.daily || g.daily.day !== day) g.daily = { day, quests: 0, lisiere: false };
+  const day = entry.day ?? gameDay(now);
+  purgeRecent(g, now);
+  if (!g.daily || day > g.daily.day) g.daily = { day, quests: 0, lisiere: g.lisiereDays.includes(day) };
 
-  const surplusE = addResource(g, 'energy', entry.energy || 0);
-  const surplusM = addResource(g, 'materials', entry.materials || 0);
-  if (surplusE + surplusM > 0) events.push({ type: 'surplus', energy: round1(surplusE), materials: round1(surplusM), filLibre: round2((surplusE + surplusM) / SURPLUS_PER_FIL) });
-
-  if (entry.lueur && entry.lueur.sector in g.lueur) {
-    g.lueur[entry.lueur.sector] = Math.max(0, round2(g.lueur[entry.lueur.sector] + (entry.lueur.amount || 0)));
+  if (Array.isArray(entry.reverses)) {
+    applyReversal(g, entry, events);
+    if (entry.type === 'reverse' && g.daily.day === day) g.daily.quests = Math.max(0, g.daily.quests - 1);
+  } else {
+    const e = addResource(g, 'energy', entry.energy || 0);
+    const m = addResource(g, 'materials', entry.materials || 0);
+    const surplus = (e.surplus > 0 ? e.surplus : 0) + (m.surplus > 0 ? m.surplus : 0);
+    if (surplus > 0) events.push({ type: 'surplus', energy: round1(e.surplus), materials: round1(m.surplus), filLibre: round2(surplus / SURPLUS_PER_FIL) });
+    if (entry.lueur && entry.lueur.sector in g.lueur) {
+      g.lueur[entry.lueur.sector] = Math.max(0, round2(g.lueur[entry.lueur.sector] + (entry.lueur.amount || 0)));
+    }
+    g.filLibre = Math.max(0, round2(g.filLibre + (entry.filLibre || 0)));
+    if (entry.key) {
+      g.recentApplied[entry.key] = {
+        at: entry.at,
+        nominal: { energy: entry.energy || 0, materials: entry.materials || 0, lueur: entry.lueur ? entry.lueur.amount || 0 : 0, filLibre: entry.filLibre || 0 },
+        applied: {
+          energy: e.kept, materials: m.kept, lueur: entry.lueur ? entry.lueur.amount || 0 : 0,
+          filLibre: round2((entry.filLibre || 0) + surplus / SURPLUS_PER_FIL),
+        },
+      };
+    }
   }
-  g.filLibre = Math.max(0, round2(g.filLibre + (entry.filLibre || 0)));
 
   if (entry.type === 'reward' && (entry.pe || 0) >= 0) {
-    g.daily.quests += 1;
-    if (!g.daily.lisiere) {
-      g.daily.lisiere = true;
-      if (!g.lisiereDays.includes(day)) g.lisiereDays.push(day);
+    if (g.daily.day === day) g.daily.quests += 1;
+    if (!g.lisiereDays.includes(day)) {
+      if (g.daily.day === day) g.daily.lisiere = true;
+      g.lisiereDays.push(day);
       g.resources.confidence += 1;
       growPlots(g);
       events.push({ type: 'lisiere-allumee', day });
@@ -117,6 +168,27 @@ export function applyEntry(game, entry, now) {
     }
   }
   events.push(...refreshSectors(g));
+  return { game: g, events };
+}
+
+/**
+ * Retire le jour de lisière d'un jour de jeu dont plus aucune quête n'est comptée (tout a été remballé) :
+ * −1 Confiance, et −1 de plus si la semaine tenue repasse sous 4 jours. Les cultures déjà arrosées ne reculent pas.
+ */
+export function retractLisiere(game, day) {
+  if (!game.lisiereDays.includes(day)) return { game, events: [] };
+  const g = structuredClone(game);
+  const events = [{ type: 'lisiere-retiree', day }];
+  g.lisiereDays = g.lisiereDays.filter((d) => d !== day);
+  g.resources.confidence = Math.max(0, g.resources.confidence - 1);
+  if (g.daily && g.daily.day === day) g.daily.lisiere = false;
+  const ws = weekStart(day);
+  const inWeek = g.lisiereDays.filter((d) => d >= ws && d <= addDays(ws, 6)).length;
+  if (inWeek < WEEK_HELD_DAYS && g.weeksHeld.includes(ws)) {
+    g.weeksHeld = g.weeksHeld.filter((w) => w !== ws);
+    g.resources.confidence = Math.max(0, g.resources.confidence - 1);
+    events.push({ type: 'semaine-retiree', weekStart: ws });
+  }
   return { game: g, events };
 }
 

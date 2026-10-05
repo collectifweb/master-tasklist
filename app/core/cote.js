@@ -1,13 +1,13 @@
 // Cote (le rang d'une quête), tris, filtres, cartes du Fil du jour, « Pourquoi ? ».
 // Le jeu n'influence jamais la Cote.
-import { daysBetween, daysUntil, dayOf, gameDay, weekEnd } from './time.js';
+import { daysBetween, daysUntil, dayOnly, gameDay, weekEnd } from './time.js';
 import { normalizeText, sectorOfTask } from './domains.js';
 
 const ratio = (n) => Math.round(n * 10) / 10;
 
 /** Jours depuis le début de l'occurrence active (récurrence) ou la création. */
 export function taskAgeDays(task, now) {
-  const start = dayOf(task.occurrenceSince) ?? dayOf(task.created);
+  const start = dayOnly(task.occurrenceSince) ?? dayOnly(task.created);
   if (!start) return 0;
   return Math.max(0, daysBetween(start, gameDay(now)));
 }
@@ -81,22 +81,22 @@ function pinnedFirst(list, now) {
   return pinned;
 }
 
-/** Tri par Cote : épinglées d'abord, puis Cote décroissante. Une quête de priorité ≥ 8 est toujours dans les 3 premières. */
+/**
+ * Tri par Cote : les quêtes épinglées (en cours) restent en tête, puis les autres par Cote décroissante.
+ * Une quête de priorité ≥ 8 est toujours dans les 3 premières des quêtes non épinglées.
+ */
 export function orderByCote(tasks, now) {
-  const scored = tasks.map((t) => ({ t, c: cote(t, now) }));
+  const scored = tasks.filter((t) => !isPinned(t)).map((t) => ({ t, c: cote(t, now) }));
   scored.sort((a, b) => b.c - a.c || b.t.priority - a.t.priority || byId(a.t, b.t));
-  const pinned = pinnedFirst(tasks, now);
-  const pinnedIds = new Set(pinned.map((t) => t.id));
-  const out = [...pinned, ...scored.map((s) => s.t).filter((t) => !pinnedIds.has(t.id))];
-  const top = out.slice(0, 3);
-  if (!top.some((t) => t.priority >= 8)) {
-    const idx = out.findIndex((t, i) => i >= 3 && t.priority >= 8);
-    if (idx > 0 && out.length > 2) {
-      const [t] = out.splice(idx, 1);
-      out.splice(Math.min(2, out.length), 0, t);
+  const rest = scored.map((s) => s.t);
+  if (!rest.slice(0, 3).some((t) => t.priority >= 8)) {
+    const idx = rest.findIndex((t, i) => i >= 3 && t.priority >= 8);
+    if (idx > 0) {
+      const [t] = rest.splice(idx, 1);
+      rest.splice(Math.min(2, rest.length), 0, t);
     }
   }
-  return out;
+  return [...pinnedFirst(tasks, now), ...rest];
 }
 
 export function sortTasks(tasks, sortId, now) {
@@ -131,7 +131,7 @@ export function filterTasks(tasks, filters = {}, now) {
     if (filters.quick && !(t.length <= 2)) return false;
     if (filters.lowEnergy && !(t.difficulty <= 3)) return false;
     if (end) {
-      const dl = dayOf(t.deadline);
+      const dl = dayOnly(t.deadline);
       if (!dl || dl > end) return false;
     }
     if (filters.sector && sectorOfTask(t) !== filters.sector) return false;

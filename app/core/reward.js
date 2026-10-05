@@ -1,6 +1,6 @@
 // Points d'effort (PE), gel de P/L/D, bonus plafonnés, plafond quotidien dégressif,
 // conversion en Énergie / Matériaux / Lueur, partage étapes / complétion, « Déjà faite ».
-import { daysBetween, dayOf, gameDay, hoursBetween, toISO } from './time.js';
+import { daysBetween, dayOnly, gameDay, hoursBetween, toISO } from './time.js';
 import { taskAgeDays } from './cote.js';
 
 export const ENERGY_PER_PE = 0.3;
@@ -36,7 +36,7 @@ export function shouldFreeze(task, now) {
   if (task.startedAt) return true;
   if (Array.isArray(task.steps) && task.steps.some((s) => s.done)) return true;
   if (task.createdAt) return hoursBetween(task.createdAt, now) >= 24;
-  const c = dayOf(task.created);
+  const c = dayOnly(task.created);
   return !!c && daysBetween(c, gameDay(now)) >= 1;
 }
 
@@ -63,9 +63,9 @@ export function applyFreeze(task, now) {
  */
 export function bonusPe(task, basePe, now) {
   let deadlineBonus = 0;
-  const dl = dayOf(task.deadline);
-  const setDay = dayOf(task.deadlineSetAt);
-  if (dl && setDay && daysBetween(setDay, dl) >= 2 && gameDay(now) <= dl) deadlineBonus = basePe * 0.2;
+  const dl = dayOnly(task.deadline);
+  // l'échéance doit avoir été posée au moins 48 h plus tôt (heures réelles) et la quête finie le jour dit ou avant
+  if (dl && task.deadlineSetAt && hoursBetween(task.deadlineSetAt, now) >= 48 && gameDay(now) <= dl) deadlineBonus = basePe * 0.2;
   const ageBonus = 2 * Math.floor(taskAgeDays(task, now) / 14);
   const raw = deadlineBonus + ageBonus;
   const total = Math.min(raw, basePe * BONUS_CAP);

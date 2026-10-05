@@ -7,15 +7,18 @@
 //   events  : événements pour l'interface (reward, lisiere-allumee, secteur-seuil, etape, plaque…)
 // `params.gameRevision` (facultatif) est repris dans game.set comme `baseGameRevision`.
 // Un champ qu'on vide est écrit `null` (l'API conserve les champs absents).
-import { gameDay, toISO, addDays, addMonths, dayOf, isDayString, daysBetween } from './time.js';
+// Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant
+// inventé ou renommé), `game.set` sans `params.gameRevision` (null permis pour le tout premier état), récurrence
+// refaite trop tôt, date calculée invalide.
+import { gameDay, toISO, addDays, addMonths, dayOnly, isValidDay, daysBetween } from './time.js';
 import { clampScale } from './migrate.js';
 import { orderByCote } from './cote.js';
-import { applyFreeze, freezeValues, questPe, stepPe, completionPe, MAX_STEPS } from './reward.js';
+import { applyFreeze, freezeValues, effectiveValues, questPe, stepPe, completionPe, MAX_STEPS } from './reward.js';
 import {
   buildRewardEntry, buildStepEntry, buildReverseEntry, buildBonusEntry, buildAjoutRefund,
   canReverse, stepsPaid, unknownStepsCount, hasKey, rewardKey, reverseKey, findEntry,
 } from './ledger.js';
-import { applyEntry } from './economy.js';
+import { applyEntry, retractLisiere } from './economy.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -46,6 +49,7 @@ class Ctx {
   get(id) {
     const t = this.tasks.find((x) => x.id === id);
     if (!t) throw new Error('Quête introuvable.');
+    if (t.readonly) throw new Error('Cette quête n’a pas d’identifiant fiable (absent ou en double dans la liste) : elle est en lecture seule.');
     return t;
   }
   put(task) {
@@ -79,11 +83,11 @@ class Ctx {
     const ops = [];
     for (const t of this.changed.values()) {
       const before = this.orig.get(t.id);
-      if (!before) { ops.push({ type: 'task.upsert', task: t }); continue; } // nouvelle quête : en entier
+      if (!before) { const { readonly, ...whole } = t; ops.push({ type: 'task.upsert', task: whole }); continue; } // nouvelle quête : en entier
       // quête existante : seulement `id`, les champs réellement modifiés et `updatedAt`
       const diff = {};
       for (const k of Object.keys(t)) {
-        if (k !== 'updatedAt' && !deepEqual(t[k], before[k])) diff[k] = t[k];
+        if (k !== 'updatedAt' && k !== 'readonly' && !deepEqual(t[k], before[k])) diff[k] = t[k];
       }
       if (!Object.keys(diff).length) {
         const i = this.tasks.findIndex((x) => x.id === t.id);
@@ -95,6 +99,7 @@ class Ctx {
     for (const id of this.deleted) ops.push({ type: 'task.delete', id });
     if (this.entries.length) ops.push({ type: 'ledger.append', entries: this.entries });
     if (JSON.stringify(this.game) !== this.game0) {
+      if (this.params.gameRevision === undefined) throw new Error('Il manque la révision de l’état du jeu (gameRevision) : impossible d’enregistrer sans elle.');
       ops.push({ type: 'game.set', game: this.game, baseGameRevision: this.params.gameRevision });
     }
     return { tasks: this.tasks, game: this.game, ops, entries: this.entries, events: this.events };
@@ -109,43 +114,68 @@ function cleanTitle(v) {
 
 function cleanDeadline(v) {
   if (v === undefined || v === null || v === '') return null;
-  const d = isDayString(v) ? v : dayOf(v);
+  const d = dayOnly(v);
   if (!d) throw new Error("L'échéance est invalide.");
   return d;
 }
 
-function cleanRecurrence(r) {
+/**
+ * Récurrence propre : { every, interval 1-365, day? (quantième d'origine, pour « chaque mois ») }.
+ * strict : un `every` inconnu lance une erreur ; sinon il donne null (pas de récurrence).
+ */
+function cleanRecurrence(r, strict = true) {
   if (r === undefined || r === null) return null;
-  const interval = Math.round(Number(r.interval ?? 1));
-  if (!RECURRENCE_EVERY.includes(r.every) || !(interval >= 1)) throw new Error('La récurrence est invalide.');
-  return { every: r.every, interval };
+  if (typeof r !== 'object' || !RECURRENCE_EVERY.includes(r.every)) {
+    if (strict) throw new Error('La récurrence est invalide.');
+    return null;
+  }
+  let interval = Math.round(Number(r.interval ?? 1));
+  if (!Number.isFinite(interval)) interval = 1;
+  const out = { every: r.every, interval: Math.min(365, Math.max(1, interval)) };
+  const day = Math.round(Number(r.day));
+  if (r.every === 'month' && day >= 1 && day <= 31) out.day = day;
+  return out;
 }
 
-function nextStepId(steps) {
-  let n = steps.length + 1;
-  const ids = new Set(steps.map((s) => s.id));
-  while (ids.has('s' + n)) n++;
-  return 's' + n;
+function nextStepId(task, ledger) {
+  let max = Math.max(Number(task.stepSeq) || 0, (task.steps ?? []).length);
+  const num = (id) => { const m = /^s(\d+)$/.exec(String(id)); return m ? Number(m[1]) : 0; };
+  for (const s of task.steps ?? []) max = Math.max(max, num(s.id));
+  const prefix = `step:${task.id}:`;
+  for (const e of ledger) {
+    if (typeof e.key === 'string' && e.key.startsWith(prefix)) max = Math.max(max, num(e.key.split(':').pop()));
+  }
+  return 's' + (max + 1);
 }
 
 /** Identifiant d'une nouvelle quête, dérivé de l'instant (jamais deux fois le même). */
 export function newTaskId(tasks, now) {
-  const base = 'q-' + parseInt(toISO(now).replace(/\D/g, '').slice(0, 17), 10).toString(36);
+  const base = 'q-' + BigInt(toISO(now).replace(/\D/g, '').slice(0, 17)).toString(36);
   const ids = new Set(tasks.map((t) => t.id));
   let id = base, n = 2;
   while (ids.has(id)) id = `${base}-${n++}`;
   return id;
 }
 
-function nextDeadline(task, recurrence, today) {
+// Début de la période d'une occurrence : l'échéance moins une période.
+function periodStart(deadline, rec) {
+  if (rec.every === 'day') return addDays(deadline, -rec.interval);
+  if (rec.every === 'week') return addDays(deadline, -7 * rec.interval);
+  return addMonths(deadline, -rec.interval, rec.day);
+}
+
+// Prochaine échéance, toujours après aujourd'hui. Pour « chaque mois », on repart du quantième d'origine
+// (31 → 28 en février → 31 en mars). Lance une erreur si le résultat n'est pas une vraie date.
+function nextDeadline(deadline, rec, today) {
   const step = (d) => {
-    if (recurrence.every === 'day') return addDays(d, recurrence.interval);
-    if (recurrence.every === 'week') return addDays(d, 7 * recurrence.interval);
-    return addMonths(d, recurrence.interval);
+    if (rec.every === 'day') return addDays(d, rec.interval);
+    if (rec.every === 'week') return addDays(d, 7 * rec.interval);
+    return addMonths(d, rec.interval, rec.day);
   };
-  let d = dayOf(task.deadline) ?? today;
+  let d = deadline ?? today;
   let guard = 0;
   do { d = step(d); } while (d <= today && ++guard < 1000);
+  if (!isValidDay(d) || d <= today) throw new Error('La prochaine échéance de la récurrence est invalide : la quête n’a pas été terminée.');
   return d;
 }
 
@@ -157,18 +187,43 @@ function paidSoFar(ledger, task, occ, pe) {
   return stepsPaid(ledger, task.id, occ) + (old ? Math.round(((pe * 0.4) / n) * old * 100) / 100 : 0);
 }
 
+const QUICK_ALREADY_DONE_MINUTES = 10;
+
 // Termine une quête dans le contexte (gain, passage à « done », ou occurrence suivante).
 function complete(ctx, task, { alreadyDone = false } = {}) {
   const now = ctx.now;
-  let t = { ...task, frozen: task.frozen ?? freezeValues(task, now) };
+  let t = applyFreeze(task, now);
+  if (!t.frozen) t = { ...t, frozen: freezeValues(t, now) };
   const occ = t.occurrence ?? 1;
+
+  // récurrence : lue de façon défensive, jamais d'effet si l'occurrence précédente vient d'être terminée
+  const rec = t.recurrence ? cleanRecurrence(t.recurrence, false) : null;
+  let nextDl = null;
+  let recNext = rec;
+  if (rec) {
+    const dl = dayOnly(t.deadline);
+    if (t.lastDone && gameDay(t.lastDone.at) === ctx.day) {
+      throw new Error('Cette quête récurrente vient déjà d’être terminée aujourd’hui : la prochaine occurrence se fait plus tard.');
+    }
+    if (rec.every === 'month' && !rec.day) recNext = { ...rec, day: Number((dl ?? ctx.day).slice(8, 10)) };
+    if (dl) {
+      const start = periodStart(dl, recNext);
+      if (ctx.day < start) throw new Error(`Trop tôt pour terminer cette quête récurrente : sa prochaine occurrence commence le ${start}.`);
+    }
+    nextDl = nextDeadline(dl, recNext, ctx.day);
+  }
+
+  // une quête terminée moins de 10 minutes après sa création compte comme « Déjà faite »
+  if (!alreadyDone && t.createdAt && (new Date(ctx.iso) - new Date(t.createdAt)) / 60000 < QUICK_ALREADY_DONE_MINUTES) alreadyDone = true;
+
   const { pe } = questPe(t, now);
   const net = completionPe(pe, paidSoFar(ctx.ledger, t, occ, pe));
+  const values = effectiveValues(t, now);
 
   let wasTop3 = false;
   if (!alreadyDone) {
     const open = ctx.tasks.filter((x) => x.status === 'todo');
-    wasTop3 = orderByCote(open, now).slice(0, 3).some((x) => x.id === t.id) && t.priority >= 8;
+    wasTop3 = orderByCote(open, now).slice(0, 3).some((x) => x.id === t.id) && values.priority >= 8;
   }
 
   const entry = buildRewardEntry({ task: t, occurrence: occ, pe: net, alreadyDone }, ctx.ledger, now);
@@ -181,20 +236,21 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   }
   if (t.frozen.length >= 6) ctx.events.push({ type: 'plaque', taskId: t.id, day: ctx.day });
 
-  if (t.recurrence) {
+  if (rec) {
     const prev = {
       deadline: t.deadline ?? null, deadlineSetAt: t.deadlineSetAt ?? null, occurrenceSince: t.occurrenceSince ?? null,
       startedAt: t.startedAt ?? null, frozen: t.frozen, steps: t.steps ?? null,
+      recurrence: t.recurrence ?? null,
     };
-    const nd = nextDeadline(t, t.recurrence, ctx.day);
     t = {
-      ...t, status: 'todo', occurrence: occ + 1, doneAt: null, startedAt: null, frozen: null,
-      deadline: nd, deadlineSetAt: null, occurrenceSince: ctx.day,
+      ...t, recurrence: recNext, status: 'todo', occurrence: occ + 1, doneAt: null, startedAt: null, frozen: null,
+      deadline: nextDl, deadlineSetAt: null, occurrenceSince: ctx.day,
       steps: Array.isArray(t.steps) ? t.steps.map((s) => ({ ...s, done: false, doneAt: null })) : t.steps,
       lastDone: { occurrence: occ, at: ctx.iso, prev },
     };
   } else {
     t = { ...t, status: 'done', doneAt: ctx.iso };
+    if (t.lastDone) t.lastDone = null; // la récurrence a été retirée : l'ancienne occurrence ne se remballe plus
   }
   return ctx.put(t);
 }
@@ -224,9 +280,15 @@ export function createQuest(tasks, game, ledger, params, now) {
   };
   if (params.notes) t.notes = String(params.notes);
   if (deadline) t.deadlineSetAt = ctx.iso;
-  if (labels.length) t.steps = labels.map((label, i) => ({ id: 's' + (i + 1), label: String(label).trim(), done: false }));
+  if (labels.length) {
+    t.steps = labels.map((label, i) => ({ id: 's' + (i + 1), label: String(label).trim(), done: false }));
+    t.stepSeq = labels.length;
+  }
   const rec = cleanRecurrence(params.recurrence);
-  if (rec) { t.recurrence = rec; t.occurrence = 1; t.occurrenceSince = ctx.day; }
+  if (rec) {
+    if (rec.every === 'month' && !rec.day) rec.day = Number((deadline ?? ctx.day).slice(8, 10)); // quantième d'origine
+    t.recurrence = rec; t.occurrence = 1; t.occurrenceSince = ctx.day;
+  }
   if (params.alreadyDone) t.alreadyDone = true;
   ctx.put(t);
 
@@ -243,7 +305,7 @@ const PATCHABLE = ['task', 'domain', 'difficulty', 'length', 'priority', 'deadli
 /** params : { id, patch: { task, domain, difficulty, length, priority, deadline, notes, recurrence } }. Les valeurs figées ne bougent pas. */
 export function updateQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  const t = { ...ctx.get(params.id) };
+  const t = { ...applyFreeze(ctx.get(params.id), now) }; // P/L/D se figent avant tout changement
   const patch = params.patch || {};
   for (const k of PATCHABLE) {
     if (!(k in patch)) continue;
@@ -258,7 +320,10 @@ export function updateQuest(tasks, game, ledger, params, now) {
     } else if (k === 'notes') t.notes = v == null ? null : String(v);
     else if (k === 'recurrence') {
       t.recurrence = cleanRecurrence(v);
-      if (t.recurrence && !t.occurrence) { t.occurrence = 1; t.occurrenceSince = t.created; }
+      if (t.recurrence) {
+        if (t.recurrence.every === 'month' && !t.recurrence.day) t.recurrence.day = Number((dayOnly(t.deadline) ?? ctx.day).slice(8, 10));
+        if (!t.occurrence) { t.occurrence = 1; t.occurrenceSince = t.created; }
+      }
     }
   }
   ctx.put(t);
@@ -289,8 +354,9 @@ export function addStep(tasks, game, ledger, params, now) {
   if (steps.length >= MAX_STEPS) throw new Error(`Une quête compte ${MAX_STEPS} étapes au plus.`);
   const label = String(params.label ?? '').trim();
   if (!label) throw new Error('Il faut un libellé pour l’étape.');
-  steps.push({ id: nextStepId(steps), label, done: false });
-  ctx.put({ ...t, steps });
+  const id = nextStepId(t, ctx.ledger); // jamais réutilisé, même après suppression
+  steps.push({ id, label, done: false });
+  ctx.put({ ...t, steps, stepSeq: Number(id.slice(1)) });
   return ctx.result();
 }
 
@@ -318,7 +384,8 @@ export function toggleStep(tasks, game, ledger, params, now) {
     const { pe } = questPe(t, now);
     const share = stepPe(pe, steps.length, paidSoFar(ctx.ledger, t, occ, pe));
     ctx.events.push({ type: 'etape', taskId: t.id, stepId: s.id, done: true, restantes: steps.filter((x) => !x.done).length });
-    if (share > 0) {
+    // rien n'est payé si la quête a déjà été récompensée (fin, ou fin puis Remballer)
+    if (share > 0 && !hasKey(ctx.ledger, rewardKey(t.id, occ))) {
       const entry = buildStepEntry({ task: t, occurrence: occ, stepId: s.id, pe: share }, ctx.ledger, now);
       if (entry) ctx.append(entry, 'etape');
     }
@@ -361,6 +428,14 @@ export function remballerQuest(tasks, game, ledger, params, now) {
   }
   const entry = buildReverseEntry(ctx.ledger, t.id, occ, now);
   ctx.append(entry, 'reverse');
+  // plus aucune quête comptée ce jour de jeu : la lisière de ce jour, sa Confiance (et la semaine tenue) sont retirées
+  const encore = ctx.ledger.some((e) => e.type === 'reward' && e.day === entry.day && e.key !== rewardKey(t.id, occ)
+    && !hasKey(ctx.ledger, reverseKey(e.taskId, e.occurrence)));
+  if (!encore) {
+    const r = retractLisiere(ctx.game, entry.day);
+    ctx.game = r.game;
+    ctx.events.push(...r.events);
+  }
   if (recurring) {
     const p = t.lastDone.prev;
     ctx.put({ ...t, ...p, status: 'todo', occurrence: occ, doneAt: null, lastDone: null });
@@ -381,7 +456,7 @@ export function unarchiveQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const t = ctx.get(params.id);
   if (t.status !== 'archived') throw new Error('Cette quête n’est pas archivée.');
-  ctx.put({ ...t, status: 'todo', archivedAt: null });
+  ctx.put({ ...t, status: t.doneAt ? 'done' : 'todo', archivedAt: null });
   return ctx.result();
 }
 
@@ -395,8 +470,14 @@ export function deleteQuest(tasks, game, ledger, params, now) {
   return ctx.result();
 }
 
-/** Bonus hors tâches : params.type = 'ouverture' | 'plan' | 'plan-honore' | 'ajout'. Sans effet si le plafond du jour est atteint. */
+const CLAIMABLE = ['plan', 'plan-honore', 'ajout'];
+
+/**
+ * Bonus hors tâches : params.type = 'plan' | 'plan-honore' | 'ajout' (les autres types passent par openApp et
+ * completeQuest ; tout autre type lance une erreur). Sans effet si le plafond du jour est atteint.
+ */
 export function claimBonus(tasks, game, ledger, params, now) {
+  if (!CLAIMABLE.includes(params.type)) throw new Error('Ce bonus ne se réclame pas ainsi.');
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const entry = buildBonusEntry(params.type, ctx.ledger, now);
   if (entry) ctx.append(entry, 'bonus', { bonus: params.type });

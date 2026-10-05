@@ -1,5 +1,5 @@
 // Migration des tâches, sans perte : tout champ inconnu est recopié tel quel.
-import { gameDay, isDayString, dayOf } from './time.js';
+import { gameDay, isDayString, dayOnly, dayOf } from './time.js';
 
 export const STATUSES = ['todo', 'done', 'archived'];
 
@@ -19,6 +19,8 @@ function hash(str) {
 /**
  * Tâche brute → tâche normalisée. Copie tous les champs (même inconnus), borne P/L/D à 1-10,
  * garde `archived`, `deadline`, `notes`. N'ajoute que `id`, `created`, `status` s'ils manquent.
+ * Une tâche dont l'identifiant est inventé ou renommé reçoit `readonly: true` (propriété de vue : quests.js refuse
+ * d'agir dessus et ne l'envoie jamais à l'API).
  */
 export function normalizeTask(raw, now, index = 0) {
   const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
@@ -27,13 +29,13 @@ export function normalizeTask(raw, now, index = 0) {
   t.difficulty = clampScale(src.difficulty);
   t.length = clampScale(src.length);
   t.priority = clampScale(src.priority);
-  if (!STATUSES.includes(src.status)) t.status = 'todo';
-  if (!isDayString(src.created)) {
-    const d = dayOf(src.created);
-    t.created = d ?? gameDay(now);
-  }
+  const status = typeof src.status === 'string' ? src.status.trim().toLowerCase() : src.status;
+  t.status = STATUSES.includes(status) ? status : 'todo';
+  if (!isDayString(src.created)) t.created = dayOnly(src.created) ?? dayOf(src.created) ?? gameDay(now);
   if (src.id === undefined || src.id === null || src.id === '') {
+    // identifiant inventé : le serveur ne le connaît pas, la tâche est en lecture seule (propriété de vue, jamais envoyée)
     t.id = 'm-' + hash(`${t.task}|${t.created}|${index}`);
+    t.readonly = true;
   } else if (typeof src.id !== 'string') {
     t.id = String(src.id);
   }
@@ -50,6 +52,7 @@ export function normalizeTasks(raw, now) {
       let n = 2;
       while (seen.has(`${t.id}-${n}`)) n++;
       t.id = `${t.id}-${n}`;
+      t.readonly = true; // identifiant renommé : inconnu du serveur, lecture seule
     }
     seen.add(t.id);
     return t;

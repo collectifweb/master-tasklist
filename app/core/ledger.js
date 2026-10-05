@@ -147,6 +147,7 @@ export function buildReverseEntry(ledger, taskId, occurrence, now) {
   const sum = (f) => round2(parts.reduce((s, e) => s + f(e), 0));
   return {
     key, at: toISO(now), day: reward.day, type: 'reverse', taskId, occurrence,
+    reverses: parts.map((e) => e.key), // clés annulées : l'état s'en sert pour retirer ce qui a vraiment été appliqué
     pe: -sum((e) => e.pe || 0),
     energy: -sum((e) => e.energy || 0),
     materials: -sum((e) => e.materials || 0),
@@ -183,7 +184,7 @@ export function buildAjoutRefund(ledger, taskId, now) {
   const key = `bonus:ajout-reprise:${given.day}:${taskId}`;
   if (hasKey(ledger, key)) return null;
   return {
-    key, at: toISO(now), day: given.day, type: 'bonus', bonus: 'ajout', taskId,
+    key, at: toISO(now), day: given.day, type: 'bonus', bonus: 'ajout', taskId, reverses: [given.key],
     pe: 0, energy: -given.energy, materials: 0, lueur: { sector: 'place', amount: 0 }, filLibre: 0,
   };
 }

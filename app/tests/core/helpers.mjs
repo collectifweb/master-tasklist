@@ -19,7 +19,7 @@ export function fresh(tasks = [], now = T0) {
 
 /** Applique un résultat de quests.js à un « monde » { tasks, game, ledger }. */
 export function step(world, fn, params, now = T0) {
-  const r = fn(world.tasks, world.game, world.ledger, params, now);
+  const r = fn(world.tasks, world.game, world.ledger, { gameRevision: null, ...params }, now);
   return { world: { tasks: r.tasks, game: r.game, ledger: [...world.ledger, ...r.entries] }, r };
 }
 
