@@ -114,7 +114,7 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 ## v2 — semaines 1 et 2
 
-Référence : `docs/BIBLE-JEU.md` (v2 validée le 5 octobre 2026), §14, ligne « 1 et 2 ». **Statut : validé par Alex le 5 octobre 2026** (réponses aux questions 1 et 2 ; la 3 est en discussion). Plan préparé par un agent qui a lu le code, puis relu et simplifié.
+Référence : `docs/BIBLE-JEU.md` (v2 validée le 5 octobre 2026), §14, ligne « 1 et 2 ». **Statut : validé par Alex le 5 octobre 2026** (réponses aux trois questions). Plan préparé par un agent qui a lu le code, puis relu et simplifié.
 
 **Règles du plan**
 - La production reste en v1 jusqu'au dernier lot. L'état actuel reçoit l'étiquette Git `v1` (le dossier `app/` n'a pas changé depuis le dernier déploiement, 3ccd92f). La v2 se construit sur une branche neuve, `feat/village-v2`.
@@ -205,4 +205,4 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
 ### Questions pour Alex
 1. Les tâches terminées avant l'app ne sont pas au registre. Les compter une fois pour les niveaux de quartier, sans Énergie ni Matériaux ? **Alex : oui.**
 2. La tâche planifiée du rappel est hors du dossier de l'app sur le serveur. Recommandation : je l'ajoute moi-même, après une copie des tâches planifiées existantes, sans toucher aux autres. Autre choix : tu l'ajoutes dans cPanel. **Alex : accord pour que je l'ajoute moi-même** (au lot 7, quand le script existe).
-3. Impasse d'hiver : la v2 arrive vers la fin octobre. Au campement, la seule Nourriture vient du potager, qui dort de novembre à avril, et la serre n'arrive qu'au hameau, qui demande 3 habitants nourris. Sans changement, le village reste bloqué tout l'hiver, et le premier pas « Semer » est impossible. Recommandation : une petite serre dès le campement ; l'objectif d'hiver « garder la serre allumée » devient jouable dès le premier hiver.
+3. Impasse d'hiver : la v2 arrive vers la fin octobre. Au campement, la seule Nourriture vient du potager, qui dort de novembre à avril, et la serre n'arrive qu'au hameau, qui demande 3 habitants nourris. Sans changement, le village reste bloqué tout l'hiver, et le premier pas « Semer » est impossible. Recommandation : une petite serre dès le campement ; l'objectif d'hiver « garder la serre allumée » devient jouable dès le premier hiver. **Alex : vrai calendrier et petite serre dès le campement (décision A).**

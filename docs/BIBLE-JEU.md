@@ -47,8 +47,8 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Rang | Habitants | Ce qu'il apporte |
 |---|---|---|
-| Campement | 0 à 2 | Le départ : chalets, potager, atelier |
-| Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; serre, éolienne, grenier, quai |
+| Campement | 0 à 2 | Le départ : chalets, potager, atelier, petite serre |
+| Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; éolienne, grenier, quai |
 | Village | 6 à 10 | Nouvelle bande de terrain ; tour de guet, scierie, poulailler, cabane à sucre |
 | Bourg | 11 à 20 | Nouvelle bande ; marché, école, centrale solaire, garage à chasse-neige |
 | Ville | 21 à 35 | Une île voisine reliée par un pont ; gare, musée |
@@ -82,7 +82,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Chalet | Campement | Loge 2 habitants |
 | Potager (parcelle) | Campement | Produit de la Nourriture de mai à octobre |
 | Atelier | Campement | Permet de construire et de réparer |
-| Serre | Hameau | Produit de la Nourriture toute l'année ; l'hiver, elle consomme de l'Énergie |
+| Petite serre | Campement | Produit de la Nourriture toute l'année ; l'hiver, elle consomme de l'Énergie |
 | Éolienne | Hameau | Donne de l'Énergie en plus les jours où tu as travaillé |
 | Grenier | Hameau | Garde plus de Nourriture en réserve |
 | Quai | Hameau | Les visiteurs arrivent par le lac : débloque les commandes |
@@ -197,7 +197,7 @@ On ne commence pas avec une liste vide. Le village démarre avec un petit stock 
 1. Construire ton premier chalet.
 2. Ajouter ta première vraie tâche.
 3. Terminer une vraie tâche.
-4. Semer ta première parcelle.
+4. Semer ta première parcelle (l'hiver, dans la petite serre).
 5. Accueillir ta première famille.
 
 Chacune enseigne un geste et donne un petit coup de pouce. Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
@@ -277,3 +277,4 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google ; d'après les sources relevées le 5 octobre (pas encore essayé sur ce téléphone), les notifications de Brave passent par Google et n'arriveraient pas.
 3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12).
 4. **Le jeu suit le rythme d'usage** : allure du village et reprise après une absence (§9).
+5. **Calendrier** : le jeu garde le vrai calendrier. Pour que l'hiver ne bloque pas un village qui démarre (le potager dort de novembre à avril), la petite serre est construisible dès le campement. Elle produit l'hiver en consommant de l'Énergie, ce qui rend l'objectif « garder la serre allumée » jouable dès le premier hiver.
