@@ -139,9 +139,12 @@ Pour le joueur : rien de visible, rien n'est déployé.
 
 ### Lot 2 — L'interface au nouveau vocabulaire
 Pour le joueur : la barre montre Énergie, Matériaux, Nourriture, Habitants ; les quartiers portent leurs nouveaux noms ; « jeton d'accès » devient « code d'accès », « Plan accessible » devient « Carte en liste », « L'Orée veille » devient « Tout est enregistré, à demain », « Finir la visite » disparaît.
-- [ ] Interface, île et textes nettoyés de la v1 (braseros, voiles, cendre, chapitres). Le front de givre reste en sommeil pour les alertes météo des semaines 3-4.
-- [ ] [impeccable] icônes Nourriture, Habitants et des six quartiers, aide des ressources.
-- [ ] Scénarios navigateur : 11 sur 23 à adapter, 1 à supprimer, 3 mis de côté jusqu'aux lots 4 et 5 (relevé de l'agent).
+- [x] Interface, île et textes nettoyés de la v1 (braseros, voiles, cendre, chapitres). Le front de givre reste en sommeil pour les alertes météo des semaines 3-4.
+- [x] [impeccable] icônes Nourriture, Habitants et des six quartiers, aide des ressources.
+- [x] Scénarios navigateur : 11 sur 23 à adapter, 1 à supprimer, 3 mis de côté jusqu'aux lots 4 et 5 (relevé de l'agent).
+- *Fait le 5 octobre (commits 4ba658f, 1f285b5, puis un contrôle instable corrigé). Vérifié par moi : 231 tests `node --test` ; scénarios navigateur aux trois largeurs, 19 réussis (15, 17 et 18 mis de côté par la variable `EN_PAUSE` de `run-ui.sh`) ; captures à 390 et 1280 regardées. Le contrôle « bonus d'ouverture au registre » du scénario 1, hérité de la v1, lisait le registre avant la fin de l'écriture : il attend maintenant l'écriture (3 réussites sur 3 après correction).*
+- */impeccable lancé avant les icônes (d'après l'agent), mais sans le guide de travail du skill, avec un seul contrôle visuel et sans relecture finale de design. À rattraper : relecture de design complète après le lot 5.*
+- *Reportés au lot 4 : les plaques de la Place et du Garage cachent des caisses à 834 et 1280 ; l'aide des ressources cite la serre, le poulailler et l'accueil d'habitants, qui n'existent pas encore. Encore au vocabulaire v1 (documents) : `app/DESIGN.md`, `design/reference.html`, `app/content/README.md`, à reprendre au lot 8.*
 
 ### Lot 3 — Migration sûre
 Pour le joueur : à la première ouverture, sa partie passe en v2 sans rien perdre, avec une lettre de Fanal qui explique ce qui change.
