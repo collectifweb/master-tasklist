@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  rewardKey, stepKey, reverseKey, bonusKey, hasKey, findEntry, dayTotals, buildRewardEntry, buildStepEntry,
+  hydrateLedger, unknownStepsCount, rewardKey, stepKey, reverseKey, bonusKey, hasKey, findEntry, dayTotals, buildRewardEntry, buildStepEntry,
   stepsPaid, occurrenceEntries, canReverse, buildReverseEntry, buildBonusEntry, buildAjoutRefund, BONUSES,
   stageForLueur, stageName, raiseCap, applyEntry, applyEntries, directFilLibre, chapterStatus, advanceChapter,
   CAP_STEPS, createInitialState, migrateState, STATE_VERSION,
@@ -330,4 +330,43 @@ test('migrateState complète les clés manquantes et garde tout le reste', () =>
 test('migrateState d’un état vide ou absent repart de l’état initial', () => {
   assert.deepEqual(migrateState(null, T0), createInitialState(T0));
   assert.deepEqual(migrateState(undefined, T0), createInitialState(T0));
+});
+
+// ---- hydrateLedger et entrées minimales ----
+
+test('hydrateLedger : ajoute { key } pour chaque clé absente du registre récent', () => {
+  const recent = [entry()];
+  const h = hydrateLedger(recent, ['reward:t1:1', 'reward:vieux:1', 'reward:vieux:1', 'step:vieux:1:s1']);
+  assert.deepEqual(h, [entry(), { key: 'reward:vieux:1' }, { key: 'step:vieux:1:s1' }]);
+  assert.deepEqual(hydrateLedger(recent, undefined), recent);
+  assert.deepEqual(hydrateLedger(undefined, ['a']), [{ key: 'a' }]);
+  assert.equal(recent.length, 1);
+});
+
+test('entrée minimale : « déjà versé » pour hasKey, jamais dans les totaux du jour', () => {
+  const h = hydrateLedger([entry()], ['reward:vieux:1', 'reverse:vieux:1', 'bonus:plan:2026-10-06', 'bonus:ajout:2026-10-06:1']);
+  assert.equal(hasKey(h, 'reward:vieux:1'), true);
+  assert.deepEqual(dayTotals(h, '2026-10-06'), dayTotals([entry()], '2026-10-06'));
+  assert.equal(dayTotals(hydrateLedger([], ['reward:a:1']), '2026-10-06').pe, 0);
+});
+
+test('entrée minimale : pas de crash dans canReverse, buildReverseEntry, stepsPaid, remballer', () => {
+  const h = hydrateLedger([], ['reward:vieux:1', 'step:vieux:1:s1']);
+  assert.equal(canReverse(h, 'vieux', 1, T0), false);
+  assert.equal(buildReverseEntry(h, 'vieux', 1, T0), null);
+  assert.equal(stepsPaid(h, 'vieux', 1), 0);
+  assert.deepEqual(occurrenceEntries(h, 'vieux', 1), []);
+  assert.equal(unknownStepsCount(h, 'vieux', 1), 1);
+  assert.equal(unknownStepsCount(h, 'vieux', 2), 0);
+  assert.equal(unknownStepsCount([entry({ key: 'step:t1:1:s1', type: 'step' })], 't1', 1), 0);
+});
+
+test('entrée minimale : le compteur « Déjà faite » et les bonus du jour l’ignorent, les clés existantes bloquent', () => {
+  const h = hydrateLedger([], ['reward:x:1', 'bonus:ouverture:2026-10-06']);
+  const e = buildRewardEntry({ task: task({ id: 'n' }), occurrence: 1, pe: 10, alreadyDone: true }, h, T0);
+  assert.equal(e.pe, 10); // 1re « Déjà faite » du jour : plein tarif
+  assert.equal(buildBonusEntry('ouverture', h, T0), null); // la clé du jour existe déjà
+  assert.equal(buildRewardEntry({ task: task({ id: 'x' }), occurrence: 1, pe: 10 }, h, T0), null);
+  assert.equal(buildAjoutRefund(h, 'x', T0), null);
+  assert.equal(buildStepEntry({ task: task({ id: 'x' }), occurrence: 1, stepId: 's1', pe: 1 }, hydrateLedger([], ['step:x:1:s1']), T0), null);
 });

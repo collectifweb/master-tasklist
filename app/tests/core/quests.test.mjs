@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createQuest, updateQuest, startQuest, pauseQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
   remballerQuest, archiveQuest, unarchiveQuest, deleteQuest, claimBonus, openApp, newTaskId,
-  questPe, normalizeTask, rewardKey,
+  questPe, normalizeTask, rewardKey, hydrateLedger,
 } from '../../core/index.js';
 import { T0, task, fresh, step, plusHours, sum } from './helpers.mjs';
 
@@ -433,4 +433,119 @@ test('jour de jeu : terminer à 3 h 59 compte pour la veille, à 4 h 00 pour le 
   const apres = step(fresh([task()], '2026-10-06T08:00:00Z'), completeQuest, { id: 't1' }, '2026-10-06T08:00:00Z');
   assert.equal(avant.r.entries[0].day, '2026-10-05');
   assert.equal(apres.r.entries[0].day, '2026-10-06');
+});
+
+// ---- opérations minimales sur une tâche existante ----
+
+const upsert = (r) => r.ops.filter((o) => o.type === 'task.upsert').map((o) => o.task);
+
+test('« Je m’y mets » n’envoie que les champs modifiés', () => {
+  const w = fresh([task({ notes: 'garde', champInconnu: { a: 1 } })]);
+  const r = startQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0);
+  const [op] = upsert(r);
+  assert.deepEqual(Object.keys(op).sort(), ['frozen', 'id', 'startedAt', 'updatedAt']);
+  assert.equal(op.id, 't1');
+  assert.equal(op.startedAt, '2026-10-06T14:00:00.000Z');
+  assert.equal('task' in op, false);
+  assert.equal('notes' in op, false);
+  // la liste affichée, elle, reste complète
+  assert.equal(r.tasks[0].task, 'Changer l’ampoule');
+  assert.deepEqual(r.tasks[0].champInconnu, { a: 1 });
+});
+
+test('modifier la priorité n’envoie pas le titre', () => {
+  const w = fresh([task()]);
+  const [op] = upsert(updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { priority: 9 } }, T0));
+  assert.deepEqual(Object.keys(op).sort(), ['id', 'priority', 'updatedAt']);
+  assert.equal(op.priority, 9);
+});
+
+test('terminer une quête envoie status, doneAt, frozen et updatedAt seulement', () => {
+  const w = fresh([task()]);
+  const [op] = upsert(completeQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0));
+  assert.deepEqual(Object.keys(op).sort(), ['doneAt', 'frozen', 'id', 'status', 'updatedAt']);
+});
+
+test('un champ effacé est envoyé à null', () => {
+  const w = fresh([task({ deadline: '2026-10-20', deadlineSetAt: '2026-10-01T10:00:00Z' })]);
+  const [op] = upsert(updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { deadline: null } }, T0));
+  assert.equal(op.deadline, null);
+  assert.equal(op.deadlineSetAt, null);
+  assert.equal('priority' in op, false);
+  const w2 = fresh([task({ startedAt: T0 })]);
+  const [p] = upsert(pauseQuest(w2.tasks, w2.game, w2.ledger, { id: 't1' }, T0));
+  assert.equal(p.startedAt, null);
+});
+
+test('comparaison profonde : des étapes inchangées ne sont pas renvoyées', () => {
+  const steps = [{ id: 's1', label: 'a', done: false }, { id: 's2', label: 'b', done: false }];
+  const w = fresh([task({ steps })]);
+  const [a] = upsert(updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { notes: 'x' } }, T0));
+  assert.equal('steps' in a, false);
+  const [b] = upsert(toggleStep(w.tasks, w.game, w.ledger, { id: 't1', stepId: 's1' }, T0));
+  assert.equal(b.steps[0].done, true);
+});
+
+test('rien n’a changé : aucune opération, tâche et date intactes', () => {
+  const w = fresh([task({ updatedAt: '2026-10-01T00:00:00.000Z' })]);
+  const r = updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { priority: 5, task: 'Changer l’ampoule' } }, T0);
+  assert.deepEqual(r.ops, []);
+  assert.equal(r.tasks[0].updatedAt, '2026-10-01T00:00:00.000Z');
+  const s = removeStep(w.tasks, w.game, w.ledger, { id: 't1', stepId: 'inexistante' }, T0);
+  assert.equal(s.ops.length, 1); // steps passe de absent à []
+});
+
+test('une nouvelle tâche est envoyée en entier ; l’entrée n’est pas modifiée', () => {
+  const w = fresh([task()]);
+  const avant = structuredClone(w.tasks);
+  const r = createQuest(w.tasks, w.game, w.ledger, { task: 'Nouvelle', domain: 'Maison' }, T0);
+  const [op] = upsert(r);
+  assert.ok(op.task && op.created && op.status && op.priority && op.updatedAt);
+  assert.deepEqual(w.tasks, avant);
+  // créée puis terminée dans la même opération (« Déjà faite ») : toujours en entier
+  const d = createQuest(w.tasks, w.game, w.ledger, { task: 'Déjà', alreadyDone: true }, T0);
+  assert.equal(upsert(d).length, 1);
+  assert.equal(upsert(d)[0].status, 'done');
+  assert.ok(upsert(d)[0].task);
+});
+
+test('remballer une quête récurrente ne renvoie que les champs rétablis', () => {
+  const dep = task({ priority: 6, length: 1, difficulty: 1, recurrence: { every: 'week', interval: 1 }, occurrence: 1, deadline: '2026-10-06' });
+  let w = fresh([dep]);
+  w = step(w, completeQuest, { id: 't1' }).world;
+  const r = remballerQuest(w.tasks, w.game, w.ledger, { id: 't1' }, plusHours(T0, 1));
+  const [op] = upsert(r);
+  assert.equal('task' in op, false);
+  assert.equal(op.occurrence, 1);
+  assert.equal(op.lastDone, null);
+});
+
+// ---- identifiants ----
+
+test('createQuest utilise params.id (UUID de l’interface) ; newTaskId reste le repli', () => {
+  const uuid = '3f2b8c1e-5a4d-4c1e-9b7a-0d2e6f8a1b3c';
+  const w = fresh();
+  const a = createQuest(w.tasks, w.game, w.ledger, { id: uuid, task: 'x' }, T0);
+  assert.equal(a.tasks[0].id, uuid);
+  assert.equal(upsert(a)[0].id, uuid);
+  const b = createQuest(w.tasks, w.game, w.ledger, { task: 'x' }, T0);
+  assert.equal(b.tasks[0].id, newTaskId([], T0));
+});
+
+// ---- registre ancien (entrées minimales) ----
+
+test('registre ancien : une occurrence déjà versée il y a plus de 60 jours rapporte 0 et ne se remballe pas', () => {
+  const ledger = hydrateLedger([], ['reward:t1:1']);
+  const w = { tasks: [task({ status: 'done' })], game: fresh().game, ledger };
+  assert.throws(() => remballerQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0), /Trop tard/);
+  const re = step({ ...w, tasks: [task()] }, completeQuest, { id: 't1' });
+  assert.deepEqual(re.r.entries, []);
+  assert.equal(re.world.tasks[0].status, 'done');
+});
+
+test('registre ancien : étapes versées connues par leur clé, la complétion ne les repaie pas', () => {
+  const base = task({ priority: 10, length: 10, difficulty: 10, steps: [1, 2, 3, 4].map((i) => ({ id: 's' + i, label: 'é', done: i <= 2 })) });
+  const ledger = hydrateLedger([], ['step:t1:1:s1', 'step:t1:1:s2']);
+  const r = step({ tasks: [base], game: fresh().game, ledger }, completeQuest, { id: 't1' });
+  assert.equal(r.r.entries[0].pe, 20); // 25 − 5 (2 étapes sur 4 : 2 × 40 % de 25 ÷ 4)
 });

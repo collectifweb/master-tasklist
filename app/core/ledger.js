@@ -24,6 +24,27 @@ export const stepKey = (taskId, occurrence, stepId) => `step:${taskId}:${occurre
 export const reverseKey = (taskId, occurrence) => `reverse:${taskId}:${occurrence}`;
 export const bonusKey = (type, day, n) => `bonus:${type}:${day}` + (n === undefined || n === null ? '' : `:${n}`);
 
+/**
+ * Registre reçu de l'API : entrées récentes + clés plus anciennes. Renvoie le registre récent complété d'une
+ * entrée minimale `{ key }` pour chaque clé absente. Une entrée minimale compte pour « déjà versé » (hasKey,
+ * canReverse refusé) et jamais dans les totaux du jour (elle n'a pas de `day`).
+ */
+export function hydrateLedger(ledger, ledgerKeys) {
+  const recent = Array.isArray(ledger) ? ledger : [];
+  const have = new Set(recent.map((e) => e.key));
+  const extra = [];
+  for (const key of Array.isArray(ledgerKeys) ? ledgerKeys : []) {
+    if (!have.has(key)) { have.add(key); extra.push({ key }); }
+  }
+  return [...recent, ...extra];
+}
+
+/** Nombre d'étapes d'une occurrence connues seulement par leur clé (entrées minimales). */
+export function unknownStepsCount(ledger, taskId, occurrence) {
+  const prefix = `step:${taskId}:${occurrence}:`;
+  return ledger.filter((e) => !e.at && typeof e.key === 'string' && e.key.startsWith(prefix)).length;
+}
+
 export function hasKey(ledger, key) {
   return ledger.some((e) => e.key === key);
 }
@@ -109,6 +130,7 @@ export function canReverse(ledger, taskId, occurrence, now) {
   const reward = findEntry(ledger, rewardKey(taskId, occurrence));
   if (!reward) return false;
   if (hasKey(ledger, reverseKey(taskId, occurrence))) return false;
+  if (!reward.at) return false; // entrée minimale : gain ancien, hors des 24 h
   return hoursBetween(reward.at, now) < REVERSE_WINDOW_HOURS;
 }
 
@@ -116,7 +138,7 @@ export function canReverse(ledger, taskId, occurrence, now) {
 export function buildReverseEntry(ledger, taskId, occurrence, now) {
   const key = reverseKey(taskId, occurrence);
   const reward = findEntry(ledger, rewardKey(taskId, occurrence));
-  if (!reward || hasKey(ledger, key)) return null;
+  if (!reward || !reward.at || hasKey(ledger, key)) return null;
   // le « Bon fil » gagné avec cette quête, le même jour, est annulé aussi
   const parts = [
     ...occurrenceEntries(ledger, taskId, occurrence),

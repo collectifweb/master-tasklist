@@ -13,11 +13,19 @@ import { orderByCote } from './cote.js';
 import { applyFreeze, freezeValues, questPe, stepPe, completionPe, MAX_STEPS } from './reward.js';
 import {
   buildRewardEntry, buildStepEntry, buildReverseEntry, buildBonusEntry, buildAjoutRefund,
-  canReverse, stepsPaid, hasKey, rewardKey, reverseKey, findEntry,
+  canReverse, stepsPaid, unknownStepsCount, hasKey, rewardKey, reverseKey, findEntry,
 } from './ledger.js';
 import { applyEntry } from './economy.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
+
+function deepEqual(a, b) {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every((k) => k in b && deepEqual(a[k], b[k]));
+}
 
 class Ctx {
   constructor(tasks, game, ledger, params, now) {
@@ -25,6 +33,7 @@ class Ctx {
     this.iso = toISO(now);
     this.day = gameDay(now);
     this.params = params || {};
+    this.orig = new Map(tasks.map((t) => [t.id, t])); // tâches telles que reçues : base de comparaison des opérations
     this.tasks = tasks.map((t) => ({ ...t }));
     this.game0 = JSON.stringify(game);
     this.game = game;
@@ -68,7 +77,21 @@ class Ctx {
   }
   result() {
     const ops = [];
-    for (const t of this.changed.values()) ops.push({ type: 'task.upsert', task: t });
+    for (const t of this.changed.values()) {
+      const before = this.orig.get(t.id);
+      if (!before) { ops.push({ type: 'task.upsert', task: t }); continue; } // nouvelle quête : en entier
+      // quête existante : seulement `id`, les champs réellement modifiés et `updatedAt`
+      const diff = {};
+      for (const k of Object.keys(t)) {
+        if (k !== 'updatedAt' && !deepEqual(t[k], before[k])) diff[k] = t[k];
+      }
+      if (!Object.keys(diff).length) {
+        const i = this.tasks.findIndex((x) => x.id === t.id);
+        this.tasks[i] = { ...before }; // rien n'a changé : pas d'opération, pas de nouvelle date
+        continue;
+      }
+      ops.push({ type: 'task.upsert', task: { id: t.id, ...diff, updatedAt: t.updatedAt } });
+    }
     for (const id of this.deleted) ops.push({ type: 'task.delete', id });
     if (this.entries.length) ops.push({ type: 'ledger.append', entries: this.entries });
     if (JSON.stringify(this.game) !== this.game0) {
@@ -126,13 +149,21 @@ function nextDeadline(task, recurrence, today) {
   return d;
 }
 
+// PE déjà payés par les étapes d'une occurrence. Une étape connue seulement par sa clé (entrée minimale
+// du registre ancien) est estimée à sa part théorique : on ne paie jamais deux fois.
+function paidSoFar(ledger, task, occ, pe) {
+  const n = (task.steps ?? []).length;
+  const old = n ? unknownStepsCount(ledger, task.id, occ) : 0;
+  return stepsPaid(ledger, task.id, occ) + (old ? Math.round(((pe * 0.4) / n) * old * 100) / 100 : 0);
+}
+
 // Termine une quête dans le contexte (gain, passage à « done », ou occurrence suivante).
 function complete(ctx, task, { alreadyDone = false } = {}) {
   const now = ctx.now;
   let t = { ...task, frozen: task.frozen ?? freezeValues(task, now) };
   const occ = t.occurrence ?? 1;
   const { pe } = questPe(t, now);
-  const net = completionPe(pe, stepsPaid(ctx.ledger, t.id, occ));
+  const net = completionPe(pe, paidSoFar(ctx.ledger, t, occ, pe));
 
   let wasTop3 = false;
   if (!alreadyDone) {
@@ -285,7 +316,7 @@ export function toggleStep(tasks, game, ledger, params, now) {
     t = applyFreeze(t, now);
     const occ = t.occurrence ?? 1;
     const { pe } = questPe(t, now);
-    const share = stepPe(pe, steps.length, stepsPaid(ctx.ledger, t.id, occ));
+    const share = stepPe(pe, steps.length, paidSoFar(ctx.ledger, t, occ, pe));
     ctx.events.push({ type: 'etape', taskId: t.id, stepId: s.id, done: true, restantes: steps.filter((x) => !x.done).length });
     if (share > 0) {
       const entry = buildStepEntry({ task: t, occurrence: occ, stepId: s.id, pe: share }, ctx.ledger, now);
