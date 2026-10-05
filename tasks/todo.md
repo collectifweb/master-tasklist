@@ -93,3 +93,16 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
   - la façon dont Hermes écrit ;
   - le côte à côte et le rappel quotidien ;
   - la bascule de l'accueil.
+
+## Bilan — matin du 5 octobre 2026
+
+- **Fait et vérifié** :
+  - le côte à côte (simple relevé du temps), commité et en ligne sur les deux essais ;
+  - 269 tests `node --test` ; 22 scénarios Playwright aux trois largeurs (1 469 vérifications) ; scénario du monde (82 vérifications) ;
+  - les deux essais en ligne, contrôlés de l'extérieur : code exigé, données interdites au web, modules chargés sans erreur ;
+  - le script de synchro d'Hermes corrigé (12 sur 12 au banc d'essai).
+- **Reste, côté Alex** :
+  - l'essai sur son téléphone (SVG ou PixiJS) ;
+  - installer le script de synchro corrigé chez Hermes ;
+  - donner le feu vert à la bascule de l'accueil (script prêt, avec retour arrière) ;
+  - trancher le rappel quotidien.
