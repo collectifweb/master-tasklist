@@ -1,6 +1,6 @@
 // Mesures du monde (app/world/demo.html) : erreurs console, défilement horizontal, cibles de 44 px,
-// images au repos, i/s pendant le fil de lumière sous ralentissement CPU ×4, durée de recoloration d'un secteur,
-// nombre d'éléments animés, saut d'animation, mouvement réduit, plan accessible.
+// images au repos, i/s pendant le fil de lumière et le passage de niveau sous ralentissement CPU ×4,
+// nombre d'éléments animés, saut d'animation, mouvement réduit, carte en liste. Démo v2, état fictif.
 //
 //   python3 -m http.server 8791 --bind 127.0.0.1      (depuis la racine du dépôt)
 //   PW_CORE=<chemin>/node_modules/playwright-core PW_CHROME=<chemin>/chrome node app/tests/e2e/world-perf.cjs
@@ -11,7 +11,7 @@ const HOME = require('os').homedir();
 const { chromium } = require(process.env.PW_CORE || `${HOME}/.npm/_npx/361ceb562f3b3235/node_modules/playwright-core`);
 const CHROME = process.env.PW_CHROME || `${HOME}/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`;
 const BASE = process.env.BASE || 'http://127.0.0.1:8791';
-const OUT = process.env.OUT || require('path').join(require('os').tmpdir(), 'oree-monde');
+const OUT = process.env.OUT || require('path').join(require('os').tmpdir(), 'oree-monde-v2');
 require('fs').mkdirSync(OUT, { recursive: true });
 const URL = `${BASE}/app/world/demo.html`;
 const VIEWS = [[390, 844], [834, 1112], [1280, 900]];
@@ -91,8 +91,8 @@ async function idleFrames(page, ms = 2000) {
     const snap = async (name, delay) => { await page.waitForTimeout(delay); await page.screenshot({ path: `${OUT}/${name}.png` }); shots.push(name); };
     act(page, 'q-champs'); await snap('390-fil', 380); await idle(page); await snap('390-apres-champs', 50);
     act(page, 'q-atelier'); await snap('390-atelier-fil', 420); await snap('390-atelier-vague', 900); await idle(page); await snap('390-apres-atelier', 50);
-    act(page, 'build'); await snap('390-construction', 560); await idle(page);
-    act(page, 'chapitre'); await snap('390-perce', 900); await idle(page); await snap('390-apres-chapitre', 50);
+    act(page, 'niveau'); await snap('390-niveau', 900); await idle(page); await snap('390-apres-niveau', 50);
+    act(page, 'reflet'); await idle(page); await snap('390-reflet', 50);
     act(page, 'veille'); await idle(page); await snap('390-veille', 50);
     report.moments = { shots, errors };
     await page.close();
@@ -104,7 +104,7 @@ async function idleFrames(page, ms = 2000) {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     await page.waitForTimeout(500);
-    // i/s pendant le fil de lumière et la germination (premier événement de la quête de l'Atelier)
+    // i/s pendant le fil de lumière et le passage de niveau (l'Atelier, amené au seuil par l'action « niveau »)
     const fps = await page.evaluate(async () => {
       const times = [];
       let maxAnims = 0, maxRunning = 0;
@@ -117,7 +117,7 @@ async function idleFrames(page, ms = 2000) {
         if (on) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      window.__demo.actions['q-atelier']();
+      window.__demo.actions.niveau();
       const t0 = performance.now();
       while (window.__world.playing) await new Promise((r) => setTimeout(r, 50));
       const dur = performance.now() - t0;
@@ -127,40 +127,20 @@ async function idleFrames(page, ms = 2000) {
       const avg = d.reduce((a, b) => a + b, 0) / d.length;
       return { frames: d.length, playMs: Math.round(dur), avgFps: +(1000 / avg).toFixed(1), p95FrameMs: +d[Math.floor(d.length * 0.95)].toFixed(1), worstFrameMs: +d[d.length - 1].toFixed(1), maxAnimations: maxAnims, maxRunningAnimations: maxRunning, events: (window.__lastEvents || []).map((e) => e.type) };
     });
-    // i/s pendant le seul fil (sans germination) : Fil libre dirigé
+    // i/s pendant le seul fil, sans passage de niveau : une quête aux Champs
     const fpsThread = await page.evaluate(async () => {
       const times = []; let on = true;
       const tick = (ts) => { times.push(ts); if (on) requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
-      window.__demo.actions.fil();
+      window.__demo.actions['q-champs']();
       while (window.__world.playing) await new Promise((r) => setTimeout(r, 50));
       on = false;
       const d = times.slice(1).map((t, i) => t - times[i]).filter((x) => x > 0).sort((a, b) => a - b);
       const avg = d.reduce((a, b) => a + b, 0) / d.length;
       return { frames: d.length, avgFps: +(1000 / avg).toFixed(1), p95FrameMs: +d[Math.floor(d.length * 0.95)].toFixed(1) };
     });
-    // recoloration d'un secteur : changement d'attribut → image suivante (×4 puis ×1)
-    const recolor = async () => page.evaluate(async () => {
-      const g = document.querySelector('.ow-ground[data-sector="archives"]');
-      const e = document.querySelector('.ow-ents[data-sector="archives"]');
-      const out = [];
-      for (const etat of ['prosperer', 'reparer', 'autonome', 'prosperer', 'reparer']) {
-        out.push(await new Promise((res) => requestAnimationFrame(() => {
-          const t0 = performance.now();
-          g.removeAttribute('data-voile'); e.removeAttribute('data-voile');
-          g.setAttribute('data-etat', etat); e.setAttribute('data-etat', etat);
-          getComputedStyle(g.querySelector('polygon')).fill; // force le recalcul de style
-          const t1 = performance.now();
-          requestAnimationFrame(() => res({ style: +(t1 - t0).toFixed(2), frame: +(performance.now() - t0).toFixed(2) }));
-        })));
-      }
-      g.removeAttribute('data-etat'); e.removeAttribute('data-etat'); g.setAttribute('data-voile', 'cendre'); e.setAttribute('data-voile', 'cendre');
-      return out;
-    });
-    const recolorX4 = await recolor();
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-    const recolorX1 = await recolor();
-    report.perf = { fps, fpsThread, recolorX4, recolorX1, errors, counts: await page.evaluate(() => ({ entities: document.querySelectorAll('.ow-ent').length, buttons: document.querySelectorAll('.ow-ent.is-btn').length, domNodes: document.querySelector('.ow').querySelectorAll('*').length })) };
+    report.perf = { fps, fpsThread, errors, counts: await page.evaluate(() => ({ entities: document.querySelectorAll('.ow-ent').length, buttons: document.querySelectorAll('.ow-ent.is-btn').length, domNodes: document.querySelector('.ow').querySelectorAll('*').length })) };
     await page.close();
   }
 
@@ -185,7 +165,7 @@ async function idleFrames(page, ms = 2000) {
     await page.close();
   }
 
-  // ---------------------------------------------------------------- mouvement réduit et plan accessible
+  // ---------------------------------------------------------------- mouvement réduit et carte en liste
   {
     const { page, errors } = await open(nav, 390, 844, { reduced: true });
     const t0 = Date.now();

@@ -21,8 +21,8 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   const reason = (await page.textContent('#fil-quest .fil-reason > span')).trim();
   R.check('raison courte présente', reason.length > 3, reason);
   R.check('le bouton « Fait » porte le texte Fait', /Fait/.test(await page.textContent('#fil-quest [data-action="complete"]')));
-  const vals = await Promise.all(['energie', 'materiaux', 'confiance', 'lueur'].map((n) => L.resValue(page, n)));
-  R.check('ressources affichées (Énergie 11 = 10 + bonus d’ouverture)', vals[0] === 11 && vals[1] === 15, JSON.stringify(vals));
+  const vals = await Promise.all(['energie', 'materiaux', 'nourriture', 'habitants'].map((n) => L.resValue(page, n)));
+  R.check('ressources affichées (Énergie 11 = 10 + bonus d’ouverture, 20 Matériaux, 5 Nourriture, 0 Habitant)', vals[0] === 11 && vals[1] === 20 && vals[2] === 5 && vals[3] === 0, JSON.stringify(vals));
   const led = srv.ledger();
   R.check('bonus d’ouverture au registre, une seule fois', led.filter((e) => e.bonus === 'ouverture').length === 1, JSON.stringify(led.map((e) => e.key)));
   await shot(page, '01-fil');

@@ -6,8 +6,11 @@ set -u
 cd "$(dirname "$0")"
 : "${PW_CORE:?définir PW_CORE}" "${PW_CHROME:?définir PW_CHROME}"
 export PW_CORE PW_CHROME
+# Mis de côté jusqu'aux lots 4 et 5 (potager, objectifs, premiers pas) : gardés dans le dossier, pas lancés.
+EN_PAUSE=" ui-15-potager.cjs ui-17-chapitre.cjs ui-18-intro.cjs "
 fail=0
 for f in ui-*.cjs; do
+  case "$EN_PAUSE" in *" $f "*) echo "##### $f : mis de côté (lots 4 et 5)"; continue ;; esac
   echo "##### $f"
   timeout 600 node "$f" || fail=1
 done

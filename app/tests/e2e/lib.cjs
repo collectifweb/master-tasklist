@@ -26,26 +26,12 @@ function freePort() {
   });
 }
 
-/** Identifiants de tous les moments d'histoire de chapitres.json (pour un état « déjà vu »). */
-function allStoryIds() {
-  const ch = JSON.parse(fs.readFileSync(path.join(REPO, 'app', 'content', 'fr-CA', 'chapitres.json'), 'utf8'));
-  const ids = ['introduction'];
-  for (const c of ch.chapitres || []) {
-    ids.push(`${c.id}.ouverture`, `${c.id}.fin`);
-    for (const o of c.objectifs || []) ids.push(`${o.id}.annonce`, `${o.id}.atteint`);
-    for (const b of c.beats || []) ids.push(b.id);
-    if (c.avis) for (const r of ['annonce', 'tenu', 'voile', 'absent']) ids.push(`avis.${c.avis.id}.${r}`);
-  }
-  return ids;
-}
-
 /**
- * État de jeu « calme » pour les scénarios qui ne testent pas le récit : intro et moments déjà vus, lettre du jour
- * déjà montrée. Sans lui, l'intro (feuille modale) s'ouvrirait au premier lancement et masquerait la page.
+ * État de jeu « calme » pour les scénarios qui ne testent pas l'accueil : lettre du jour déjà montrée.
+ * Sans lui, la lettre du matin (feuille modale) s'ouvrirait au premier lancement et masquerait la page.
  */
 function quietState(core, now = new Date(), { letters = true } = {}) {
   const g = core.createInitialState(now);
-  g.story = { seen: allStoryIds(), day: null, count: 0 };
   if (letters) {
     const lt = JSON.parse(fs.readFileSync(path.join(REPO, 'app', 'content', 'fr-CA', 'lettres.json'), 'utf8'));
     const day = core.gameDay(now);
@@ -230,24 +216,16 @@ async function ready(page) {
 }
 
 /**
- * Ferme ce que l'accueil a pu ouvrir (moment d'histoire, lettre, bilan), une feuille après l'autre.
+ * Ferme ce que l'accueil a pu ouvrir (lettre, bilan), une feuille après l'autre.
  * Renvoie la liste des feuilles fermées (ex. ['dlg-letter']).
  */
 async function closeWelcome(page, ms = 2500) {
   const closed = [];
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
-    const id = await page.evaluate(() => { const d = document.querySelector('#dlg-scene[open], #dlg-letter[open], #dlg-review[open]'); return d ? d.id : null; });
+    const id = await page.evaluate(() => { const d = document.querySelector('#dlg-letter[open], #dlg-review[open]'); return d ? d.id : null; });
     if (!id) { await page.waitForTimeout(150); continue; }
-    if (id === 'dlg-scene') {
-      // « Passer » jusqu'à la fin, puis le dernier bouton (Fermer, Plus tard)
-      for (let i = 0; i < 40 && await page.evaluate(() => !!document.querySelector('#dlg-scene[open]')); i++) {
-        await page.evaluate(() => { const d = document.querySelector('#dlg-scene'); (d.querySelector('[data-action="scene-later"]') || d.querySelector('[data-action="scene-next"]')).click(); });
-        await page.waitForTimeout(60);
-      }
-    } else {
-      await page.evaluate((x) => document.querySelector(`#${x} .sheet-foot [data-close]`).click(), id);
-    }
+    await page.evaluate((x) => document.querySelector(`#${x} .sheet-foot [data-close]`).click(), id);
     closed.push(id);
     await page.waitForTimeout(500);
   }
@@ -362,4 +340,4 @@ const rect = (page, sel) => page.evaluate((s) => {
   return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom };
 }, sel);
 
-module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, allStoryIds, closeWelcome, VOICES, said, voice };
+module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, closeWelcome, VOICES, said, voice };

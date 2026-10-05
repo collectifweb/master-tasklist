@@ -1,4 +1,4 @@
-// 23. Blocage après trop d'essais (429) : message dans la feuille du jeton, plus aucune requête pendant le blocage, pas de « hors ligne ».
+// 23. Blocage après trop d'essais (429) : message dans la feuille du code d'accès, plus aucune requête pendant le blocage, pas de « hors ligne ».
 // Le serveur est simulé (réponse 429 posée par le navigateur) : le vrai blocage est couvert par les tests de l'API.
 const L = require('./lib.cjs');
 const BLOCAGE = { status: 429, contentType: 'application/json', headers: { 'Retry-After': '600' }, body: JSON.stringify({ ok: false, code: 'too_many_attempts', error: 'Trop d’essais.', retryAfter: 600 }) };
@@ -10,10 +10,10 @@ L.runScenario('23. blocage après trop d’essais', async ({ R, srv, newPage, sh
   page.on('request', compte);
   const sheet = () => page.evaluate(() => { const d = document.getElementById('dlg-token'); return { open: d.open, err: (d.querySelector('.field-error') || {}).textContent || '' }; });
 
-  // 1. premier chargement déjà bloqué : la feuille du jeton porte le message, l'app ne bascule pas hors ligne
+  // 1. premier chargement déjà bloqué : la feuille du code d'accès porte le message, l'app ne bascule pas hors ligne
   await page.route('**/api/api.php', (r) => r.fulfill(BLOCAGE));
   await page.goto(srv.url);
-  R.check('chargement bloqué : la feuille du jeton s’ouvre', !!(await L.waitFor(async () => (await sheet()).open, 6000)));
+  R.check('chargement bloqué : la feuille du code d’accès s’ouvre', !!(await L.waitFor(async () => (await sheet()).open, 6000)));
   let s = await sheet();
   R.check('… avec « Trop d’essais. Réessaie dans 10 minutes. »', s.err.trim() === 'Trop d’essais. Réessaie dans 10 minutes.', s.err);
   R.check('… sans l’ancien « jeton refusé » ni écran d’échec de chargement', !/pas été accepté/.test(s.err) && await page.evaluate(() => document.getElementById('load-error').hidden));

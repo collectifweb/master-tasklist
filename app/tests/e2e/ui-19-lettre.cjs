@@ -67,7 +67,6 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
     const today = core.gameDay(now);
     const g = L.quietState(core, now, { letters: false });
     g.startDay = core.addDays(today, -3);
-    g.chapter.startDay = core.addDays(today, -3);
     return g;
   },
 });

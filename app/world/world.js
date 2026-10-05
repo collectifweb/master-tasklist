@@ -13,7 +13,7 @@
 // Ici, « secteur » désigne la zone de carte d'un quartier (identifiants de core/domains.js : champs, atelier…).
 //
 // onSelect(info) — un toucher (ou Entrée) sur la carte. Formes de `info` :
-//   { type: 'sector', id }                                   plaque de quartier
+//   { type: 'sector', id, sector }                           plaque de quartier (id = sector)
 //   { type: 'landmark', id, sector, model }                  repère fixe (halle, tour, atelier, mairie, école…)
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
@@ -594,8 +594,8 @@ export function createWorld(container, options = {}) {
       const s = pl.dataset.sector;
       rovingTo(pl);
       focusSector(s);
-      options.onSelect?.({ type: 'sector', id: s });
-      bus.emit('select', { type: 'sector', id: s });
+      options.onSelect?.({ type: 'sector', id: s, sector: s });
+      bus.emit('select', { type: 'sector', id: s, sector: s });
       return;
     }
     const b = ev.target.closest('.ow-ent.is-btn');

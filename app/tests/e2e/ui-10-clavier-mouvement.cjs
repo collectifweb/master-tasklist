@@ -32,8 +32,8 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Shift+Tab');
   const reach = await page.evaluate(() => document.activeElement.getAttribute('data-action') || document.activeElement.className);
-  // en large, le panneau n'a que « + » : Maj+Tab remonte jusqu'au bandeau du haut (pastille du chapitre, ressources)
-  R.check('Maj+Tab remonte vers les boutons de l’en-tête du panneau', /toggle-panel|add|panel-toggle|btn|res-help|carnet/.test(reach), reach);
+  // en large, le panneau n'a que « + » : Maj+Tab remonte jusqu'au bandeau du haut (ressources)
+  R.check('Maj+Tab remonte vers les boutons de l’en-tête du panneau', /toggle-panel|add|panel-toggle|btn|res-help/.test(reach), reach);
   if (size[0] < 700) {
     await page.focus('.panel-toggle');
     await page.keyboard.press('Enter');

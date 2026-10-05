@@ -37,14 +37,14 @@ L.runScenario('2. ajout rapide', async ({ R, srv, newPage, shot }) => {
   await L.openPanel(page);
   R.check('présente après rechargement', await page.locator('#quest-list li', { hasText: 'Tondre la pelouse du devant' }).count() === 1);
 
-  // domaine modifiable : on corrige le secteur à la main
+  // domaine modifiable : on corrige le quartier à la main
   await page.click('.panel-head [data-action="add"]');
   await page.waitForSelector('#dlg-add[open] #add-title');
   await page.fill('#add-title', 'Tondre la pelouse chez la voisine');
-  await page.locator('label.sector-option', { hasText: 'Archives' }).click();
+  await page.locator('label.sector-option', { hasText: 'Mairie' }).click();
   R.check('l’étiquette « Deviné » disparaît quand on choisit', !(await page.isVisible('#add-guess')));
   await page.fill('#add-title', 'Tondre la pelouse chez la voisine !');
-  R.check('le choix manuel n’est pas écrasé par la devinette', await page.$eval('input[name="add-sector"]:checked', (e) => e.value) === 'archives');
+  R.check('le choix manuel n’est pas écrasé par la devinette', await page.$eval('input[name="add-sector"]:checked', (e) => e.value) === 'mairie');
   await page.click('#dlg-add [data-action="add-submit"]');
   await L.waitFor(() => srv.readTasks().some((t) => t.task === 'Tondre la pelouse chez la voisine !'));
   const t2 = srv.readTasks().find((t) => t.task === 'Tondre la pelouse chez la voisine !');

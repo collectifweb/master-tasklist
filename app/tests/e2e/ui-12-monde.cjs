@@ -1,5 +1,5 @@
 // 12. Le vrai monde : « Fait » sur une quête de l'Atelier → le fil part du bouton, les compteurs montent à l'impact,
-//     le secteur reçoit la Lueur ; aucune erreur ; plus aucune image d'animation après 12 s ; mouvement réduit respecté.
+//     le quartier compte la tâche ; aucune erreur ; plus aucune image d'animation après 12 s ; mouvement réduit respecté.
 const L = require('./lib.cjs');
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const TASKS = [
@@ -24,7 +24,7 @@ const SAMPLER = () => {
   }, 16);
 };
 
-L.runScenario('12. monde : fil de lumière, impact, Lueur, repos', async ({ R, srv, newPage, size, core }) => {
+L.runScenario('12. monde : fil de lumière, impact, niveau de quartier, repos', async ({ R, srv, newPage, size, core }) => {
   const { page } = await newPage();
   await page.addInitScript(() => { window.__raf = 0; const o = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = (cb) => { window.__raf++; return o(cb); }; });
   await page.goto(srv.url);
@@ -58,10 +58,10 @@ L.runScenario('12. monde : fil de lumière, impact, Lueur, repos', async ({ R, s
   if (s.thread && s.hud) R.check('les compteurs montent à l’impact, après le départ du fil (≥ 400 ms)', s.hud.t - s.thread.t >= 400, `${Math.round(s.hud.t - s.thread.t)} ms`);
   R.check('l’Énergie affichée a bien augmenté', (await L.resValue(page, 'energie')) > e0);
   const g1 = srv.game();
-  const lu0 = ((g0 && g0.lueur) || {}).atelier || 0, lu1 = ((g1 && g1.lueur) || {}).atelier || 0;
-  R.check('l’Atelier a reçu de la Lueur dans l’état du jeu enregistré', lu1 > lu0, `${lu0} → ${lu1}`);
+  const q0 = ((g0 && g0.quartiers) || {}).atelier || 0, q1 = ((g1 && g1.quartiers) || {}).atelier || 0;
+  R.check('l’Atelier compte une tâche de plus dans l’état du jeu enregistré', q1 === q0 + 1, `${q0} → ${q1}`);
   const plaque1 = await page.getAttribute('.ow-plaque[data-sector="atelier"]', 'aria-label');
-  R.check('la plaque de l’Atelier le dit', plaque1 !== plaque0 && /Lueur/.test(plaque1), `${plaque0} → ${plaque1}`);
+  R.check('la plaque de l’Atelier le dit (niveau, tâches qui manquent)', plaque1 !== plaque0 && /niveau 0, encore 4 tâches Maison pour le niveau 1/.test(plaque1), `${plaque0} → ${plaque1}`);
   R.check('le texte du monde passe par sa propre zone vocale', await L.waitFor(() => page.evaluate(() => document.getElementById('live-world').textContent.trim().length > 0), 3000));
   R.check('la zone vocale des gains reste séparée et remplie', await page.evaluate(() => document.getElementById('live').textContent.trim().length > 0));
 
@@ -73,23 +73,28 @@ L.runScenario('12. monde : fil de lumière, impact, Lueur, repos', async ({ R, s
   R.check('0 requestAnimationFrame après 12 s d’inactivité', r2 === r1, `${r1} → ${r2}`);
   R.check('le monde est au repos (data-ambient=off, plus de bouton « Passer »)', await page.evaluate(() => document.querySelector('.ow').dataset.ambient === 'off' && document.querySelector('.ow-skip').hidden));
 
-  // toucher un secteur de la carte : sa feuille d'actions, puis « Voir les quêtes des Champs » → liste filtrée
+  // toucher un quartier sur la carte : le panneau s'ouvre, la liste est filtrée sur lui
   await page.click('.ow-plaque[data-sector="champs"]');
-  R.check('toucher un secteur ouvre sa feuille d’actions', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-act').open && /Champs/.test(document.getElementById('act-t').textContent)), 2000));
-  await page.waitForTimeout(300);
-  await page.click('#dlg-act [data-act="filter"]');
-  R.check('« Voir les quêtes » ferme la feuille et ouvre le panneau', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-act').open && document.getElementById('app').dataset.panel === 'open'), 2000));
-  R.check('et filtre la liste par ce secteur', await page.evaluate(() => document.querySelector('.chip[data-sector="champs"]').getAttribute('aria-pressed') === 'true' && [...document.querySelectorAll('#quest-list .quest-title')].map((e) => e.textContent.trim()).join('|') === 'Ratisser les feuilles'));
-  await page.screenshot({ path: `${L.SHOTS}/12-secteur-${size[0]}.png` });
+  R.check('toucher un quartier ouvre le panneau', await L.waitFor(() => page.evaluate(() => document.getElementById('app').dataset.panel === 'open'), 2000));
+  R.check('et filtre la liste par ce quartier', await L.waitFor(() => page.evaluate(() => document.querySelector('.chip[data-quartier="champs"]').getAttribute('aria-pressed') === 'true' && [...document.querySelectorAll('#quest-list .quest-title')].map((e) => e.textContent.trim()).join('|') === 'Ratisser les feuilles'), 2000));
+  await page.screenshot({ path: `${L.SHOTS}/12-quartier-${size[0]}.png` });
+  await page.locator('.chip[data-quartier="champs"]').click(); // retire le filtre
 
-  // plan accessible
+  // carte en liste : un quartier par ligne, son niveau, deux boutons
   await page.click('[data-action="open-plan"]');
   await page.waitForSelector('#dlg-plan[open]');
   await page.waitForTimeout(500);
-  R.check('le plan accessible s’ouvre et nomme les secteurs', /Plan de l’Orée/.test(await page.textContent('#dlg-plan')) && (await page.locator('#dlg-plan .ow-plan-sectors > li').count()) === 6);
+  R.check('la carte en liste s’ouvre et nomme les six quartiers', /Carte en liste/.test(await page.textContent('#dlg-plan')) && (await page.locator('#dlg-plan .ow-plan-sectors > li').count()) === 6);
+  R.check('chaque quartier dit son niveau et ce qui manque', /Atelier · Niveau 0/.test(await page.textContent('#dlg-plan')) && /encore 4 tâches Maison pour le niveau 1/.test(await page.textContent('#dlg-plan')), (await page.textContent('#dlg-plan .ow-plan-sectors')).slice(0, 200));
   await page.screenshot({ path: `${L.SHOTS}/12-plan-${size[0]}.png` });
+  await page.locator('#dlg-plan .ow-plan-quests[data-sector="champs"]').click();
+  R.check('« Ses quêtes » referme la carte en liste et filtre la liste', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-plan').open && document.querySelector('.chip[data-quartier="champs"]').getAttribute('aria-pressed') === 'true'), 2000));
+  await page.locator('.chip[data-quartier="champs"]').click();
+  await page.click('[data-action="open-plan"]');
+  await page.waitForSelector('#dlg-plan[open]');
+  await page.waitForTimeout(400);
   await page.locator('#dlg-plan .ow-plan-sectors button').first().click();
-  R.check('« Voir sur la carte » referme le plan', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-plan').open), 2000));
+  R.check('« Voir sur la carte » referme la carte en liste', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-plan').open), 2000));
 
   // mouvement réduit : pas de fil, compteurs immédiats
   const { page: pr } = await newPage({}, { reducedMotion: 'reduce' });

@@ -16,7 +16,7 @@ const AUDIT = () => {
   // une boîte fermée (dialog non ouvert) est déjà display:none
   for (const el of document.querySelectorAll('button, a[href], summary, select, input:not([type=hidden]):not([type=radio]):not([type=checkbox]), textarea, label.seg-option, label.sector-option, label.check-row, .step label')) {
     if (!vis(el)) continue;
-    // objets de la carte (sprites cliquables du monde) : leur équivalent à cible de 44 px est le Plan accessible ; mesurés à part
+    // objets de la carte (sprites cliquables du monde) : leur équivalent à cible de 44 px est la Carte en liste ; mesurés à part
     if (el.closest('.ow-ent')) continue;
     const r = el.getBoundingClientRect();
     const name = (el.getAttribute('aria-label') || el.textContent || el.id || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 40);
@@ -41,12 +41,13 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
     R.check(`${label} : toutes les cibles ≥ 44 px`, a.small.length === 0, a.small.slice(0, 6).join(' ; '));
   };
   await audit('Fil du jour replié');
-  // carte du chapitre dépliée sur la carte
-  await page.click('#carnet [data-card="chapitre"]');
-  await page.waitForSelector('#carnet-card:not([hidden])'); await page.waitForTimeout(300);
-  await audit('carte du chapitre');
-  await shot(page, '09-carnet');
-  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  // aide d'une ressource (trois lignes : ce que c'est, d'où ça vient, à quoi ça sert)
+  await page.click('.res[data-res="nourriture"]');
+  await page.waitForSelector('#dlg-help[open]'); await page.waitForTimeout(400);
+  await audit('aide de la Nourriture');
+  R.check('aide de la Nourriture : trois lignes', await page.locator('#dlg-help .help-line').count() === 3);
+  await shot(page, '09-aide-ressource');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
   await L.openPanel(page);
   await audit('panneau ouvert');
   // états variés
@@ -69,15 +70,11 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
   await shot(page, '09-ajout-reglages');
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 
-  // écrans de jeu : feuille d'actions d'un secteur (depuis le plan), bilan de la semaine, prénom
+  // écrans de jeu : carte en liste, bilan de la semaine, prénom
   await page.click('[data-action="open-plan"]');
   await page.waitForSelector('#dlg-plan[open]'); await page.waitForTimeout(400);
-  await audit('plan accessible');
-  await page.click(`#dlg-plan [data-act="open-target"][data-params='{"type":"sector","id":"champs"}']`);
-  await page.waitForSelector('#dlg-act[open]'); await page.waitForTimeout(500);
-  await audit('feuille d’actions des Champs');
-  await shot(page, '09-feuille-champs');
-  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await audit('carte en liste');
+  await shot(page, '09-carte-en-liste');
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
   await page.click('[data-action="open-review"]');
   await page.waitForSelector('#dlg-review[open]'); await page.waitForTimeout(500);

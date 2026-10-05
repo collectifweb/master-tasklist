@@ -1,22 +1,26 @@
 // 3. « Fait » → ressources en hausse, annonce visible qui ne couvre aucun bouton, entrée au registre ;
 //    Remballer → retour en arrière ; « Fait » de nouveau → aucun gain.
 const L = require('./lib.cjs');
-L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, shot, size }) => {
+L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, shot, size, core }) => {
   const { page } = await newPage();
   await page.goto(srv.url);
   await L.ready(page);
   const compact = size[0] < 700;
-  const snap = async () => ({ e: await L.resValue(page, 'energie'), m: await L.resValue(page, 'materiaux'), c: await L.resValue(page, 'confiance'), l: await L.resValue(page, 'lueur') });
+  const snap = async () => ({ e: await L.resValue(page, 'energie'), m: await L.resValue(page, 'materiaux'), f: await L.resValue(page, 'nourriture'), h: await L.resValue(page, 'habitants') });
+  const quartiers = () => ({ ...(srv.game()?.quartiers || {}) });
   const s0 = await snap();
   const title = (await page.textContent('#fil-quest .fil-title')).trim();
   const id = await page.getAttribute('#fil-quest', 'data-task-id');
+  const q = core.quartierOfTask(srv.readTasks().find((t) => t.id === id));
+  const q0 = quartiers();
   await page.click('#fil-quest [data-action="complete"]');
   await page.waitForTimeout(700);
   const s1 = await snap();
   R.check('Énergie en hausse', s1.e > s0.e, `${s0.e} → ${s1.e}`);
   R.check('Matériaux en hausse', s1.m > s0.m, `${s0.m} → ${s1.m}`);
-  R.check('Lueur en hausse', s1.l > s0.l, `${s0.l} → ${s1.l}`);
-  R.check('Confiance +1 (la lisière s’allume)', s1.c === s0.c + 1, `${s0.c} → ${s1.c}`);
+  R.check('Nourriture et Habitants inchangés (ils viennent des récoltes et des logements)', s1.f === s0.f && s1.h === s0.h, JSON.stringify({ s0, s1 }));
+  await L.waitFor(() => (quartiers()[q] || 0) === (q0[q] || 0) + 1, 3000);
+  R.check(`le quartier de la quête (${q}) compte une tâche de plus`, (quartiers()[q] || 0) === (q0[q] || 0) + 1, JSON.stringify({ q0, q1: quartiers() }));
   // annonce
   const ann = await L.rect(page, '#announce');
   R.check('l’annonce est visible', ann && ann.w > 0 && (await page.evaluate(() => getComputedStyle(document.getElementById('announce')).opacity)) > 0);
@@ -63,7 +67,8 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   await page.click('#dlg-confirm [data-answer="yes"]');
   await page.waitForTimeout(800);
   const s2 = await snap();
-  R.check('Remballer : Énergie, Matériaux, Lueur et Confiance reviennent', s2.e === s0.e && s2.m === s0.m && s2.l === s0.l && s2.c === s0.c, JSON.stringify({ s0, s2 }));
+  R.check('Remballer : Énergie, Matériaux, Nourriture et Habitants reviennent', s2.e === s0.e && s2.m === s0.m && s2.f === s0.f && s2.h === s0.h, JSON.stringify({ s0, s2 }));
+  R.check('Remballer : le quartier revient à son compte', (quartiers()[q] || 0) === (q0[q] || 0), JSON.stringify({ q0, q2: quartiers() }));
   R.check('Remballer : une écriture reverse au registre', srv.ledger().filter((e) => e.key === `reverse:${id}:1`).length === 1);
   R.check('Remballer : tasks.json revient à « todo »', srv.readTasks().find((t) => t.id === id).status === 'todo');
   await shot(page, '03-remballe');
@@ -73,7 +78,8 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   await page.locator(`#quest-list > li[data-task-id="${id}"] [data-action="complete"]`).click();
   await page.waitForTimeout(800);
   const s3 = await snap();
-  R.check('« Fait » de nouveau : aucun gain', s3.e === s2.e && s3.m === s2.m && s3.l === s2.l && s3.c === s2.c, JSON.stringify({ s2, s3 }));
+  R.check('« Fait » de nouveau : aucun gain', s3.e === s2.e && s3.m === s2.m && s3.f === s2.f && s3.h === s2.h, JSON.stringify({ s2, s3 }));
+  R.check('« Fait » de nouveau : le quartier ne compte pas la tâche deux fois', (quartiers()[q] || 0) === (q0[q] || 0), JSON.stringify({ q0, q3: quartiers() }));
   R.check('« Fait » de nouveau : toujours une seule entrée reward', srv.ledger().filter((e) => e.key === `reward:${id}:1`).length === 1);
   R.check('« Fait » de nouveau : le message dit « aucun nouveau gain »', /aucun nouveau gain/i.test(await page.textContent('#announce')) || /Aucun nouveau gain/.test(await page.textContent('#live')), (await page.textContent('#announce')) + ' / ' + (await page.textContent('#live')));
   R.check('« Fait » de nouveau : tasks.json à nouveau « done »', srv.readTasks().find((t) => t.id === id).status === 'done');

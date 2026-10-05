@@ -35,9 +35,9 @@ L.runScenario('8. étapes, tris, filtres, recherche, archivage, suppression', as
   await shot(page, '08-vide');
   await page.click('#list-empty [data-action="clear-filters"]');
   R.check('« Retirer les filtres » rend toute la liste', (await titles()).length === 10 && await chip('data-filter="thisWeek"').getAttribute('aria-pressed') === 'false');
-  await chip('data-sector="champs"').click();
-  R.check('filtre de secteur « Champs »', JSON.stringify(await titles()) === JSON.stringify(expected('cote', { sector: 'champs' })), (await titles()).join('|'));
-  await chip('data-sector="champs"').click();
+  await chip('data-quartier="champs"').click();
+  R.check('filtre de quartier « Champs »', JSON.stringify(await titles()) === JSON.stringify(expected('cote', { quartier: 'champs' })), (await titles()).join('|'));
+  await chip('data-quartier="champs"').click();
 
   // ───── recherche
   await page.fill('#search', 'fen');
