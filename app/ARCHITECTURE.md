@@ -154,3 +154,35 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 - État abîmé : `migrateState` reprend la valeur par défaut quand le type brut ne correspond pas (tableau attendu, objet attendu).
 - Les recherches dans un catalogue (`SEED_COST`, `BUILDABLES`, `CROP_STAGES`…) passent par `Object.hasOwn` : `constructor` & cie sont refusés.
 - Lettre de retour : le jour où `openApp` a donné le bonus de retour.
+
+## Interface — `js/`, `world/`, application installable
+
+- **`js/main.js`** : contrôleur. Un seul gestionnaire de clics délégué lit les attributs `data-*`, appelle une action du magasin, puis redessine. Branche le monde (`world-bridge.js`) et ouvre les feuilles (`ui/sheets.js`, `ui/game.js`), le carnet (`ui/carnet.js`) et les moments d'histoire (`ui/story.js`).
+- **`js/store.js`** : état affiché = réponse du serveur + file d'actions en attente rejouée par-dessus. Chaque action de `ACTIONS` appelle une fonction de `core/` et produit des opérations envoyées à l'API.
+  - Le contenu `chapitres` est gardé en mémoire et réinjecté dans `advanceTime` à l'appel comme au rejeu ; il n'est jamais stocké dans la file.
+  - Les actions de tenue (`openApp`, `advanceTime`, `markStorySeen`, `markLetterShown`) partent dans la file mais ne comptent pas dans « N changements en attente ».
+  - Ordre : `openApp` puis `advanceTime` à l'ouverture ; `advanceTime` au changement de jour de jeu, au retour au premier plan et après chaque geste qui peut faire avancer un objectif.
+- **`js/content.js`** : textes de `content/fr-CA/interface.json` (aucun libellé en dur) et variables des répliques.
+- **`world/`** : île isométrique DOM/SVG. L'interface publique de `createWorld` (options, rappels `onSelect`, `onHarvest`, `onImpact`, événements acceptés par `play()`) est décrite en tête de `world/world.js`. Le monde n'applique jamais rien lui-même : il signale un geste, l'interface appelle le cœur puis lui rejoue les événements.
+
+**Stockage de l'appareil** (`localStorage`, jamais envoyé au serveur sauf la file) :
+
+| Clé | Contenu |
+|---|---|
+| `oree.queue.v1` | actions en attente d'envoi (hors ligne, conflit) |
+| `oree.cache.v1` | dernière réponse du serveur, pour démarrer sans réseau |
+| `oree.tick.v1` | dernier passage du minuteur de jour |
+| `oree.token` | jeton d'accès à l'API, quand la protection sera en place |
+| `oree.prenom.v1` | prénom facultatif saisi par le joueur (lettre du matin) |
+| `oree.recycle.v1` | quêtes « gardées » au Jour du recyclage (masquées 4 semaines sur cet appareil) |
+| `oree.replies.v1` | répliques déjà dites (anti-répétition) |
+
+**Application installable** :
+- `manifest.webmanifest` et `sw.js` utilisent des chemins relatifs : l'app peut vivre dans un sous-dossier.
+- `sw.js` : réseau d'abord, cache en repli hors ligne. Ne touche jamais `…/api/…`, ni une autre origine, ni une requête autre que GET.
+- **À chaque déploiement qui modifie la coquille, changer `VERSION` dans `sw.js`** (l'ancien cache est effacé à l'activation), et ajouter à `SHELL` tout nouveau fichier chargé par la page.
+- Ne pas déployer `app/.impeccable/`, `app/tests/` ni la page de référence `app/design/reference.*`. `app/design/icons.svg` est utilisé par l'app : il doit être déployé.
+
+**Vérifications navigateur** (Playwright est une bibliothèque, pas une commande ; voir l'en-tête de chaque script) :
+- `tests/e2e/run-ui.sh` : 21 scénarios de l'app, 3 largeurs chacun (390×844, 834×1112, 1280×900), sur une copie temporaire servie par `php -S`. Variables `PW_CORE`, `PW_CHROME`, `SHOTS`. Plus de 10 minutes.
+- `tests/e2e/world-s3.cjs` et `world-perf.cjs` : la démo du monde (`world/demo.html`), servie par `python3 -m http.server`, variable `BASE`.
