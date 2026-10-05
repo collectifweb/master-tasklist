@@ -61,9 +61,11 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 ## Mise en ligne
 
-- [ ] Choisir la protection : connexion par code ou mot de passe du serveur.
+- [ ] Choisir la protection : connexion par code ou mot de passe du serveur. *La connexion par code est prête et vérifiée sur la version d'essai.*
 - [ ] Décider comment Hermes écrit : par la nouvelle API, ou par SSH avec le même verrou.
-- [ ] Sauvegarder ce qui est en ligne, déployer dans un sous-dossier, tester sur téléphone, puis basculer l'accueil.
+- [x] Sauvegarder ce qui est en ligne : copie datée de la liste, de la page, de l'ancienne API et du `.htaccess` dans un dossier du site interdit au web (5 octobre 2026).
+- [x] Version d'essai dans un sous-dossier, avec une liste fictive et un code d'accès. Parcours réel vérifié en HTTPS : code demandé, quête enregistrée sur le serveur, relance hors ligne, dossier de données interdit au web.
+- [ ] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil.
 
 ## Critères de réussite
 
@@ -71,3 +73,18 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 - Aucun champ perdu sur la copie des vraies tâches.
 - Quête n° 1 lisible en moins de 2 s ; ajout en 3 gestes au plus ; terminer en 2 touchers.
 - Une tâche ajoutée par Hermes apparaît en 30 s au plus.
+
+## Bilan — nuit du 5 octobre 2026
+
+- **Fait et vérifié** :
+  - les trois semaines du plan, sauf le côte à côte (attend la décision d'Alex) ;
+  - 259 tests `node --test` (logique et API) ;
+  - 21 scénarios Playwright aux trois largeurs (1 331 vérifications) et le scénario du monde (86 vérifications).
+- **Relectures indépendantes** de la logique de la semaine 3, puis de la sécurité et de l'accessibilité. Tout défaut démontré a été corrigé avec un test qui échouait avant.
+- **Reste** :
+  - l'essai sur un vrai téléphone : décision SVG ou PixiJS ;
+  - l'essai sur les vraies tâches ;
+  - la protection de la production ;
+  - la façon dont Hermes écrit ;
+  - le côte à côte et le rappel quotidien ;
+  - la bascule de l'accueil.
