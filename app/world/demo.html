@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Monde de l’Orée · démo</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/world.css">
+  <style>
+    /* propre à la démo : grille de boutons d'événements dans le panneau */
+    .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); margin: var(--sp-3) 0 0; padding: 0; list-style: none; }
+    .demo-grid .btn { width: 100%; justify-content: center; white-space: normal; text-align: center; line-height: 1.2; }
+    .demo-note { margin: var(--sp-2) 0 0; font-size: var(--text-14); color: var(--text-soft); }
+    .demo-plan { padding-top: var(--sp-4); }
+  </style>
+</head>
+<body>
+<div class="app" id="app" data-panel="peek">
+  <div class="world-slot" id="world"></div>
+
+  <header class="hud" aria-label="Ressources">
+    <button class="res" type="button" data-res="energie" aria-label="Énergie">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-energie"/></svg></span>
+      <span class="res-value num" data-val="energy">0</span>
+      <span class="res-label">Énergie</span>
+    </button>
+    <button class="res" type="button" data-res="materiaux" aria-label="Matériaux">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-materiaux"/></svg></span>
+      <span class="res-value num" data-val="materials">0</span>
+      <span class="res-label">Matériaux</span>
+    </button>
+    <button class="res" type="button" data-res="confiance" aria-label="Confiance">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-confiance"/></svg></span>
+      <span class="res-value num" data-val="confidence">0</span>
+      <span class="res-label">Confiance</span>
+    </button>
+    <button class="res" type="button" data-res="lueur" aria-label="Fil libre">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-lueur"/></svg></span>
+      <span class="res-value num" data-val="filLibre">0</span>
+      <span class="res-label">Fil libre</span>
+    </button>
+  </header>
+
+  <p class="sr-only" role="status" aria-live="polite" id="live"></p>
+
+  <section class="panel" id="panel" aria-labelledby="panel-title">
+    <span class="panel-grip" aria-hidden="true"></span>
+    <header class="panel-head">
+      <h2 class="panel-title" id="panel-title">Démo du monde <small>état fictif</small></h2>
+      <button class="btn btn--quiet btn--small panel-toggle" type="button" data-demo="panel" aria-expanded="false" aria-controls="panel-rest">
+        <span class="panel-toggle-label">Tout voir</span>
+        <svg class="icon" aria-hidden="true"><use href="../design/icons.svg#i-chevron-up"/></svg>
+      </button>
+    </header>
+    <div class="panel-scroll" id="panel-scroll">
+      <ul class="demo-grid">
+        <li><button class="btn btn--primary btn--small" type="button" data-demo="q-champs">Quête aux Champs</button></li>
+        <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-atelier">Quête à l’Atelier</button></li>
+        <li><button class="btn btn--secondary btn--small" type="button" data-demo="q-archives">Quête aux Archives</button></li>
+        <li><button class="btn btn--secondary btn--small" type="button" data-demo="build">Construire</button></li>
+      </ul>
+      <div class="panel-rest" id="panel-rest">
+        <ul class="demo-grid">
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="fil">Diriger le Fil libre</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="seuil">Palier de l’Atelier</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="reflet">Reflet de la glacière</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="chapitre">Chapitre suivant</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="veille">L’Orée veille</button></li>
+          <li><button class="btn btn--secondary btn--small" type="button" data-demo="remballer">Remballer</button></li>
+          <li><button class="btn btn--quiet btn--small" type="button" data-demo="motion" aria-pressed="false">Mouvement réduit</button></li>
+          <li><button class="btn btn--quiet btn--small" type="button" data-demo="plan" aria-pressed="false">Plan accessible</button></li>
+          <li><button class="btn btn--quiet btn--small" type="button" data-demo="reset">Recommencer</button></li>
+        </ul>
+        <p class="demo-note" id="demo-note">Toutes les quêtes et valeurs de cette page sont fictives. Toucher la carte ou Échap passe une animation.</p>
+        <div class="demo-plan" id="plan" hidden></div>
+      </div>
+    </div>
+  </section>
+</div>
+<script type="module" src="./demo.js"></script>
+</body>
+</html>

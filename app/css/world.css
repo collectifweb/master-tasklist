@@ -1,0 +1,645 @@
+/* ════════════════════════════════════════════════════════════════════
+   Le monde : l'île de l'Orée (app/world/). Jetons : tokens.css.
+   Couches de la scène (une seule mise à l'échelle) :
+     terrain 1 · voiles de cendre 5 · effets au sol 6 · ombres 7 · objets 10 à ~3400 (tri par profondeur)
+     brume 4000 · crépuscule 4100 · étoiles 4150 · halos 4200 · effets 4300
+   Les objets n'ont pas de contexte d'empilement par secteur : ils se trient entre secteurs.
+   Les couleurs des matières viennent de palette.js (variables --<matière>-<t|l|r>).
+   ════════════════════════════════════════════════════════════════════ */
+
+.ow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  contain: strict;
+  background: var(--c-lake-deep);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ow [hidden] { display: none !important; }
+.ow svg { max-width: none; }
+.ow button { font: inherit; color: inherit; }
+
+.ow-scroller {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  outline: none;
+}
+.ow-scroller::-webkit-scrollbar { display: none; }
+.ow[data-glisse] .ow-scroller { cursor: grabbing; }
+
+/* ciel jusqu'à l'horizon, puis le lac ; la forêt lointaine est posée sur l'horizon */
+.ow-content {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+    var(--c-sky-top) 0,
+    var(--c-sky-horizon) calc(var(--ow-horizon, 120px) - 1px),
+    var(--c-lake) var(--ow-horizon, 120px),
+    var(--c-lake-deep) 100%);
+}
+.ow-far {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--ow-horizon, 120px) - 45px);
+  height: 46px;
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.ow-skyband {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(var(--ow-horizon, 120px) - 30px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.ow-cloud {
+  position: absolute;
+  left: 0;
+  width: 112px;
+  height: 26px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--c-frost-wash) 70%, var(--c-sky-horizon));
+  opacity: 0.9;
+  animation: ow-drift 150s linear infinite;
+  animation-play-state: paused;
+}
+.ow-cloud::before,
+.ow-cloud::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  border-radius: 50%;
+  background: inherit;
+}
+.ow-cloud::before { left: 18px; width: 44px; height: 30px; }
+.ow-cloud::after { left: 50px; width: 36px; height: 24px; }
+.ow-cloud.c1 { top: 28%; animation-delay: -40s; }
+.ow-cloud.c2 { top: 52%; transform: scale(0.7); animation-duration: 190s; animation-delay: -120s; opacity: 0.7; }
+.ow-cloud.c3 { top: 12%; transform: scale(0.85); animation-duration: 170s; animation-delay: -10s; }
+@keyframes ow-drift {
+  from { transform: translateX(-140px); }
+  to { transform: translateX(1900px); }
+}
+
+/* ---------------------------------------------------------------- scène */
+.ow-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+.ow-terrain-host { position: absolute; left: 0; top: 0; z-index: 1; }
+.ow-terrain,
+.ow-veils,
+.ow-flashes { position: absolute; display: block; overflow: visible; }
+.ow-veils { z-index: 5; pointer-events: none; }
+.ow-fxg { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; }
+.ow-shadows { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; }
+.ow-ents-root,
+.ow-ents { position: absolute; left: 0; top: 0; }
+.ow-mistlayer { position: absolute; left: 0; top: 0; pointer-events: none; } /* sans z-index : chaque nappe se trie avec les objets */
+.ow-dusk { z-index: 4100; }
+.ow-stars { position: absolute; left: 0; top: 0; z-index: 4150; pointer-events: none; }
+.ow-lights { position: absolute; left: 0; top: 0; z-index: 4200; pointer-events: none; }
+.ow-fxw { position: absolute; left: 0; top: 0; z-index: 4300; pointer-events: none; }
+
+/* lac et socle */
+.ow-ripple { fill: none; stroke: rgb(255 255 255 / 0.42); stroke-width: 1.4; stroke-linecap: round; }
+.ow-lakeshadow { fill: rgb(38 78 84 / 0.2); }
+.ow-shallow { fill: var(--waterl-t); opacity: 0.5; }
+.ow-reflect { fill: rgb(60 110 110 / 0.22); }
+.ow-foam { fill: none; stroke: rgb(255 255 255 / 0.7); stroke-width: 1.6; }
+.ow-edge { fill: none; stroke: rgb(255 250 225 / 0.55); stroke-width: 1.2; stroke-linejoin: round; }
+.ow-edge-front { stroke: rgb(255 250 225 / 0.32); }
+
+/* détails des modèles */
+.ow .rim { stroke: rgb(255 251 238 / 0.5); stroke-width: 0.8; }
+.ow .win { fill: var(--win-day); stroke: none; }
+.ow [data-allume] .win { fill: var(--c-lantern); }
+.ow[data-veille] [data-allume] .win { fill: var(--win-night); }
+.ow .lampg { fill: var(--lampg-off); stroke: none; }
+.ow [data-allume] .lampg { fill: var(--lampg-on); }
+.ow .rune { stroke: var(--stoned-r); fill: none; }
+.ow [data-allume] .rune { stroke: var(--tech-t); }
+.ow .ow-core { fill: var(--lampg-off); }
+.ow [data-allume] .ow-core { fill: var(--lampg-on); }
+.ow .ow-fanal-core { fill: var(--c-lantern-glow); }
+.ow-sprite-shadow { fill: rgb(60 45 30 / 0.22); }
+
+.ow-shadow { position: absolute; }
+.ow-shadow svg { display: block; overflow: visible; }
+.ow-shadow polygon { fill: rgb(70 56 34 / 0.2); }
+
+/* ---------------------------------------------------------------- objets */
+.ow-ent {
+  position: absolute;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: none;
+}
+.ow-ent svg { display: block; overflow: visible; }
+.ow-ent.is-btn .ow-hit {
+  pointer-events: all;
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+}
+.ow-ent.is-btn:focus { outline: none; }
+.ow-ent.is-btn:focus-visible .ow-hit {
+  fill: rgb(255 253 246 / 0.16);
+  stroke: var(--c-focus);
+  stroke-width: calc(3px * var(--ow-inv, 1));
+  stroke-linejoin: round;
+}
+.ow-ent.is-sel .ow-hit {
+  fill: rgb(255 217 140 / 0.2);
+  stroke: var(--c-lantern-ink);
+  stroke-width: calc(2px * var(--ow-inv, 1));
+  stroke-dasharray: calc(6px * var(--ow-inv, 1)) calc(4px * var(--ow-inv, 1));
+  stroke-linejoin: round;
+}
+.ow-ent[data-reluit] .ow-art { filter: brightness(1.06) saturate(1.12); }
+.ow-char-bob {
+  position: absolute;
+  left: 16px;
+  top: 10px;
+  width: 32px;
+  height: 54px;
+  transform-origin: 50% 100%;
+  animation: ow-bob 3.4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.ow-ent.m-milo .ow-char-bob { animation-delay: -1.2s; }
+.ow-ent.m-solene .ow-char-bob { animation-delay: -2.1s; }
+.ow-ent.m-fanal .ow-char-bob { animation-name: ow-hover; animation-duration: 2.8s; }
+.ow-hitbox { position: absolute; left: 0; top: 0; }
+@keyframes ow-bob {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.035); }
+}
+@keyframes ow-hover {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.ow-crystal {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  animation: ow-hover 3.2s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.ow-crys-t { fill: var(--glass-t); }
+.ow-crys-l { fill: var(--tech-t); }
+.ow-crys-r { fill: var(--tech-r); }
+.ow-crys-ring { fill: none; stroke: var(--c-lantern-glow); stroke-width: 1.2; opacity: 0.7; }
+
+.ow-smoke { position: absolute; width: 0; height: 0; }
+.ow-smoke i {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgb(244 240 230 / 0.75);
+  opacity: 0;
+  animation: ow-smoke 4.5s ease-out infinite;
+  animation-play-state: paused;
+}
+.ow-smoke i:nth-child(2) { animation-delay: -1.5s; }
+.ow-smoke i:nth-child(3) { animation-delay: -3s; }
+@keyframes ow-smoke {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  15% { opacity: 0.8; }
+  100% { transform: translate(10px, -34px) scale(1.7); opacity: 0; }
+}
+
+/* ---------------------------------------------------------------- halos, voiles, brume, crépuscule */
+.ow-halo {
+  position: absolute;
+  left: -44px;
+  top: -44px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 230 160 / 0.9), rgb(255 217 140 / 0.36) 48%, rgb(255 217 140 / 0));
+  opacity: 0;
+  transition: opacity var(--t-short) var(--ease-out);
+}
+.ow-halo[data-on] { opacity: 0.32; }
+.ow-halo.h-window,
+.ow-halo.h-lamp { left: -30px; top: -30px; width: 60px; height: 60px; }
+.ow-halo.h-window[data-on] { opacity: 0; }
+.ow-halo.h-core { left: -56px; top: -56px; width: 112px; height: 112px; }
+.ow-halo.h-core[data-on] { opacity: 0.5; }
+.ow-halo.h-crystal { background: radial-gradient(closest-side, rgb(214 244 236 / 0.9), rgb(174 224 215 / 0.35) 50%, rgb(174 224 215 / 0)); }
+.ow-halo.h-fanal { left: -34px; top: -34px; width: 68px; height: 68px; }
+.ow[data-veille] .ow-halo[data-on] { opacity: 1; }
+
+.ow-veil-fill { fill: var(--c-ash-wash); opacity: 0.45; }
+.ow-veil-pat { opacity: 0.9; }
+.ow-ash-speck { fill: var(--c-ash); opacity: 0.55; }
+.ow-veil-edge { fill: none; stroke: var(--c-ash); stroke-width: 1.5; stroke-dasharray: 6 5; opacity: 0.85; }
+
+.ow-flash { fill: var(--c-lantern-glow); opacity: 0; }
+.ow-tileflash { fill: var(--c-lantern-wash); opacity: 0; }
+
+.ow-mist { position: absolute; left: 0; top: 0; }
+.ow-mist i {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(250 250 246 / 0.97), rgb(248 248 243 / 0.78) 55%, rgb(248 248 243 / 0));
+  animation: ow-mist 22s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+.ow-mist .b1 { left: -170px; top: -80px; width: 330px; height: 170px; }
+.ow-mist .b2 { left: -50px; top: -120px; width: 250px; height: 140px; animation-delay: -6s; }
+.ow-mist .b3 { left: -230px; top: -30px; width: 250px; height: 130px; animation-delay: -12s; }
+.ow-mist .b4 { left: -90px; top: -10px; width: 290px; height: 130px; animation-delay: -17s; }
+@keyframes ow-mist {
+  from { transform: translateX(-10px); }
+  to { transform: translateX(12px); }
+}
+
+.ow-dusk {
+  position: absolute;
+  left: -1800px;
+  top: -1400px;
+  width: 3600px;
+  height: 3000px;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c-soil-deep) 34%, transparent),
+    color-mix(in srgb, var(--c-lantern-ink) 22%, transparent) 50%,
+    color-mix(in srgb, var(--c-soil-deep) 30%, transparent));
+  opacity: 0;
+}
+.ow[data-veille] .ow-dusk { opacity: 1; }
+.ow-nightstar {
+  position: absolute;
+  left: -1.5px;
+  top: -1.5px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--c-paper-raised);
+  opacity: 0;
+}
+.ow[data-veille] .ow-nightstar { opacity: 1; }
+
+/* ---------------------------------------------------------------- effets */
+.ow-fxv { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.ow-fxsvg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+.ow-thread-glow { fill: none; stroke: rgb(255 217 140 / 0.5); stroke-width: 10; stroke-linecap: round; }
+.ow-thread-core { fill: none; stroke: var(--c-paper-raised); stroke-width: 3.2; stroke-linecap: round; }
+.ow-thread.is-thin .ow-thread-glow { stroke-width: 6; }
+.ow-thread.is-thin .ow-thread-core { stroke-width: 2; }
+.ow-orb {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffbe9 0 28%, #ffd98c 52%, rgb(255 217 140 / 0) 72%);
+}
+.ow-orb.is-thin { transform: scale(0.7); }
+.ow-spark {
+  position: absolute;
+  left: -2.5px;
+  top: -2.5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-lantern-wash);
+}
+.ow-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--c-lantern-glow);
+  opacity: 0;
+}
+.ow-ring.is-gold { border-width: 3px; }
+.ow-ring.is-ash { border-color: var(--c-ash); }
+.ow-ring.is-ghost { border-style: dashed; border-color: var(--c-paper-raised); }
+.ow-wspark {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c-paper-raised) 0 30%, var(--c-lantern-glow) 60%, transparent 72%);
+  transform-origin: 50% 50%;
+  opacity: 0;
+}
+.ow-dust {
+  position: absolute;
+  left: -8px;
+  top: -5px;
+  width: 16px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-cream);
+  opacity: 0;
+}
+.ow-chip { position: absolute; left: -3px; top: -1.5px; width: 6px; height: 3px; background: var(--woodd-l); }
+.ow-flake { position: absolute; left: -5px; top: -3px; width: 10px; height: 6px; background: var(--c-ash); box-shadow: inset 0 -2px 0 var(--c-ash-ink); opacity: 0; }
+.ow-beam {
+  position: absolute;
+  width: 18px;
+  height: 124px;
+  border-radius: var(--r-pill) var(--r-pill) 0 0;
+  transform-origin: 50% 100%;
+  background: linear-gradient(0deg, rgb(255 224 150 / 0.9), rgb(255 240 200 / 0));
+  opacity: 0;
+}
+.ow-star { position: absolute; left: -10px; top: -10px; width: 20px; height: 20px; opacity: 0; }
+.ow-star path { fill: var(--c-paper-raised); }
+
+/* ---------------------------------------------------------------- plaques de secteur (boutons, socle de 3 px) */
+.ow-plaques { position: absolute; left: 0; top: 0; z-index: 4; } /* au-dessus du fil de lumière (.ow-fxv) */
+.ow-plaque {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: var(--target, 44px);
+  min-height: var(--target, 44px);
+  padding: 5px 11px 8px 6px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-paper);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-cream-face);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ow-plaque:active { top: calc(var(--face-h, 3px) * var(--motion, 1)); box-shadow: none; }
+.ow-plaque:focus { outline: none; }
+.ow-plaque:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.ow-plaque-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+}
+.ow-glyph { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ow-plaque-text { display: grid; gap: 2px; }
+.ow-plaque-name {
+  font-family: var(--font-display);
+  font-weight: var(--w-heavy, 800);
+  font-size: var(--text-14);
+  line-height: 1.15;
+  letter-spacing: var(--track-tight);
+}
+.ow-plaque-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-12);
+  font-weight: var(--w-semibold);
+  line-height: 1.2;
+  color: var(--text-soft);
+}
+.ow-plaque-val { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.ow-pips { display: inline-flex; gap: 2px; }
+.ow-pips i {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--c-sage-deep);
+  border-radius: 50%;
+}
+.ow-plaque[data-stage="1"] .ow-pips i:nth-child(-n + 1),
+.ow-plaque[data-stage="2"] .ow-pips i:nth-child(-n + 2),
+.ow-plaque[data-stage="3"] .ow-pips i { background: var(--c-sage-deep); }
+.ow-plaque-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--c-line);
+  overflow: hidden;
+}
+.ow-plaque-bar i {
+  display: block;
+  height: 100%;
+  background: var(--c-lantern);
+  transform-origin: 0 50%;
+  transition: transform var(--t-medium) var(--ease-out);
+}
+/* à rallumer : picto lanterne, cadres vides */
+.ow-plaque[data-vis="open"][data-stage="0"] .ow-plaque-icon { background: var(--c-lantern-wash); color: var(--c-lantern-ink); }
+.ow-plaque[data-stage="0"] .ow-pips i { border-color: var(--c-ash-ink); }
+/* sous la cendre : bord en tirets, papier de cendre, pas de barre */
+.ow-plaque[data-vis="cendre"] {
+  background: var(--c-ash-wash);
+  border-style: dashed;
+  border-color: var(--c-ash);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-ash);
+}
+.ow-plaque[data-vis="cendre"] .ow-plaque-icon { background: var(--c-paper); color: var(--c-ash-ink); }
+.ow-plaque[data-vis="cendre"] .ow-pips,
+.ow-plaque[data-vis="cendre"] .ow-plaque-bar,
+.ow-plaque[data-vis="brume"] .ow-pips,
+.ow-plaque[data-vis="brume"] .ow-plaque-bar { display: none; }
+.ow-plaque[data-vis="cendre"] .ow-plaque-line { color: var(--c-ash-ink); }
+/* dans la brume : bord en pointillés, sans nom de secteur */
+.ow-plaque[data-vis="brume"] {
+  background: rgb(255 253 246 / 0.86);
+  border-style: dotted;
+  border-color: var(--c-frost-ink);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-frost);
+  padding-bottom: 6px;
+}
+.ow-plaque[data-vis="brume"] .ow-plaque-icon { background: var(--c-frost-wash); color: var(--c-frost-ink); }
+.ow-plaque[data-vis="brume"] .ow-plaque-line { display: none; }
+/* plaque repliée (autre secteur que l'actif sur petit écran, ou vue d'ensemble) : son picto seul, 44 × 44 */
+.ow-plaque[data-court],
+.ow[data-lod="loin"] .ow-plaque { padding: 6px; gap: 0; border-radius: 50%; }
+.ow-plaque[data-court] :is(.ow-plaque-text, .ow-plaque-bar),
+.ow[data-lod="loin"] :is(.ow-plaque-text, .ow-plaque-bar) { display: none; }
+.ow[data-lod="loin"] .ow-ent.is-btn .ow-hit { pointer-events: none; }
+
+.ow-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  max-width: 240px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- commandes */
+.ow-zoom {
+  position: absolute;
+  z-index: 5;
+  right: calc(var(--sp-3, 12px) + var(--safe-right, 0px));
+  bottom: calc(var(--ow-bottom, 0px) + var(--sp-3, 12px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2, 8px);
+}
+.ow-zbtn {
+  display: grid;
+  place-items: center;
+  width: var(--target, 44px);
+  height: var(--target, 44px);
+  padding: 0;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-paper);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-cream-face);
+  cursor: pointer;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out);
+}
+.ow-zbtn svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ow-zbtn:active:not(:disabled) { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
+.ow-zbtn:disabled { cursor: default; border-style: dashed; color: var(--text-muted); background: var(--c-sunken); box-shadow: none; }
+.ow-zbtn:focus { outline: none; }
+.ow-zbtn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+
+.ow-skip {
+  position: absolute;
+  z-index: 6;
+  right: calc(var(--sp-3, 12px) + var(--safe-right, 0px));
+  top: calc(var(--ow-top, 0px) + var(--sp-2, 8px));
+  min-height: var(--target, 44px);
+  padding: 0 var(--sp-4, 16px);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  cursor: pointer;
+}
+.ow-skip:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+
+.ow-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.ow-probe { position: absolute; left: 0; top: 0; width: 0; visibility: hidden; pointer-events: none; }
+
+/* ---------------------------------------------------------------- ambiance : seulement après une activité,
+   jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-mist i, .ow-crystal, .ow-smoke i, .ow-char-bob) {
+  animation-play-state: running;
+}
+.ow[data-mouvement="reduit"] .ow-halo,
+.ow[data-mouvement="reduit"] .ow-plaque-bar i { transition-duration: 0s; }
+
+/* ---------------------------------------------------------------- plan accessible */
+.ow-plan {
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-16);
+  line-height: var(--lh-body);
+}
+.ow-plan-title {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--text-20);
+  font-weight: var(--w-heavy);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--track-tight);
+}
+.ow-plan-title:focus { outline: none; }
+.ow-plan-title:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.ow-plan-intro { margin: 0 0 var(--sp-3); color: var(--text-soft); font-size: var(--text-14); }
+.ow-plan-summary { margin: 0 0 var(--sp-4); padding: 0; list-style: none; display: grid; gap: var(--sp-1); font-size: var(--text-14); }
+.ow-plan-summary li { padding-left: var(--sp-4); position: relative; }
+.ow-plan-summary li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--c-lantern);
+}
+.ow-plan-sectors { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--c-line); }
+.ow-plan-sector {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1) var(--sp-3);
+  align-items: start;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.ow-plan-name {
+  grid-column: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-16);
+  font-weight: var(--w-heavy);
+  line-height: var(--lh-snug);
+}
+.ow-plan-body { grid-column: 1; font-size: var(--text-14); color: var(--text-soft); }
+.ow-plan-body p { margin: 0; }
+.ow-plan-body p:first-child { color: var(--text); font-weight: var(--w-semibold); }
+.ow-plan-show {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: var(--target, 44px);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-paper);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-cream-face);
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+  color: var(--text);
+  cursor: pointer;
+}
+.ow-plan-show:active { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
+.ow-plan-show:focus { outline: none; }
+.ow-plan-show:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
