@@ -19,6 +19,7 @@ import {
   canReverse, stepsPaid, unknownStepsCount, hasKey, rewardKey, reverseKey, findEntry,
 } from './ledger.js';
 import { applyEntry, retractLisiere } from './economy.js';
+import { startSeance, stopSeance } from './cote-a-cote.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -331,20 +332,22 @@ export function updateQuest(tasks, game, ledger, params, now) {
   return ctx.result();
 }
 
-/** « Je m'y mets » : épingle la quête et fige P/L/D. */
+/** « Je m'y mets » : épingle la quête, fige P/L/D et lance la séance côte à côte (relevé du temps, voir cote-a-cote.js). */
 export function startQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   let t = ctx.get(params.id);
   if (t.status !== 'todo') throw new Error('Seule une quête à faire peut être commencée.');
   if (!t.startedAt) t = { ...t, startedAt: ctx.iso };
   ctx.put(applyFreeze(t, now));
+  startSeance(ctx, t);
   return ctx.result();
 }
 
-/** Retire l'épingle (« Pause »). Les valeurs figées restent. */
+/** Retire l'épingle (« Pause ») et arrête la séance. Les valeurs figées restent. */
 export function pauseQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  ctx.put({ ...ctx.get(params.id), startedAt: null });
+  const t = ctx.put({ ...ctx.get(params.id), startedAt: null });
+  stopSeance(ctx, t.id, 'pause', { task: t });
   return ctx.result();
 }
 
@@ -403,7 +406,8 @@ export function completeQuest(tasks, game, ledger, params, now) {
   const t = ctx.get(params.id);
   if (t.status === 'done') throw new Error('Cette quête est déjà terminée.');
   if (t.status === 'archived') throw new Error('Une quête archivée ne se termine pas : il faut d’abord la sortir des archives.');
-  complete(ctx, t);
+  const after = complete(ctx, t);
+  stopSeance(ctx, t.id, 'fait', { task: after, occurrence: t.occurrence ?? 1, terminee: true });
   return ctx.result();
 }
 
@@ -444,12 +448,15 @@ export function remballerQuest(tasks, game, ledger, params, now) {
     ctx.put({ ...t, status: 'todo', doneAt: null });
   }
   ctx.events.push({ type: 'remballe', taskId: t.id });
+  stopSeance(ctx, t.id, 'remballer', { occurrence: occ, terminee: false });
   return ctx.result();
 }
 
 export function archiveQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  ctx.put({ ...ctx.get(params.id), status: 'archived', archivedAt: ctx.iso, startedAt: null });
+  const t = ctx.get(params.id);
+  ctx.put({ ...t, status: 'archived', archivedAt: ctx.iso, startedAt: null });
+  stopSeance(ctx, t.id, 'archive', { occurrence: t.occurrence ?? 1, terminee: true });
   return ctx.result();
 }
 
@@ -464,10 +471,11 @@ export function unarchiveQuest(tasks, game, ledger, params, now) {
 /** Supprime une quête. Le bonus « ajout complet » est repris si la suppression a lieu dans les 24 h. */
 export function deleteQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  ctx.get(params.id);
+  const t = ctx.get(params.id);
   const refund = buildAjoutRefund(ctx.ledger, params.id, now);
   if (refund) ctx.append(refund, 'bonus', { bonus: 'ajout-reprise' });
   ctx.remove(params.id);
+  stopSeance(ctx, t.id, 'suppression', { occurrence: t.occurrence ?? 1, terminee: true });
   return ctx.result();
 }
 

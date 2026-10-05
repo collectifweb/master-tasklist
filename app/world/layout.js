@@ -224,6 +224,20 @@ export const CHARACTERS = [
   { id: 'milo', kind: 'milo', sector: 'atelier', u: 8.55, v: 8.6 },
 ];
 
+/**
+ * Côte à côte : où Fanal travaille avec toi pendant une séance « Je m'y mets » ([u, v, penché vers]) : au bord de la
+ * Place, du côté du secteur de la quête (la Place est toujours ouverte) ; aux Champs (ouverts dès le chapitre 1), entre
+ * la clôture et les emplacements, hors de la plaque de la Place. Pour une quête de la Place, il reste chez lui.
+ */
+export const FANAL_SPOTS = {
+  place: [6.85, 6.55, 'gauche'],
+  champs: [2.5, 7.05, 'gauche'],
+  atelier: [7.8, 7.65, 'droite'],
+  archives: [7.65, 5.65, 'droite'],
+  'maison-commune': [4.35, 6.3, 'gauche'],
+  relais: [6.45, 4.3, 'droite'],
+};
+
 // ---------------------------------------------------------------- décor (arbres, buissons, rochers)
 // Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe.
 function isFree(u, v) {

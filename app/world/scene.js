@@ -207,6 +207,8 @@ export class Scene {
     for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit], ['neuf', e.placed], ['mure', e.plot?.ripe]]) {
       if (n.last[attr] !== !!val) { n.el.toggleAttribute(`data-${attr}`, !!val); n.last[attr] = !!val; }
     }
+    const pose = e.pose || null; // personnage au travail (Côte à côte) : 'gauche' | 'droite'
+    if (n.last.pose !== pose) { if (pose) n.el.dataset.pose = pose; else delete n.el.dataset.pose; n.last.pose = pose; }
     this.syncHalo(n, e);
     n.e = e;
     return changed;

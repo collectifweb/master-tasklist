@@ -59,6 +59,7 @@ const DEFAULTS = {
   'monde.obj.parcelle': 'Parcelle', 'monde.obj.tunnel': 'Tunnel de culture', 'monde.obj.atelier': 'Atelier', 'monde.obj.etabli': 'Établi',
   'monde.obj.erable': 'Érable', 'monde.obj.glaciere': 'Glacière', 'monde.obj.registres': 'Salle des registres', 'monde.obj.maison': 'Maison commune',
   'monde.obj.fanal': 'Fanal, l’automate-lanterne', 'monde.obj.solene': 'Solène', 'monde.obj.milo': 'Milo',
+  'monde.obj.fanal.travail': 'Fanal, au travail avec toi',
   'monde.crop.courge': 'courge', 'monde.crop.patate': 'patate', 'monde.crop.ble': 'blé',
   'monde.crop.state.0': 'semée', 'monde.crop.state.mid': 'pousse {s} sur {n}', 'monde.crop.state.ripe': 'mûre',
   'monde.crate.days': 'dans {n} jours', 'monde.crate.today': 'aujourd’hui', 'monde.crate.passed': 'elle attend au bord du chemin',

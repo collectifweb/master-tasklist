@@ -44,6 +44,7 @@ export function createInitialState(now) {
     letters: {}, // { idLettre: dernier jour montré }
     lastSeenDay: null, // dernier jour de jeu où advanceTime a tourné (présence, pour la règle d'absence des Avis)
     recentApplied: {}, // ce que chaque gain des 48 dernières heures a réellement appliqué (sert aux annulations)
+    coteACote: { current: null, totals: [] }, // séance « Je m'y mets » en cours et temps relevé (cote-a-cote.js)
   };
 }
 

@@ -2,7 +2,7 @@
 // hors ligne. Les données passent par api/api.php : jamais mises en cache ici (la copie hors ligne des quêtes est
 // celle du magasin, dans localStorage). Chemins relatifs : l'app peut vivre dans un sous-dossier.
 // Changer VERSION à chaque déploiement qui touche la coquille : l'ancien cache est effacé à l'activation.
-const VERSION = 'oree-coquille-v1';
+const VERSION = 'oree-coquille-v2';
 
 const SHELL = [
   './',
@@ -16,7 +16,7 @@ const SHELL = [
   'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js',
   'js/ui/announce.js', 'js/ui/carnet.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/game.js', 'js/ui/glyphs.js',
   'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js',
-  'core/index.js', 'core/avis.js', 'core/build.js', 'core/chapters.js', 'core/cote.js', 'core/domains.js', 'core/economy.js',
+  'core/index.js', 'core/avis.js', 'core/build.js', 'core/chapters.js', 'core/cote.js', 'core/cote-a-cote.js', 'core/domains.js', 'core/economy.js',
   'core/infer.js', 'core/ledger.js', 'core/letters.js', 'core/migrate.js', 'core/quests.js', 'core/recycling.js',
   'core/reward.js', 'core/state.js', 'core/time.js',
   'world/world.js', 'world/view.js', 'world/camera.js', 'world/fx.js', 'world/iso.js', 'world/layout.js', 'world/models.js',

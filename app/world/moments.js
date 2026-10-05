@@ -9,6 +9,7 @@
 //   12 l'Orée veille (veille)                 + palier de secteur (secteur-seuil) : vague gris → couleur
 //   semaine 3 : 5 aussi pour l'établi, la Tour et les parcelles · 6 récolte (recolte) · semis · brasero · souffler
 //   9 le Front de givre arrive (avis-annonce)  10 le matin de l'Avis, rejoué en 8 s (avis-resolu) · voile-leve
+//   8 Côte à côte : Fanal va travailler avec toi, puis rentre (seance-debut, seance-fin)
 import { P, f, pts } from './iso.js';
 import { CELLS, SECTOR_CENTER, SECTOR_ORDER, germCell, LANDMARKS, PLOT_SLOTS, AVIS_EDGE } from './layout.js';
 import { tileProgress, nextThreshold, postsFor, ETATS } from './view.js';
@@ -36,6 +37,7 @@ export function cloneView(v) {
     landmarkState: { ...v.landmarkState },
     avis: v.avis ? { ...v.avis } : null,
     veils: (v.veils || []).map((x) => ({ ...x })),
+    fanal: v.fanal ? { ...v.fanal } : null,
   };
 }
 
@@ -502,6 +504,30 @@ function etapeStep(ctx, ev) {
     await ctx.fx.wait(300);
   };
   return { apply: () => {}, run, text: () => '' };
+}
+
+// ----------------------------------------------------------------------------- 8 : Côte à côte
+/**
+ * Fanal rejoint sa place de la vue cible (travail ou retour) en une seule marche, puis s'arrête : aucune boucle.
+ * La marche glisse l'élément de son ancienne place vers la nouvelle (WAAPI) ; en mouvement réduit, un fondu court.
+ */
+function fanalStep(ctx) {
+  const apply = () => { ctx.shown.fanal = ctx.target.fanal ? { ...ctx.target.fanal } : null; ctx.apply({ enter: false }); };
+  const run = async () => {
+    const n = ctx.scene.get('fanal');
+    const from = n ? [n.X, n.Y] : null;
+    apply();
+    const m = ctx.scene.get('fanal');
+    if (!m || !from) return;
+    const dx = from[0] - m.X, dy = from[1] - m.Y;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    if (ctx.reduced) { await fade(ctx, m.el, 0, 1); return; }
+    const dur = Math.round(Math.min(1400, 450 + Math.hypot(dx, dy) * 5));
+    const opts = { duration: dur, easing: 'cubic-bezier(.45,0,.25,1)' };
+    if (m.halo) ctx.fx.anim(m.halo, [{ translate: `${f(dx)}px ${f(dy)}px` }, { translate: '0px 0px' }], opts);
+    await ctx.fx.anim(m.el, [{ translate: `${f(dx)}px ${f(dy)}px` }, { translate: '0px 0px' }], opts).finished.catch(() => {});
+  };
+  return { apply, run, text: () => '' };
 }
 
 // ----------------------------------------------------------------------------- 5 bis : établi et Tour (repères fixes)
@@ -974,6 +1000,7 @@ function stepsFor(ctx, ev) {
     case 'veille': return [veilleStep(ctx)];
     case 'surplus': return [surplusStep(ctx)];
     case 'etape': return [etapeStep(ctx, ev)];
+    case 'seance-debut': case 'seance-fin': return [fanalStep(ctx)];
     default: return [];
   }
 }
@@ -997,7 +1024,7 @@ function extraSteps(ctx) {
  * Une seule voix par événement : les gestes du joueur et le temps du jeu (Avis, voile parti) sont annoncés par
  * l'interface ; le monde les dessine sans les dire. Le voile levé par une quête du secteur reste dit par le monde.
  */
-const SAID_BY_UI = new Set(['semis', 'recolte', 'partage', 'reserve', 'construction', 'parcelle', 'brasero', 'souffler', 'fil-libre', 'voile-leve', 'avis-annonce', 'avis-resolu']);
+const SAID_BY_UI = new Set(['semis', 'recolte', 'partage', 'reserve', 'construction', 'parcelle', 'brasero', 'souffler', 'fil-libre', 'voile-leve', 'avis-annonce', 'avis-resolu', 'seance-debut', 'seance-fin']);
 const saidByUi = (ev) => SAID_BY_UI.has(ev.type) && !(ev.type === 'voile-leve' && ev.reason === 'quete');
 
 export async function playEvents(ctx, events) {

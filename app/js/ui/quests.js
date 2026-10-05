@@ -31,8 +31,9 @@ export function renderFil(root, ctx) {
   setText($('.fil-title', art), m.title);
   setText($('.cote-value', art.querySelector('.cote')), String(m.cote));
   for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`.replace('?', ' ?'));
-  setHtml($('.meta', art), metaItems(m, { now }).map(metaLi).join(''));
+  setHtml($('.meta', art), metaItems(m, { now, withSeance: false }).map(metaLi).join(''));
   setText($('.fil-reason > span', art), reasonText(m, now));
+  art.classList.toggle('is-seance', m.seanceMinutes !== null);
   const complete = $('[data-action="complete"]', art);
   const start = $('[data-action="start"]', art);
   const doing = m.state === 'doing';

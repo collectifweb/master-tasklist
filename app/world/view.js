@@ -4,6 +4,7 @@ import { SECTORS, SECTOR_IDS, sectorOfTask } from '../core/domains.js';
 import { SECTOR_THRESHOLDS, CROP_STAGES } from '../core/economy.js';
 import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
+import { currentSeance } from '../core/cote-a-cote.js';
 import {
   TILES_TO_REPAIR, LUEUR_PER_TILE, PLOT_SLOTS, BUILD_SLOTS, MODEL_SECTOR, CRATE_SPOTS, LISIERE_POSTS, LANDMARKS,
   ANCHOR_OBJECT, SECTOR_LANDMARK,
@@ -144,6 +145,11 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
       progress: Math.max(0, Math.min(1, (total - left) / Math.max(1, total - 1))),
     };
   }
+  // Côte à côte : pendant une séance, Fanal travaille au bord de la Place, tourné vers le secteur de la quête
+  const seance = currentSeance(g, now ?? new Date());
+  const seanceTask = seance && !seance.oubliee ? list.find((t) => t && String(t.id) === seance.taskId && t.status === 'todo') : null;
+  const fanal = seanceTask ? { taskId: seance.taskId, sector: sectorOfTask(seanceTask) } : null;
+
   const veils = (g.avis && Array.isArray(g.avis.veils) ? g.avis.veils : [])
     .filter((x) => x && SECTOR_IDS.includes(x.sector) && num(x.cells) > 0)
     .map((x) => ({ avis: x.avis ?? null, sector: x.sector, cells: Math.min(2, Math.round(num(x.cells))) }));
@@ -161,6 +167,7 @@ export function deriveView(game, tasks = [], { now, anchors } = {}) {
     avis,
     veils,
     landmarkState,
+    fanal,
     // semaine 3 : la Tour se répare en la construisant (objectif du chapitre 1), plus au palier de la Place
     tourRepaired: ['reparee', 'repare', 'reparer'].includes(landmarkState.tour),
     filLibre: Math.max(0, num(g.filLibre)),

@@ -441,7 +441,7 @@ const upsert = (r) => r.ops.filter((o) => o.type === 'task.upsert').map((o) => o
 
 test('« Je m’y mets » n’envoie que les champs modifiés', () => {
   const w = fresh([task({ notes: 'garde', champInconnu: { a: 1 } })]);
-  const r = startQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0);
+  const r = startQuest(w.tasks, w.game, w.ledger, { id: 't1', gameRevision: 0 }, T0); // la séance s'écrit dans l'état du jeu
   const [op] = upsert(r);
   assert.deepEqual(Object.keys(op).sort(), ['frozen', 'id', 'startedAt', 'updatedAt']);
   assert.equal(op.id, 't1');

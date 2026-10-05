@@ -57,14 +57,14 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 - [x] Introduction, chapitre 1, chapitre 2 jusqu'au premier Avis (Premier gel). Chapitres pilotés par `chapitres.json`, Avis annoncé 7 jours d'avance avec sa jauge, résultat tenu, voilé ou absent sans perte (scénarios 16, 17, 18).
 - [x] Potager (semer, récolter au glissé ou au bouton, garde-manger, partager, réserve) et lettre du matin (scénarios 15, 19).
-- [ ] Côte à côte : simple relevé du temps passé, sans garder l'écran allumé (décidé le 5 octobre).
+- [x] Côte à côte : simple relevé du temps passé, sans garder l'écran allumé (décidé le 5 octobre). « Je m'y mets » lance le relevé, Pause, Fait, Remballer, Archiver ou Supprimer l'arrêtent ; aucune ressource gagnée ; une séance oubliée compte 3 h au plus ; proposition de découper une quête qui prend plus du double de sa durée estimée ; temps relevé dans le bilan de la semaine. Fanal va se placer près du secteur de la quête, immobile (scénario 22).
 - [x] Jour du recyclage, première version ; installation sur l'écran d'accueil du téléphone, lancement hors ligne (scénarios 20, 21).
 
 ## Mise en ligne
 
 - [x] Choisir la protection : connexion par code d'accès (Alex, 5 octobre). Prête et vérifiée sur la version d'essai.
 - [x] Décider comment Hermes écrit : par SSH, avec le même verrou que l'API (Alex, 5 octobre).
-- [x] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé. Banc d'essai sans serveur : 11 sur 11 avec le script corrigé, 5 échecs avec l'ancien.
+- [x] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé. Banc d'essai sans serveur (`tests/sync-tasks-remote.test.sh`) : 12 sur 12 avec le script corrigé, 6 échecs sur 12 avec l'ancien.
 - [ ] Installer le script corrigé sur la machine d'Hermes (Alex).
 - [x] Essai sur une copie des vraies tâches, faite sur le serveur dans un second dossier d'essai protégé par un code. L'API relit chaque tâche à l'identique, aucun champ perdu ; vérifié sur le serveur, sans rapatrier de données.
 - [ ] Alex utilise cette copie sur son téléphone : jalon « utilisable au quotidien ».

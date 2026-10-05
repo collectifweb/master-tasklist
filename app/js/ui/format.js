@@ -41,6 +41,15 @@ export function stepsProgress(task) {
   return { done: steps.filter((s) => s.done).length, total: steps.length };
 }
 
+/** Temps relevé (Côte à côte), à la minute : « 12 min », « 1 h 05 », « 2 h ». */
+export function releveText(minutes) {
+  const m = Math.floor(Math.max(0, Number(minutes) || 0));
+  if (m < 1) return t('releve.under_minute');
+  if (m < 60) return t('releve.minutes', { n: m });
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? t('releve.hours_minutes', { h, m: String(r).padStart(2, '0') }) : t('releve.hours', { h });
+}
+
 export function minutesSince(iso, now) {
   return Math.max(0, Math.round(hoursBetween(iso, now) * 60));
 }

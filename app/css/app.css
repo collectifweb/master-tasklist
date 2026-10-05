@@ -47,6 +47,13 @@
 .panel-status .sync .btn--icon {
   margin-left: auto;
 }
+/* Proposition de découpage (Côte à côte) : le texte sur toute sa ligne, « Découper » aligné dessous, « Fermer » à droite */
+#offer .sync-text {
+  flex-basis: calc(100% - 22px - var(--sp-3));
+}
+#offer [data-action="split"] {
+  margin-left: calc(22px + var(--sp-3));
+}
 
 /* Réplique d'un personnage : bulle posée sur le monde, sous la voie d'annonce. Elle ne capte aucun toucher. */
 .speech {
@@ -800,6 +807,13 @@
 }
 .review-domains .why-line dd {
   font-size: var(--text-16);
+}
+/* Temps relevé avec Fanal (Côte à côte) : sous les heures estimées, en métadonnée, jamais en chiffre vedette */
+.review-domains .why-line dd small {
+  display: block;
+  margin-top: var(--sp-1);
+  font: var(--w-regular) var(--text-14) / 1.35 var(--font-ui);
+  color: var(--text-soft);
 }
 .review-sort {
   display: grid;

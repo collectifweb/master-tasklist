@@ -120,7 +120,8 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 | `avis.js` | Avis (`AVIS`), activité et Force, Préparation détaillée (`avisPreparation`, `avisStatus` pour la jauge), `lightBrasero`, `liftVeil`, et **`advanceTime`** : lève les voiles expirés, résout l'Avis du jour, annonce le suivant, retient les objectifs et termine le chapitre (`syncChapter`), note `lastSeenDay`. Idempotente : rejouée avec le même instant, elle ne fait rien. |
 | `chapters.js` | `evalCondition` (types de `chapitres.json`), `chapterProgress`, `syncChapter` (s'appuie sur `chapterStatus`/`advanceChapter` d'`economy.js`), `storyMoments` (3 moments d'histoire par jour au plus, lignes filtrées par leur `si`), `markStorySeen`. |
 | `letters.js` | `morningLetter` (matin, sans quête, retour ; `{quete}` = quête n° 1 ; sans prénom, « , {prenom} » et « {prenom}, » disparaissent ; pas de répétition sur 7 jours), `markLetterShown`, `fillText`. |
-| `recycling.js` | `weeklyReview` : bilan de la semaine (heures estimées par domaine, quêtes, jours de lisière, `ratioJeuQuetes: null` tant que le temps de jeu n'est pas mesuré) et quêtes ouvertes depuis plus de 60 jours (archivage par `archiveQuest`). |
+| `recycling.js` | `weeklyReview` : bilan de la semaine (heures estimées par domaine, quêtes, jours de lisière, `ratioJeuQuetes: null` tant que le temps de jeu n'est pas mesuré ; temps relevé avec Fanal en plus : `minutesReleve`, `heuresReleve`, au total et par domaine) et quêtes ouvertes depuis plus de 60 jours (archivage par `archiveQuest`). |
+| `cote-a-cote.js` | Côte à côte : simple relevé du temps passé, sans écran maintenu allumé. `startSeance`, `stopSeance`, `tidySeances` (appelées par `quests.js` et `advanceTime`, sur le `Ctx` de l'opération) ; lecture : `currentSeance(game, now)` → `{ taskId, occurrence, since, minutes, oubliee }` ou null, `releve(game, taskId, occurrence, now)` → `{ minutes, capped, enCours }`, `decoupagePropose(game, task, now, occurrence?)`. Constantes `SEANCE_MAX_MINUTES` (180), `RELEVE_KEEP_DAYS` (60), `DECOUPAGE_FACTEUR` (2). |
 
 **Ordre d'appel côté interface.** À l'ouverture : `openApp`, puis `advanceTime` (avec `chapitres`). Au changement de jour de jeu, et après une action qui peut atteindre un objectif (quête terminée, construction, récolte, réserve, Fil libre dirigé) : `advanceTime`. Histoire : `storyMoments` → affichage → `markStorySeen({ ids })`. Lettre : `morningLetter` → affichage → `markLetterShown({ id })`. `advanceChapter` ne s'appelle plus directement : il est obsolète, ignore les objectifs et ne sert qu'à `world/demo.js`.
 
@@ -136,6 +137,7 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 | `story` | `{ seen: [ids], day, count }` |
 | `letters` | `{ idLettre: dernier jour montré }` |
 | `lastSeenDay` | dernier jour de jeu où `advanceTime` a tourné ; ne recule jamais |
+| `coteACote` | `{ current: { taskId, occurrence, since } \| null, totals: [{ taskId, occurrence, minutes, capped, doneOn }] }` : séance en cours (une seule) et temps relevé par occurrence (minutes à une décimale ; `capped` : une séance oubliée y est plafonnée ; `doneOn` : jour où l'occurrence s'est terminée, null tant qu'elle est à faire) |
 
 **Registre** : `avis:{id}` (Avis tenu, `type: 'avis'`, 15 ▣). Dépenses, semis, récoltes, réserve et Souffler n'écrivent rien au registre : ils ne font que dépenser ou convertir ce qui a déjà été gagné.
 
@@ -154,6 +156,10 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 - État abîmé : `migrateState` reprend la valeur par défaut quand le type brut ne correspond pas (tableau attendu, objet attendu).
 - Les recherches dans un catalogue (`SEED_COST`, `BUILDABLES`, `CROP_STAGES`…) passent par `Object.hasOwn` : `constructor` & cie sont refusés.
 - Lettre de retour : le jour où `openApp` a donné le bonus de retour.
+- Côte à côte : « Je m'y mets » (`startQuest`) lance la séance ; en commencer une autre arrête la première (événement `seance-fin`, raison `autre-quete`) sans désépingler l'ancienne quête. Pause, Fait, Remballer, archiver et supprimer l'arrêtent (`seance-fin { taskId, occurrence, minutes, total, oubliee, raison, decoupage }`) ; le début émet `seance-debut { taskId, occurrence }`. Le temps vit dans `game.coteACote`, jamais dans la tâche : `startQuest` produit donc un `game.set` (révision exigée). Aucune entrée au registre, aucune ressource : le temps passé ne rapporte rien.
+- Séance oubliée : au-delà de 3 h, elle compte 3 h et marque le total (`capped`) ; `advanceTime` la ferme (raison `oubliee`) sans toucher la tâche, qui reste épinglée. Rejouer Pause ou « Je m'y mets » ne compte rien deux fois.
+- Découpage proposé : relevé de l'occurrence > 2 × `estimatedMinutes(L)` (L gelée si elle existe), aucune séance oubliée dedans, quête encore à faire (une quête unique terminée n'a plus rien à découper ; une récurrente, oui, pour la prochaine fois) et moins de 12 étapes.
+- Mémoire bornée : `advanceTime` note la fin des occurrences qui ne sont plus à faire (y compris retirées ailleurs) et efface les totaux terminés depuis plus de 60 jours.
 
 ## Interface — `js/`, `world/`, application installable
 
@@ -167,6 +173,7 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 - **Voix** (`ui/announce.js`) : deux voix, celle de l'interface (`#live`) et celle du monde (`#live-world`). Une feuille modale rend le reste de la page inerte : chaque feuille porte donc ses propres régions `role="status"`, et une annonce va dans la feuille du dessus (après la fin de sa fermeture animée). **Une seule voix par événement** : l'interface dit les gestes du joueur ; le monde se tait pour ceux de la liste `SAID_BY_UI` (`world/moments.js`) et ne dit que ses moments propres.
 - **`js/content.js`** : textes de `content/fr-CA/interface.json` (aucun libellé en dur) et variables des répliques.
 - **`world/`** : île isométrique DOM/SVG. L'interface publique de `createWorld` (options, rappels `onSelect`, `onHarvest`, `onImpact`, événements acceptés par `play()`) est décrite en tête de `world/world.js`. Le monde n'applique jamais rien lui-même : il signale un geste, l'interface appelle le cœur puis lui rejoue les événements.
+- **Côte à côte** : pendant une séance, la ligne de raison du Fil du jour dit « Fanal travaille avec toi · 12 min » (à la minute, rafraîchie par le minuteur d'une minute ; la ligne de méta perd « En cours » pour que « Pause » reste visible, panneau replié). Une annonce au début, une à la fin, jamais pendant. Après Pause ou Fait, `#offer` (zone d'état, sans région lue : son texte part avec l'annonce de fin) propose « Découper », qui ouvre l'éditeur d'étapes de la fiche. Le bilan montre le temps relevé sous les heures estimées. Dans le monde, `deriveView` donne `fanal: { taskId, sector } | null` ; Fanal se tient à `FANAL_SPOTS[secteur]` (`world/layout.js`) avec une pose fixe (`data-pose`), y va en une seule marche (`seance-debut`) et rentre (`seance-fin`) ; aucune boucle d'animation pendant la séance, un fondu court en mouvement réduit.
 
 **Stockage de l'appareil** (`localStorage`, jamais envoyé au serveur sauf la file) :
 
@@ -187,5 +194,5 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 - Ne pas déployer `app/.impeccable/`, `app/tests/` ni la page de référence `app/design/reference.*`. `app/design/icons.svg` est utilisé par l'app : il doit être déployé.
 
 **Vérifications navigateur** (Playwright est une bibliothèque, pas une commande ; voir l'en-tête de chaque script) :
-- `tests/e2e/run-ui.sh` : 21 scénarios de l'app, 3 largeurs chacun (390×844, 834×1112, 1280×900), sur une copie temporaire servie par `php -S`. Variables `PW_CORE`, `PW_CHROME`, `SHOTS`. Plus de 10 minutes.
+- `tests/e2e/run-ui.sh` : 22 scénarios de l'app, 3 largeurs chacun (390×844, 834×1112, 1280×900), sur une copie temporaire servie par `php -S`. Variables `PW_CORE`, `PW_CHROME`, `SHOTS`. Plus de 10 minutes.
 - `tests/e2e/world-s3.cjs` et `world-perf.cjs` : la démo du monde (`world/demo.html`), servie par `python3 -m http.server`, variable `BASE`.

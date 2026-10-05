@@ -23,13 +23,17 @@
 //
 // Événements que play() sait jouer (un type inconnu est ignoré) : reward, fil-libre, secteur-seuil, lisiere-allumee,
 // lisiere-retiree, chapitre, secteur-ouvert, construction, parcelle, semis, recolte, brasero, souffler, avis-annonce,
-// avis-resolu, voile-leve, reflet, veille, surplus, etape ; sans animation : partage, reserve, objectif-atteint,
-// chapitre-fin.
+// avis-resolu, voile-leve, reflet, veille, surplus, etape, seance-debut, seance-fin ; sans animation : partage, reserve,
+// objectif-atteint, chapitre-fin.
+//   seance-debut { taskId, occurrence }                     « Je m'y mets » (Côte à côte) : Fanal va une fois au bord
+//                                                           de la Place, vers le secteur de la quête, et y reste immobile
+//   seance-fin { taskId, occurrence, minutes, raison, … }   la séance s'arrête : Fanal rentre (s'il n'en commence pas une autre)
+// Pendant la séance, aucune boucle d'animation : Fanal est dessiné à sa place de travail (pose fixe, data-pose).
 import { P, f, pts } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   CELLS, LIT_ORDER, SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, LISIERE_POSTS, CHARACTERS, DECOR,
-  PLOT_SLOTS, CRATE_SPOTS, AVIS_EDGE, VEIL_CELLS, braseroSpots, sectorAt, germCell,
+  PLOT_SLOTS, CRATE_SPOTS, AVIS_EDGE, VEIL_CELLS, FANAL_SPOTS, braseroSpots, sectorAt, germCell,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, sectorPolygon, frontSVG, edgeNormal } from './terrain.js';
@@ -153,7 +157,10 @@ export function entitiesFor(v, tasks = []) {
   }
   for (const ch of CHARACTERS) {
     if (!open(ch.sector)) continue;
-    list.push({ id: ch.id, kind: 'char', who: ch.kind, sector: ch.sector, u: ch.u, v: ch.v, interactive: true, light: ch.kind === 'fanal' ? 'fanal' : null, allume: true });
+    const e = { id: ch.id, kind: 'char', who: ch.kind, sector: ch.sector, u: ch.u, v: ch.v, interactive: true, light: ch.kind === 'fanal' ? 'fanal' : null, allume: true };
+    const spot = ch.kind === 'fanal' && v.fanal && FANAL_SPOTS[v.fanal.sector];
+    if (spot) [e.u, e.v, e.pose] = spot; // au travail : penché vers la quête (pose fixe, voir world.css)
+    list.push(e);
   }
   for (const id of SECTOR_ORDER) {
     const s = S[id];
@@ -334,7 +341,7 @@ export function createWorld(container, options = {}) {
   // ---------------------------------------------------------------------------- textes accessibles
   function sectorName(s) { return t(`sector.${s}.name`); }
   function objName(e) {
-    if (e.kind === 'char') return t(`monde.obj.${e.who}`);
+    if (e.kind === 'char') return t(e.pose ? `monde.obj.${e.who}.travail` : `monde.obj.${e.who}`);
     if (e.model === 'tour') return t(e.variant ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
     if (e.model === 'culture') {
       const p = e.plot;

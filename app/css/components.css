@@ -817,6 +817,11 @@ button.cote:active {
   font-size: var(--text-14);
   color: var(--text-soft);
 }
+/* Côte à côte : la raison laisse place à « Fanal travaille avec toi · 12 min », au ton de « En cours » (.meta-item--doing) */
+.fil-quest.is-seance .fil-reason > span {
+  color: var(--c-sage-deep);
+  font-weight: var(--w-semibold);
+}
 .fil-actions {
   grid-area: actions;
   display: grid;

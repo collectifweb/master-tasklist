@@ -12,6 +12,7 @@ import { addDays, daysBetween, gameDay, isTruce, toISO } from './time.js';
 import { reverseKey, hasKey } from './ledger.js';
 import { BUILDABLES, RESERVE_MAX, payCost } from './build.js';
 import { syncChapter } from './chapters.js';
+import { tidySeances } from './cote-a-cote.js';
 
 /**
  * Avis connus. `chapter` + `announceDay` : annoncé dès le jour `announceDay` de ce chapitre (au plus tôt), pour le jour
@@ -143,10 +144,11 @@ function nextAvis(g, today) {
  *     (résultat « absent », aucun voile) ;
  *  3. annonce le prochain Avis (Force fixée d'après l'activité des 28 jours précédents) ;
  *  4. avec params.chapitres (content/fr-CA/chapitres.json) : retient les objectifs atteints et termine le chapitre ;
- *  5. note le jour de présence (game.lastSeenDay).
+ *  5. note le jour de présence (game.lastSeenDay) ;
+ *  6. ferme une séance côte à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js).
  * Événements : 'voile-leve' { sector, reason: 'temps', cells: 0 }, 'avis-resolu' { id, day, result, force,
  * preparation, lignes }, 'reward' (source 'avis') si tenu, 'avis-annonce' { id, day, sector, force },
- * puis ceux de syncChapter.
+ * puis ceux de syncChapter, puis 'seance-fin' (raison 'oubliee').
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -203,5 +205,6 @@ export function advanceTime(tasks, game, ledger, params, now) {
     ctx.game = r.game;
     ctx.events.push(...r.events);
   }
+  tidySeances(ctx); // séance oubliée fermée, vieux relevés effacés (cote-a-cote.js)
   return ctx.result();
 }

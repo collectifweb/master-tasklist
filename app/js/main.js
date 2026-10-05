@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, isPinned, topCards, PANTRY_MAX, RESERVE_MAX, BRASERO, AVIS } from '../core/index.js';
+import { SORTS, gameDay, isPinned, topCards, PANTRY_MAX, RESERVE_MAX, BRASERO, AVIS, SEANCE_MAX_MINUTES } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { loadContent, t, content, pickReply, replyVars } from './content.js';
@@ -9,7 +9,7 @@ import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.
 import { createSpeech } from './ui/speech.js';
 import { createSync } from './ui/sync.js';
 import { renderFil, renderAlts, renderList } from './ui/quests.js';
-import { num } from './ui/format.js';
+import { num, releveText } from './ui/format.js';
 import {
   wireDialogs, openAdd, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
@@ -105,24 +105,25 @@ function react(payload) {
   const reply = speech.react({ action, params, events, task, game: c.game, now: now || new Date() });
   const replyText = reply ? ` ${reply.nom} : ${reply.texte}` : '';
   const gains = gainList(s);
+  const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
 
   if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime'].includes(action) && gains.length) {
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
           : action === 'advanceTime' ? timeSay(events) : '';
-    const liveText = `${head} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
+    const liveText = `${head}${fanal ? ' ' + fanal : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
     announce.show(s, 'gain', { liveText: action === 'advanceTime' ? after(liveText) : remember(liveText) });
     return;
   }
   if (action === 'completeQuest' && s.noGain) {
-    announce.show(s, 'none', { liveText: `${t('sr.quest.done', { quete: title })} ${t('sr.repeat_zero')}` });
+    announce.show(s, 'none', { liveText: `${t('sr.quest.done', { quete: title })}${fanal ? ' ' + fanal : ''} ${t('sr.repeat_zero')}` });
     return;
   }
   if (action === 'remballerQuest') {
     const e = (result.entries || [])[0];
     const list = e ? [e.energy && `${num(e.energy)} ${t('resource.energy')}`, e.materials && `${num(e.materials)} ${t('resource.materials.other')}`].filter(Boolean) : [];
-    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${replyText}` });
+    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${fanal ? ' ' + fanal : ''}${replyText}` });
     return;
   }
   const say = {
@@ -134,10 +135,24 @@ function react(payload) {
     reopenQuest: () => t('sr.reopened', { quete: title }),
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
-  if (say) return announce.say(remember(say() + replyText));
+  if (say) return announce.say(remember(say() + (fanal ? ' ' + fanal : '') + replyText));
   if (action === 'advanceTime') { const text = timeSay(events); if (text) announce.say(after(text)); return; }
   const text = gameSay(action, params, events, c.game);
   if (text) announce.say(remember(text + replyText));
+}
+
+// Côte à côte : une phrase au début de la séance, une à la fin, jamais pendant. Après Pause ou Fait, une quête qui a
+// pris plus de deux fois sa durée estimée reçoit une proposition de découpage (zone d'état), lue avec la fin.
+const SEANCE_ACTIONS = new Set(['startQuest', 'pauseQuest', 'completeQuest', 'remballerQuest', 'archiveQuest', 'deleteQuest']);
+function fanalSay(events, title) {
+  if (events.some((e) => e.type === 'seance-debut')) { sync.closeOffer(); return t('sr.seance.start'); }
+  const fin = events.find((e) => e.type === 'seance-fin');
+  if (!fin) return '';
+  const text = fin.oubliee ? t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }) : t('sr.seance.stop', { duree: releveText(fin.minutes) });
+  if (!fin.decoupage) return text;
+  const offer = t('offer.split', { quete: title });
+  sync.offer({ taskId: fin.taskId, text: offer });
+  return `${text} ${offer}`;
 }
 
 /** Phrase lue après un geste dans l'Orée (construire, semer, récolter…). */
@@ -170,6 +185,7 @@ function timeSay(events) {
     else if (e.type === 'avis-annonce') out.push(t('sr.avis.announce', { nom: avisName(e.id), quand: dayWord(e.day, now) }));
     else if (e.type === 'avis-resolu') out.push(t(`sr.avis.${e.result}`, { nom: avisName(e.id), au_secteur: t(`sector.${AVIS[e.id] ? AVIS[e.id].sector : 'champs'}.in`) }));
     else if (e.type === 'voile-leve' && e.reason === 'temps') out.push(t('sr.veil.gone', { du_secteur: t(`sector.${e.sector}.of`) }));
+    else if (e.type === 'seance-fin' && e.raison === 'oubliee') out.push(t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }));
   }
   return out.join(' ');
 }
@@ -414,6 +430,7 @@ document.addEventListener('click', (e) => {
       if (!task) return;
       return run(isPinned(task) ? 'pauseQuest' : 'startQuest', { id });
     case 'split':
+      if (target.closest('#offer')) { sync.closeOffer(); if (!task) return; } // proposition de découpage (Côte à côte)
       openFiche(ctx(), id);
       return $('#fiche-step-new').focus();
     case 'reopen': return run('reopenQuest', { id });
@@ -450,6 +467,7 @@ document.addEventListener('click', (e) => {
       return renderAll();
     case 'sync-retry': return store.retryNow();
     case 'notice-close': return sync.closeNotice();
+    case 'offer-close': return sync.closeOffer();
     case 'reload': return start();
   }
 });

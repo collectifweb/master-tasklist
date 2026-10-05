@@ -1,9 +1,9 @@
 // Modèle d'affichage d'une quête : tout ce que les rendus ont besoin de savoir, calculé une fois.
 import {
-  cote, isPinned, sectorOfTask, canReverse, taskAgeDays, daysUntil, dayOnly, gameDay,
+  cote, isPinned, sectorOfTask, canReverse, taskAgeDays, daysUntil, dayOnly, gameDay, currentSeance,
 } from '../../core/index.js';
 import { t } from '../content.js';
-import { durationText, deadlineInfo, recurrenceText, stepsProgress, minutesSince, shortDate, timeOf, capitalize } from './format.js';
+import { durationText, deadlineInfo, recurrenceText, stepsProgress, minutesSince, shortDate, timeOf, capitalize, releveText } from './format.js';
 
 export const SECTOR_ICON = {
   champs: 'champs', atelier: 'atelier', archives: 'archives', 'maison-commune': 'maison-commune', relais: 'relais', place: 'bastion',
@@ -17,6 +17,9 @@ export function taskModel(task, ctx) {
   const steps = stepsProgress(task);
   const occ = task.occurrence ?? 1;
   const remballer = task.status === 'done' && !task.readonly && canReverse(ledger, task.id, occ, now);
+  // Côte à côte : séance en cours sur cette occurrence (une séance oubliée n'est plus montrée)
+  const seance = state === 'doing' ? currentSeance(ctx.game, now) : null;
+  const withFanal = !!seance && !seance.oubliee && seance.taskId === String(task.id) && seance.occurrence === occ;
   return {
     id: task.id,
     task,
@@ -32,14 +35,26 @@ export function taskModel(task, ctx) {
     readonly: !!task.readonly,
     remballer,
     doingMinutes: state === 'doing' ? minutesSince(task.startedAt, now) : 0,
+    seanceMinutes: withFanal ? seance.minutes : null,
   };
 }
 
-/** Éléments de la ligne de méta, dans l'ordre : { cls?, icon, text, sr? }. */
-export function metaItems(m, { now, withSector = true, done = true } = {}) {
+/** Côte à côte : « Fanal travaille avec toi · 12 min » (à la minute), ou null hors séance. */
+export function seanceText(m) {
+  if (m.seanceMinutes === null) return null;
+  return m.seanceMinutes >= 1 ? t('fil.seance', { duree: releveText(m.seanceMinutes) }) : t('fil.seance.now');
+}
+
+/**
+ * Éléments de la ligne de méta, dans l'ordre : { cls?, icon, text, sr? }. withSeance false : la séance en cours n'y
+ * figure pas (le Fil du jour la dit à la place de la raison, pour que « Pause » reste visible panneau replié).
+ */
+export function metaItems(m, { now, withSector = true, done = true, withSeance = true } = {}) {
   const items = [];
   const task = m.task;
-  if (m.state === 'doing') {
+  if (m.state === 'doing' && m.seanceMinutes !== null) {
+    if (withSeance) items.push({ cls: 'meta-item--doing', icon: 'pin', text: seanceText(m) });
+  } else if (m.state === 'doing') {
     items.push({ cls: 'meta-item--doing', icon: 'pin', text: m.doingMinutes >= 1 ? t('fil.doing.since', { n: m.doingMinutes }) : t('fil.doing.now') });
   }
   if (withSector) items.push({ icon: SECTOR_ICON[m.sector], text: m.sectorName });
@@ -66,6 +81,7 @@ export function metaItems(m, { now, withSector = true, done = true } = {}) {
 export function reasonText(m, now) {
   const task = m.task;
   if (m.state === 'doing') {
+    if (m.seanceMinutes !== null) return seanceText(m); // séance côte à côte : Fanal travaille avec toi
     const next = (task.steps || []).find((s) => !s.done);
     return next ? t('fil.next_step', { etape: next.label }) : t('fil.reason.start');
   }
