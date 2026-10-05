@@ -2,6 +2,7 @@
 import { t, tn } from '../content.js';
 import { $, esc, icon, restart, reducedMotion } from './dom.js';
 import { num } from './format.js';
+import { topSheet } from './sheets.js';
 
 /** Somme les gains d'une action à partir de ses événements. */
 export function summarize(events) {
@@ -29,15 +30,32 @@ export function gainList(s) {
   return out;
 }
 
+/**
+ * Voix lue (role=status) : `say(texte)` écrit dans la région de la feuille modale du dessus (le reste de la page est
+ * alors inerte pour un lecteur d'écran), sinon dans `fallback` (#live, #live-world). La région est choisie au moment
+ * d'écrire : une feuille qui se ferme (400 ms) est encore modale, l'annonce attend qu'elle soit partie.
+ */
+export function createVoice(fallback) {
+  let timer = null;
+  let text = '';
+  let last = null;
+  function put() {
+    const top = topSheet();
+    if (top && top.classList.contains('is-closing')) { timer = setTimeout(put, 100); return; }
+    last = (top && top.querySelector(`:scope > [data-live="${fallback.id}"]`)) || fallback;
+    last.textContent = text;
+  }
+  return (next) => {
+    text = next;
+    clearTimeout(timer);
+    if (last) last.textContent = '';
+    timer = setTimeout(put, 60);
+  };
+}
+
 export function createAnnounce(lane, live) {
   const el = $('#announce', lane);
-  let liveTimer = null;
-
-  function say(text) {
-    live.textContent = '';
-    clearTimeout(liveTimer);
-    liveTimer = setTimeout(() => { live.textContent = text; }, 60);
-  }
+  const say = createVoice(live);
 
   return {
     say,

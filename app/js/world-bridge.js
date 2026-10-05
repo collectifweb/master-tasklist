@@ -3,7 +3,7 @@
 //
 //   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion });
 //   onSelect({ type: 'sector' | 'object' | 'plot' | 'landmark' | 'placement', id, … }) ; onHarvest(plotId) : récolte au glissé.
-//   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now)
+//   w.render(game, tasks); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
 //   w.plan(conteneur, { onFocusSector }) → { render, focus, destroy }
 export async function initWorld({ container, slot, content, announce, onImpact, onSelect, onHarvest, threadFrom, now, reducedMotion }) {
   let mod, view;
@@ -31,6 +31,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
       play: safe(world.play, Promise.resolve()),
       setReducedMotion: safe(world.setReducedMotion),
       focusSector: safe(world.focusSector),
+      clearSelection: safe(world.clearSelection),
       skip: safe(world.skip),
       on: safe(world.on, () => {}),
       get playing() { return world.playing; },

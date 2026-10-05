@@ -25,6 +25,7 @@ const sceneText = async (page) => {
   return out;
 };
 const DAY = 24 * 3600 * 1000;
+const idle = (page) => L.waitFor(() => page.evaluate(() => document.querySelector('.ow-skip').hidden), 12000);
 
 function seed(core, now, extra) {
   const today = core.gameDay(now);
@@ -40,7 +41,8 @@ function seed(core, now, extra) {
 
 L.runScenario('16. Premier gel : annonce, jauge, braseros, tenu ; voilé puis levé', async ({ R, srv, newPage, core, shot }) => {
   // ───── annonce au jour 5 du chapitre 2
-  const { page } = await newPage();
+  const { context, page } = await newPage();
+  await context.addInitScript(L.VOICES);
   await page.clock.install({ time: new Date() });
   await page.goto(srv.url);
   await L.ready(page);
@@ -51,6 +53,10 @@ L.runScenario('16. Premier gel : annonce, jauge, braseros, tenu ; voilé puis le
   const lines = await sceneText(page);
   R.check('scène d’annonce : le jour est écrit, aucune accolade', lines.length >= 3 && /arrive (lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|le \d+ \w+)/.test(lines[0]) && !lines.some((x) => /[{}]/.test(x)), lines[0]);
   await L.closeWelcome(page, 2000);
+  await idle(page);
+  const quand = (lines[0].match(/arrive (lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|le \d+ \w+)/) || [])[1];
+  const dit = (await L.said(page, true)).filter((x) => /Premier gel/.test(x.text));
+  R.check('une seule annonce vocale de l’Avis, avec le jour de la scène', dit.length === 1 && dit[0].voice === 'live' && !!quand && dit[0].text.includes(quand) && !/dans \d+ jours/.test(dit[0].text), JSON.stringify({ quand, dit }));
   const cur = srv.game().avis.current;
   R.check('Avis enregistré : dans 7 jours, Force 18 (activité nulle)', cur && cur.id === 'premier_gel' && cur.force === 18 && core.daysBetween(cur.announcedOn, cur.day) === 7, JSON.stringify(cur));
 
@@ -103,16 +109,28 @@ L.runScenario('16. Premier gel : annonce, jauge, braseros, tenu ; voilé puis le
     }),
   });
   try {
-    const { page: p2 } = await newPage();
+    const { context: c2, page: p2 } = await newPage();
+    await c2.addInitScript(L.VOICES);
     await p2.clock.install({ time: now });
     await p2.goto(srv2.url);
     await L.ready(p2);
     await p2.waitForTimeout(600);
     await p2.clock.fastForward(DAY);
     R.check('Avis voilé : scène « Premier gel · voilé »', await L.waitFor(async () => (await sceneTitle(p2)) === 'Premier gel · voilé', 5000), await sceneTitle(p2));
+    // le matin de l'Avis se rejoue sur la carte pendant la scène : la plaque des Champs ne l'annonce déjà plus
+    const plaqueAvis = () => p2.evaluate(() => {
+      const b = document.querySelector('.ow-plaque[data-sector="champs"] .ow-plaque-avis');
+      return { repere: b && !b.hidden ? b.textContent.trim() : '', rejoue: !!document.querySelector('.ow-flash.is-frost') };
+    });
+    // échantillon pris pendant que le givre passe sur les Champs (étape de résolution en cours)
+    await L.waitFor(() => p2.evaluate(() => !!document.querySelector('.ow-flash.is-frost')), 8000, 50);
+    const pendant = await plaqueAvis();
     const v = await sceneText(p2);
     R.check('la scène nomme le secteur : « deux cases des Champs »', /deux cases des Champs/.test(v[0]) && !v.some((x) => /[{}]/.test(x)), v[0]);
     await L.closeWelcome(p2, 2000);
+    await idle(p2);
+    const dit2 = (await L.said(p2, true)).filter((x) => /Premier gel/.test(x.text));
+    R.check('l’Avis voilé est dit une seule fois (l’interface ; le monde le dessine)', dit2.length === 1 && dit2[0].voice === 'live', JSON.stringify(dit2));
     const g2 = srv2.game();
     R.check('voile enregistré : 2 cases des Champs, 3 jours', g2.avis.veils.length === 1 && g2.avis.veils[0].sector === 'champs' && g2.avis.veils[0].cells === 2, JSON.stringify(g2.avis.veils));
     const vp = await p2.getAttribute('#carnet [data-card="voile"]', 'aria-label');
@@ -122,6 +140,8 @@ L.runScenario('16. Premier gel : annonce, jauge, braseros, tenu ; voilé puis le
     const vt = await p2.textContent('#carnet-card');
     R.check('carte du voile : secteur, cases, départ seul, « Lever une case du voile · 1 ⚡ »', /Champs/.test(vt) && /2 cases voilées/.test(vt) && /Il part seul/.test(vt) && /Lever une case du voile/.test(vt), vt.replace(/\s+/g, ' ').slice(0, 200));
     await shot(p2, '16-voile');
+    const apres = await plaqueAvis();
+    R.check('Avis passé : plus de repère « Premier gel » sur la plaque des Champs (matin rejoué, puis après)', pendant.rejoue && !pendant.repere && !apres.repere, JSON.stringify({ pendant, apres }));
     await p2.click('#carnet-card [data-act="liftVeil"]');
     await L.waitFor(() => srv2.game().avis.veils[0]?.cells === 1, 4000);
     await p2.click('#carnet-card [data-act="liftVeil"]');

@@ -53,8 +53,11 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
   const secondId = Object.keys(srv.game().letters).find((k) => srv.game().letters[k] === tomorrow);
   R.check('ce n’est pas la même lettre qu’hier', secondId && secondId !== firstId, `${firstId} / ${secondId}`);
   R.check('aucune accolade ; « Bon matin » prend le prénom s’il y est', !/[{}]/.test(l.text) && (!/Bon matin,/.test(l.text) || /Bon matin, Sam/.test(l.text)), l.text.slice(0, 120));
-  await page.click('#dlg-letter .sheet-foot [data-close]');
-  await page.waitForTimeout(500);
+  // Échap : la lettre s'était ouverte seule, le focus revient au Fil du jour (pas sur la page)
+  await page.keyboard.press('Escape');
+  R.check('Échap range la lettre', await L.waitFor(async () => !(await page.evaluate(() => document.getElementById('dlg-letter').open)), 2000));
+  await page.waitForTimeout(300);
+  R.check('… et le focus est sur « Fait » du Fil du jour', await page.evaluate(() => !!document.activeElement && document.activeElement.matches('#fil-quest [data-action="complete"]')), await page.evaluate(() => document.activeElement?.tagName));
   await page.clock.fastForward(61 * 1000);
   await page.waitForTimeout(1200);
   R.check('le même jour, plus rien ne s’ouvre', !(await page.evaluate(() => !!document.querySelector('dialog[open]'))));

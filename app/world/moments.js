@@ -807,12 +807,12 @@ function avisResoluStep(ctx, ev) {
         ctx.say(textOf());
         return;
       }
-      // c'est le jour J (la plaque le dit) ; si le Front n'était pas affiché (monde ouvert le matin même), on le pose
-      // au rivage pour rejouer la scène
+      // c'est le jour J ; si le Front n'était pas affiché (monde ouvert le matin même), on le pose au rivage pour
+      // rejouer la scène. L'Avis est déjà résolu dans le jeu (`resolu`) : la plaque n'en montre plus le repère.
       const was = ctx.shown.avis && ctx.shown.avis.id === id ? ctx.shown.avis : null;
       const p0 = was ? was.progress : 1;
-      ctx.shown.avis = was ? { ...was, daysLeft: 0, progress: 1 }
-        : { id, sector: s, day: ev.day, announcedOn: ev.day, force: Number(ev.force) || 0, braseros: 0, daysLeft: 0, progress: 1 };
+      ctx.shown.avis = was ? { ...was, daysLeft: 0, progress: 1, resolu: true }
+        : { id, sector: s, day: ev.day, announcedOn: ev.day, force: Number(ev.force) || 0, braseros: 0, daysLeft: 0, progress: 1, resolu: true };
       ctx.apply({ enter: false });
       const fm = ctx.frontMove;
       if (result === 'absent') {
@@ -896,7 +896,7 @@ function avisResoluStep(ctx, ev) {
   return { apply, run, text: textOf };
 }
 
-/** Une case dégivrée (1 ⚡) ou tout le voile levé (fin des 3 jours, quête du secteur). */
+/** Une case du voile levée (1 ⚡) ou tout le voile levé (fin des 3 jours, quête du secteur). */
 function voileLeveStep(ctx, ev) {
   const S = ev.sector;
   const left = Math.max(0, Math.round(Number(ev.cells) || 0));
@@ -993,13 +993,20 @@ function extraSteps(ctx) {
   return out.slice(0, 4);
 }
 
+/**
+ * Une seule voix par événement : les gestes du joueur et le temps du jeu (Avis, voile parti) sont annoncés par
+ * l'interface ; le monde les dessine sans les dire. Le voile levé par une quête du secteur reste dit par le monde.
+ */
+const SAID_BY_UI = new Set(['semis', 'recolte', 'partage', 'reserve', 'construction', 'parcelle', 'brasero', 'souffler', 'fil-libre', 'voile-leve', 'avis-annonce', 'avis-resolu']);
+const saidByUi = (ev) => SAID_BY_UI.has(ev.type) && !(ev.type === 'voile-leve' && ev.reason === 'quete');
+
 export async function playEvents(ctx, events) {
   const missed = [];
-  const runAll = async (steps) => {
+  const runAll = async (steps, quiet = false) => {
     for (const step of steps) {
       if (ctx.fx.instant) {
         step.apply();
-        const s = step.text();
+        const s = quiet ? '' : step.text();
         if (s) missed.push(s);
         continue;
       }
@@ -1007,7 +1014,10 @@ export async function playEvents(ctx, events) {
       await step.run();
     }
   };
-  for (const ev of events) await runAll(stepsFor(ctx, ev));
+  for (const ev of events) {
+    const quiet = saidByUi(ev);
+    await runAll(stepsFor(quiet ? Object.create(ctx, { say: { value: () => {} } }) : ctx, ev), quiet);
+  }
   await runAll(extraSteps(ctx));
   if (missed.length) ctx.say(missed.join(' '));
 }

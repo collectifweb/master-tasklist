@@ -25,7 +25,7 @@ Un gabarit s'écrit `{nom}`. Le code le remplace avant l'affichage.
 
 | Gabarit | Valeur |
 |---|---|
-| `{prenom}` | Prénom du joueur, tiré des réglages (« Alex » par défaut) |
+| `{prenom}` | Prénom du joueur, tiré des réglages (facultatif ; sans prénom, une réplique qui l'emploie est écartée, et dans une scène ou une lettre « , {prenom} » et « {prenom}, » disparaissent) |
 | `{quete}` | Titre de la quête, tel quel, jamais habillé |
 | `{secteur}` | Nom du secteur avec son article, `sector.<id>.the` (« les Champs », « l’Atelier ») |
 | `{Secteur}` | La même chose avec une majuscule initiale (« Les Champs ») |
@@ -150,7 +150,7 @@ Une **ligne** de scène vaut `{ "voix", "texte", "si"? }`. Avec `si`, elle ne s'
 - Le chapitre suivant s'ouvre quand le précédent est fini et que la Confiance atteint son `confianceMin`.
 - Les objectifs s'affichent dans l'ordre ; le premier non atteint porte l'étiquette « Maintenant ». Ils peuvent se remplir dans n'importe quel ordre.
 - `annonce` joue quand l'objectif devient « Maintenant », et se saute s'il est déjà atteint. `atteint` joue au moment où la condition devient vraie.
-- **Au plus 3 moments d'histoire par jour.** L'introduction, les ouvertures, les beats, les fins et les scènes d'Avis comptent ; un moment en trop attend le lendemain. Les `annonce` et `atteint` sont des répliques courtes et ne comptent pas.
+- **Au plus 3 moments d'histoire par jour.** Tous comptent : l'introduction, les ouvertures, les beats, les fins, les scènes d'Avis, et aussi les `annonce` et `atteint` des objectifs ; un moment en trop attend le lendemain.
 - Chaque scène se lit en 60 s au plus et se passe d'un toucher.
 - L'Avis : `annonce` quand il est annoncé (5 à 9 jours d'avance), puis une seule des trois scènes le matin suivant : `tenu`, `voile`, ou `absent` (aucun voile ne tombe pendant une absence de 48 h ou plus).
 

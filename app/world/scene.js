@@ -55,6 +55,15 @@ export class Scene {
     for (const e of list) {
       seen.add(e.id);
       let n = this.nodes.get(e.id);
+      // devenu touchable (secteur sorti de la cendre) : la balise change (div → button) et la zone de toucher n'a
+      // de style transparent que sous .is-btn. L'élément est recréé sur place, sans fondu d'entrée.
+      if (n && !!n.e.interactive !== !!e.interactive) {
+        this.remove(n, true);
+        n = this.create(e);
+        this.nodes.set(e.id, n);
+        changed.push(e.id);
+        continue;
+      }
       if (!n) { n = this.create(e); this.nodes.set(e.id, n); added.push(e.id); }
       else if (this.update(n, e)) changed.push(e.id);
     }

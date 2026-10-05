@@ -5,6 +5,7 @@
 //   world.play(events);          // joue les événements du cœur (quests, build, avis, chapters), dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
 //   world.focusSector('champs');
+//   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
 //   world.destroy();
 //
 // Appeler render(game, tasks) PUIS play(events) dans la même tâche (ou play d'abord) : le nouvel état
@@ -337,15 +338,15 @@ export function createWorld(container, options = {}) {
     if (e.model === 'tour') return t(e.variant ? 'monde.obj.tour' : 'monde.obj.tour.abimee');
     if (e.model === 'culture') {
       const p = e.plot;
-      if (!p.crop) return `${t('monde.obj.parcelle')} : ${t('monde.crop.empty')}`;
+      if (!p.crop) return `${t('monde.obj.parcelle')} : ${t('monde.crop.empty')}`;
       const state = p.stage <= 0 ? t('monde.crop.state.0') : p.ripe ? t('monde.crop.state.ripe') : t('monde.crop.state.mid', { s: p.stage, n: p.need });
-      return `${t('monde.obj.parcelle')} : ${t(`monde.crop.${p.crop}`)}, ${state}${p.ripe ? `. ${t('monde.crop.ripe.hint')}` : ''}`;
+      return `${t('monde.obj.parcelle')} : ${t(`monde.crop.${p.crop}`)}, ${state}${p.ripe ? `. ${t('monde.crop.ripe.hint')}` : ''}`;
     }
     if (e.model === 'chantier') return t('monde.obj.chantier');
     if (e.crate) {
       const d = e.crate.days;
       const when = d < 0 ? t('monde.crate.passed') : d === 0 ? t('monde.crate.today') : t('monde.crate.days', { n: d });
-      return `${t('monde.obj.caisse')}${e.title ? ` : ${e.title}` : ''}, ${when}`;
+      return `${t('monde.obj.caisse')}${e.title ? ` : ${e.title}` : ''}, ${when}`;
     }
     return t(`monde.obj.${e.model}`);
   }
@@ -428,8 +429,9 @@ export function createWorld(container, options = {}) {
     if (sv.visibility === 'brume') {
       return { vis: 'brume', name: t('monde.mist'), line: '', etat: '', stage: 0, progress: 0, label: t('monde.mist.hint') };
     }
-    // repère d'Avis : picto de givre + texte court, aussi lu dans l'étiquette du bouton
-    const av = avis && avis.sector === sv.id ? { text: avisBadge(avis), label: t('monde.avis.label', { nom: avisName(t, avis.id), au_secteur: t(`sector.${sv.id}.in`), quand: avisWhen(t, avis.daysLeft) }) } : null;
+    // repère d'Avis : picto de givre + texte court, aussi lu dans l'étiquette du bouton ; parti dès que l'Avis est
+    // résolu, même pendant que son matin se rejoue
+    const av = avis && avis.sector === sv.id && !avis.resolu ? { text: avisBadge(avis), label: t('monde.avis.label', { nom: avisName(t, avis.id), au_secteur: t(`sector.${sv.id}.in`), quand: avisWhen(t, avis.daysLeft) }) } : null;
     const withAvis = (label) => (av ? `${label} ${av.label}` : label);
     if (sv.visibility === 'cendre') {
       const n = fmt(sv.lueur);
@@ -553,7 +555,7 @@ export function createWorld(container, options = {}) {
       }
     }
     if (selected && !scene.get(selected)) select(null);
-    else placeTag();
+    else syncTag();
     syncRoving();
     return res;
   }
@@ -654,6 +656,13 @@ export function createWorld(container, options = {}) {
     vl = Math.max(m, Math.min(right - w - m, vl));
     if (vt < camera.top + m) vt = y + 14 - camera.sy; // pas de place au-dessus : l'étiquette passe sous l'objet
     tag.style.transform = `translate(${f(vl + camera.sx)}px, ${f(vt + camera.sy)}px)`;
+  }
+  /** L'objet sélectionné a pu changer (Tour réparée, culture qui pousse) : l'étiquette suit. */
+  function syncTag() {
+    if (!selected || tag.hidden) return;
+    const text = objName(scene.get(selected).e);
+    if (tag.textContent !== text) tag.textContent = text;
+    placeTag();
   }
   function select(eid) {
     selected = eid && scene.get(eid) ? eid : null;
@@ -784,7 +793,9 @@ export function createWorld(container, options = {}) {
     if (b) {
       const n = scene.get(b.dataset.id);
       rovingTo(b);
-      select(b.dataset.id === selected ? null : b.dataset.id);
+      // chaque toucher ouvre la feuille, même sur l'objet déjà sélectionné ; la sélection part par Échap,
+      // un toucher à côté ou clearSelection() (feuille fermée)
+      select(b.dataset.id);
       if (selected && n) {
         const info = selectInfo(n.e);
         options.onSelect?.(info);
@@ -1029,6 +1040,8 @@ export function createWorld(container, options = {}) {
     /** true : mouvement réduit ; false : complet ; null : suivre le système et <html data-motion>. */
     setReducedMotion(v) { forced = v === null || v === undefined ? null : !!v; syncMotion(); },
     focusSector,
+    /** Retire la sélection et son étiquette (par exemple quand la feuille de l'objet se ferme). */
+    clearSelection() { if (!destroyed) select(null); },
     /** Termine les animations en cours en 150 ms au plus. */
     skip,
     /** Écoute : 'impact' (gain arrivé), 'select', 'harvest' ({ plotId }), 'render', 'played'. Renvoie la fonction de retrait. */

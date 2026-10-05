@@ -25,11 +25,14 @@ const SHELL = [
   'content/fr-CA/chapitres.json', 'content/fr-CA/lettres.json',
 ];
 
-/** Requêtes que le service worker laisse passer sans y toucher : l'API, les autres origines, tout sauf GET. */
+/**
+ * Requêtes que le service worker laisse passer sans y toucher : tout sauf GET, ce qui sort de sa portée (autres
+ * origines, fichiers du site hors de l'app), toute adresse avec une chaîne de requête (une entrée par variante) et l'API.
+ */
 function bypass(request) {
   if (request.method !== 'GET') return true;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return true;
+  if (!url.href.startsWith(self.registration.scope) || url.search) return true;
   return url.pathname.includes('/api/');
 }
 
@@ -49,7 +52,9 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-// Réseau d'abord (les mises à jour arrivent tout de suite), cache en repli hors ligne.
+// Réseau d'abord (les mises à jour arrivent tout de suite), cache en repli hors ligne. Si le serveur répond en
+// erreur (hébergement saturé : 503, 508…), la copie en cache du même fichier vaut mieux qu'une page d'erreur ;
+// une adresse inconnue garde sa vraie réponse (404).
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (bypass(request)) return;
@@ -58,9 +63,9 @@ self.addEventListener('fetch', (event) => {
     try {
       const response = await fetch(request);
       if (response.ok && response.type === 'basic') cache.put(request, response.clone());
-      return response;
+      return response.ok ? response : (await cache.match(request)) || response;
     } catch (err) {
-      const hit = await cache.match(request, { ignoreSearch: true })
+      const hit = await cache.match(request)
         || (request.mode === 'navigate' ? (await cache.match('./')) || (await cache.match('index.html')) : null);
       if (hit) return hit;
       throw err;

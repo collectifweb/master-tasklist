@@ -31,4 +31,33 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   R.check('et l’indicateur hors ligne le dit', await L.waitFor(() => page.isVisible('#sync[data-sync="offline"]'), 3000));
   await shot(page, '06-copie-locale');
   await page.unroute('**/api/api.php');
+
+  // serveur en panne au démarrage (hébergement saturé : 503) : même repli sur la copie locale, indicateur d'erreur
+  page.expected.push(/status of 503/);
+  await page.route('**/api/api.php', (r) => r.fulfill({ status: 503, contentType: 'text/html', body: '<h1>Service indisponible</h1>' }));
+  await page.reload();
+  const up503 = await L.waitFor(() => page.locator('#fil-quest:not([hidden])').count(), 6000);
+  R.check('API en 503 au démarrage : le Fil du jour vient de la copie locale (pas d’écran d’échec)', !!up503 && await page.evaluate(() => document.getElementById('load-error').hidden));
+  R.check('… et l’indicateur dit que le serveur ne répond pas', await L.waitFor(() => page.isVisible('#sync[data-sync="error"]'), 3000) && /serveur ne répond pas/.test(await page.textContent('#sync')), await page.textContent('#sync'));
+  await page.unroute('**/api/api.php');
+  await page.reload();
+  await L.ready(page);
+  await page.waitForTimeout(800);
+
+  // stockage de l'appareil plein (d'autres pages du site l'ont rempli) : le geste est refusé, et le message le dit
+  const id2 = await page.getAttribute('#fil-quest', 'data-task-id');
+  const e2 = await L.resValue(page, 'energie');
+  await page.evaluate(() => {
+    let n = 0;
+    for (const size of [1 << 20, 1 << 16, 1 << 12, 1 << 8, 1 << 4, 1]) {
+      const s = 'x'.repeat(size);
+      for (;;) { try { localStorage.setItem('autre-app-' + n++, s); } catch { break; } }
+    }
+  });
+  await page.click('#fil-quest [data-action="complete"]');
+  await page.waitForTimeout(800);
+  const notice = await page.evaluate(() => { const n = document.getElementById('notice'); return n.hidden ? '' : n.textContent.trim(); });
+  R.check('stockage plein : « Fait » est refusé, avec un message clair', /stockage de cet appareil est plein/.test(notice), notice);
+  R.check('… la quête reste à faire, rien n’est gagné, rien n’est en file', await page.getAttribute('#fil-quest', 'data-task-id') === id2 && (await L.resValue(page, 'energie')) === e2 && await page.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v1') || '[]').length === 0) && srv.readTasks().find((t) => t.id === id2).status === 'todo');
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith('autre-app-')) localStorage.removeItem(k); });
 });

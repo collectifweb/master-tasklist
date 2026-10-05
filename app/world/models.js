@@ -93,7 +93,7 @@ export function bastion() {
   return a.done();
 }
 
-/** Tour de signal. `reparee` : pylône complet et cristal ; sinon tronquée, cristal tombé au pied. */
+/** Tour de veille. `reparee` : pylône complet et cristal ; sinon tronquée, cristal tombé au pied. */
 export function tour(reparee = false) {
   const a = new Art();
   a.box(0.14, 0.14, 0.72, 0.72, 0, 10, 'stone', { rim: true });

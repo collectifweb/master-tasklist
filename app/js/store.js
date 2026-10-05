@@ -37,7 +37,12 @@ const ACTIONS = {
 if (typeof core.shareHarvest === 'function') ACTIONS.shareHarvest = core.shareHarvest;
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
-export const hasAction = (name) => typeof ACTIONS[name] === 'function';
+export const hasAction = (name) => Object.hasOwn(ACTIONS, name) && typeof ACTIONS[name] === 'function';
+/** Action par son nom, parmi les seules clés propres d'ACTIONS (jamais « constructor » ou « __proto__ » lus dans la file). */
+function action(name) {
+  if (!hasAction(name)) throw new Error('Action inconnue : ' + name);
+  return ACTIONS[name];
+}
 
 const QUEUE_KEY = 'oree.queue.v1';
 const CACHE_KEY = 'oree.cache.v1';
@@ -52,8 +57,9 @@ function loadQueue() {
     return Array.isArray(q) ? q : [];
   } catch { return []; }
 }
+/** Renvoie false si la file n'a pas pu être écrite (stockage plein ou bloqué). */
 function saveQueue(q) {
-  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch { /* sans stockage : la file reste en mémoire */ }
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); return true; } catch { return false; }
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Tenue du jeu (ouverture, passage du temps, moment vu, lettre montrée) : elle part avec la file, mais n'est pas
@@ -94,7 +100,10 @@ export class Store {
   emit(type, payload) { for (const fn of this.listeners[type] || []) { try { fn(payload); } catch (e) { console.error(e); } } }
 
   // ───────── Chargement ─────────
-  /** Charge l'état : réseau d'abord, copie locale si hors ligne. Lance une ApiError si rien n'est possible. */
+  /**
+   * Charge l'état : réseau d'abord, copie locale si hors ligne ou si le serveur est en panne (5xx : hébergement
+   * saturé). Lance une ApiError si rien n'est possible.
+   */
   async load() {
     let resp = null;
     let fromCache = false;
@@ -102,11 +111,11 @@ export class Store {
       resp = await api.get();
     } catch (err) {
       if (err.status === 401) { this.needsToken = true; throw err; }
-      if (err.status !== 0) throw err;
+      if (err.status !== 0 && !(err.status >= 500)) throw err;
       try { resp = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { resp = null; }
       if (!resp) throw err;
       fromCache = true;
-      this.setSync('offline');
+      if (err.status === 0) this.setSync('offline'); else this.setSync('error', t('state.error.server'));
     }
     this.adopt(resp, fromCache);
     if (this.queue.length) this.flush();
@@ -124,7 +133,7 @@ export class Store {
     let { tasks, game, ledger } = this.server;
     for (const e of this.queue) {
       try {
-        const r = ACTIONS[e.name](tasks, game, ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
+        const r = action(e.name)(tasks, game, ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
         tasks = r.tasks; game = r.game; ledger = r.entries.length ? [...ledger, ...r.entries] : ledger;
       } catch { /* sera écartée à l'envoi */ }
     }
@@ -138,14 +147,15 @@ export class Store {
    * Renvoie { result, events }.
    */
   do(name, params = {}) {
-    if (!ACTIONS[name]) throw new Error('Action inconnue : ' + name);
+    const run = action(name);
     const now = new Date();
     const base = this.view;
-    const result = ACTIONS[name](base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision }, now);
+    const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision }, now);
     if (result.ops.length) {
-      this.queue = loadQueue();
-      this.queue.push({ opId: newOpId(), name, params, at: now.toISOString() });
-      saveQueue(this.queue);
+      const queue = [...loadQueue(), { opId: newOpId(), name, params, at: now.toISOString() }];
+      // la file est la seule trace de l'action jusqu'à l'envoi : sans elle, l'action serait perdue à la relecture
+      if (!saveQueue(queue)) throw new Error(t('notice.storage_full'));
+      this.queue = queue;
       this.view = { tasks: result.tasks, game: result.game, ledger: result.entries.length ? [...base.ledger, ...result.entries] : base.ledger };
       this.updatePending();
     }
@@ -200,7 +210,7 @@ export class Store {
         if (!e.body) {
           let r;
           try {
-            r = ACTIONS[e.name](this.server.tasks, this.server.game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
+            r = action(e.name)(this.server.tasks, this.server.game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
           } catch (err) {
             this.dropHead(e.opId);
             this.recompute();

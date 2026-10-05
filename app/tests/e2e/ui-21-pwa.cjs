@@ -1,6 +1,7 @@
 // 21. Application installable : manifeste valide (nom, couleurs du DESIGN, icônes 192 et 512), service worker
 // enregistré, coquille en cache, l'API jamais en cache, puis rechargement hors ligne depuis le cache.
 const fs = require('node:fs');
+const http = require('node:http');
 const path = require('node:path');
 const L = require('./lib.cjs');
 
@@ -85,6 +86,35 @@ L.runScenario('21. application installable et lancement hors ligne', async ({ R,
   R.check('toute la coquille est en cache', notCached.length === 0, notCached.join(', '));
   R.check('l’API n’est jamais en cache', !cache.urls.some((u) => /\/api\//.test(u)) && cache.keys.every((k) => k.startsWith('oree-')), cache.urls.filter((u) => /api/.test(u)).join());
   R.check('aucune réponse de l’API ne vient du service worker', apiFromSw.length === 0, apiFromSw.join());
+
+  // ───── ni variante « ?v=N » ni fichier hors de la portée de l'app (../tasks.json) dans le cache
+  await page.evaluate(async () => { for (const u of ['index.html?v=1', 'js/main.js?x=2', '../tasks.json']) await fetch(u).catch(() => {}); });
+  await page.waitForTimeout(300);
+  const urls2 = await page.evaluate(async (v) => (await (await caches.open(v)).keys()).map((r) => r.url), VERSION);
+  R.check('le cache ne garde ni chaîne de requête ni fichier hors de l’app', urls2.every((u) => !u.includes('?') && u.startsWith(srv.url)), urls2.filter((u) => u.includes('?') || !u.startsWith(srv.url)).join(', '));
+
+  // ───── serveur en panne (503 partout, réseau présent) : coquille en cache, copie locale, indicateur d'erreur
+  const port = Number(new URL(srv.base).port);
+  srv.stop();
+  page.expected.push(/status of 503/, /ServiceWorker/);
+  const down = http.createServer((req, res) => { res.writeHead(503, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<h1>Service indisponible</h1>'); });
+  // le serveur PHP vient d'être tué : le port se libère un instant plus tard
+  const tryListen = () => new Promise((r) => {
+    const onErr = () => r(false);
+    down.once('error', onErr);
+    down.listen(port, '127.0.0.1', () => { down.off('error', onErr); r(true); });
+  });
+  let listening = false;
+  for (let i = 0; i < 50 && !listening; i++) { listening = await tryListen(); if (!listening) await new Promise((r) => setTimeout(r, 100)); }
+  if (!listening) throw new Error(`port ${port} toujours occupé après l’arrêt du serveur`);
+  try {
+    const r503 = await page.reload();
+    R.check('serveur en 503 : la page vient du cache (pas la page d’erreur)', !!r503 && r503.fromServiceWorker() && r503.status() === 200, r503 ? `${r503.status()} / ${r503.fromServiceWorker()}` : 'aucune réponse');
+    R.check('… le Fil du jour s’affiche depuis la copie locale', !!(await L.waitFor(() => page.locator('#fil-quest:not([hidden])').count(), 8000)) && await page.getAttribute('#fil-quest', 'data-task-id') === next, await page.getAttribute('#fil-quest', 'data-task-id'));
+    R.check('… et l’indicateur dit que le serveur ne répond pas', await L.waitFor(() => page.isVisible('#sync[data-sync="error"]'), 4000), await page.getAttribute('#sync', 'data-sync'));
+  } finally {
+    await new Promise((r) => down.close(r));
+  }
 
   // ───── hors ligne : réseau coupé ET serveur arrêté, puis rechargement
   const titles = await page.$$eval('#quest-list > li .quest-title', (els) => els.map((e) => e.textContent.trim()));

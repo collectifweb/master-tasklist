@@ -63,7 +63,7 @@ export function avisPreparation(game, ledger, avis) {
   for (const [id, def] of Object.entries(BUILDABLES)) {
     if (!def.defense || (def.defense.sector && def.defense.sector !== avis.sector)) continue;
     const n = (game.placements ?? []).filter((p) => (def.landmark ? p.id === id : p.model === def.model)).length;
-    if (n) lignes.push({ id, label: id === 'tour' ? 'Tour de signal' : 'Tunnel de culture', value: def.defense.prep * n, count: n });
+    if (n) lignes.push({ id, label: id === 'tour' ? 'Tour de veille' : 'Tunnel de culture', value: def.defense.prep * n, count: n });
   }
   const keys = new Set(ledger.map((e) => e.key));
   const quests = ledger.filter((e) => e.type === 'reward' && e.day && e.day >= avis.announcedOn && e.day < avis.day

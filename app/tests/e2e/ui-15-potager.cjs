@@ -17,7 +17,13 @@ const actSheet = (page) => page.evaluate(() => {
   };
 });
 const btn = (s, act, part) => s.buttons.find((b) => b.act === act && (!part || (b.params || '').includes(part)));
-const live = (page) => page.evaluate(() => document.getElementById('live').textContent);
+// voix de l'interface : #live, ou son double dans la feuille ouverte (#live est alors inerte)
+const live = (page) => page.evaluate(() => [document.getElementById('live'), ...document.querySelectorAll('dialog > [data-live="live"]')].map((e) => e.textContent).join(' ').trim());
+/** Un geste, une voix : l'interface le dit, le monde le dessine sans le redire. */
+const oneVoice = async (page, re) => {
+  const s = (await L.said(page)).filter((x) => re.test(x.text));
+  return { ok: s.some((x) => x.voice === 'live') && !s.some((x) => x.voice === 'live-world'), detail: JSON.stringify(s) };
+};
 const openPlanTarget = async (page, target) => {
   if (!(await page.evaluate(() => document.getElementById('dlg-plan').open))) {
     await L.openPanel(page);
@@ -29,9 +35,26 @@ const openPlanTarget = async (page, target) => {
   await page.waitForTimeout(250);
 };
 const idle = (page) => L.waitFor(() => page.evaluate(() => document.querySelector('.ow-skip').hidden), 8000);
+/** Point de la zone de toucher d'un objet que rien d'autre ne recouvre (Solène se tient devant la parcelle 1). */
+const freePoint = (page, id) => page.evaluate((id) => {
+  const el = document.querySelector(`.ow-ent[data-id="${id}"]`);
+  const hit = el && el.querySelector('.ow-hit');
+  if (!hit) return null;
+  const r = hit.getBoundingClientRect();
+  for (const gy of [0.6, 0.5, 0.7, 0.4, 0.8, 0.3]) {
+    for (const gx of [0.5, 0.4, 0.6, 0.3, 0.7]) {
+      const x = r.left + r.width * gx, y = r.top + r.height * gy;
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+      const at = document.elementFromPoint(x, y);
+      if (at && at.closest('.ow-ent') === el) return [x, y];
+    }
+  }
+  return null;
+}, id);
 
 L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, shot }) => {
-  const { page } = await newPage();
+  const { context, page } = await newPage();
+  await context.addInitScript(L.VOICES);
   await page.clock.install({ time: new Date() });
   await page.goto(srv.url);
   await L.ready(page);
@@ -52,7 +75,13 @@ L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, sho
   R.check('semer referme la feuille', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-act').open), 2000));
   R.check('la courge est semée dans l’état enregistré', await L.waitFor(() => { const g = srv.game(); return g && g.plots[0].crop === 'courge'; }, 5000));
   R.check('3 Énergie dépensées', await L.waitFor(async () => (await L.resValue(page, 'energie')) === e0 - 3, 3000), `${e0} → ${await L.resValue(page, 'energie')}`);
-  R.check('annonce lue : « Courge semée. »', /Courge semée/.test(await live(page)), await live(page));
+  // lue une fois la feuille fermée (pendant sa fermeture, elle est encore modale)
+  R.check('annonce lue : « Courge semée. »', await L.waitFor(async () => /Courge semée/.test(await live(page)), 2000), await live(page));
+  const sem = (await L.said(page)).find((x) => /Courge semée/.test(x.text));
+  R.check('« Courge semée. » est écrite une fois la feuille fermée (pas dans une page rendue inerte par elle)', !!sem && sem.voice === 'live' && sem.sheet === '' && sem.open.length === 0, JSON.stringify(sem));
+  await idle(page);
+  let v = await oneVoice(page, /semée|semis/i);
+  R.check('une seule voix : le monde ne redit pas le semis', v.ok, v.detail);
 
   // ───── réparer la Tour depuis le plan accessible
   await openPlanTarget(page, { type: 'landmark', id: 'tour' });
@@ -63,6 +92,14 @@ L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, sho
   await page.click('#dlg-act [data-act="build"]');
   R.check('la Tour est réparée (état enregistré)', await L.waitFor(() => (srv.game()?.placements || []).some((p) => p.id === 'tour' && p.state === 'reparee'), 5000));
   R.check('le plan reste ouvert après le geste', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-plan').open && !document.getElementById('dlg-act').open), 2000));
+  const focusTour = () => page.evaluate(() => { const a = document.activeElement; return !!a && a.matches('#dlg-plan [data-act="open-target"]') && a.dataset.params === '{"type":"landmark","id":"tour"}'; });
+  R.check('le focus revient au bouton « Agir » de la Tour dans le plan (pas sur la page)', await L.waitFor(focusTour, 2000), await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 140)));
+  await L.waitFor(async () => /réparée/.test((await L.voice(page)).text), 2000);
+  const vt = await L.voice(page);
+  R.check('« Tour de veille réparée. » lue dans le plan ouvert, là où un lecteur d’écran l’entend', /Tour de veille réparée/.test(vt.text) && vt.sheet === 'dlg-plan' && vt.ignored === false, JSON.stringify(vt));
+  await idle(page);
+  v = await oneVoice(page, /réparée/);
+  R.check('une seule voix : le monde ne redit pas la réparation', v.ok, v.detail);
   const planTour = await page.textContent('#dlg-plan .plan-acts');
   R.check('le plan dit « Réparée »', /Réparée/.test(planTour), planTour.slice(0, 200));
 
@@ -80,6 +117,8 @@ L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, sho
   await page.waitForTimeout(500);
   R.check('toucher un bouton refusé ne fait rien', srv.game().resources.materials === m0 && await page.evaluate(() => document.getElementById('dlg-act').open));
   R.check('… et relit la raison', /Il manque/.test(await live(page)), await live(page));
+  const vr = await L.voice(page);
+  R.check('… dans la feuille ouverte, là où un lecteur d’écran l’entend', vr.sheet === 'dlg-act' && vr.ignored === false, JSON.stringify(vr));
   await page.keyboard.press('Escape');
   await page.waitForTimeout(450);
   await page.keyboard.press('Escape');
@@ -108,9 +147,9 @@ L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, sho
   await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-plan').open), 2000);
   await page.waitForTimeout(1200);
   await page.waitForSelector('.ow-ent.is-btn[data-id="parcelle-1"][data-mure]', { timeout: 4000 }).catch(() => {});
-  const box = await page.locator('.ow-ent.is-btn[data-id="parcelle-1"]').boundingBox();
-  if (box) {
-    const x = box.x + box.width / 2, y = box.y + box.height * 0.6;
+  const at = await freePoint(page, 'parcelle-1');
+  if (at) {
+    const [x, y] = at;
     await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.move(x + 20, y + 4, { steps: 3 });
@@ -121,6 +160,8 @@ L.runScenario('15. potager et construction', async ({ R, srv, newPage, size, sho
   await page.waitForTimeout(300);
   R.check('annonce lue : « Courge récoltée. Garde-manger : 1 sur 12. »', /Courge récoltée\. Garde-manger.?: 1 sur 12/.test(await live(page)), JSON.stringify(await live(page)));
   await idle(page);
+  v = await oneVoice(page, /récolt/i);
+  R.check('une seule voix : le monde ne redit pas la récolte', v.ok, v.detail);
 
   // ───── partager au village (la feuille reste ouverte)
   await openPlanTarget(page, { type: 'plot', id: 'parcelle-1' });

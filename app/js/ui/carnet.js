@@ -27,7 +27,7 @@ export const avisName = (id) => (content.chapitres?.chapitres ?? []).map((c) => 
 function chapterPill(p) {
   const pips = p.objectives.map((o) => `<i${o.done ? ' class="is-done"' : ''}></i>`).join('');
   const label = p.contenu
-    ? t('carnet.chapter.aria', { n: p.number, fait: p.done, total: p.total })
+    ? tn('carnet.chapter.aria', p.done, { n: p.number, fait: p.done, total: p.total })
     : t('chapter.label', { n: p.number });
   return `<button class="carnet-pill" type="button" data-action="carnet" data-card="chapitre" aria-expanded="${openCard === 'chapitre'}" aria-controls="carnet-card" aria-label="${esc(label)}">
     ${glyph('chapitre')}<span class="carnet-pill-text">${esc(t('chapter.label', { n: p.number }))}</span>${p.total ? `<span class="carnet-pips" aria-hidden="true">${pips}</span>` : ''}
@@ -95,7 +95,9 @@ function avisCard(a, c) {
   const lack = Math.max(0, a.force - a.preparation);
   const lines = a.lignes.map((l) => {
     const val = l.max ? t('carnet.avis.line.max', { v: num(l.value), max: num(l.max) }) : num(l.value);
-    return `<div class="why-line${l.value ? '' : ' why-line--zero'}"><dt>${esc(l.label)}</dt><dd>${esc(val)}</dd></div>`;
+    // le cœur nomme encore la Tour « de signal » : l'interface garde le nom du récit (monde.obj.tour)
+    const label = l.id === 'tour' ? t('monde.obj.tour') : l.label;
+    return `<div class="why-line${l.value ? '' : ' why-line--zero'}"><dt>${esc(label)}</dt><dd>${esc(val)}</dd></div>`;
   }).join('');
   const brasero = actionRow(c, lightBrasero, 'lightBrasero', {}, {
     label: t('carnet.avis.brasero'), cost: { energy: BRASERO.energy, materials: 0 }, ico: glyph('flamme'), kind: 'secondary',

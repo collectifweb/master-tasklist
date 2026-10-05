@@ -13,9 +13,16 @@ const SECTOR_ORDER = ['atelier', 'champs', 'archives', 'maison-commune', 'relais
 const DEFAULTS = { priority: 5, length: 2, difficulty: 3 };
 
 // ───────── Ouverture / fermeture ─────────
+let stacked = 0; // ordre d'ouverture : la dernière feuille ouverte est au-dessus des autres
 export function openSheet(dlg) {
   if (dlg._cancelClose) dlg._cancelClose(); // rouverte pendant sa fermeture : on annule la fermeture
-  if (!dlg.open) dlg.showModal();
+  if (!dlg.open) { dlg.showModal(); dlg._z = ++stacked; }
+}
+/** Feuille modale du dessus, ou null : quand une feuille est ouverte, le reste de la page est inerte. */
+export function topSheet() {
+  let top = null;
+  for (const d of $$('dialog.sheet[open]')) if (!top || d._z > top._z) top = d;
+  return top;
 }
 export function closeSheet(dlg) {
   if (!dlg.open || dlg.classList.contains('is-closing')) return;
@@ -476,11 +483,26 @@ export function openVeille({ next, reply, saved, onClose }) {
   openSheet(dlg);
 }
 
-/** Câblage commun : fermeture au fond, Échap animé, bouton data-close. */
+/**
+ * Câblage commun : fermeture au fond, Échap animé, bouton data-close. Une feuille peut remplacer la fermeture
+ * (`_dismiss` : la scène « passe » au lieu de finir). Chaque feuille porte ses régions lues (#live et #live-world sont
+ * inertes derrière elle) ; son contenu est réécrit à chaque rendu, elles y sont remises aussitôt.
+ */
 export function wireDialogs() {
   for (const d of $$('dialog.sheet')) {
-    d.addEventListener('cancel', (e) => { e.preventDefault(); closeSheet(d); });
-    d.addEventListener('click', (e) => { if (e.target === d) closeSheet(d); });
+    const dismiss = () => (d._dismiss ? d._dismiss() : closeSheet(d));
+    d.addEventListener('cancel', (e) => { e.preventDefault(); dismiss(); });
+    d.addEventListener('click', (e) => { if (e.target === d) dismiss(); });
+    const regions = ['live', 'live-world'].map((id) => {
+      const p = document.createElement('p');
+      p.className = 'sr-only';
+      p.setAttribute('role', 'status');
+      p.dataset.live = id;
+      return p;
+    });
+    const keep = () => { for (const p of regions) if (p.parentNode !== d) d.append(p); };
+    keep();
+    new MutationObserver(keep).observe(d, { childList: true });
   }
 }
 

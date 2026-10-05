@@ -151,7 +151,14 @@ async function swipe(page, id, touch) {
     if (tapAt) { await page.mouse.click(tapAt[0], tapAt[1]); await page.waitForTimeout(150); }
     r.tap = await page.evaluate(() => window.__selections.at(-1) || null);
     check(`${tag} toucher une parcelle → onSelect plot`, r.tap && r.tap.type === 'plot' && r.tap.id === 'parcelle-2' && r.tap.ripe === true, r.tap);
-    if (tapAt) { await page.mouse.click(tapAt[0], tapAt[1]); await page.waitForTimeout(100); } // désélectionne
+    // ---- retoucher le même objet rappelle onSelect (sa feuille se rouvre) ; clearSelection() retire la sélection
+    const nSel = await page.evaluate(() => window.__selections.length);
+    if (tapAt) { await page.mouse.click(tapAt[0], tapAt[1]); await page.waitForTimeout(150); }
+    r.retap = await page.evaluate((n) => ({ calls: window.__selections.length - n, last: window.__selections.at(-1) || null }), nSel);
+    check(`${tag} retoucher la même parcelle → onSelect à nouveau`, r.retap.calls === 1 && r.retap.last?.id === 'parcelle-2', r.retap);
+    await page.evaluate(() => window.__world.clearSelection());
+    r.cleared = await page.evaluate(() => ({ tagHidden: document.querySelector('.ow-tag').hidden, sel: document.querySelectorAll('.ow-ent.is-sel').length }));
+    check(`${tag} clearSelection() : plus d'étiquette ni d'objet sélectionné`, r.cleared.tagHidden && r.cleared.sel === 0, r.cleared);
 
     // ---- glisser sur la parcelle mûre → onHarvest(id), puis la récolte se joue
     const sw = await swipe(page, 'parcelle-2', false);
@@ -170,7 +177,7 @@ async function swipe(page, id, touch) {
     const tapE = await hitPoint(page, 'etabli');
     if (tapE) { await page.mouse.click(tapE[0], tapE[1]); await page.waitForTimeout(150); }
     r.tapEtabli = await page.evaluate(() => window.__selections.at(-1) || null);
-    if (tapE) { await page.mouse.click(tapE[0], tapE[1]); await page.waitForTimeout(100); }
+    await page.evaluate(() => window.__world.clearSelection());
     await run(page, 'etabli');
     r.etabli1 = await page.evaluate(() => document.querySelector('.ow-ent[data-id="etabli"]')?.className || null);
     check(`${tag} établi absent (chantier) puis construit`, /m-chantier/.test(r.etabli0 || '') && !/m-etabli/.test(r.etabli0 || '') && /m-etabli/.test(r.etabli1 || '') && !/m-chantier/.test(r.etabli1 || ''), { avant: r.etabli0, apres: r.etabli1 });
@@ -182,8 +189,19 @@ async function swipe(page, id, touch) {
     const tapT = await hitPoint(page, 'tunnel-1');
     if (tapT) { await page.mouse.click(tapT[0], tapT[1]); await page.waitForTimeout(150); }
     r.tapTunnel = await page.evaluate(() => window.__selections.at(-1) || null);
-    if (tapT) { await page.mouse.click(tapT[0], tapT[1]); await page.waitForTimeout(100); }
+    await page.evaluate(() => window.__world.clearSelection());
     check(`${tag} tunnel construit aux Champs, onSelect placement`, r.tapTunnel && r.tapTunnel.type === 'placement' && r.tapTunnel.id === 'tunnel-1' && r.tapTunnel.sector === 'champs', r.tapTunnel);
+
+    // ---- Tour sélectionnée puis réparée : l'étiquette suit l'objet (« … à réparer » → « Tour de veille »)
+    await focus(page, 'place');
+    await page.locator('.ow-ent.is-btn[data-id="tour"]').dispatchEvent('click');
+    await page.waitForTimeout(150);
+    const tagTour = () => page.evaluate(() => { const g = document.querySelector('.ow-tag'); return g.hidden ? '(cachée)' : g.textContent; });
+    r.tourTag = { avant: await tagTour() };
+    await run(page, 'tour');
+    r.tourTag.apres = await tagTour();
+    await page.evaluate(() => window.__world.clearSelection());
+    check(`${tag} Tour sélectionnée puis réparée : l'étiquette suit`, r.tourTag.avant === 'Tour de veille à réparer' && r.tourTag.apres === 'Tour de veille', r.tourTag);
 
     // ---- Avis annoncé : Front visible au bord des Champs, repère picto + texte dans la plaque
     await act(page, 'avis');

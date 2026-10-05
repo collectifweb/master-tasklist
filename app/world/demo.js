@@ -243,7 +243,7 @@ const actions = {
   'avis-absent': () => resolveAvis('absent'),
   lever: () => {
     const v = game.avis.veils[0];
-    if (!v) { announce('Aucune case sous le givre.'); return; }
+    if (!v) { announce('Aucune case sous le voile.'); return; }
     return core(liftVeil, { sector: v.sector });
   },
   muets: () => world.play([{ type: 'objectif-atteint', chapter: 2, id: 'demo' }, { type: 'chapitre-fin', chapter: 2 }, { type: 'type-inconnu' }, { type: 'partage', crop: 'ble', n: 1, pantry: 0 }]),

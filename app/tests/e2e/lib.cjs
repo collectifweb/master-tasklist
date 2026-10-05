@@ -183,6 +183,7 @@ async function newPage(browser, [w, h], opts = {}) {
   const context = await browser.newContext({ viewport: { width: w, height: h }, ...opts });
   const page = await context.newPage();
   page.errors = [];
+  page.expected = [];
   guardPage(page);
   page.on('pageerror', (e) => page.errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
@@ -190,6 +191,7 @@ async function newPage(browser, [w, h], opts = {}) {
     const loc = m.location() || {};
     if (/ERR_INTERNET_DISCONNECTED/.test(m.text())) return; // coupure de réseau provoquée par le scénario (journal du navigateur, pas de l'app)
     if (/status of 409/.test(m.text())) return; // conflit 409 : réponse normale du protocole (game_conflict), le navigateur la journalise
+    if (page.expected.some((re) => re.test(m.text()))) return; // erreur provoquée par le scénario (serveur en panne…)
     page.errors.push('console: ' + m.text() + ' ' + (loc.url || ''));
   });
   page.on('requestfailed', (r) => { if (!/INTERNET_DISCONNECTED|ABORTED/.test(r.failure().errorText)) page.errors.push('requestfailed: ' + r.url() + ' ' + r.failure().errorText); });
@@ -299,6 +301,53 @@ async function runScenario(name, fn, { tasks, game, ledger, fresh = false, quiet
   process.exit(f ? 1 : 0);
 }
 
+/**
+ * Journal des voix (script d'initialisation) : chaque texte écrit dans une région lue (#live, #live-world et leurs
+ * doubles dans les feuilles) est noté dans window.__said : { voice: 'live' | 'live-world', sheet: feuille qui porte la région,
+ * open: feuilles ouvertes à cet instant, text }.
+ */
+const VOICES = () => {
+  window.__said = [];
+  const note = () => {
+    for (const r of document.querySelectorAll('#live, #live-world, dialog > [data-live]')) {
+      const tx = r.textContent.trim();
+      if (tx && r.__last !== tx) {
+        // feuilles ouvertes au moment d'écrire (une feuille qui se ferme est encore modale : « (fermeture) »)
+        const open = [...document.querySelectorAll('dialog[open]')].map((d) => d.id + (d.classList.contains('is-closing') ? ' (fermeture)' : ''));
+        window.__said.push({ voice: r.id || r.dataset.live, sheet: r.closest('dialog')?.id || '', open, text: tx });
+      }
+      r.__last = tx;
+    }
+  };
+  new MutationObserver(note).observe(document, { subtree: true, childList: true, characterData: true });
+};
+/** Annonces notées par VOICES depuis la dernière remise à zéro (reset : vide le journal après lecture). */
+const said = (page, reset = false) => page.evaluate((r) => { const s = window.__said || []; if (r) window.__said = []; return s; }, reset);
+
+/**
+ * Dernière annonce d'une voix (#live ou #live-world, ou son double dans une feuille) : la feuille qui la porte et si un
+ * lecteur d'écran la reçoit (arbre d'accessibilité de Chromium : ignored = inerte derrière une feuille, cachée…).
+ */
+async function voice(page, id = 'live') {
+  const at = await page.evaluate((id) => {
+    const el = [document.getElementById(id), ...document.querySelectorAll(`dialog > [data-live="${id}"]`)].find((e) => e.textContent.trim());
+    if (!el) return null;
+    const d = el.closest('dialog');
+    return { text: el.textContent.trim(), sheet: d ? d.id : '', sel: d ? `#${d.id} > [data-live="${id}"]` : `#${id}` };
+  }, id);
+  if (!at) return { text: '', sheet: '', ignored: null, reasons: [] };
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await cdp.send('Accessibility.enable');
+    const { root } = await cdp.send('DOM.getDocument', { depth: -1 });
+    const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: at.sel });
+    const { nodes } = await cdp.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false });
+    return { text: at.text, sheet: at.sheet, ignored: nodes[0].ignored, reasons: (nodes[0].ignoredReasons || []).map((r) => r.name) };
+  } finally {
+    await cdp.detach().catch(() => {});
+  }
+}
+
 /** Valeur numérique affichée d'une ressource du HUD. */
 const resValue = (page, name) => page.evaluate((n) => {
   const t = document.querySelector(`.res[data-res="${n}"] .res-value`).firstChild.nodeValue;
@@ -313,4 +362,4 @@ const rect = (page, sel) => page.evaluate((s) => {
   return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom };
 }, sel);
 
-module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, allStoryIds, closeWelcome };
+module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, allStoryIds, closeWelcome, VOICES, said, voice };

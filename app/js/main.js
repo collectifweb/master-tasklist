@@ -3,9 +3,9 @@ import { SORTS, gameDay, isPinned, topCards, PANTRY_MAX, RESERVE_MAX, BRASERO, A
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { loadContent, t, content, pickReply, replyVars } from './content.js';
-import { $, $$, reducedMotion, setText, inlineSprite } from './ui/dom.js';
+import { $, $$, esc, reducedMotion, setText, inlineSprite } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
-import { createAnnounce, summarize, gainList } from './ui/announce.js';
+import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.js';
 import { createSpeech } from './ui/speech.js';
 import { createSync } from './ui/sync.js';
 import { renderFil, renderAlts, renderList } from './ui/quests.js';
@@ -47,13 +47,17 @@ const story = createStory({
   ctx: () => (store.view ? ctx() : null),
   run: (action, params) => run(action, params),
   announce: (text) => announce.say(text),
+  focusHome,
   onIntroEnd: (choice) => {
     // « Commencer » : le Fil du jour, quête n° 1 ; « Plus tard » : tout reste utilisable, rien ne bouge
-    if (choice !== 'start') return;
-    const done = $('#fil-quest:not([hidden]) [data-action="complete"]');
-    (done || $('.panel-head [data-action="add"]')).focus();
+    if (choice === 'start') focusHome();
   },
 });
+/** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
+function focusHome() {
+  const done = $('#fil-quest:not([hidden]) [data-action="complete"]');
+  (done || $('.panel-head [data-action="add"]')).focus();
+}
 const findTask = (id) => (id ? store.view.tasks.find((x) => x.id === id) || null : null);
 
 // ───────── Rendu ─────────
@@ -274,6 +278,16 @@ function onWorldSelect(info) {
   const target = resolveTarget(info, store.view.game);
   if (target) openActions(ctx(), target);
 }
+// La feuille ouverte par un toucher sur la carte se ferme : l'objet n'est plus sélectionné (le toucher suivant la rouvre)
+for (const d of $$('#dlg-act, #dlg-fiche')) d.addEventListener('close', () => { if (world) world.clearSelection(); });
+// Feuille ouverte depuis le Plan : le geste a pu recréer son bouton « Agir » ; le focus revient au bouton de la même cible
+$('#dlg-act').addEventListener('close', () => {
+  const plan = $('#dlg-plan');
+  if (!plan.open || plan.contains(document.activeElement)) return;
+  const target = $('#dlg-act').dataset.target;
+  const back = [...plan.querySelectorAll('[data-act="open-target"]')].find((b) => b.dataset.params === target);
+  if (back) back.focus();
+});
 /** Glisser sur une parcelle mûre : la même récolte que le bouton « Récolter ». */
 function onWorldHarvest(plotId) {
   run('harvest', { plotId });
@@ -535,7 +549,7 @@ async function start() {
   initWorld({
     container: $('#world-live'), slot: $('.world-slot'), content,
     now: () => new Date(), reducedMotion,
-    announce: (text) => { const el = $('#live-world'); el.textContent = ''; setTimeout(() => { el.textContent = text; }, 60); },
+    announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,
     onHarvest: onWorldHarvest,
@@ -545,7 +559,7 @@ async function start() {
     if (!world) return;
     world.render(store.view.game, store.view.tasks);
     const host = $('#dlg-plan');
-    host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${t('plan.close')}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
+    host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('plan.close'))}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
     worldPlan = world.plan($('#plan-host'), { onFocusSector: (sid) => { closeSheet(host); setPanel(false); world.focusSector(sid); } });
     planActs = document.createElement('section');
     planActs.className = 'plan-acts-wrap';

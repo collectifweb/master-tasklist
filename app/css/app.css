@@ -843,10 +843,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .carnet-card,
-  .scene-line {
+  :root:not([data-motion="full"]) .carnet-card,
+  :root:not([data-motion="full"]) .scene-line {
     animation-duration: 150ms;
   }
+}
+:root[data-motion="reduce"] .carnet-card,
+:root[data-motion="reduce"] .scene-line {
+  animation-duration: 150ms;
 }
 
 /* Carte du carnet dépliée : la réplique (aussi lue dans #live) s'efface pour ne pas la recouvrir */

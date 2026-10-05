@@ -134,7 +134,7 @@ export function replyVars(task, sectorId) {
   const id = sectorId in SECTORS ? sectorId : 'place';
   const the = t(`sector.${id}.the`);
   return {
-    prenom: 'Alex',
+    prenom: prenom() || null, // facultatif : sans prénom, une variante qui l'emploie est écartée (jamais d'accolade)
     quete: task ? task.task : undefined,
     secteur: the,
     Secteur: the.charAt(0).toUpperCase() + the.slice(1),

@@ -162,6 +162,9 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
   - Le contenu `chapitres` est gardé en mémoire et réinjecté dans `advanceTime` à l'appel comme au rejeu ; il n'est jamais stocké dans la file.
   - Les actions de tenue (`openApp`, `advanceTime`, `markStorySeen`, `markLetterShown`) partent dans la file mais ne comptent pas dans « N changements en attente ».
   - Ordre : `openApp` puis `advanceTime` à l'ouverture ; `advanceTime` au changement de jour de jeu, au retour au premier plan et après chaque geste qui peut faire avancer un objectif.
+  - Démarrage : si l'API est injoignable **ou répond 500 ou plus** (ex. 503, 508 « Resource Limit Is Reached » en hébergement mutualisé), l'app repart de la copie locale `oree.cache.v1` et l'indicateur le dit.
+  - Si la file ne peut pas être enregistrée dans `localStorage` (stockage plein), l'action est refusée avec un message : rien ne doit paraître fait sans être gardé.
+- **Voix** (`ui/announce.js`) : deux voix, celle de l'interface (`#live`) et celle du monde (`#live-world`). Une feuille modale rend le reste de la page inerte : chaque feuille porte donc ses propres régions `role="status"`, et une annonce va dans la feuille du dessus (après la fin de sa fermeture animée). **Une seule voix par événement** : l'interface dit les gestes du joueur ; le monde se tait pour ceux de la liste `SAID_BY_UI` (`world/moments.js`) et ne dit que ses moments propres.
 - **`js/content.js`** : textes de `content/fr-CA/interface.json` (aucun libellé en dur) et variables des répliques.
 - **`world/`** : île isométrique DOM/SVG. L'interface publique de `createWorld` (options, rappels `onSelect`, `onHarvest`, `onImpact`, événements acceptés par `play()`) est décrite en tête de `world/world.js`. Le monde n'applique jamais rien lui-même : il signale un geste, l'interface appelle le cœur puis lui rejoue les événements.
 
@@ -179,7 +182,7 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game, 
 
 **Application installable** :
 - `manifest.webmanifest` et `sw.js` utilisent des chemins relatifs : l'app peut vivre dans un sous-dossier.
-- `sw.js` : réseau d'abord, cache en repli hors ligne. Ne touche jamais `…/api/…`, ni une autre origine, ni une requête autre que GET.
+- `sw.js` : réseau d'abord ; en repli, la copie en cache du même fichier si le réseau est coupé **ou si le serveur répond une erreur**. Une adresse inconnue garde sa vraie 404. Ne touche jamais `…/api/…`, ni une autre origine, ni ce qui est hors de sa portée (`../tasks.json`), ni une adresse avec chaîne de requête, ni une requête autre que GET.
 - **À chaque déploiement qui modifie la coquille, changer `VERSION` dans `sw.js`** (l'ancien cache est effacé à l'activation), et ajouter à `SHELL` tout nouveau fichier chargé par la page.
 - Ne pas déployer `app/.impeccable/`, `app/tests/` ni la page de référence `app/design/reference.*`. `app/design/icons.svg` est utilisé par l'app : il doit être déployé.
 

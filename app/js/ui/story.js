@@ -24,7 +24,7 @@ const anyOpen = () => document.querySelector('dialog[open]');
 
 /**
  * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte),
- *         onIntroEnd(choix 'start' | 'later') }.
+ *         focusHome(), onIntroEnd(choix 'start' | 'later') }.
  */
 export function createStory(app) {
   const scene = { steps: [], i: 0, ids: [], intro: false, onDone: null };
@@ -92,15 +92,17 @@ export function createStory(app) {
         <span class="scene-count">${esc(t('scene.count', { n: pos, total: momentSteps.length }))}</span>
       </header>
       <div class="sheet-body scene-body">
-        <div class="scene-line ${kindCls}" data-voix="${esc(s.voix)}" aria-live="polite">
+        <div class="scene-line ${kindCls}" data-voix="${esc(s.voix)}">
           ${nom ? `<p class="scene-voice">${esc(nom)}</p>` : ''}
           ${s.voix === 'inscription' ? `<p class="scene-inscription-label">${esc(t('scene.inscription'))}</p>` : ''}
-          <p class="scene-text">${esc(s.texte)}</p>
+          <p class="scene-text" id="scene-text">${esc(s.texte)}</p>
         </div>
       </div>
       <footer class="sheet-foot scene-foot">${foot}</footer>`;
     const primary = dlg.querySelector('.btn--primary');
-    if (primary) primary.focus();
+    // le bouton garde le focus d'une réplique à l'autre : sa description est la réplique, lue avec lui (une région
+    // aria-live recréée à chaque réplique n'était pas lue de façon fiable, et l'aurait été deux fois avec la description)
+    if (primary) { primary.setAttribute('aria-describedby', 'scene-text'); primary.focus(); }
   }
 
   function finishScene(choice) {
@@ -138,7 +140,8 @@ export function createStory(app) {
     renderScene();
     if (!dlg._wired) {
       dlg._wired = true;
-      // Échap, toucher hors de la feuille : même effet que « Passer »
+      // Échap, toucher hors de la feuille : même effet que « Passer » (l'intro va à sa dernière réplique, jamais à la fin)
+      dlg._dismiss = () => sceneAction('scene-skip');
       dlg.addEventListener('close', () => { if (scene.steps.length) finishScene('later'); });
     }
     openSheet(dlg);
@@ -293,6 +296,8 @@ export function createStory(app) {
   }
 
   // ───────── Accueil : intro, lettre, moments, bilan du dimanche ─────────
+  /** Une feuille d'accueil s'ouvre seule : à sa fermeture, le navigateur rend le focus à la page entière. */
+  const refocus = () => { if (!document.activeElement || document.activeElement === document.body) app.focusHome?.(); };
   function whenClosed(dlg, fn) {
     if (!fn) return;
     const h = () => { dlg.removeEventListener('close', h); fn(); };
@@ -312,7 +317,7 @@ export function createStory(app) {
     }
     const c = app.ctx();
     if (!c || !c.game) return;
-    const next = () => { welcoming = false; setTimeout(welcome, 50); };
+    const next = () => { welcoming = false; refocus(); setTimeout(welcome, 50); };
     const moments = content.chapitres ? storyMoments(c.game, c.tasks, c.ledger, content.chapitres, c.now) : [];
     if (moments.length) { welcoming = true; showMoments(moments, c, next); return; }
     const today = gameDay(c.now);
@@ -322,7 +327,7 @@ export function createStory(app) {
     }
     const r = readReview();
     if (r.shown !== today && weeklyReview(c.tasks, c.game, c.ledger, c.now).dimanche) {
-      welcoming = true; openReview(c, () => { welcoming = false; }); return;
+      welcoming = true; openReview(c, () => { welcoming = false; refocus(); }); return;
     }
   }
 
