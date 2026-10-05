@@ -271,5 +271,15 @@ Hors plafond :
 5. **Notification** : un seul rappel quotidien facultatif ? À quelle heure ?
 6. **Calendrier réel** : neige le 15 novembre, trêve des Fêtes. Ça te convient, sachant que le premier Avis tombera vers la mi-novembre ?
 
+**Réponses d'Alex, 5 octobre 2026**
+1. La colonie de l'Orée.
+2. Avis actifs (pas de « Saison douce » par défaut).
+3. À trancher en semaine 3.
+4. Domaines regroupés : Jardin et Ferme dans Terrain, Professionnel dans Administratif.
+5. À trancher en semaine 3.
+6. Calendrier réel.
+
+Aussi décidé : la progression du jeu est sauvegardée sur le serveur ; le site reste ouvert pour l'instant, la protection se choisit avant la mise en ligne ; on construit cette direction avant tout déploiement. Plan : `tasks/todo.md`.
+
 ---
 Simulation : `simulations/recommandation-3-semaines.mjs` (données : `simulations/taches-006.json`).

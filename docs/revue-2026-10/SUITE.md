@@ -25,6 +25,8 @@ Point de reprise après la session cloud du 5 octobre 2026. À lire avec `CLAUDE
 
 ## Décisions ouvertes (voir RECOMMANDATION.md, section 10)
 
+> **Mise à jour du 5 octobre 2026.** Les points 1, 2, 4 et 6 sont tranchés (réponses dans RECOMMANDATION.md, section 10) ; 3 et 5 attendent la semaine 3. L'historique réécrit est poussé, la règle de protection réactivée. Le travail suit maintenant `tasks/todo.md`, sur la branche `feat/lisiere-rallumee`.
+
 1. La colonie de l'Orée (recommandée) ou une maquette de la vraie maison ?
 2. Avis de saison actifs par défaut, ou un mode « saison douce » ?
 3. Mode côte à côte avec Fanal : écran allumé, ou simple relevé du temps passé ?
