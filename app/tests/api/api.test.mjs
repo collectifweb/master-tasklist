@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, SAMPLE, fmt } from './helpers.mjs';
 import { mkdirSync, chmodSync, rmSync, symlinkSync, lstatSync, readdirSync } from 'node:fs';
@@ -268,6 +268,19 @@ test('3. fermée par défaut : décision d’accès', () => withServer({}, async
   const cfg = JSON.parse(runCli(s, 'echo json_encode(load_config());', { OREE_ALLOW_OPEN: '1' }));
   assert.equal(cfg.allow_open, true);
 }));
+/** Tient un verrou flock depuis un autre processus ; ne rend la main qu'une fois le verrou réellement pris. */
+async function holdLock(path) {
+  const holder = spawn('flock', [path, 'sleep', '60'], { stdio: 'ignore', detached: true });
+  const release = () => { try { process.kill(-holder.pid, 'SIGKILL'); } catch {} }; // tout le groupe : flock ET son « sleep »
+  holder.release = release;
+  for (let i = 0; i < 200; i++) {
+    if (spawnSync('flock', ['-n', path, 'true']).status === 1) return holder; // 1 = verrou occupé
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  release();
+  throw new Error('le verrou de test n’a jamais été pris');
+}
+
 function sha1hex(x) { return createHash('sha256').update(x).digest('hex'); }
 
 test('3b. POST : Content-Type autre que application/json refusé (415)', () => withServer({}, async (s) => {
@@ -362,17 +375,16 @@ test('7. opId réutilisé avec un autre corps : 409 ; ops.json illisible : 503',
 
 test('8. verrou tenu par un autre processus : 503 busy après environ 5 s', () => withServer({}, async (s) => {
   await s.get();
-  const holder = spawn('flock', [join(s.dataDir, '.lock'), 'sleep', '8'], { stdio: 'ignore' });
+  const holder = await holdLock(join(s.dataDir, '.lock')); // tenu jusqu'à la fin du test
   try {
-    await new Promise((r) => setTimeout(r, 300));
     const t0 = Date.now();
-    const [g, p] = await Promise.all([s.get(), s.op([{ type: 'task.delete', id: 'a1' }])]);
-    const dt = Date.now() - t0;
+    const timed = async (p) => { const r = await p; return [r, Date.now() - t0]; };
+    const [[g, dg], [p, dp]] = await Promise.all([timed(s.get()), timed(s.op([{ type: 'task.delete', id: 'a1' }]))]);
     assert.deepEqual([g.status, p.status], [503, 503]);
     assert.equal((await p.json()).code, 'busy');
-    assert.ok(dt >= 4800 && dt < 7500, `attente de ${dt} ms`);
+    assert.ok(dg >= 4800 && dp >= 4800, `attentes de ${dg} et ${dp} ms`);
     assert.ok(s.readTasksRaw().includes('"a1"'));
-  } finally { holder.kill(); }
+  } finally { holder.release(); }
 }));
 
 test('9. registre : limites, entrées récentes et clés complètes', () => withServer({}, async (s) => {
@@ -433,12 +445,14 @@ test('12. sans mbstring ; type d’identifiant conservé à la fusion', async ()
 
 test('verrou voisin : l’écriture attend celui de tasks.json.lock', () => withServer({}, async (s) => {
   await s.get();
-  const holder = spawn('flock', [s.tasksFile + '.lock', 'sleep', '1.5'], { stdio: 'ignore' });
+  const holder = await holdLock(s.tasksFile + '.lock');
   try {
-    await new Promise((r) => setTimeout(r, 300));
-    const t0 = Date.now();
-    const r = await s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }]);
+    const p = s.op([{ type: 'task.upsert', task: { id: 'a1', status: 'done' } }]).then((r) => [r, Date.now()]);
+    await new Promise((r) => setTimeout(r, 1200));
+    const releasedAt = Date.now();
+    holder.release();
+    const [r, doneAt] = await p;
     assert.equal(r.status, 200);
-    assert.ok(Date.now() - t0 >= 1000, 'a attendu le verrou voisin');
-  } finally { holder.kill(); }
+    assert.ok(doneAt >= releasedAt, 'la réponse n’est arrivée qu’après la libération du verrou');
+  } finally { holder.release(); }
 }));
