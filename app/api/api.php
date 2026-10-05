@@ -178,7 +178,7 @@ function atomic_write(string $file, string $content, int $mode, ?callable $prech
         throw server_error("écriture impossible : $file");
     }
     @chmod($tmp, $mode);
-    $hook = $GLOBALS['oree_hook_before_rename'] ?? null; // crochet réservé aux tests en ligne de commande
+    $hook = PHP_SAPI === 'cli' ? ($GLOBALS['oree_hook_before_rename'] ?? null) : null; // crochet réservé aux tests en ligne de commande
     if (is_callable($hook)) $hook($file);
     if ($precheck !== null && !$precheck()) {
         @unlink($tmp);
