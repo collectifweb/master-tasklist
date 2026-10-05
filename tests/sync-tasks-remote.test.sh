@@ -54,6 +54,8 @@ check "4. course à l'envoi : aucun fichier temporaire laissé" '[ ! -e "$W/remo
 # la synchro suivante voit les deux côtés modifiés : conflit déclaré, rien d'écrasé
 rc=$(run)
 check "4. ensuite : conflit déclaré sans rien écraser (code 4)" '[ "$rc" = 4 ] && grep -q "écrit par l’app" "$R" && grep -q "Arroser" "$L"'
+rc=$(run); rc=$(run)
+check "4. conflit qui dure : une seule copie locale" '[ "$rc" = 4 ] && [ "$(ls "$W/local"/tasks.json.conflict-* | wc -l)" = 1 ]'
 
 # 5. course à la réception : l'app écrit le distant juste après la copie
 cp "$R" "$L"; bash "$SCRIPT" >/dev/null 2>&1  # base = état commun

@@ -101,6 +101,12 @@ elif [[ -z "$base" ]]; then
   printf 'No sync baseline and files differ; refusing to overwrite either side.\n' >&2
   exit 3
 else
+  # une seule copie par conflit : la synchro tourne chaque minute tant que le conflit n'est pas réglé
+  last="$(ls -1t "${LOCAL}".conflict-* 2>/dev/null | head -1 || true)"
+  if [[ -n "$last" ]] && cmp -s "$LOCAL" "$last"; then
+    printf 'Sync conflict still open. Local backup: %s\n' "$last" >&2
+    exit 4
+  fi
   stamp="$(date +%Y%m%d-%H%M%S)"
   cp "$LOCAL" "${LOCAL}.conflict-$stamp"
   printf 'Sync conflict: both local and remote changed. Local backup: %s\n' "${LOCAL}.conflict-$stamp" >&2
