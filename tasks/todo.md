@@ -64,8 +64,10 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 - [x] Choisir la protection : connexion par code d'accès (Alex, 5 octobre). Prête et vérifiée sur la version d'essai.
 - [x] Décider comment Hermes écrit : par SSH, avec le même verrou que l'API (Alex, 5 octobre).
-- [ ] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé.
-- [ ] Essai sur une copie des vraies tâches faite sur le serveur.
+- [x] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé. Banc d'essai sans serveur : 11 sur 11 avec le script corrigé, 5 échecs avec l'ancien.
+- [ ] Installer le script corrigé sur la machine d'Hermes (Alex).
+- [x] Essai sur une copie des vraies tâches, faite sur le serveur dans un second dossier d'essai protégé par un code. L'API relit chaque tâche à l'identique, aucun champ perdu ; vérifié sur le serveur, sans rapatrier de données.
+- [ ] Alex utilise cette copie sur son téléphone : jalon « utilisable au quotidien ».
 - [x] Sauvegarder ce qui est en ligne : copie datée de la liste, de la page, de l'ancienne API et du `.htaccess` dans un dossier du site interdit au web (5 octobre 2026).
 - [x] Version d'essai dans un sous-dossier, avec une liste fictive et un code d'accès. Parcours réel vérifié en HTTPS : code demandé, quête enregistrée sur le serveur, relance hors ligne, dossier de données interdit au web.
 - [ ] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil.
