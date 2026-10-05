@@ -42,7 +42,7 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
   - `tasks.json` reste la référence ; `game-state.json` et `ledger.jsonl` à côté.
 - [x] Registre des quêtes au moins aussi complet que l'app actuelle : tris, filtres, recherche, création, modification, suppression, notes, étapes, récurrence, archiver, remballer.
 - [x] Ajout rapide avec domaine deviné, Fil du jour, « Pourquoi ? ».
-- [ ] Jalon : utilisable au quotidien sur une copie locale des vraies tâches.
+- [ ] Jalon : utilisable au quotidien sur une copie locale des vraies tâches. *Vérifié sur un fichier fictif de même forme (scénario `ui-13`, aucun champ perdu). L'essai sur la vraie copie attend l'accord d'Alex.*
 
 ## Semaine 2 — Le monde
 
@@ -54,9 +54,10 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 ## Semaine 3 — Le jeu
 
-- [ ] Introduction, chapitre 1, chapitre 2 jusqu'au premier Avis (Premier gel).
-- [ ] Potager, lettre du matin, côte à côte (selon la décision d'Alex).
-- [ ] Jour du recyclage, première version ; installation sur l'écran d'accueil du téléphone.
+- [x] Introduction, chapitre 1, chapitre 2 jusqu'au premier Avis (Premier gel). Chapitres pilotés par `chapitres.json`, Avis annoncé 7 jours d'avance avec sa jauge, résultat tenu, voilé ou absent sans perte (scénarios 16, 17, 18).
+- [x] Potager (semer, récolter au glissé ou au bouton, garde-manger, partager, réserve) et lettre du matin (scénarios 15, 19).
+- [ ] Côte à côte : attend la décision d'Alex.
+- [x] Jour du recyclage, première version ; installation sur l'écran d'accueil du téléphone, lancement hors ligne (scénarios 20, 21).
 
 ## Mise en ligne
 
