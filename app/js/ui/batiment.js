@@ -4,7 +4,7 @@
 // Rien n'est calculé ici qui ne vienne de core/batiments.js ; le geste passe par data-action="bat-geste".
 import {
   BATIMENTS, CULTURE, CHAUFFAGE, GRENIER_STOCKAGE, ACCUEIL_NOURRITURE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
-  refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, hasKey,
+  refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -77,7 +77,7 @@ export function batimentModel(c, id) {
     m.raison = refusAccueillir(game);
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {
-    m.maintenant = hasKey(ledger, `prod:eolienne:${gameDay(now)}`) ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
+    m.maintenant = eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
   } else if (type === 'grenier') {
     m.maintenant = t('bat.grenier.maintenant', { stock: num(game.resources.food), max: num(stockage(game)) });
   } else {

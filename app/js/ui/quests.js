@@ -30,14 +30,14 @@ export function renderFil(root, ctx) {
   setAttr(art, 'data-state', m.state);
   setText($('.fil-title', art), m.title);
   setText($('.cote-value', art.querySelector('.cote')), String(m.cote));
-  for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`.replace('?', ' ?'));
+  for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`.replace('?', '\u00a0?'));
   setHtml($('.meta', art), metaItems(m, { now, withSeance: false }).map(metaLi).join(''));
   setText($('.fil-reason > span', art), reasonText(m, now));
   art.classList.toggle('is-seance', m.seanceMinutes !== null);
   const complete = $('[data-action="complete"]', art);
   const start = $('[data-action="start"]', art);
   const doing = m.state === 'doing';
-  setAttr(complete, 'aria-label', `Fait : ${m.title}`);
+  setAttr(complete, 'aria-label', `Fait\u00a0: ${m.title}`);
   setAttr(start, 'aria-pressed', String(doing));
   setText($('.start-label', start), doing ? t('fil.pause') : t('quest.start'));
   const use = start.querySelector('use');
@@ -107,7 +107,7 @@ export function renderAlts(root, ctx, cards) {
     for (const b of [complete, start, $('[data-action="split"]', li)]) {
       if (b) setAttr(b, 'aria-disabled', m.readonly ? 'true' : null);
     }
-    if (complete) setAttr(complete, 'aria-label', `Fait : ${m.title}`);
+    if (complete) setAttr(complete, 'aria-label', `Fait\u00a0: ${m.title}`);
   }
   ul.hidden = !any;
 }
@@ -150,7 +150,7 @@ function patchRow(li, m, now) {
   if (cv) setText(cv, String(m.cote));
   const check = $('button.quest-check', li);
   if (check) {
-    setAttr(check, 'aria-label', `Marquer « ${m.title} » comme faite`);
+    setAttr(check, 'aria-label', `Marquer «\u00a0${m.title}\u00a0» comme faite`);
     setAttr(check, 'aria-disabled', m.readonly ? 'true' : null);
   }
 }

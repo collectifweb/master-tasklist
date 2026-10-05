@@ -53,3 +53,62 @@ test('une quête ajoutée « déjà faite » compte aussi comme un jour travaill
   const { world } = step(w, createQuest, { task: 'Ranger le cabanon', domain: 'Maison', alreadyDone: true }, at(D));
   assert.equal(prod(world.ledger).length, 1);
 });
+
+// ───────── Remballer (lot 5) : le jour redevient sans quête payée → l'Énergie de l'éolienne est reprise ─────────
+const net = (ledger, day = D) => ledger.filter((e) => e.type === 'prod' && e.batiment === 'eolienne' && e.day === day).reduce((s, e) => s + e.energy, 0);
+const uniques = (ledger) => new Set(ledger.map((e) => e.key)).size === ledger.length;
+
+test('remballer la seule quête payée du jour reprend l’Énergie de l’éolienne, par une écriture inverse', () => {
+  let w = step(monde(), completeQuest, { id: 'q0' }, at(D)).world;
+  const e0 = w.game.resources.energy;
+  const { world, r } = step(w, remballerQuest, { id: 'q0' }, at(D, 15));
+  const reprise = r.entries.filter((e) => e.type === 'prod');
+  assert.equal(reprise.length, 1);
+  assert.deepEqual({ ...reprise[0], at: undefined }, {
+    key: `reprise:eolienne:${D}:1`, at: undefined, day: D, type: 'prod', batiment: 'eolienne', reprise: true, pe: 0, energy: -EOLIENNE_ENERGIE, materials: 0,
+  });
+  assert.equal(net(world.ledger), 0);
+  // le gain de la quête et celui de l'éolienne sont repris
+  const quete = w.ledger.find((e) => e.key === 'reward:q0:1');
+  assert.equal(world.game.resources.energy, Math.round((e0 - quete.energy - EOLIENNE_ENERGIE) * 10) / 10);
+  // le registre n'est jamais réécrit : l'entrée d'origine est toujours là
+  assert.ok(world.ledger.some((e) => e.key === `prod:eolienne:${D}` && e.energy === EOLIENNE_ENERGIE));
+});
+
+test('remballer une quête quand une autre reste payée ce jour-là : l’éolienne garde son Énergie', () => {
+  let w = step(monde(), completeQuest, { id: 'q0' }, at(D)).world;
+  w = step(w, completeQuest, { id: 'q1' }, at(D, 15)).world;
+  const { world, r } = step(w, remballerQuest, { id: 'q0' }, at(D, 16));
+  assert.equal(r.entries.filter((e) => e.type === 'prod').length, 0);
+  assert.equal(net(world.ledger), EOLIENNE_ENERGIE);
+});
+
+test('une quête de nouveau payée ce jour-là : l’Énergie est reversée, jamais deux fois en même temps', () => {
+  let w = step(monde(), completeQuest, { id: 'q0' }, at(D)).world;
+  w = step(w, remballerQuest, { id: 'q0' }, at(D, 15)).world;
+  w = step(w, completeQuest, { id: 'q1' }, at(D, 16)).world;
+  assert.equal(net(w.ledger), EOLIENNE_ENERGIE);
+  assert.ok(w.ledger.some((e) => e.key === `prod:eolienne:${D}:2`));
+  w = step(w, completeQuest, { id: 'q2' }, at(D, 17)).world; // une 2e quête payée : rien de plus
+  assert.equal(net(w.ledger), EOLIENNE_ENERGIE);
+  w = step(w, remballerQuest, { id: 'q1' }, at(D, 18)).world; // q2 reste payée : rien n'est repris
+  assert.equal(net(w.ledger), EOLIENNE_ENERGIE);
+  w = step(w, remballerQuest, { id: 'q2' }, at(D, 19)).world; // plus aucune : repris
+  assert.equal(net(w.ledger), 0);
+  w = step(w, completeQuest, { id: 'q3' }, at(D, 20)).world; // de nouveau : reversé
+  assert.equal(net(w.ledger), EOLIENNE_ENERGIE);
+  assert.ok(uniques(w.ledger));
+  // la quête remballée puis refaite ne paie plus rien : elle ne relance pas l'éolienne non plus
+  w = step(w, remballerQuest, { id: 'q3' }, at(D, 21)).world;
+  w = step(w, completeQuest, { id: 'q0' }, at(D, 22)).world;
+  assert.equal(net(w.ledger), 0);
+});
+
+test('remballer le lendemain (moins de 24 h) une quête de la veille : c’est la veille qui perd l’Énergie', () => {
+  let w = step(monde(), completeQuest, { id: 'q0' }, at(D, 22)).world; // 18 h à Montréal
+  w = step(w, completeQuest, { id: 'q1' }, at('2026-10-07', 14)).world;
+  const { world, r } = step(w, remballerQuest, { id: 'q0' }, at('2026-10-07', 15));
+  assert.deepEqual(r.entries.filter((e) => e.type === 'prod').map((e) => e.key), [`reprise:eolienne:${D}:1`]);
+  assert.equal(net(world.ledger, D), 0);
+  assert.equal(net(world.ledger, '2026-10-07'), EOLIENNE_ENERGIE);
+});

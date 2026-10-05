@@ -1,4 +1,4 @@
-// Applique les entrées du registre à l'état du jeu : Énergie et Matériaux, tâches par quartier.
+// Applique les entrées du registre à l'état du jeu : Énergie, Matériaux (et Nourriture d'un premier pas), tâches par quartier.
 // Fonctions pures : l'état d'entrée n'est jamais modifié. Aucun plafond de stock : seul le plafond quotidien des
 // points d'effort (reward.js) borne ce qu'une journée rapporte.
 import { round1 } from './reward.js';
@@ -16,6 +16,7 @@ export function applyEntry(game, entry) {
   const events = [];
   g.resources.energy = Math.max(0, round1(g.resources.energy + (entry.energy || 0)));
   g.resources.materials = Math.max(0, round1(g.resources.materials + (entry.materials || 0)));
+  if (entry.food) g.resources.food = Math.max(0, round1((Number(g.resources.food) || 0) + entry.food));
   const q = quartierOfEntry(entry);
   const delta = entry.type === 'reward' ? 1 : entry.type === 'reverse' ? -1 : 0;
   if (delta && q) { // quartierOfEntry ne renvoie qu'un quartier connu

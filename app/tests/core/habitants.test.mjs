@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ACCUEIL_NOURRITURE, accueillir, refusAccueillir, logements, construire, completeQuest, advanceTime, openApp,
+  ACCUEIL_NOURRITURE, accueillir, refusAccueillir, logements, construire, completeQuest, advanceTime, openApp, PAS_IDS,
 } from '../../core/index.js';
 import { fresh, step, task } from './helpers.mjs';
 
@@ -13,6 +13,9 @@ const avecChalets = (n, food = 100, habitants = 0) => {
   w.game.resources = { energy: 50, materials: 50, food };
   w.game.batiments = Array.from({ length: n }, (_, k) => ({ id: `chalet-${k + 1}`, type: 'chalet' }));
   w.game.habitants = habitants;
+  // premiers pas faits et objectif d'automne déjà atteint (clé seule) : ces tests ne regardent que l'accueil
+  w.game.premiersPas = Object.fromEntries(PAS_IDS.map((id) => [id, '2026-10-01']));
+  w.ledger = [{ key: 'saison:automne-2026' }];
   return w;
 };
 
@@ -38,7 +41,7 @@ test('refus : pas de chalet (« Il faut d’abord un chalet. »)', () => {
 
 test('refus : aucun logement libre', () => {
   const w = avecChalets(1, 100, 2);
-  assert.equal(refusAccueillir(w.game), 'Aucun logement libre : rebâtis un chalet.');
+  assert.equal(refusAccueillir(w.game), 'Aucun logement libre\u00a0: rebâtis un chalet.');
 });
 
 test('refus : il manque de la Nourriture, avec le nombre exact', () => {

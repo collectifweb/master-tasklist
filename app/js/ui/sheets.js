@@ -239,9 +239,9 @@ function summaryHtml(m) {
   if (m.deadline && m.deadline.late) tags.push(`<span class="tag tag--late">${icon('crate')}${esc(m.deadline.text)}</span>`);
   if (m.readonly) tags.push(`<span class="tag">${icon('lock')}${esc(t('readonly.tag'))}</span>`);
   const cote = m.cote !== null
-    ? `<button class="cote" type="button" data-action="why" aria-label="Cote ${esc(num(m.cote))}. ${esc(t('quest.why').replace('?', ' ?'))}"><span class="cote-value">${esc(num(m.cote))}</span><span class="cote-label">Cote</span></button>`
+    ? `<button class="cote" type="button" data-action="why" aria-label="Cote ${esc(num(m.cote))}. ${esc(t('quest.why').replace('?', '\u00a0?'))}"><span class="cote-value">${esc(num(m.cote))}</span><span class="cote-label">Cote</span></button>`
     : '';
-  const link = m.cote !== null ? `<button class="link-btn" type="button" data-action="why">${esc(t('quest.why').replace('?', ' ?'))}</button>` : '';
+  const link = m.cote !== null ? `<button class="link-btn" type="button" data-action="why">${esc(t('quest.why').replace('?', '\u00a0?'))}</button>` : '';
   return cote + tags.join('') + link;
 }
 

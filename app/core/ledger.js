@@ -181,7 +181,7 @@ export function buildReverseEntry(ledger, taskId, occurrence, now) {
  */
 export function buildBonusEntry(type, ledger, now, extra = {}) {
   const def = BONUSES[type];
-  if (!def) throw new Error('Bonus inconnu : ' + type);
+  if (!def) throw new Error('Bonus inconnu\u00a0: ' + type);
   const day = gameDay(now);
   const tot = dayTotals(ledger, day);
   const done = tot.bonusCount[type] || 0;

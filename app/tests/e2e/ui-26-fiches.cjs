@@ -70,7 +70,7 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
   await L.said(page, true);
   // aria-disabled : Playwright le tient pour désactivé ; le doigt, lui, peut toucher le bouton (force)
   await page.click('#dlg-batiment [data-action="bat-geste"]', { force: true });
-  const dit = await L.waitFor(async () => (await L.said(page)).find((x) => x.text === 'Hameau : encore 3 habitants.'), 3000);
+  const dit = await L.waitFor(async () => (await L.said(page)).find((x) => x.text.replace(/\u00a0/g, ' ') === 'Hameau : encore 3 habitants.'), 3000);
   R.check('activer le geste verrouillé redit la raison, dans la fiche', dit && dit.voice === 'live' && dit.sheet === 'dlg-batiment', JSON.stringify(await L.said(page)));
   await page.waitForTimeout(600);
   R.check('… et ne bâtit rien', JSON.stringify(srv.game().batiments || []) === JSON.stringify(g0.batiments || []) && srv.game().resources.materials === g0.resources.materials);

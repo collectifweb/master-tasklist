@@ -78,10 +78,10 @@ test('« Jour suivant » (version d’essai) : la date avance et, avec une quêt
 
 test('récolter : +Nourriture, la parcelle se libère ; pas avant d’être mûre (raison écrite)', () => {
   let w = step(monde(), semer, { id: 'parcelle-1' }, at(MAI)).world;
-  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI, 20)), `Pas encore mûr : encore ${CULTURE.jours} jours travaillés.`);
+  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI, 20)), `Pas encore mûr\u00a0: encore ${CULTURE.jours} jours travaillés.`);
   let day = MAI;
   for (let k = 0; k < CULTURE.jours - 1; k++) { day = plusJours(day, 1); w = travaille(w, day); }
-  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(day, 20)), 'Pas encore mûr : encore 1 jour travaillé.');
+  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(day, 20)), 'Pas encore mûr\u00a0: encore 1 jour travaillé.');
   day = plusJours(day, 1);
   w = travaille(w, day);
   const { world, r } = step(w, recolter, { id: 'parcelle-1' }, at(day, 20));
@@ -114,7 +114,7 @@ test('le grenier augmente le stockage : la même récolte entre en entier', () =
 test('potager : de mai à octobre seulement ; de novembre à avril, il dort (raison écrite)', () => {
   for (const d of ['2026-05-01', '2026-07-15', '2026-10-31']) assert.equal(refusSemer(monde(d).game, [], 'parcelle-1', at(d)), null, d);
   for (const d of ['2026-11-01', '2026-12-20', '2027-02-10', '2027-04-30']) {
-    assert.equal(refusSemer(monde(d).game, [], 'parcelle-1', at(d)), 'Le potager dort de novembre à avril : sème dans la petite serre.', d);
+    assert.equal(refusSemer(monde(d).game, [], 'parcelle-1', at(d)), 'Le potager dort de novembre à avril\u00a0: sème dans la petite serre.', d);
     assert.throws(() => step(monde(d), semer, { id: 'parcelle-1' }, at(d)), /dort de novembre à avril/);
   }
 });

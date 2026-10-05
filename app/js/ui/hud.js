@@ -25,7 +25,7 @@ export function createHud(root) {
         const valueEl = $('.res-value', btn);
         const text = num(value);
         if (valueEl.firstChild.nodeValue !== text) valueEl.firstChild.nodeValue = text;
-        setAttr(btn, 'aria-label', `${t(LABEL[name])} : ${text}`);
+        setAttr(btn, 'aria-label', `${t(LABEL[name])}\u00a0: ${text}`);
         if (animate && last && last[name] !== undefined) {
           const diff = Math.round((value - last[name]) * 10) / 10;
           if (diff !== 0) {

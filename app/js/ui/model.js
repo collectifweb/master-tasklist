@@ -57,7 +57,7 @@ export function metaItems(m, { now, withQuartier = true, done = true, withSeance
   if (m.state === 'todo' || m.state === 'doing') items.push({ icon: 'clock', text: m.duration });
   if (m.deadline) items.push({ cls: m.deadline.late ? 'meta-item--late' : '', icon: m.deadline.late ? 'crate' : 'calendar', text: m.deadline.text });
   if (m.recurrence) items.push({ icon: 'repeat', text: m.recurrence.toLowerCase() });
-  if (m.steps) items.push({ icon: 'steps', text: `${m.steps.done}/${m.steps.total}`, sr: 'Étapes : ' });
+  if (m.steps) items.push({ icon: 'steps', text: `${m.steps.done}/${m.steps.total}`, sr: 'Étapes\u00a0: ' });
   if (m.readonly) items.push({ icon: 'lock', text: t('readonly.tag') });
   if (done && m.state === 'done') {
     const at = task.doneAt;

@@ -21,7 +21,7 @@ const ACTIONS = {
 export const hasAction = (name) => Object.hasOwn(ACTIONS, name) && typeof ACTIONS[name] === 'function';
 /** Action par son nom, parmi les seules clés propres d'ACTIONS (jamais « constructor » ou « __proto__ » lus dans la file). */
 function action(name) {
-  if (!hasAction(name)) throw new Error('Action inconnue : ' + name);
+  if (!hasAction(name)) throw new Error('Action inconnue\u00a0: ' + name);
   return ACTIONS[name];
 }
 

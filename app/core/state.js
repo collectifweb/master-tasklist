@@ -26,7 +26,8 @@ export function createInitialState(now) {
     quartiers: zeroQuartiers(), // tâches terminées et payées, par quartier (niveaux : village.js)
     batiments: [], // bâtiments construits (lot 4)
     parcelles: [], // parcelles du potager (lot 4)
-    premiersPas: {}, // { idPas: jour atteint } : les cinq quêtes d'initiation (lot 5)
+    premiersPas: {}, // { idPas: jour atteint } : les cinq quêtes d'initiation (lot 5, objectifs.js)
+    accueil: null, // jour où les écrans d'accueil ont été vus (lot 5) ; null : à montrer
     bilans: [], // bilans figés des semaines finies (recycling.js)
     lastOpenDay: null,
     lastReturnDay: null,

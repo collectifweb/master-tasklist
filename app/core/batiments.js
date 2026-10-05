@@ -3,13 +3,15 @@
 // pour le joueur, et la même raison se lit sans rien faire par refusConstruire, refusSemer, refusRecolter et
 // refusAccueillir (les fiches de l'interface l'écrivent sous le bouton).
 // Construire, semer, récolter et accueillir n'écrivent rien au registre : ils dépensent ou convertissent ce qui a déjà
-// été gagné (game.set suffit). Seule l'éolienne y inscrit sa production, une fois par jour travaillé.
+// été gagné (game.set suffit). Seule l'éolienne y inscrit sa production, une fois par jour travaillé ; et un geste qui
+// accomplit un premier pas ou l'objectif de la saison y inscrit son coup de pouce (objectifs.js).
 // Les nombres sont des exemples de départ (bible), réglés par la simulation de tests/core/simulation.test.mjs.
 import { Ctx } from './quests.js';
 import { gameDay, toISO } from './time.js';
 import { round1 } from './reward.js';
 import { hasKey, reverseKey } from './ledger.js';
 import { rangDuVillage, RANGS } from './village.js';
+import { suivreObjectifs } from './objectifs.js';
 
 /**
  * Catalogue, dans l'ordre d'affichage. cout : { energy, materials } ; rang : identifiant de RANGS ; max : emplacements
@@ -133,7 +135,7 @@ export function refusConstruire(game, type) {
   if (compte(game, type) >= def.max) return def.max === 1 ? `Il y a déjà ${def.un} au village.` : `Plus d’emplacement libre pour ${def.un}.`;
   const besoin = RANGS.find((r) => r.id === def.rang);
   const h = logements(game).habitants;
-  if (besoin && h < besoin.min) return `${besoin.name} : encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}.`;
+  if (besoin && h < besoin.min) return `${besoin.name}\u00a0: encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}.`;
   if (def.prerequis && !compte(game, def.prerequis)) return `Il faut d’abord ${BATIMENTS[def.prerequis].un}.`;
   return manque(game, def.cout);
 }
@@ -145,7 +147,7 @@ export function refusSemer(game, ledger, id, now) {
   if (!aBati(game, id)) return lieu === 'serre' ? 'Il faut d’abord une petite serre.' : 'Il faut d’abord une parcelle ici.';
   if (etatCulture(game, ledger, id, now).semee) return 'C’est déjà semé.';
   const day = gameDay(now);
-  if (lieu === 'potager' && !potagerOuvert(day)) return 'Le potager dort de novembre à avril : sème dans la petite serre.';
+  if (lieu === 'potager' && !potagerOuvert(day)) return 'Le potager dort de novembre à avril\u00a0: sème dans la petite serre.';
   return manque(game, { energy: coutSemis(id, day).energy });
 }
 
@@ -153,7 +155,7 @@ export function refusSemer(game, ledger, id, now) {
 export function refusRecolter(game, ledger, id, now) {
   const st = etatCulture(game, ledger, id, now);
   if (!st.semee) return 'Rien n’est semé ici.';
-  if (!st.mure) return `Pas encore mûr : encore ${st.reste} jour${st.reste > 1 ? 's' : ''} travaillé${st.reste > 1 ? 's' : ''}.`;
+  if (!st.mure) return `Pas encore mûr\u00a0: encore ${st.reste} jour${st.reste > 1 ? 's' : ''} travaillé${st.reste > 1 ? 's' : ''}.`;
   const max = stockage(game);
   if (game.resources.food >= max) return `Le stockage est plein (${num(game.resources.food)} sur ${max}). Accueille une famille, ou bâtis un grenier au hameau.`;
   return null;
@@ -163,7 +165,7 @@ export function refusRecolter(game, ledger, id, now) {
 export function refusAccueillir(game) {
   const l = logements(game);
   if (!l.places) return 'Il faut d’abord un chalet.';
-  if (!l.libres) return 'Aucun logement libre : rebâtis un chalet.';
+  if (!l.libres) return 'Aucun logement libre\u00a0: rebâtis un chalet.';
   const m = round1(ACCUEIL_NOURRITURE - game.resources.food);
   return m > 0 ? `Il manque ${num(m)} Nourriture.` : null;
 }
@@ -201,6 +203,7 @@ export function construire(tasks, game, ledger, params, now) {
   g.batiments = [...list(g.batiments), { id, type }];
   ctx.game = g;
   ctx.events.push({ type: 'construction', id, batiment: type, cout });
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 
@@ -216,6 +219,7 @@ export function semer(tasks, game, ledger, params, now) {
   g.parcelles = [...list(g.parcelles).filter((p) => p.id !== params.id), { id: params.id, semeLe: ctx.day }];
   ctx.game = g;
   ctx.events.push({ type: 'semis', id: params.id, lieu: lieuDe(params.id), cout, chauffage });
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 
@@ -234,6 +238,7 @@ export function recolter(tasks, game, ledger, params, now) {
   g.parcelles = list(g.parcelles).filter((p) => p.id !== params.id);
   ctx.game = g;
   ctx.events.push({ type: 'recolte', id: params.id, lieu: lieuDe(params.id), nourriture, perdu: round1(CULTURE.recolte - nourriture), stock: g.resources.food, max });
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 
@@ -250,16 +255,51 @@ export function accueillir(tasks, game, ledger, params, now) {
   ctx.events.push({ type: 'famille', habitants: g.habitants, nourriture: ACCUEIL_NOURRITURE });
   const apres = rangDuVillage(g.habitants);
   if (apres.palier > avant.palier) ctx.events.push({ type: 'rang', id: apres.id, name: apres.name, habitants: g.habitants });
+  suivreObjectifs(ctx);
   return ctx.result();
+}
+
+/** Jour travaillé : au moins une quête payée ce jour-là et pas remballée. */
+function jourPaye(ledger, day) {
+  const keys = new Set(ledger.map((e) => e.key));
+  return ledger.some((e) => e.type === 'reward' && e.day === day && !keys.has(reverseKey(e.taskId, e.occurrence)));
+}
+
+/** Énergie de l'éolienne qui reste acquise pour ce jour : productions moins reprises (0, ou celle d'un jour). */
+export function eolienneDuJour(ledger, day) {
+  return round1(ledger.filter((e) => e.type === 'prod' && e.batiment === 'eolienne' && e.day === day)
+    .reduce((s, e) => s + (Number(e.energy) || 0), 0));
+}
+
+// Première clé libre de la série : base, puis base:2, base:3… (ou base:1, base:2… si `depuis` vaut 1).
+function cleLibre(ledger, base, depuis = 2) {
+  if (depuis > 1 && !hasKey(ledger, base)) return base;
+  let k = depuis;
+  while (hasKey(ledger, `${base}:${k}`)) k++;
+  return `${base}:${k}`;
 }
 
 /**
  * Production de l'éolienne, appelée par quests.js après une quête payée : la première du jour inscrit
- * prod:eolienne:{jour} au registre (clé unique : jamais deux fois le même jour, même après Remballer puis refaire).
+ * prod:eolienne:{jour} au registre. Jamais deux fois en même temps : rien si l'Énergie du jour est déjà acquise. Si
+ * elle a été reprise (Remballer), une nouvelle quête payée ce jour-là la reverse sous prod:eolienne:{jour}:2, :3…
  */
 export function produireEolienne(ctx) {
   const n = compte(ctx.game, 'eolienne');
-  const key = `prod:eolienne:${ctx.day}`;
-  if (!n || hasKey(ctx.ledger, key)) return;
+  if (!n || eolienneDuJour(ctx.ledger, ctx.day) > 0) return;
+  const key = cleLibre(ctx.ledger, `prod:eolienne:${ctx.day}`);
   ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: 'eolienne', pe: 0, energy: EOLIENNE_ENERGIE * n, materials: 0 }, 'eolienne');
+}
+
+/**
+ * Reprise, appelée par Remballer : si le jour du gain annulé n'a plus aucune quête payée, l'Énergie de l'éolienne de
+ * ce jour est reprise par une écriture inverse reprise:eolienne:{jour}:{n} (le registre n'est jamais réécrit).
+ * Événement { type: 'eolienne-reprise', day, energy }.
+ */
+export function reprendreEolienne(ctx, day) {
+  const net = eolienneDuJour(ctx.ledger, day);
+  if (net <= 0 || jourPaye(ctx.ledger, day)) return;
+  const key = cleLibre(ctx.ledger, `reprise:eolienne:${day}`, 1);
+  ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: 'eolienne', reprise: true, pe: 0, energy: -net, materials: 0 }, 'eolienne');
+  ctx.events.push({ type: 'eolienne-reprise', day, energy: net });
 }

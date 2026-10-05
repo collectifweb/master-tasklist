@@ -22,7 +22,8 @@ import { applyEntry } from './economy.js';
 import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
 import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
-import { produireEolienne } from './batiments.js';
+import { produireEolienne, reprendreEolienne } from './batiments.js';
+import { suivreObjectifs } from './objectifs.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -54,7 +55,7 @@ export class Ctx {
   get(id) {
     const t = this.tasks.find((x) => x.id === id);
     if (!t) throw new Error('Quête introuvable.');
-    if (t.readonly) throw new Error('Cette quête n’a pas d’identifiant fiable (absent ou en double dans la liste) : elle est en lecture seule.');
+    if (t.readonly) throw new Error('Cette quête n’a pas d’identifiant fiable (absent ou en double dans la liste)\u00a0: elle est en lecture seule.');
     return t;
   }
   put(task) {
@@ -72,10 +73,11 @@ export class Ctx {
   append(entry, source, extra = {}) {
     this.entries.push(entry);
     this.ledger.push(entry);
-    if (entry.type !== 'reverse' && (entry.pe > 0 || entry.energy > 0 || entry.materials > 0)) {
+    if (entry.type !== 'reverse' && (entry.pe > 0 || entry.energy > 0 || entry.materials > 0 || entry.food > 0)) {
       this.events.push({
         type: 'reward', source, taskId: entry.taskId ?? null,
-        pe: entry.pe, energy: entry.energy, materials: entry.materials, quartier: entry.quartier ?? null,
+        pe: entry.pe, energy: entry.energy, materials: entry.materials, ...(entry.food > 0 ? { food: entry.food } : {}),
+        quartier: entry.quartier ?? null,
         ...extra,
       });
     }
@@ -103,7 +105,7 @@ export class Ctx {
     for (const id of this.deleted) ops.push({ type: 'task.delete', id });
     if (this.entries.length) ops.push({ type: 'ledger.append', entries: this.entries });
     if (JSON.stringify(this.game) !== this.game0) {
-      if (this.params.gameRevision === undefined) throw new Error('Il manque la révision de l’état du jeu (gameRevision) : impossible d’enregistrer sans elle.');
+      if (this.params.gameRevision === undefined) throw new Error('Il manque la révision de l’état du jeu (gameRevision)\u00a0: impossible d’enregistrer sans elle.');
       ops.push({ type: 'game.set', game: this.game, baseGameRevision: this.params.gameRevision });
     }
     return { tasks: this.tasks, game: this.game, ops, entries: this.entries, events: this.events };
@@ -179,7 +181,7 @@ function nextDeadline(deadline, rec, today) {
   let d = deadline ?? today;
   let guard = 0;
   do { d = step(d); } while (d <= today && ++guard < 1000);
-  if (!isValidDay(d) || d <= today) throw new Error('La prochaine échéance de la récurrence est invalide : la quête n’a pas été terminée.');
+  if (!isValidDay(d) || d <= today) throw new Error('La prochaine échéance de la récurrence est invalide\u00a0: la quête n’a pas été terminée.');
   return d;
 }
 
@@ -207,12 +209,12 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   if (rec) {
     const dl = dayOnly(t.deadline);
     if (t.lastDone && gameDay(t.lastDone.at) === ctx.day) {
-      throw new Error('Cette quête récurrente vient déjà d’être terminée aujourd’hui : la prochaine occurrence se fait plus tard.');
+      throw new Error('Cette quête récurrente vient déjà d’être terminée aujourd’hui\u00a0: la prochaine occurrence se fait plus tard.');
     }
     if (rec.every === 'month' && !rec.day) recNext = { ...rec, day: Number((dl ?? ctx.day).slice(8, 10)) };
     if (dl) {
       const start = periodStart(dl, recNext);
-      if (ctx.day < start) throw new Error(`Trop tôt pour terminer cette quête récurrente : sa prochaine occurrence commence le ${start}.`);
+      if (ctx.day < start) throw new Error(`Trop tôt pour terminer cette quête récurrente\u00a0: sa prochaine occurrence commence le ${start}.`);
     }
     nextDl = nextDeadline(dl, recNext, ctx.day);
   }
@@ -302,6 +304,7 @@ export function createQuest(tasks, game, ledger, params, now) {
     if (b) ctx.append(b, 'bonus', { bonus: 'ajout' });
   }
   if (params.alreadyDone) complete(ctx, ctx.get(id), { alreadyDone: true });
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 
@@ -408,9 +411,10 @@ export function completeQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const t = ctx.get(params.id);
   if (t.status === 'done') throw new Error('Cette quête est déjà terminée.');
-  if (t.status === 'archived') throw new Error('Une quête archivée ne se termine pas : il faut d’abord la sortir des archives.');
+  if (t.status === 'archived') throw new Error('Une quête archivée ne se termine pas\u00a0: il faut d’abord la sortir des archives.');
   const after = complete(ctx, t);
   stopSeance(ctx, t.id, 'fait', { task: after, occurrence: t.occurrence ?? 1, terminee: true });
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 
@@ -432,9 +436,11 @@ export function remballerQuest(tasks, game, ledger, params, now) {
   const occ = recurring ? t.lastDone.occurrence : t.occurrence ?? 1;
   if (hasKey(ctx.ledger, reverseKey(t.id, occ))) throw new Error('Cette quête a déjà été remballée.');
   if (!canReverse(ctx.ledger, t.id, occ, now)) {
-    throw new Error(findEntry(ctx.ledger, rewardKey(t.id, occ)) ? 'Trop tard pour remballer : plus de 24 h se sont écoulées.' : 'Cette quête n’a rien rapporté, il n’y a rien à remballer.');
+    throw new Error(findEntry(ctx.ledger, rewardKey(t.id, occ)) ? 'Trop tard pour remballer\u00a0: plus de 24 h se sont écoulées.' : 'Cette quête n’a rien rapporté, il n’y a rien à remballer.');
   }
-  ctx.append(buildReverseEntry(ctx.ledger, t.id, occ, now), 'reverse'); // −1 tâche au quartier (economy.js)
+  const reverse = buildReverseEntry(ctx.ledger, t.id, occ, now);
+  ctx.append(reverse, 'reverse'); // −1 tâche au quartier (economy.js)
+  reprendreEolienne(ctx, reverse.day); // le jour du gain redevient sans quête payée : l'éolienne rend son Énergie
   if (recurring) {
     const p = t.lastDone.prev;
     ctx.put({ ...t, ...p, status: 'todo', occurrence: occ, doneAt: null, lastDone: null });
@@ -517,8 +523,9 @@ export function openApp(tasks, game, ledger, params, now) {
  * Passage du temps, à appeler à l'ouverture (après openApp), au changement de jour de jeu et après les gestes du jeu.
  * Au premier passage d'une nouvelle semaine, fige le bilan des semaines finies (figerBilans, recycling.js). Note le
  * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis ferme une séance côte
- * à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js). Idempotente : rejouée avec le même instant,
- * elle ne fait rien. Événement : 'seance-fin' (raison 'oubliee').
+ * à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js), et valide les objectifs devenus vrais
+ * (premiers pas, saison : objectifs.js). Idempotente : rejouée avec le même instant, elle ne fait rien. Événements :
+ * 'seance-fin' (raison 'oubliee'), 'premier-pas', 'objectif-saison'.
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -529,6 +536,7 @@ export function advanceTime(tasks, game, ledger, params, now) {
   }
   if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   tidySeances(ctx);
+  suivreObjectifs(ctx);
   return ctx.result();
 }
 

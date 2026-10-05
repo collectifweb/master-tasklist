@@ -11,7 +11,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
   try {
     [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
   } catch (e) {
-    console.warn('monde absent :', e && e.message);
+    console.warn('monde absent\u00a0:', e && e.message);
     return null; // pas de monde : l'illustration statique reste
   }
   try {
@@ -22,7 +22,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
     container.hidden = false;
     slot.dataset.world = 'live';
     const safe = (fn, fallback) => (...args) => {
-      try { return fn.apply(world, args); } catch (e) { console.warn('monde :', e); return fallback; }
+      try { return fn.apply(world, args); } catch (e) { console.warn('monde\u00a0:', e); return fallback; }
     };
     const reflets = (game, tasks) => {
       try { return view.deriveView(game, tasks, { now: now(), anchors }).reflets; } catch { return new Set(); }
@@ -49,7 +49,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
       destroy: safe(world.destroy),
     };
   } catch (e) {
-    console.warn('monde indisponible :', e);
+    console.warn('monde indisponible\u00a0:', e);
     container.hidden = true;
     delete slot.dataset.world;
     return null;

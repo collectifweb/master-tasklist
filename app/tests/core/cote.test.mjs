@@ -148,7 +148,7 @@ test('« Pourquoi ? » donne la raison chiffrée', () => {
   const t = task({ priority: 7, length: 1, difficulty: 1, deadline: '2026-10-06', created: '2026-10-06' });
   const w = why(t, T0);
   assert.equal(w.cote, 82);
-  assert.match(w.text, /^Cote 82 : priorité 7 \(\+31,5\), courte \(\+20\), facile \(\+10\), échéance aujourd’hui \(\+20\)/);
+  assert.match(w.text, /^Cote 82\u00a0: priorité 7 \(\+31,5\), courte \(\+20\), facile \(\+10\), échéance aujourd’hui \(\+20\)/);
   const retard = why(task({ deadline: '2026-10-01', created: '2026-08-01' }), T0);
   assert.match(retard.text, /échéance dépassée \(\+25\)/);
   assert.match(retard.text, /ancienneté/);

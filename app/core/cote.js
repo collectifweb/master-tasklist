@@ -112,7 +112,7 @@ export function sortTasks(tasks, sortId, now) {
     anciennes: (a, b) => (a.created < b.created ? -1 : a.created > b.created ? 1 : 0),
     recentes: (a, b) => (a.created < b.created ? 1 : a.created > b.created ? -1 : 0),
   }[sortId];
-  if (!cmp) throw new Error('Tri inconnu : ' + sortId);
+  if (!cmp) throw new Error('Tri inconnu\u00a0: ' + sortId);
   return [...tasks].sort((a, b) => cmp(a, b) || cote(b, now) - cote(a, now) || byId(a, b));
 }
 
@@ -177,6 +177,6 @@ export function why(task, now) {
   }
   if (b.age >= 0.1) parts.push({ label: 'ancienneté', points: ratio(b.age) });
   const fmt = (n) => String(n).replace('.', ',');
-  const text = `Cote ${b.total} : ` + parts.map((p) => `${p.label} (+${fmt(p.points)})`).join(', ') + '.';
+  const text = `Cote ${b.total}\u00a0: ` + parts.map((p) => `${p.label} (+${fmt(p.points)})`).join(', ') + '.';
   return { cote: b.total, parts, text };
 }

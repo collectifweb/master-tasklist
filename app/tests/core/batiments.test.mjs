@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BATIMENTS, BATIMENT_IDS, DEPART, construire, refusConstruire, compte, batimentsDuVillage, createInitialState,
+  BATIMENTS, BATIMENT_IDS, DEPART, construire, refusConstruire, compte, batimentsDuVillage, createInitialState, PAS_IDS,
 } from '../../core/index.js';
 import { EMPLACEMENTS } from '../../world/layout.js';
 import { fresh, step } from './helpers.mjs';
@@ -46,6 +46,7 @@ test('départ : une parcelle du vieux potager est déjà là, aucun chalet n’e
 
 test('construire : paie le coût, pose le bâtiment au premier emplacement libre, événement « construction »', () => {
   const w = fresh([], NOW);
+  w.game.premiersPas = Object.fromEntries(PAS_IDS.map((id) => [id, '2026-10-01'])); // premiers pas faits : seul le geste compte ici
   const { world, r } = step(w, construire, { type: 'chalet' }, NOW);
   const c = BATIMENTS.chalet.cout;
   assert.deepEqual(world.game.resources, { energy: 10 - c.energy, materials: 20 - c.materials, food: 5 });
@@ -72,9 +73,9 @@ test('refus : il manque des ressources, avec le nombre exact (« Il manque 4 Mat
 
 test('refus : rang requis (« Hameau : encore 2 habitants. »), puis « encore 1 habitant »', () => {
   const w = riche({ habitants: 1 });
-  for (const id of ['eolienne', 'grenier', 'quai']) assert.equal(refusConstruire(w.game, id), 'Hameau : encore 2 habitants.', id);
+  for (const id of ['eolienne', 'grenier', 'quai']) assert.equal(refusConstruire(w.game, id), 'Hameau\u00a0: encore 2 habitants.', id);
   w.game.habitants = 2;
-  assert.equal(refusConstruire(w.game, 'grenier'), 'Hameau : encore 1 habitant.');
+  assert.equal(refusConstruire(w.game, 'grenier'), 'Hameau\u00a0: encore 1 habitant.');
   w.game.habitants = 3;
   assert.equal(refusConstruire(w.game, 'grenier'), null);
   assert.equal(refusConstruire(w.game, 'quai'), null);
@@ -105,7 +106,7 @@ test('refus : maximum atteint, avec sa raison', () => {
 test('refus : le maximum passe avant le rang, le rang avant le prérequis, le prérequis avant le coût', () => {
   const pauvre = fresh([], NOW).game;
   pauvre.resources = { energy: 0, materials: 0, food: 0 };
-  assert.equal(refusConstruire(pauvre, 'eolienne'), 'Hameau : encore 3 habitants.');
+  assert.equal(refusConstruire(pauvre, 'eolienne'), 'Hameau\u00a0: encore 3 habitants.');
   assert.equal(refusConstruire(pauvre, 'serre'), 'Il faut d’abord un atelier.');
   assert.match(refusConstruire(pauvre, 'atelier'), /^Il manque /);
 });

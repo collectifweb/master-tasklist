@@ -111,7 +111,7 @@ function react(payload) {
   const task = findTask(taskId) || (result && result.tasks.find((x) => x.id === taskId)) || null;
   const title = task ? task.task : '';
   const reply = speech.react({ action, params, events, task, now: now || maintenant() });
-  const replyText = reply ? ` ${reply.nom} : ${reply.texte}` : '';
+  const replyText = reply ? ` ${reply.nom}\u00a0: ${reply.texte}` : '';
   const gains = gainList(s);
   const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
 
@@ -129,8 +129,9 @@ function react(payload) {
     return;
   }
   if (action === 'remballerQuest') {
-    const e = (result.entries || [])[0];
-    const list = e ? [e.energy && `${num(e.energy)} ${t('resource.energy')}`, e.materials && `${num(e.materials)} ${t('resource.materials.other')}`].filter(Boolean) : [];
+    // l'écriture inverse de la quête, et celle de l'éolienne si le jour reste sans quête payée
+    const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0) }), { energy: 0, materials: 0 });
+    const list = [e.energy && `${num(e.energy)} ${t('resource.energy')}`, e.materials && `${num(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
     announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${fanal ? ' ' + fanal : ''}${replyText}` });
     return;
   }

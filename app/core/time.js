@@ -11,7 +11,7 @@ const MS_DAY = 86400000;
 export function parseNow(now) {
   if (now === undefined || now === null) throw new TypeError("L'instant courant (now) est obligatoire.");
   const d = now instanceof Date ? new Date(now.getTime()) : new Date(now);
-  if (Number.isNaN(d.getTime())) throw new TypeError('Instant invalide : ' + String(now));
+  if (Number.isNaN(d.getTime())) throw new TypeError('Instant invalide\u00a0: ' + String(now));
   return d;
 }
 
@@ -63,7 +63,7 @@ export function isDayString(v) {
 
 /** AAAA-MM-JJ → ms UTC à minuit (calcul de calendrier seulement). */
 export function parseDay(day) {
-  if (!isDayString(day)) throw new TypeError('Date attendue au format AAAA-MM-JJ : ' + String(day));
+  if (!isDayString(day)) throw new TypeError('Date attendue au format AAAA-MM-JJ\u00a0: ' + String(day));
   const [y, m, d] = day.split('-').map(Number);
   return Date.UTC(y, m - 1, d);
 }

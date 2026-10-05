@@ -3,13 +3,16 @@
 //  (a) qu'à rythme régulier on atteint le Hameau en 21 jours environ ;
 //  (b) qu'un village qui démarre le 25 octobre, avec le seul campement, n'est jamais bloqué l'hiver : la petite serre
 //      nourrit, et une famille arrive avant le printemps, même à une quête par jour ;
-//  (c) qu'aucun stock ne devient négatif.
+//  (c) qu'aucun stock ne devient négatif ;
+//  (d) (lot 5) qu'un joueur qui suit le bandeau d'objectifs atteint les cinq premiers pas sans impasse, et que la
+//      première famille arrive vers le 6e jour, au départ du 25 octobre comme du 15 décembre.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
+  prochainGeste, PAS_IDS,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -23,21 +26,27 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
 
 /**
  * Joue `jours` jours à partir de `debut`. rythme(i) = quêtes terminées le i-e jour. Après chaque geste, vérifie (c).
+ * bandeau : tant que les premiers pas durent, le joueur fait le geste que le bandeau propose (prochainGeste) dès qu'il
+ * le peut, et rien d'autre ; au pas « famille », il fait tout ce qui aide à nourrir. Sinon, il fait tout ce qui est
+ * possible, dans l'ordre ci-dessous.
  * Renvoie le journal : { hameau (jour d'arrivée, ou null), familles: [jours], recoltes: [jours], plein (jour où tous les
- * logements possibles sont habités, ou null), monde }.
+ * logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour), monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false } = {}) {
   let w = fresh(quetes(jours * 3 + 10), heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, monde: null };
   const logementsMax = BATIMENTS.chalet.max * BATIMENTS.chalet.loge;
   let n = 0;
+  let i = 0;
   const geste = (fn, params, now) => {
-    w = step(w, fn, params, now).world;
+    const s = step(w, fn, params, now);
+    w = s.world;
+    for (const e of s.r.events) if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
     const { energy, materials, food } = w.game.resources;
     assert.ok(energy >= 0 && materials >= 0 && food >= 0 && w.game.habitants >= 0, `stock négatif le ${now} : ${JSON.stringify(w.game.resources)}`);
     assert.ok(food <= stockage(w.game), `Nourriture au-dessus du stockage le ${now}`);
   };
-  for (let i = 0; i < jours; i++) {
+  for (i = 0; i < jours; i++) {
     const day = addDays(debut, i);
     geste(openApp, {}, heure(day, 12));
     for (let k = 0; k < rythme(i); k++) geste(completeQuest, { id: `s${n++}` }, heure(day, 14 + k));
@@ -47,9 +56,17 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false } = {}) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
       const mure = cultures.find((id) => !refusRecolter(w.game, w.ledger, id, soir));
       if (mure) { geste(recolter, { id: mure }, soir); log.recoltes.push(day); continue; }
+      const g = bandeau ? prochainGeste(w.tasks, w.game, w.ledger, soir) : null;
+      if (g && g.pas !== 'famille') {
+        if (g.raison) break; // il attend d'avoir de quoi faire le geste proposé
+        if (g.geste === 'construire') { geste(construire, { type: g.cible.replace(/-\d+$/, ''), id: g.cible }, soir); continue; }
+        if (g.geste === 'semer') { geste(semer, { id: g.cible }, soir); continue; }
+        break; // ajouter ou terminer une quête : c'est la journée qui s'en charge
+      }
       if (!refusAccueillir(w.game)) {
         geste(accueillir, {}, soir);
         log.familles.push(day);
+        log.premiereFamille ??= i + 1;
         if (!log.hameau && rangDuVillage(w.game.habitants).id === 'hameau') log.hameau = i + 1;
         if (w.game.habitants >= logementsMax) log.plein = day;
         continue;
@@ -96,4 +113,22 @@ test('(c) une année entière à trois quêtes par jour : aucun stock négatif, 
   // les vérifications sont faites après chaque geste, dans simuler()
   const log = simuler('2026-10-06', 365, () => 3);
   assert.equal(log.monde.game.habitants, BATIMENTS.chalet.max * BATIMENTS.chalet.loge);
+});
+
+test('(d) en suivant le bandeau : les cinq premiers pas sans impasse, la première famille vers le 6e jour', () => {
+  for (const debut of ['2026-10-25', '2026-12-15']) {
+    const log = simuler(debut, 30, regulier, { bandeau: true });
+    assert.deepEqual(Object.keys(log.pas), PAS_IDS, `${debut} : premiers pas ${JSON.stringify(log.pas)}`);
+    // dans l'ordre : chaque pas le même jour que le précédent ou après
+    for (let k = 1; k < PAS_IDS.length; k++) assert.ok(log.pas[PAS_IDS[k]] >= log.pas[PAS_IDS[k - 1]], `${debut} : ${JSON.stringify(log.pas)}`);
+    // un coup de pouce, pas un cadeau : ni le premier soir, ni plus tard que le 7e jour
+    assert.ok(log.premiereFamille >= 5 && log.premiereFamille <= 7, `${debut} : première famille au jour ${log.premiereFamille}`);
+    assert.equal(log.pas.famille, log.premiereFamille);
+  }
+  // à une quête par jour aussi, le bandeau ne mène jamais à une impasse
+  for (const debut of ['2026-10-25', '2026-12-15']) {
+    const log = simuler(debut, 30, () => 1, { bandeau: true });
+    assert.deepEqual(Object.keys(log.pas), PAS_IDS, `${debut}, une quête par jour : ${JSON.stringify(log.pas)}`);
+    assert.ok(log.premiereFamille <= 12, `${debut}, une quête par jour : première famille au jour ${log.premiereFamille}`);
+  }
 });

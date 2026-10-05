@@ -7,7 +7,7 @@ export const content = { ui: {}, repliques: null, ancres: null, lettres: null };
 export async function loadContent() {
   const get = async (f) => {
     const r = await fetch(BASE + f, { cache: 'no-cache' });
-    if (!r.ok) throw new Error('Texte introuvable : ' + f);
+    if (!r.ok) throw new Error('Texte introuvable\u00a0: ' + f);
     return r.json();
   };
   const [ui, repliques, ancres, batiments] = await Promise.all([get('interface.json'), get('repliques.json'), get('ancres.json'), get('batiments.json')]);
