@@ -1,0 +1,249 @@
+/*
+ * La lisière rallumée — jetons de design
+ * Contrat : app/DESIGN.md. Aucune police distante : piles système seulement.
+ * Contrastes mesurés (WCAG 2.x) notés à côté des couleurs de texte, sur --c-paper sauf mention.
+ *
+ * Points de rupture (les variables CSS ne vont pas dans les @media, on les recopie) :
+ *   compact  : par défaut (téléphone en portrait)          → feuille du bas
+ *   moyen    : (min-width: 700px)                          → feuille du bas plus haute (tablette portrait)
+ *   large    : (min-width: 1000px), (min-width: 700px) and (orientation: landscape)
+ *                                                          → colonne latérale à droite
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ───────── Matières de l'Orée (palette brute) ───────── */
+  --c-ink: #273026;            /* Encre végétale — texte principal · 12,9:1 */
+  --c-ink-soft: #4f5848;       /* Encre mousse — texte secondaire · 7,0:1 */
+  --c-ink-muted: #5c6452;      /* Encre lichen — texte tertiaire · 5,8:1 (5,0:1 sur crème) */
+
+  --c-paper: #fff8e8;          /* Papier récolte — panneaux */
+  --c-paper-raised: #fffdf6;   /* Papier neuf — cartes, champs */
+  --c-sunken: #f6edd6;         /* Papier creusé — champs de recherche, pistes */
+  --c-cream: #f5e6c0;          /* Crème — boutons secondaires, puces */
+  --c-cream-face: #dcc58e;     /* socle du crème */
+  --c-line: #e6dbbf;           /* filets entre lignes */
+  --c-line-strong: #cdbb8d;    /* bords de champs, plaques */
+
+  --c-sage: #718c5d;           /* Sauge — décor, végétation */
+  --c-sage-deep: #3f6047;      /* Sauge d'autonomie — action principale · texte 6,7:1 */
+  --c-sage-hover: #47694f;     /* survol de l'action · papier dessus 5,8:1 */
+  --c-sage-face: #2c4733;      /* socle de l'action */
+  --c-sage-wash: #e4edda;      /* fond « en cours », « faite » */
+
+  --c-glass: #58a9a4;          /* Verre solaire — décor technique */
+  --c-glass-deep: #2d7473;     /* liens, information, Énergie · 5,1:1 */
+  --c-glass-ink: #245f5e;      /* texte sur lavis de verre · 6,1:1 */
+  --c-glass-wash: #dcefeb;
+
+  --c-soil: #aa6c43;           /* Terre de l'Orée — décor */
+  --c-soil-deep: #75472f;      /* Matériaux, caisses d'échéance · 7,4:1 (6,2:1 sur lavis) */
+  --c-soil-wash: #f3e2cf;
+
+  --c-lantern: #f3c879;        /* Lumière de matin — décor */
+  --c-lantern-glow: #ffd98c;   /* lanterne allumée — sélection de texte, halo de Lueur */
+  --c-lantern-ink: #7a5200;    /* Lueur, « Prioritaire » · 6,5:1 (5,7:1 sur lavis) */
+  --c-lantern-wash: #fbe8b4;
+
+  --c-ash: #a39b8d;            /* Cendre chaude — secteurs éteints */
+  --c-ash-ink: #625c52;        /* archivé · 6,3:1 (5,3:1 sur lavis) */
+  --c-ash-wash: #ebe6dc;
+
+  --c-frost: #9cc0cc;          /* Givre — réservé aux Avis */
+  --c-frost-ink: #3d6577;      /* hors ligne, Avis · 6,0:1 (5,3:1 sur lavis) */
+  --c-frost-wash: #e2edf1;
+
+  --c-ember: #bf5a38;          /* Braise — menace, casse. Jamais décorative. Pictos et fonds seulement (4,2:1) */
+  --c-ember-ink: #a3462a;      /* texte braise · 5,7:1 (4,8:1 sur lavis) ; papier dessus 5,7:1 */
+  --c-ember-face: #7c3320;
+  --c-ember-wash: #f8e1d6;
+
+  --c-focus: #1d3b3a;          /* anneau de focus · 11,4:1 sur papier, 3,9:1 sur le lac */
+
+  /* Monde (repris du spike dom-svg, heure 12 h) */
+  --c-sky-top: #8ccbe0;
+  --c-sky-horizon: #eef0d2;
+  --c-lake: #7bbabb;
+  --c-lake-deep: #5b9ca3;
+
+  /* ───────── Rôles ───────── */
+  --surface-page: var(--c-paper);
+  --surface-panel: var(--c-paper); /* opaque : le monde ne transparaît pas sous le texte */
+  --surface-hud: rgb(255 249 235 / 0.94);
+  --surface-card: var(--c-paper-raised);
+  --surface-sunken: var(--c-sunken);
+
+  --text: var(--c-ink);
+  --text-soft: var(--c-ink-soft);
+  --text-muted: var(--c-ink-muted);
+  --text-on-action: var(--c-paper);
+
+  --action: var(--c-sage-deep);
+  --action-hover: var(--c-sage-hover);
+  --action-face: var(--c-sage-face);
+  --info: var(--c-glass-deep);
+  --danger: var(--c-ember-ink);
+
+  /* Chaque ressource est une matière du monde, toujours doublée d'un picto et d'un mot */
+  --res-energie: var(--c-glass-deep);     --res-energie-wash: var(--c-glass-wash);
+  --res-materiaux: var(--c-soil-deep);    --res-materiaux-wash: var(--c-soil-wash);
+  --res-confiance: var(--c-sage-deep);    --res-confiance-wash: var(--c-sage-wash);
+  --res-lueur: var(--c-lantern-ink);      --res-lueur-wash: var(--c-lantern-wash);
+
+  /* ───────── Typographie ───────── */
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  /* Chiffres : arrondis là où le système les offre (iOS, macOS), sinon la pile UI */
+  --font-num: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, sans-serif;
+  /* Rôle d'affichage (titres, HUD, Cote) : même pile arrondie, graisse 800. Un fichier local pourra s'y glisser en tête. */
+  --font-display: var(--font-num);
+  --w-display: 800;
+
+  --text-12: 0.75rem;   /* étiquettes, plaques */
+  --text-14: 0.875rem;  /* métadonnées */
+  --text-15: 0.9375rem; /* boutons compacts, puces */
+  --text-16: 1rem;      /* corps, champs */
+  --text-18: 1.125rem;  /* titres de ligne, chiffres du HUD */
+  --text-20: 1.25rem;   /* titre de la quête n° 1 */
+  --text-24: 1.5rem;    /* titres de feuille */
+  --text-28: 1.75rem;   /* titre de page (référence) */
+
+  --lh-tight: 1.12;
+  --lh-snug: 1.25;
+  --lh-body: 1.45;
+
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
+  --w-heavy: 800;
+
+  --track-tight: -0.012em;
+
+  /* ───────── Espacement (base 4) ───────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --gutter: 16px;
+
+  /* ───────── Rayons ───────── */
+  --r-xs: 6px;      /* étiquettes */
+  --r-sm: 10px;     /* plaques de Cote, petites tuiles */
+  --r-md: 12px;     /* boutons, champs */
+  --r-lg: 16px;     /* cartes, puces de ressource */
+  --r-xl: 24px;     /* feuilles */
+  --r-pill: 999px;  /* puces de filtre */
+
+  /* ───────── Profondeur ───────── */
+  /* Ce qui s'enfonce a un socle (face latérale pleine, comme les strates de l'île) */
+  --face-h: 3px;
+  /* Ce qui flotte au-dessus du monde a une ombre douce et chaude */
+  --shadow-hud: 0 1px 1px rgb(66 43 25 / 0.08), 0 6px 16px rgb(66 43 25 / 0.16);
+  --shadow-float: 0 1px 2px rgb(66 43 25 / 0.10), 0 12px 28px rgb(66 43 25 / 0.20);
+  --shadow-sheet: 0 -2px 6px rgb(40 30 15 / 0.08), 0 -12px 32px rgb(40 30 15 / 0.20);
+  --shadow-column: -1px 0 0 rgb(58 65 48 / 0.12), -14px 0 32px rgb(40 30 15 / 0.14);
+  --shadow-card: 0 1px 2px rgb(66 43 25 / 0.08);
+  --backdrop: rgb(39 48 38 / 0.40);
+
+  /* ───────── Mouvement (docs/revue-2026-10/MOTION.md §3) ───────── */
+  --t-press: 90ms;
+  --t-micro: 150ms;
+  --t-short: 220ms;
+  --t-medium: 320ms;
+  --t-long: 480ms;
+  --t-camera: 600ms;
+  --t-celebrate: 1200ms;
+  --t-day: 1600ms;
+  --t-announce-hold: 3600ms;
+
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.55, 0, .75, .2);
+  --ease-inout: cubic-bezier(.65, 0, .35, 1);
+  --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-bounce: linear(0, .36 12%, .9 25%, 1.08 35%, 1 46%, .97 58%, 1);
+
+  --lift-1: 2px;
+  --lift-2: 6px;
+  --drop: 28px;
+  --stagger: 40ms;
+
+  /* 1 = mouvement complet ; 0 = mouvement réduit (les distances tombent à zéro, il reste des fondus) */
+  --motion: 1;
+  /* boucles d'ambiance (chargement, lueur) : running ou paused */
+  --ambient: running;
+
+  /* ───────── Couches ───────── */
+  --z-world: 0;
+  --z-hud: 20;
+  --z-lane: 25;
+  --z-panel: 30;
+  --z-sticky: 5;   /* dans le panneau */
+
+  /* ───────── Mise en page ───────── */
+  --target: 44px;          /* cible tactile minimale */
+  --target-lg: 48px;       /* boutons d'action */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --hud-h: 52px;           /* hauteur d'une puce de ressource */
+  --lane-h: 40px;          /* voie réservée à l'annonce de gain, sous le HUD */
+  --hud-top: calc(var(--safe-top) + var(--sp-2));
+  --lane-top: calc(var(--hud-top) + var(--hud-h) + var(--sp-1));
+  /* le panneau ouvert s'arrête sous la voie d'annonce : ressources et annonce restent visibles */
+  --panel-open-top: calc(var(--lane-top) + var(--lane-h) + var(--sp-1));
+  /* feuille repliée : le monde garde ≈ 70 % de la hauteur à 390×844 */
+  --panel-peek: clamp(248px, 30dvh, 300px);
+  --column-w: clamp(340px, 34vw, 420px);
+  /* ce que le monde doit laisser libre en bas (feuille repliée) ou à droite (colonne) */
+  --world-cover-bottom: var(--panel-peek);
+  --world-cover-right: 0px;
+  --world-safe-top: calc(var(--lane-top) + var(--lane-h));
+}
+
+@media (min-width: 700px) {
+  :root {
+    --gutter: 20px;
+    --panel-peek: clamp(272px, 26dvh, 340px);
+  }
+}
+
+@media (min-width: 1000px), (min-width: 700px) and (orientation: landscape) {
+  :root {
+    --gutter: 24px;
+    --world-cover-bottom: 0px;
+    --world-cover-right: var(--column-w);
+  }
+}
+
+/* Mouvement réduit : préférence du système, sauf si l'app force le mouvement complet,
+   ou réglage de l'app (data-motion="reduce" sur <html>). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) {
+    --motion: 0;
+    --ambient: paused;
+    --t-short: 150ms;
+    --t-medium: 150ms;
+    --t-long: 150ms;
+    --t-camera: 0ms;
+    --t-celebrate: 150ms;
+    --t-day: 300ms;
+  }
+}
+:root[data-motion="reduce"] {
+  --motion: 0;
+  --ambient: paused;
+  --t-short: 150ms;
+  --t-medium: 150ms;
+  --t-long: 150ms;
+  --t-camera: 0ms;
+  --t-celebrate: 150ms;
+  --t-day: 300ms;
+}

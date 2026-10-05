@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8ccbe0">
+<title>Lisière · référence visuelle</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="reference.css">
+<script type="module" src="reference.js"></script>
+</head>
+<body>
+<a class="ref-skip" href="#catalogue">Aller au catalogue des composants</a>
+<h1 class="sr-only">La lisière rallumée : référence visuelle (données fictives)</h1>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COQUILLE — la mise en page réelle de l'app, à la taille de l'écran.
+     Compact : monde ≈ 70 %, feuille du bas repliée. Large : colonne à droite.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="app" id="app" data-panel="peek">
+
+  <div class="world-slot">
+    <div class="world-backdrop" aria-hidden="true">
+      <svg class="world-horizon" viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true">
+        <polygon fill="#9fb7a6" points="0,30 0,20 5,11 10,21 14,9 18,20 23,9 27,19 32,12 37,19 43,7 48,19 53,8 57,21 63,9 69,21 73,7 77,20 81,11 86,20 92,11 99,20 105,10 111,20 115,12 119,20 125,9 131,20 137,9 143,20 149,8 155,20 161,9 167,21 173,10 179,21 183,9 188,21 192,9 197,19 203,7 209,20 215,10 222,21 228,8 234,20 240,6 247,20 253,12 259,21 265,6 270,21 275,10 280,21 284,9 288,19 293,12 297,21 301,10 306,20 312,11 319,20 325,6 330,21 337,10 344,20 349,6 354,21 358,11 363,20 367,9 372,20 377,12 382,20 387,8 392,21 398,9 400,21 400,30"/>
+        <polygon fill="#6f8f7c" points="0,30 0,26 8,17 15,27 24,11 32,27 38,14 45,25 52,17 60,25 66,16 72,26 77,17 82,25 87,14 93,25 101,13 110,25 116,14 122,26 127,11 133,27 140,14 146,25 152,15 157,26 166,16 174,25 183,13 192,25 199,17 206,26 215,11 224,27 230,14 236,25 244,13 252,27 258,15 265,27 274,11 282,27 291,12 299,26 306,14 313,25 318,15 323,26 331,10 339,26 348,10 356,27 363,15 369,26 375,16 381,27 390,11 398,26 400,20 400,30"/>
+      </svg>
+    </div>
+    <div class="world-stage">
+      <svg class="world-island" viewBox="0 0 400 270" role="img" aria-label="L'île de l'Orée, vue de loin : emplacement réservé au monde de la semaine 2">
+        <ellipse cx="200" cy="246" rx="176" ry="22" fill="#1d3336" opacity=".16"/>
+        <g stroke="#b6e1d9" stroke-width="2.2" stroke-linecap="round" opacity=".75">
+          <path d="M36 196h30M326 206h34M84 238h28M268 250h30"/>
+        </g>
+        <!-- socle en strates -->
+        <polygon points="30,120 200,205 200,213 30,128" fill="#86a556"/>
+        <polygon points="30,128 200,213 200,251 30,166" fill="#a3683f"/>
+        <polygon points="30,148 200,233 200,251 30,166" fill="#8c5a3b"/>
+        <polygon points="200,205 370,120 370,128 200,213" fill="#6f8c47"/>
+        <polygon points="200,213 370,128 370,166 200,251" fill="#7a492d"/>
+        <polygon points="200,233 370,148 370,166 200,251" fill="#64412e"/>
+        <!-- dessus -->
+        <polygon points="200,35 370,120 200,205 30,120" fill="#a9bf6c"/>
+        <polygon points="125.2,72.4 295.2,157.4 274.8,167.6 104.8,82.6" fill="#e8d29f"/>
+        <polygon points="274.8,72.4 295.2,82.6 125.2,167.6 104.8,157.4" fill="#e8d29f"/>
+        <!-- secteur encore sous la cendre -->
+        <polygon points="295.2,82.6 370,120 295.2,157.4 220.4,120" fill="#bdb6a9"/>
+        <g fill="#a39b8d">
+          <circle cx="282" cy="104" r="1.6"/><circle cx="318" cy="118" r="1.4"/><circle cx="300" cy="140" r="1.8"/>
+          <circle cx="262" cy="126" r="1.3"/><circle cx="335" cy="128" r="1.5"/><circle cx="290" cy="122" r="1.2"/>
+        </g>
+        <g fill="#d3cdc1">
+          <circle cx="306" cy="98" r="1.3"/><circle cx="275" cy="137" r="1.4"/><circle cx="324" cy="138" r="1.2"/>
+        </g>
+        <!-- Champs -->
+        <polygon points="108.2,92.8 162.6,120 150.7,125.95 96.3,98.75" fill="#a3683f"/>
+        <polygon points="87.8,103 142.2,130.2 130.3,136.15 75.9,108.95" fill="#8fc25c"/>
+        <polygon points="67.4,113.2 121.8,140.4 109.9,146.35 55.5,119.15" fill="#e6c163"/>
+        <!-- Atelier -->
+        <polygon points="172.8,75.8 203.4,91.1 203.4,67.1 172.8,51.8" fill="#d9ac6c"/>
+        <polygon points="203.4,91.1 234,75.8 234,51.8 203.4,67.1" fill="#a87b4c"/>
+        <polygon points="186,80.5 193,84 193,72 186,68.5" fill="#64412e"/>
+        <polygon points="203.4,36.5 234,51.8 218.7,47.45 188.1,32.15" fill="#56795c"/>
+        <polygon points="203.4,67.1 234,51.8 218.7,47.45" fill="#a87b4c"/>
+        <polygon points="172.8,51.8 203.4,67.1 218.7,47.45 188.1,32.15" fill="#7f9d69"/>
+        <!-- Relais (tour) -->
+        <polygon points="186.4,160.8 206.8,171 206.8,119 186.4,108.8" fill="#d4c9af"/>
+        <polygon points="206.8,171 227.2,160.8 227.2,108.8 206.8,119" fill="#b2a58a"/>
+        <polygon points="206.8,98.6 227.2,108.8 206.8,119 186.4,108.8" fill="#e6ddc6"/>
+        <circle cx="206.8" cy="96" r="9" fill="#ffd98c" opacity=".45"/>
+        <polygon points="206.8,90 212,93 206.8,108 201.6,93" fill="#f3c879"/>
+        <!-- arbres -->
+        <g>
+          <path d="M152 79V74" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="143,76 152,50 152,79" fill="#87a65b"/><polygon points="152,79 152,50 161,76" fill="#5d8150"/>
+          <path d="M231 57V52" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="222,54 231,28 231,57" fill="#87a65b"/><polygon points="231,57 231,28 240,54" fill="#5d8150"/>
+          <path d="M254 76V71" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="245,73 254,47 254,76" fill="#87a65b"/><polygon points="254,76 254,47 263,73" fill="#5d8150"/>
+          <path d="M146 168V163" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="137,165 146,139 146,168" fill="#87a65b"/><polygon points="146,168 146,139 155,165" fill="#5d8150"/>
+          <path d="M254 168V163" stroke="#8a5a3a" stroke-width="3"/>
+          <polygon points="245,165 254,139 254,168" fill="#87a65b"/><polygon points="254,168 254,139 263,165" fill="#5d8150"/>
+        </g>
+        <g>
+          <polygon points="291,105 299,82 299,108" fill="#c4bdb0"/><polygon points="299,108 299,82 307,105" fill="#9a9284"/>
+          <polygon points="243,119 251,96 251,122" fill="#c4bdb0"/><polygon points="251,122 251,96 259,119" fill="#9a9284"/>
+          <polygon points="287,134 295,111 295,137" fill="#c4bdb0"/><polygon points="295,137 295,111 303,134" fill="#9a9284"/>
+        </g>
+      </svg>
+      <p class="world-caption">Emplacement du monde · l'île arrive en semaine 2</p>
+    </div>
+  </div>
+
+  <header class="hud" aria-label="Ressources">
+    <button class="res" type="button" data-res="energie" aria-label="Énergie : 30 sur 40">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-energie"/></svg></span>
+      <span class="res-value">30<span class="res-cap">/40</span></span>
+      <span class="res-label">Énergie</span>
+      <span class="res-delta" aria-hidden="true">+3</span>
+    </button>
+    <button class="res" type="button" data-res="materiaux" aria-label="Matériaux : 78 sur 150">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-materiaux"/></svg></span>
+      <span class="res-value">78<span class="res-cap">/150</span></span>
+      <span class="res-label">Matériaux</span>
+      <span class="res-delta" aria-hidden="true">+5</span>
+    </button>
+    <button class="res" type="button" data-res="confiance" aria-label="Confiance : 8">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-confiance"/></svg></span>
+      <span class="res-value">8</span>
+      <span class="res-label">Confiance</span>
+      <span class="res-delta" aria-hidden="true">+1</span>
+    </button>
+    <button class="res" type="button" data-res="lueur" aria-label="Lueur : 61">
+      <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lueur"/></svg></span>
+      <span class="res-value">61</span>
+      <span class="res-label">Lueur</span>
+      <span class="res-delta" aria-hidden="true">+10</span>
+    </button>
+  </header>
+
+  <div class="announce-lane" aria-hidden="true">
+    <p class="announce" id="announce">
+      <span class="announce-done"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span>
+      <span class="announce-item">+10 PE</span>
+      <span class="announce-sep">·</span>
+      <span class="announce-item" data-res="energie">+3 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-energie"/></svg></span>
+      <span class="announce-sep">·</span>
+      <span class="announce-item" data-res="materiaux">+5 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-materiaux"/></svg></span>
+      <span class="announce-sep">·</span>
+      <span class="announce-item announce-tail" data-res="lueur">Lueur → Atelier</span>
+    </p>
+  </div>
+  <p class="sr-only" role="status" aria-live="polite" id="live"></p>
+
+  <section class="panel" id="panel" aria-labelledby="panel-title">
+    <span class="panel-grip" aria-hidden="true"></span>
+    <header class="panel-head">
+      <h2 class="panel-title" id="panel-title">Fil du jour <small>lun. 5 oct.</small></h2>
+      <button class="btn btn--quiet btn--icon" type="button" data-action="add" aria-label="Ajouter une quête">
+        <svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg>
+      </button>
+      <button class="btn btn--quiet btn--small panel-toggle" type="button" data-action="toggle-panel" aria-expanded="false" aria-controls="panel-rest">
+        <span class="panel-toggle-label">Tout voir</span>
+        <svg class="icon" aria-hidden="true"><use href="icons.svg#i-chevron-up"/></svg>
+      </button>
+    </header>
+
+    <div class="panel-scroll" id="panel-scroll">
+      <article class="fil-quest" id="fil-quest" data-task-id="ex-poignee" data-state="todo" aria-labelledby="fil-q1">
+        <h3 class="fil-title" id="fil-q1">Réparer une poignée</h3>
+        <button class="cote" type="button" data-action="why" aria-label="Cote 82. Pourquoi ?">
+          <span class="cote-value">82</span><span class="cote-label">Cote</span>
+        </button>
+        <ul class="meta">
+          <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 15 min</li>
+          <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</li>
+          <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Échéance demain</li>
+          <li class="meta-item--doing" data-doing-only hidden><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours</li>
+        </ul>
+        <p class="fil-reason"><span>Prioritaire, courte et due demain.</span> <button class="link-btn" type="button" data-action="why">Pourquoi ?</button></p>
+        <div class="fil-actions">
+          <button class="btn btn--primary" type="button" data-action="complete">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+          <button class="btn btn--secondary" type="button" data-action="start" aria-pressed="false">
+            <svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg><span class="start-label">Je m'y mets</span>
+          </button>
+        </div>
+      </article>
+
+      <div class="panel-rest" id="panel-rest">
+        <ul class="alts">
+          <li class="alt">
+            <button class="alt-row" type="button" aria-expanded="false" aria-controls="alt-1">
+              <span class="alt-text">
+                <span class="alt-title">Payer la facture d'électricité</span>
+                <span class="alt-kind"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-quick"/></svg>Victoire rapide · ≈ 5 min</span>
+              </span>
+              <span class="cote cote--sm"><span class="cote-value">74</span><span class="sr-only">de Cote</span></span>
+              <svg class="icon alt-chevron" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg>
+            </button>
+            <div class="alt-panel" id="alt-1"><div><div class="alt-body">
+              <ul class="meta">
+                <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</li>
+                <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Échéance dans 5 j</li>
+              </ul>
+              <div class="fil-actions">
+                <button class="btn btn--primary" type="button" data-action="complete">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+                <button class="btn btn--secondary" type="button" data-action="start"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg>Je m'y mets</button>
+              </div>
+            </div></div></div>
+          </li>
+          <li class="alt">
+            <button class="alt-row" type="button" aria-expanded="false" aria-controls="alt-2">
+              <span class="alt-text">
+                <span class="alt-title">Classer les documents</span>
+                <span class="alt-kind"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-chantier"/></svg>Grand chantier · ≈ 3 h · étape 1/4</span>
+              </span>
+              <span class="cote cote--sm"><span class="cote-value">48</span><span class="sr-only">de Cote</span></span>
+              <svg class="icon alt-chevron" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg>
+            </button>
+            <div class="alt-panel" id="alt-2"><div><div class="alt-body">
+              <ul class="meta">
+                <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</li>
+                <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>Prochaine étape : trier le bac du haut</li>
+              </ul>
+              <div class="fil-actions">
+                <button class="btn btn--secondary" type="button" data-action="start"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg>Je m'y mets</button>
+                <button class="btn btn--quiet" type="button" data-action="split"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-split"/></svg>Découper</button>
+              </div>
+            </div></div></div>
+          </li>
+        </ul>
+
+        <section class="panel-section" aria-labelledby="list-h">
+          <h2 class="panel-section-title" id="list-h">Toutes les quêtes <small>8 ouvertes</small></h2>
+          <div class="toolbar">
+            <div class="search" role="search">
+              <svg class="icon" aria-hidden="true"><use href="icons.svg#i-search"/></svg>
+              <input class="search-input" type="search" placeholder="Chercher une quête" aria-label="Chercher une quête" autocomplete="off" enterkeyhint="search">
+              <button class="search-clear" type="button" data-action="search-clear" aria-label="Effacer la recherche" hidden>
+                <svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg>
+              </button>
+            </div>
+            <div class="toolbar-row">
+              <fieldset class="seg">
+                <legend class="sr-only">Statut</legend>
+                <label class="seg-option"><input type="radio" name="statut-shell" value="todo" checked><span>À faire <b>8</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut-shell" value="done"><span>Faites <b>1</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut-shell" value="archived"><span>Archivées <b>1</b></span></label>
+              </fieldset>
+              <label class="sort">
+                <span class="sort-label"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-sort"/></svg>Trier</span>
+                <select class="select" data-action="sort">
+                  <option value="cote" selected>Cote</option>
+                  <option value="priority">Priorité</option>
+                  <option value="length">Durée</option>
+                  <option value="difficulty">Effort</option>
+                  <option value="deadline">Échéance</option>
+                  <option value="age">Ancienneté</option>
+                  <option value="sector">Secteur</option>
+                </select>
+              </label>
+            </div>
+            <div class="chips" role="group" aria-label="Filtres rapides">
+              <button class="chip" type="button" aria-pressed="false" data-filter="15min"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>15 min</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="low-effort"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg>Peu d'énergie</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="week"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Cette semaine</button>
+            </div>
+            <div class="chips chips--scroll" role="group" aria-label="Secteurs">
+              <button class="chip" type="button" aria-pressed="false" data-filter="champs"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-champs"/></svg>Champs</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="atelier"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="archives"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="maison-commune"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg>Maison commune</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="relais"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-relais"/></svg>Relais du convoi</button>
+              <button class="chip" type="button" aria-pressed="false" data-filter="bastion"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-bastion"/></svg>Place du Bastion</button>
+            </div>
+          </div>
+
+          <ul class="quest-list">
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Réparer une poignée » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Réparer une poignée</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 15 min</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>demain</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">82</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Payer la facture d'électricité » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Payer la facture d'électricité</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 5 min</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>dans 5 j</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">74</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo" data-late="true">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Vérifier la pression des pneus » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Vérifier la pression des pneus</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-relais"/></svg>Relais du convoi</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 15 min</span>
+                    <span class="meta-item meta-item--late"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-crate"/></svg>Attend depuis 3 j</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">70</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Arroser les plantes » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Arroser les plantes</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-champs"/></svg>Champs</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 5 min</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">59</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Laver les fenêtres » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Laver les fenêtres</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 45 min</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>1/3</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">49</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Classer les documents » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Classer les documents</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 3 h</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>1/4</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">48</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Préparer les repas de la semaine » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Préparer les repas de la semaine</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg>Maison commune</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 1 h</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-repeat"/></svg>chaque semaine</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>2/5</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">46</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" data-action="complete" aria-label="Marquer « Trier les boîtes du sous-sol » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button" data-action="open">
+                <span class="quest-text">
+                  <span class="quest-title">Trier les boîtes du sous-sol et apporter ce qui ne sert plus à l'écocentre avant la fin du mois</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-bastion"/></svg>Place du Bastion</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 2 h</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">39</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     CATALOGUE — chaque composant de la semaine 1 dans ses états
+     ═══════════════════════════════════════════════════════════════════ -->
+<main class="ref" id="catalogue" tabindex="-1">
+  <header class="ref-intro">
+    <h2>Catalogue des composants</h2>
+    <p>Fondations visuelles de « La lisière rallumée », semaine 1. Toutes les quêtes affichées sont fictives. Les contrastes de cette page sont calculés en direct à partir des jetons de <code>css/tokens.css</code>.</p>
+    <nav class="ref-toc" aria-label="Sections du catalogue">
+      <a class="chip" href="#palette">Couleurs</a>
+      <a class="chip" href="#typo">Typographie</a>
+      <a class="chip" href="#espace">Espace et profondeur</a>
+      <a class="chip" href="#boutons">Boutons</a>
+      <a class="chip" href="#ressources">Ressources</a>
+      <a class="chip" href="#annonce">Annonce de gain</a>
+      <a class="chip" href="#fil">Fil du jour</a>
+      <a class="chip" href="#cartes">Trois cartes</a>
+      <a class="chip" href="#lignes">Lignes de quête</a>
+      <a class="chip" href="#outils">Tri et filtres</a>
+      <a class="chip" href="#ajout">Ajout rapide</a>
+      <a class="chip" href="#fiche">Fiche de quête</a>
+      <a class="chip" href="#pourquoi">Pourquoi ?</a>
+      <a class="chip" href="#etats">États</a>
+      <a class="chip" href="#mouvement">Mouvement</a>
+    </nav>
+  </header>
+
+  <!-- ───────── Couleurs ───────── -->
+  <section class="ref-section" id="palette" aria-labelledby="palette-h">
+    <h2 id="palette-h">Couleurs</h2>
+    <p class="ref-lead">Les matières de l'Orée. Chaque pastille montre « Aa » dans la couleur de texte prévue sur son fond, avec le contraste mesuré. La braise est réservée à la casse et aux actions risquées ; une échéance passée n'utilise jamais de rouge.</p>
+    <div class="swatches">
+      <div class="swatch-group">
+        <h3>Encres et papiers</h3>
+        <div class="swatch" data-fg="--c-ink" data-bg="--c-paper"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Encre végétale</b><code>--c-ink</code><span>texte principal · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-ink-soft" data-bg="--c-paper"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Encre mousse</b><code>--c-ink-soft</code><span>texte secondaire · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-ink-muted" data-bg="--c-cream"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Encre lichen sur crème</b><code>--c-ink-muted</code><span>tertiaire, pire cas · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-ink" data-bg="--c-cream"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Crème</b><code>--c-cream</code><span>boutons secondaires, puces · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-ink" data-bg="--c-sunken"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Papier creusé</b><code>--c-sunken</code><span>pistes, réglages · <output class="ratio"></output></span></span></div>
+      </div>
+      <div class="swatch-group">
+        <h3>Sauge · agir</h3>
+        <div class="swatch" data-fg="--c-paper" data-bg="--c-sage-deep"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Sauge d'autonomie</b><code>--c-sage-deep</code><span>action principale · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-paper" data-bg="--c-sage-hover"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Sauge, survol</b><code>--c-sage-hover</code><span><output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-sage-deep" data-bg="--c-sage-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Lavis de sauge</b><code>--c-sage-wash</code><span>en cours, faite, Confiance · <output class="ratio"></output></span></span></div>
+      </div>
+      <div class="swatch-group">
+        <h3>Matières des ressources</h3>
+        <div class="swatch" data-fg="--c-glass-ink" data-bg="--c-glass-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Verre solaire · Énergie</b><code>--c-glass-deep / -ink</code><span>info, liens, Énergie · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-soil-deep" data-bg="--c-soil-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Terre · Matériaux</b><code>--c-soil-deep</code><span>Matériaux, caisses d'échéance · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-lantern-ink" data-bg="--c-lantern-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Lanterne · Lueur</b><code>--c-lantern-ink</code><span>Lueur, Prioritaire · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-sage-deep" data-bg="--c-paper"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Sauge · Confiance</b><code>--c-sage-deep</code><span><output class="ratio"></output></span></span></div>
+      </div>
+      <div class="swatch-group">
+        <h3>États et saisons</h3>
+        <div class="swatch" data-fg="--c-ash-ink" data-bg="--c-ash-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Cendre chaude</b><code>--c-ash-ink</code><span>archivé, secteur éteint · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-frost-ink" data-bg="--c-frost-wash"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Givre</b><code>--c-frost-ink</code><span>hors ligne, Avis · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-ember-ink" data-bg="--c-paper"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Braise (texte)</b><code>--c-ember-ink</code><span>casse, suppression · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-paper" data-bg="--c-ember-ink"><span class="swatch-chip">Aa</span><span class="swatch-text"><b>Braise (fond)</b><code>--c-ember-ink</code><span>« Supprimer pour de bon » · <output class="ratio"></output></span></span></div>
+        <div class="swatch" data-fg="--c-focus" data-bg="--c-lake-deep"><span class="swatch-chip swatch-chip--ring" aria-hidden="true"></span><span class="swatch-text"><b>Anneau de focus sur le lac</b><code>--c-focus</code><span>non textuel, seuil 3:1 · <output class="ratio"></output></span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Typographie ───────── -->
+  <section class="ref-section" id="typo" aria-labelledby="typo-h">
+    <h2 id="typo-h">Typographie</h2>
+    <p class="ref-lead">Polices du système (Roboto sur Android, SF sur iPhone), aucun fichier téléchargé. Deux rôles : le corps en <code>--font-ui</code> ; les titres, les chiffres du HUD et les Cotes en <code>--font-display</code>, pile arrondie là où le système l'offre, graisse 800, chiffres tabulaires. Échelle fixe en rem, rapport d'environ 1,125.</p>
+    <div class="type-scale">
+      <div class="type-row"><span>24 / 700 · titre de section (affichage)</span><p style="font-family:var(--font-display);font-size:var(--text-24);font-weight:700;line-height:1.25">Toutes les quêtes</p></div>
+      <div class="type-row"><span>20 / 800 · quête n° 1 (affichage)</span><p style="font-family:var(--font-display);font-size:var(--text-20);font-weight:800;line-height:1.25">Réparer une poignée</p></div>
+      <div class="type-row"><span>18 / 700 · carte, chiffres</span><p style="font-size:var(--text-18);font-weight:700">Classer les documents <span class="num" style="font-weight:800">48</span></p></div>
+      <div class="type-row"><span>16 / 600 · ligne de quête</span><p style="font-weight:600">Arroser les plantes</p></div>
+      <div class="type-row"><span>16 / 400 · corps</span><p>La Cote décide seulement de l'ordre des quêtes. Elle ne change pas ce qu'une quête rapporte.</p></div>
+      <div class="type-row"><span>14 / 400 · métadonnées</span><p style="font-size:var(--text-14);color:var(--text-soft)">Atelier · ≈ 15 min · échéance demain</p></div>
+      <div class="type-row"><span>12 / 700 · étiquettes</span><p><span class="tag tag--doing"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours</span></p></div>
+    </div>
+  </section>
+
+  <!-- ───────── Espace et profondeur ───────── -->
+  <section class="ref-section" id="espace" aria-labelledby="espace-h">
+    <h2 id="espace-h">Espace, rayons et profondeur</h2>
+    <p class="ref-lead">Base de 4 px. Règle du socle : ce qui s'enfonce sous le doigt (boutons, plaques de Cote) a une face latérale pleine, comme les strates de l'île ; ce qui flotte au-dessus du monde (HUD, panneau, feuilles) a une ombre douce et chaude.</p>
+    <div class="ref-grid">
+      <div class="specimen">
+        <div class="specimen-frame space-scale">
+          <div class="space-row"><span>--sp-1 · 4</span><span class="space-bar" style="width:4px"></span></div>
+          <div class="space-row"><span>--sp-2 · 8</span><span class="space-bar" style="width:8px"></span></div>
+          <div class="space-row"><span>--sp-3 · 12</span><span class="space-bar" style="width:12px"></span></div>
+          <div class="space-row"><span>--sp-4 · 16</span><span class="space-bar" style="width:16px"></span></div>
+          <div class="space-row"><span>--sp-5 · 20</span><span class="space-bar" style="width:20px"></span></div>
+          <div class="space-row"><span>--sp-6 · 24</span><span class="space-bar" style="width:24px"></span></div>
+          <div class="space-row"><span>--sp-8 · 32</span><span class="space-bar" style="width:32px"></span></div>
+          <div class="space-row"><span>--sp-12 · 48</span><span class="space-bar" style="width:48px"></span></div>
+        </div>
+        <p class="specimen-cap"><strong>Espacement</strong>Marge latérale : 16 px (téléphone), 20 px (tablette), 24 px (grand écran).</p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-row">
+          <span class="radius-box" style="border-radius:var(--r-xs)">6 · étiquette</span>
+          <span class="radius-box" style="border-radius:var(--r-sm)">10 · plaque</span>
+          <span class="radius-box" style="border-radius:var(--r-md)">12 · bouton</span>
+          <span class="radius-box" style="border-radius:var(--r-lg)">16 · carte</span>
+          <span class="radius-box" style="border-radius:var(--r-xl)">24 · feuille</span>
+        </div>
+        <p class="specimen-cap"><strong>Rayons</strong>Les puces de filtre sont en pilule (<code>--r-pill</code>).</p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--sky specimen-row" style="padding:var(--sp-6) var(--sp-4)">
+          <span class="depth-box" style="box-shadow:var(--shadow-hud)">--shadow-hud</span>
+          <span class="depth-box" style="box-shadow:var(--shadow-float)">--shadow-float</span>
+          <span class="depth-box" style="box-shadow:0 var(--face-h) 0 var(--c-cream-face);background:var(--c-cream);color:var(--text);border-radius:var(--r-md)">socle 3 px</span>
+        </div>
+        <p class="specimen-cap"><strong>Profondeur</strong>Ombres chaudes (brun, jamais noir) ; aucun halo coloré, aucun flou décoratif.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Boutons ───────── -->
+  <section class="ref-section" id="boutons" aria-labelledby="boutons-h">
+    <h2 id="boutons-h">Boutons</h2>
+    <p class="ref-lead">48 px de haut pour les actions, 44 px au minimum partout. Enfoncé : le bouton descend sur son socle (90 ms). Désactivé : à plat, bord en tirets, cadenas, texte encore lisible et raison écrite dessous.</p>
+    <div class="ref-grid">
+      <div class="specimen">
+        <div class="specimen-frame specimen-stack">
+          <button class="btn btn--primary" type="button">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+          <button class="btn btn--secondary" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg>Je m'y mets</button>
+          <button class="btn btn--quiet" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-split"/></svg>Découper</button>
+          <button class="btn btn--quiet btn--danger" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>Supprimer</button>
+          <button class="btn btn--danger" type="button">Supprimer pour de bon</button>
+        </div>
+        <p class="specimen-cap"><strong>Variantes</strong><code>.btn--primary · --secondary · --quiet · --danger</code></p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-stack">
+          <div class="specimen-row">
+            <button class="btn btn--primary is-pressed" type="button">Enfoncé</button>
+            <button class="btn btn--secondary is-pressed" type="button">Enfoncé</button>
+          </div>
+          <div class="specimen-row">
+            <button class="btn btn--primary is-focus-demo" type="button">Focus clavier</button>
+            <button class="btn btn--quiet btn--icon" type="button" aria-label="Ajouter une quête"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button>
+            <button class="btn btn--secondary btn--small" type="button">Petit · 44 px</button>
+          </div>
+          <button class="btn btn--primary" type="button" aria-busy="true"><svg class="icon spin" aria-hidden="true"><use href="icons.svg#i-spinner"/></svg>Enregistrement…</button>
+        </div>
+        <p class="specimen-cap"><strong>États</strong><code>:active / .is-pressed · :focus-visible · aria-busy="true"</code></p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame">
+          <div class="specimen-row" style="align-items:center">
+            <button class="btn btn--primary" type="button">Remballer</button>
+            <span class="specimen-cap" style="display:inline">actif</span>
+          </div>
+          <div style="margin-top:var(--sp-4)">
+            <button class="btn btn--primary" type="button" aria-disabled="true" aria-describedby="why-disabled"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lock"/></svg>Remballer</button>
+            <p class="btn-reason" id="why-disabled"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>Possible seulement dans les 24 h qui suivent la quête. Celle-ci date d'hier matin.</p>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Désactivé lisible</strong><code>aria-disabled="true"</code> garde le focus ; la raison est liée par <code>aria-describedby</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Ressources ───────── -->
+  <section class="ref-section" id="ressources" aria-labelledby="ressources-h">
+    <h2 id="ressources-h">Barre de ressources</h2>
+    <p class="ref-lead">Quatre ressources, chacune une matière du monde : Énergie (verre solaire), Matériaux (terre et bois), Confiance (sauge), Lueur (lumière de lanterne). Toujours picto + chiffre + mot. Au téléphone, le mot passe sous le chiffre ; sur grand écran, une tuile teintée et le plafond s'ajoutent.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen specimen--full">
+        <div class="specimen-frame specimen-frame--sky">
+          <div class="hud-demo">
+            <button class="res" type="button" data-res="energie" aria-label="Énergie : 30 sur 40"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-energie"/></svg></span><span class="res-value">30<span class="res-cap">/40</span></span><span class="res-label">Énergie</span></button>
+            <button class="res" type="button" data-res="materiaux" aria-label="Matériaux : 78 sur 150"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-materiaux"/></svg></span><span class="res-value">78<span class="res-cap">/150</span></span><span class="res-label">Matériaux</span></button>
+            <button class="res" type="button" data-res="confiance" aria-label="Confiance : 8"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-confiance"/></svg></span><span class="res-value">8</span><span class="res-label">Confiance</span></button>
+            <button class="res" type="button" data-res="lueur" aria-label="Lueur : 61"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lueur"/></svg></span><span class="res-value">61</span><span class="res-label">Lueur</span></button>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Au repos</strong><code>button.res[data-res="energie|materiaux|confiance|lueur"]</code></p>
+      </div>
+      <div class="specimen specimen--full">
+        <div class="specimen-frame specimen-frame--sky">
+          <div class="hud-demo">
+            <button class="res is-hit" type="button" data-res="energie" aria-label="Énergie : 34 sur 40"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-energie"/></svg></span><span class="res-value">34<span class="res-cap">/40</span></span><span class="res-label">Énergie</span><span class="res-delta" style="opacity:1" aria-hidden="true">+4</span></button>
+            <button class="res" type="button" data-res="materiaux" data-full="true" aria-label="Matériaux : 150 sur 150, plein"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-materiaux"/></svg></span><span class="res-value">150<span class="res-cap">/150</span></span><span class="res-label">Matériaux</span></button>
+            <button class="res" type="button" data-res="confiance" aria-label="Confiance : 9"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-confiance"/></svg></span><span class="res-value">9</span><span class="res-label">Confiance</span><span class="res-delta" style="opacity:1" aria-hidden="true">+1</span></button>
+            <button class="res" type="button" data-res="lueur" aria-label="Lueur : 58"><span class="res-tile"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lueur"/></svg></span><span class="res-value">58</span><span class="res-label">Lueur</span><span class="res-delta res-delta--spend" style="opacity:1" aria-hidden="true">−3</span></button>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Gain, plein, dépense</strong><code>.res-delta.is-shown · [data-full="true"] · .res-delta--spend</code> Le chiffre change au moment de l'impact, pas avant.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Annonce ───────── -->
+  <section class="ref-section" id="annonce" aria-labelledby="annonce-h">
+    <h2 id="annonce-h">Annonce de gain</h2>
+    <p class="ref-lead">Une ligne, dans une voie réservée sous les ressources : rien d'autre n'y est posé, elle ne peut donc couvrir aucun bouton. Elle ne capte pas les touchers et s'efface après 4 s. Le texte complet part dans une région <code>aria-live="polite"</code>.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen specimen--full">
+        <div class="specimen-frame specimen-frame--sky">
+          <div class="lane-demo">
+            <p class="announce announce--static">
+              <span class="announce-done"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span>
+              <span class="announce-item">+12 PE</span><span class="announce-sep">·</span>
+              <span class="announce-item" data-res="energie">+4 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-energie"/></svg><span class="sr-only">Énergie</span></span><span class="announce-sep">·</span>
+              <span class="announce-item" data-res="materiaux">+6 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-materiaux"/></svg><span class="sr-only">Matériaux</span></span><span class="announce-sep">·</span>
+              <span class="announce-item announce-tail" data-res="lueur">Lueur → Atelier</span>
+            </p>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>« Laver les fenêtres » terminée</strong>Lu à voix haute : « Quête terminée : Laver les fenêtres. Plus 12 points d'effort, plus 4 Énergie, plus 6 Matériaux. La Lueur part vers l'Atelier. »</p>
+        <div><button class="btn btn--secondary" type="button" data-action="replay-announce"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg>Rejouer dans la coquille</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Fil du jour ───────── -->
+  <section class="ref-section" id="fil" aria-labelledby="fil-h">
+    <h2 id="fil-h">Fil du jour</h2>
+    <p class="ref-lead">La quête n° 1 en grand, lisible en deux secondes : titre sur deux lignes au plus, durée estimée, Cote, raison courte, et deux boutons. Une quête commencée est épinglée à sa place. Les deux autres recommandations sont repliées dessous.</p>
+    <div class="ref-grid">
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone">
+          <article class="fil-quest" data-state="doing" aria-labelledby="fil-doing-t">
+            <h3 class="fil-title" id="fil-doing-t">Laver les fenêtres</h3>
+            <button class="cote" type="button" aria-label="Cote 49. Pourquoi ?"><span class="cote-value">49</span><span class="cote-label">Cote</span></button>
+            <ul class="meta">
+              <li class="meta-item--doing"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours depuis 12 min</li>
+              <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 45 min</li>
+              <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>1/3</li>
+            </ul>
+            <p class="fil-reason"><span>Prochaine étape : salon.</span> <button class="link-btn" type="button">Étapes</button></p>
+            <div class="fil-actions">
+              <button class="btn btn--primary" type="button">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+              <button class="btn btn--secondary" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pause"/></svg>Pause</button>
+            </div>
+          </article>
+        </div>
+        <p class="specimen-cap"><strong>En cours (épinglée)</strong><code>.fil-quest[data-state="doing"]</code></p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone">
+          <div class="empty">
+            <span class="empty-mark"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lueur"/></svg></span>
+            <h3 class="empty-title">Aucune quête ouverte</h3>
+            <p class="empty-text">L'Orée veille. Ajoute une vraie tâche quand elle se présente.</p>
+            <button class="btn btn--primary" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg>Ajouter une quête</button>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Vide</strong><code>.empty</code></p>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone">
+          <div class="skeleton" aria-busy="true" aria-label="Chargement des quêtes">
+            <span class="skel skel--title"></span>
+            <span class="skel skel--title-2"></span>
+            <span class="skel skel--meta"></span>
+            <div class="skel-pair"><span class="skel skel--btn"></span><span class="skel skel--btn"></span></div>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Chargement</strong><code>.skeleton .skel</code> Reflet figé en mouvement réduit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Trois cartes ───────── -->
+  <section class="ref-section" id="cartes" aria-labelledby="cartes-h">
+    <h2 id="cartes-h">Trois cartes</h2>
+    <p class="ref-lead">La version dépliée du Fil du jour (feuille ouverte, tablette, grand écran). Côte à côte quand la place dépasse 620 px, empilées sinon. Une quête de priorité 8 ou plus porte l'étiquette « Prioritaire » et reste toujours parmi les trois (garde-fou).</p>
+    <div class="reco-wrap">
+      <ul class="reco-list">
+        <li class="reco reco--first">
+          <div class="reco-head">
+            <h3 class="reco-title">Réparer une poignée</h3>
+            <button class="cote" type="button" aria-label="Cote 82. Pourquoi ?"><span class="cote-value">82</span><span class="cote-label">Cote</span></button>
+          </div>
+          <ul class="meta">
+            <li class="reco-kind"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-target"/></svg>À faire d'abord</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 15 min</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>demain</li>
+            <li><span class="tag tag--prio"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-flag"/></svg>Prioritaire</span></li>
+          </ul>
+          <div class="reco-actions">
+            <button class="btn btn--primary" type="button">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+            <button class="btn btn--secondary" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg>Je m'y mets</button>
+          </div>
+        </li>
+        <li class="reco">
+          <div class="reco-head">
+            <h3 class="reco-title">Payer la facture d'électricité</h3>
+            <button class="cote" type="button" aria-label="Cote 74. Pourquoi ?"><span class="cote-value">74</span><span class="cote-label">Cote</span></button>
+          </div>
+          <ul class="meta">
+            <li class="reco-kind"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-quick"/></svg>Victoire rapide</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 5 min</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</li>
+          </ul>
+          <div class="reco-actions">
+            <button class="btn btn--secondary" type="button">Fait <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></button>
+          </div>
+        </li>
+        <li class="reco">
+          <div class="reco-head">
+            <h3 class="reco-title">Classer les documents</h3>
+            <button class="cote" type="button" aria-label="Cote 48. Pourquoi ?"><span class="cote-value">48</span><span class="cote-label">Cote</span></button>
+          </div>
+          <ul class="meta">
+            <li class="reco-kind"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-chantier"/></svg>Grand chantier</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 3 h</li>
+            <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>étape 1/4</li>
+            <li><span class="tag tag--prio"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-flag"/></svg>Prioritaire</span></li>
+          </ul>
+          <div class="reco-actions">
+            <button class="btn btn--secondary" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-start"/></svg>Je m'y mets</button>
+            <button class="btn btn--quiet" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-split"/></svg>Découper</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <p class="specimen-cap" style="margin-top:var(--sp-3)"><code>.reco-wrap > .reco-list > .reco(.reco--first)</code> · catégorie : <code>.meta > .reco-kind</code> · étiquette du garde-fou : <code>.tag--prio</code></p>
+  </section>
+
+  <!-- ───────── Lignes ───────── -->
+  <section class="ref-section" id="lignes" aria-labelledby="lignes-h">
+    <h2 id="lignes-h">Lignes de quête</h2>
+    <p class="ref-lead">Toucher la case termine la quête (deux touchers en tout depuis la liste) ; toucher le reste ouvre la fiche. Une échéance passée devient une caisse au bord du chemin : couleur de terre, picto et texte, aucun rouge, rien de perdu. Une quête faite garde des actions pleinement lisibles.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen specimen--full">
+        <div class="specimen-frame specimen-frame--phone" style="max-width:560px">
+          <ul class="quest-list">
+            <li class="quest" data-state="doing">
+              <button class="quest-check" type="button" aria-label="Marquer « Laver les fenêtres » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Laver les fenêtres</span>
+                  <span class="meta">
+                    <span class="meta-item meta-item--doing"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours · 12 min</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>1/3</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">49</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" aria-label="Marquer « Réparer une poignée » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Réparer une poignée</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 15 min</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>demain</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">82</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo" data-late="true">
+              <button class="quest-check" type="button" aria-label="Marquer « Vérifier la pression des pneus » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Vérifier la pression des pneus</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-relais"/></svg>Relais du convoi</span>
+                    <span class="meta-item meta-item--late"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-crate"/></svg>Attend depuis 3 j</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">70</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" aria-label="Marquer « Préparer les repas de la semaine » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Préparer les repas de la semaine</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg>Maison commune</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 1 h</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-repeat"/></svg>chaque semaine</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-steps"/></svg><span class="sr-only">Étapes : </span>2/5</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">46</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="todo">
+              <button class="quest-check" type="button" aria-label="Marquer « Trier les boîtes du sous-sol » comme faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></button>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Trier les boîtes du sous-sol et apporter ce qui ne sert plus à l'écocentre avant la fin du mois, voir https://exemple.org/liste-des-matieres-acceptees-a-l-ecocentre</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-bastion"/></svg>Place du Bastion</span>
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>≈ 2 h</span>
+                  </span>
+                </span>
+                <span class="cote cote--sm"><span class="cote-value">39</span><span class="sr-only">de Cote</span></span>
+              </button>
+            </li>
+            <li class="quest" data-state="done">
+              <span class="quest-check" role="img" aria-label="Faite"><span class="quest-check-ring"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Vider le lave-vaisselle</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</span>
+                    <span class="meta-item">Faite à 7 h 40</span>
+                  </span>
+                </span>
+              </button>
+              <div class="quest-aside"><button class="btn btn--quiet btn--small" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-undo"/></svg>Remballer</button></div>
+            </li>
+            <li class="quest" data-state="archived">
+              <span class="quest-icon" role="img" aria-label="Archivée"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archive"/></svg></span>
+              <button class="quest-main" type="button">
+                <span class="quest-text">
+                  <span class="quest-title">Donner les vêtements inutilisés</span>
+                  <span class="meta">
+                    <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg>Maison commune</span>
+                    <span class="meta-item">Archivée le 28 sept.</span>
+                  </span>
+                </span>
+              </button>
+              <div class="quest-aside"><button class="btn btn--quiet btn--small" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-unarchive"/></svg>Ressortir</button></div>
+            </li>
+          </ul>
+        </div>
+        <p class="specimen-cap"><strong>États</strong><code>li.quest[data-state="todo|doing|done|archived"][data-late="true"]</code> · en cours, à faire, en retard, récurrente avec étapes, titre très long, faite, archivée.</p>
+      </div>
+    </div>
+    <div class="ref-grid" style="margin-top:var(--sp-5)">
+      <div class="specimen">
+        <div class="specimen-frame specimen-row">
+          <span class="tag tag--doing"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours</span>
+          <span class="tag tag--done"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg>Faite</span>
+          <span class="tag tag--late"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-crate"/></svg>Attend depuis 3 j</span>
+          <span class="tag tag--prio"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-flag"/></svg>Prioritaire</span>
+          <span class="tag tag--archived"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archive"/></svg>Archivée</span>
+          <span class="tag tag--guess">Deviné</span>
+          <span class="tag"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-repeat"/></svg>Chaque semaine</span>
+        </div>
+        <p class="specimen-cap"><strong>Étiquettes</strong><code>.tag--doing · --done · --late · --prio · --archived · --guess</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Outils ───────── -->
+  <section class="ref-section" id="outils" aria-labelledby="outils-h">
+    <h2 id="outils-h">Tri, filtres et recherche</h2>
+    <p class="ref-lead">Statut en contrôle segmenté (vrais boutons radio), tri dans la liste native du téléphone (7 tris : Cote, Priorité, Durée, Effort, Échéance, Ancienneté, Secteur), filtres en puces qui se cumulent. Une puce active passe en sauge et gagne un ✓ dessiné. Les secteurs défilent sur une ligne, le bord droit s'estompe pour montrer la suite.</p>
+    <div class="ref-grid">
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone">
+          <div class="toolbar">
+            <div class="search" role="search">
+              <svg class="icon" aria-hidden="true"><use href="icons.svg#i-search"/></svg>
+              <input class="search-input" type="search" value="fen" aria-label="Chercher une quête" autocomplete="off">
+              <button class="search-clear" type="button" data-action="search-clear" aria-label="Effacer la recherche"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
+            </div>
+            <div class="toolbar-row">
+              <fieldset class="seg">
+                <legend class="sr-only">Statut</legend>
+                <label class="seg-option"><input type="radio" name="statut-demo" value="todo" checked><span>À faire <b>8</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut-demo" value="done"><span>Faites <b>1</b></span></label>
+                <label class="seg-option"><input type="radio" name="statut-demo" value="archived"><span>Archivées <b>1</b></span></label>
+              </fieldset>
+              <label class="sort">
+                <span class="sort-label"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-sort"/></svg>Trier</span>
+                <select class="select">
+                  <option>Cote</option><option>Priorité</option><option>Durée</option><option selected>Effort</option><option>Échéance</option><option>Ancienneté</option><option>Secteur</option>
+                </select>
+              </label>
+            </div>
+            <div class="chips" role="group" aria-label="Filtres rapides">
+              <button class="chip" type="button" aria-pressed="true"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-clock"/></svg>15 min</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg>Peu d'énergie</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg>Cette semaine</button>
+            </div>
+            <div class="chips chips--scroll" role="group" aria-label="Secteurs">
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-champs"/></svg>Champs</button>
+              <button class="chip" type="button" aria-pressed="true"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg>Atelier</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg>Archives</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg>Maison commune</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-relais"/></svg>Relais du convoi</button>
+              <button class="chip" type="button" aria-pressed="false"><svg class="icon chip-check" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="icon" aria-hidden="true"><use href="icons.svg#i-bastion"/></svg>Place du Bastion</button>
+            </div>
+          </div>
+          <div class="empty empty--inline">
+            <h3 class="empty-title">Aucune quête ne correspond</h3>
+            <p class="empty-text">« fen » avec « 15 min » dans l'Atelier ne donne rien.</p>
+            <button class="btn btn--quiet" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg>Retirer les filtres</button>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>Filtres actifs et résultat vide</strong><code>.chip[aria-pressed="true"] · .empty--inline</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Ajout rapide ───────── -->
+  <section class="ref-section" id="ajout" aria-labelledby="ajout-h">
+    <h2 id="ajout-h">Ajout rapide en trois gestes</h2>
+    <p class="ref-lead">1. Écrire le titre. 2. Vérifier le secteur deviné (déjà coché, on le change d'un toucher). 3. Ajouter. Priorité, durée et effort partent avec des valeurs par défaut, repliées. L'erreur s'écrit sous le champ, jamais dans une bulle qui passerait sous le fond de la feuille.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen">
+        <dialog class="sheet sheet--inline" id="dlg-add" aria-labelledby="add-h" open>
+          <header class="sheet-head">
+            <h2 class="sheet-title" id="add-h">Nouvelle quête</h2>
+            <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="Fermer"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
+          </header>
+          <form class="sheet-body" method="dialog" id="add-form">
+            <div class="field">
+              <label class="field-label" for="add-title">Quoi faire ?</label>
+              <input class="input input--lg" id="add-title" name="title" value="Remplacer le filtre de la hotte" autocomplete="off" enterkeyhint="done" aria-describedby="add-title-hint">
+              <p class="field-hint" id="add-title-hint">Le secteur se devine à partir des mots du titre.</p>
+            </div>
+            <fieldset class="field">
+              <legend class="field-label">Secteur <span class="tag tag--guess">Deviné d'après « hotte »</span></legend>
+              <div class="sector-picker">
+                <label class="sector-option"><input type="radio" name="add-sector" value="atelier" checked><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-atelier"/></svg><span class="sector-text"><span class="sector-name">Atelier</span><span class="sector-domain">Maison</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+                <label class="sector-option"><input type="radio" name="add-sector" value="champs"><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-champs"/></svg><span class="sector-text"><span class="sector-name">Champs</span><span class="sector-domain">Terrain</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+                <label class="sector-option"><input type="radio" name="add-sector" value="archives"><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archives"/></svg><span class="sector-text"><span class="sector-name">Archives</span><span class="sector-domain">Administratif</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+                <label class="sector-option"><input type="radio" name="add-sector" value="maison-commune"><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-maison-commune"/></svg><span class="sector-text"><span class="sector-name">Maison commune</span><span class="sector-domain">Enfants</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+                <label class="sector-option"><input type="radio" name="add-sector" value="relais"><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-relais"/></svg><span class="sector-text"><span class="sector-name">Relais du convoi</span><span class="sector-domain">Véhicule</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+                <label class="sector-option"><input type="radio" name="add-sector" value="bastion"><span class="sector-card"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-bastion"/></svg><span class="sector-text"><span class="sector-name">Place du Bastion</span><span class="sector-domain">Autre</span></span><span class="sector-tick"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span></span></label>
+              </div>
+            </fieldset>
+            <details class="disclosure">
+              <summary>
+                <span class="disclosure-summary">Priorité <b>5</b> · <b>≈ 15 min</b> · effort <b>3</b></span>
+                <span class="disclosure-action">Ajuster <svg class="icon" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></span>
+              </summary>
+              <div class="disclosure-body">
+                <div class="stepper-row">
+                  <span class="stepper-label"><span class="stepper-name" id="st-p">Priorité</span><span class="stepper-hint">Moyenne</span></span>
+                  <span class="stepper" role="group" aria-labelledby="st-p">
+                    <button type="button" data-step="-1" aria-label="Diminuer la priorité"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button>
+                    <output aria-live="polite">5</output>
+                    <button type="button" data-step="1" aria-label="Augmenter la priorité"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button>
+                  </span>
+                </div>
+                <div class="stepper-row">
+                  <span class="stepper-label"><span class="stepper-name" id="st-l">Durée</span><span class="stepper-hint">≈ 15 min</span></span>
+                  <span class="stepper" role="group" aria-labelledby="st-l">
+                    <button type="button" data-step="-1" aria-label="Diminuer la durée"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button>
+                    <output aria-live="polite">2</output>
+                    <button type="button" data-step="1" aria-label="Augmenter la durée"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button>
+                  </span>
+                </div>
+                <div class="stepper-row">
+                  <span class="stepper-label"><span class="stepper-name" id="st-d">Effort</span><span class="stepper-hint">Facile</span></span>
+                  <span class="stepper" role="group" aria-labelledby="st-d">
+                    <button type="button" data-step="-1" aria-label="Diminuer l'effort"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button>
+                    <output aria-live="polite">3</output>
+                    <button type="button" data-step="1" aria-label="Augmenter l'effort"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button>
+                  </span>
+                </div>
+              </div>
+            </details>
+            <label class="check-row"><input type="checkbox" name="already-done"><span>Déjà faite aujourd'hui<small>Elle compte, sans passer par la liste.</small></span></label>
+          </form>
+          <footer class="sheet-foot">
+            <button class="btn btn--primary btn--block" type="submit" form="add-form"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg>Ajouter la quête</button>
+          </footer>
+        </dialog>
+        <p class="specimen-cap"><strong>Feuille d'ajout</strong><code>dialog.sheet</code> · feuille du bas au téléphone, fenêtre centrée dès 700 px.</p>
+        <div><button class="btn btn--secondary" type="button" data-open="dlg-add">Ouvrir en vrai</button></div>
+      </div>
+      <div class="specimen">
+        <div class="sheet sheet--inline">
+          <header class="sheet-head">
+            <h2 class="sheet-title">Nouvelle quête</h2>
+            <button class="btn btn--quiet btn--icon" type="button" aria-label="Fermer"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
+          </header>
+          <div class="sheet-body">
+            <div class="field">
+              <label class="field-label" for="add-title-err">Quoi faire ?</label>
+              <input class="input input--lg" id="add-title-err" placeholder="Ex. : Laver les fenêtres" aria-invalid="true" aria-describedby="add-title-err-msg" autocomplete="off">
+              <p class="field-error" id="add-title-err-msg"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-why"/></svg>Écris d'abord ce qu'il y a à faire.</p>
+            </div>
+          </div>
+          <footer class="sheet-foot">
+            <button class="btn btn--primary btn--block" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg>Ajouter la quête</button>
+          </footer>
+        </div>
+        <p class="specimen-cap"><strong>Erreur dans le champ</strong><code>.input[aria-invalid="true"] + .field-error</code> Le bouton reste actif : il explique au lieu de bloquer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Fiche ───────── -->
+  <section class="ref-section" id="fiche" aria-labelledby="fiche-h">
+    <h2 id="fiche-h">Fiche de quête</h2>
+    <p class="ref-lead">Tout ce qui se modifie : titre, secteur, réglages, échéance, récurrence, étapes (12 au plus, la première déjà cochée), notes. Archiver et Remballer sont discrets ; Supprimer est la seule action en braise et demande une confirmation.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen">
+        <dialog class="sheet sheet--inline" id="dlg-fiche" aria-labelledby="fiche-t" open>
+          <header class="sheet-head">
+            <h2 class="sheet-title" id="fiche-t">Fiche de quête</h2>
+            <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="Fermer"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
+          </header>
+          <form class="sheet-body" method="dialog" id="fiche-form">
+            <div class="fiche-summary">
+              <button class="cote" type="button" data-action="why" aria-label="Cote 49. Pourquoi ?"><span class="cote-value">49</span><span class="cote-label">Cote</span></button>
+              <span class="tag tag--doing"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"/></svg>En cours · 12 min</span>
+              <button class="link-btn" type="button" data-action="why">Pourquoi ?</button>
+            </div>
+            <div class="field">
+              <label class="field-label" for="fiche-title">Titre</label>
+              <input class="input" id="fiche-title" value="Laver les fenêtres" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field-label" for="fiche-sector">Secteur</label>
+              <select class="select" id="fiche-sector">
+                <option selected>Atelier · Maison</option><option>Champs · Terrain</option><option>Archives · Administratif</option><option>Maison commune · Enfants</option><option>Relais du convoi · Véhicule</option><option>Place du Bastion · Autre</option>
+              </select>
+            </div>
+            <div class="disclosure-body" style="border:1px solid var(--c-line);border-radius:var(--r-md)">
+              <div class="stepper-row">
+                <span class="stepper-label"><span class="stepper-name" id="fs-p">Priorité</span><span class="stepper-hint">Moyenne</span></span>
+                <span class="stepper" role="group" aria-labelledby="fs-p"><button type="button" data-step="-1" aria-label="Diminuer la priorité"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button><output aria-live="polite">6</output><button type="button" data-step="1" aria-label="Augmenter la priorité"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button></span>
+              </div>
+              <div class="stepper-row">
+                <span class="stepper-label"><span class="stepper-name" id="fs-l">Durée</span><span class="stepper-hint">≈ 45 min</span></span>
+                <span class="stepper" role="group" aria-labelledby="fs-l"><button type="button" data-step="-1" aria-label="Diminuer la durée"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button><output aria-live="polite">4</output><button type="button" data-step="1" aria-label="Augmenter la durée"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button></span>
+              </div>
+              <div class="stepper-row">
+                <span class="stepper-label"><span class="stepper-name" id="fs-d">Effort</span><span class="stepper-hint">Facile</span></span>
+                <span class="stepper" role="group" aria-labelledby="fs-d"><button type="button" data-step="-1" aria-label="Diminuer l'effort"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></button><output aria-live="polite">3</output><button type="button" data-step="1" aria-label="Augmenter l'effort"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button></span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="fiche-deadline">Échéance</label>
+              <input class="input" type="date" id="fiche-deadline" aria-describedby="fiche-deadline-hint">
+              <p class="field-hint" id="fiche-deadline-hint">Facultative. Une échéance proche fait monter la Cote.</p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="fiche-recur"><svg class="icon icon--sm" aria-hidden="true"><use href="icons.svg#i-repeat"/></svg>Récurrence</label>
+              <select class="select" id="fiche-recur">
+                <option selected>Aucune</option><option>Chaque jour</option><option>Chaque semaine</option><option>Chaque mois</option>
+              </select>
+            </div>
+            <fieldset class="field">
+              <legend class="field-label"><svg class="icon icon--sm" aria-hidden="true"><use href="icons.svg#i-steps"/></svg>Étapes <span class="tag">1/3</span></legend>
+              <ul class="steps">
+                <li class="step"><label><input type="checkbox" checked><span class="step-text">Sortir le seau et la raclette</span></label><button class="step-remove" type="button" aria-label="Retirer l'étape « Sortir le seau et la raclette »"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></li>
+                <li class="step"><label><input type="checkbox"><span class="step-text">Salon</span></label><button class="step-remove" type="button" aria-label="Retirer l'étape « Salon »"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></li>
+                <li class="step"><label><input type="checkbox"><span class="step-text">Chambres</span></label><button class="step-remove" type="button" aria-label="Retirer l'étape « Chambres »"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button></li>
+              </ul>
+              <div class="step-add">
+                <input class="input" placeholder="Nouvelle étape" aria-label="Nouvelle étape" autocomplete="off">
+                <button class="btn btn--secondary btn--icon" type="button" aria-label="Ajouter l'étape"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></button>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label class="field-label" for="fiche-notes"><svg class="icon icon--sm" aria-hidden="true"><use href="icons.svg#i-note"/></svg>Notes</label>
+              <textarea class="textarea" id="fiche-notes" placeholder="Un mot pour plus tard">Produit sous l'évier.</textarea>
+            </div>
+            <div class="fiche-actions">
+              <button class="btn btn--quiet" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-archive"/></svg>Archiver</button>
+              <button class="btn btn--quiet btn--danger" type="button" data-action="delete"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>Supprimer</button>
+            </div>
+          </form>
+          <footer class="sheet-foot">
+            <button class="btn btn--primary btn--block" type="submit" form="fiche-form">Enregistrer</button>
+          </footer>
+        </dialog>
+        <p class="specimen-cap"><strong>Fiche</strong><code>dialog.sheet</code> · même gabarit que l'ajout.</p>
+        <div><button class="btn btn--secondary" type="button" data-open="dlg-fiche">Ouvrir en vrai</button></div>
+      </div>
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone specimen-stack" style="justify-items:stretch">
+          <div class="confirm" role="alertdialog" aria-labelledby="del-t" aria-describedby="del-d">
+            <p class="confirm-title" id="del-t"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-trash"/></svg>Supprimer « Laver les fenêtres » ?</p>
+            <p id="del-d">Elle disparaîtra de ta liste. Pour la garder de côté, archive-la plutôt.</p>
+            <div class="confirm-actions">
+              <button class="btn btn--secondary" type="button">Garder</button>
+              <button class="btn btn--danger" type="button">Supprimer pour de bon</button>
+            </div>
+          </div>
+          <div class="fiche-actions" style="border-top:0;padding-top:0">
+            <button class="btn btn--quiet" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-undo"/></svg>Remballer</button>
+          </div>
+          <p class="fiche-note">« Remballer » apparaît sur une quête faite depuis moins de 24 h : il annule ce qu'elle a rapporté si c'était une erreur.</p>
+        </div>
+        <p class="specimen-cap"><strong>Confirmation et Remballer</strong><code>.confirm</code> remplace la rangée d'actions ; le focus va sur « Garder ».</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Pourquoi ───────── -->
+  <section class="ref-section" id="pourquoi" aria-labelledby="pourquoi-h">
+    <h2 id="pourquoi-h">« Pourquoi ? »</h2>
+    <p class="ref-lead">La Cote décomposée comme un relevé : chaque terme, sa valeur, le total. Ouvert depuis la plaque de Cote ou le lien « Pourquoi ? ».</p>
+    <div class="ref-grid">
+      <div class="specimen">
+        <dialog class="sheet sheet--small sheet--inline" id="dlg-why" aria-labelledby="why-t" open>
+          <header class="sheet-head">
+            <h2 class="sheet-title" id="why-t">Pourquoi la Cote 82 ?</h2>
+            <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="Fermer"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-x"/></svg></button>
+          </header>
+          <div class="sheet-body">
+            <div class="why">
+              <p class="why-note" style="color:var(--text)">Réparer une poignée</p>
+              <dl class="why-ledger">
+                <div class="why-line"><dt>Priorité 8</dt><dd>+36</dd></div>
+                <div class="why-line"><dt>Courte<small>≈ 15 min</small></dt><dd>+18</dd></div>
+                <div class="why-line"><dt>Plutôt facile<small>effort 3 sur 10</small></dt><dd>+8</dd></div>
+                <div class="why-line"><dt>Échéance demain</dt><dd>+19</dd></div>
+                <div class="why-line"><dt>Ouverte depuis 3 semaines</dt><dd>+1</dd></div>
+                <div class="why-line why-total"><dt>Cote</dt><dd>82</dd></div>
+              </dl>
+              <p class="why-note">La Cote décide seulement de l'ordre des quêtes. Elle ne change pas ce qu'une quête rapporte.</p>
+            </div>
+          </div>
+        </dialog>
+        <p class="specimen-cap"><strong>Relevé de la Cote</strong><code>.why-ledger .why-line(.why-total)</code></p>
+        <div><button class="btn btn--secondary" type="button" data-open="dlg-why">Ouvrir en vrai</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── États système ───────── -->
+  <section class="ref-section" id="etats" aria-labelledby="etats-h">
+    <h2 id="etats-h">Synchronisation et réseau</h2>
+    <p class="ref-lead">Placé en haut du panneau, sous son en-tête. Hors ligne : givre, rien d'alarmant, les changements attendent. Erreur d'enregistrement : la braise, parce que c'est une casse, avec une action pour réessayer.</p>
+    <div class="ref-grid ref-grid--wide">
+      <div class="specimen">
+        <div class="specimen-frame specimen-frame--phone specimen-stack" style="justify-items:stretch">
+          <div class="sync" data-sync="offline" role="status">
+            <svg class="icon" aria-hidden="true"><use href="icons.svg#i-offline"/></svg>
+            <p class="sync-text"><strong>Hors ligne</strong>Tes changements restent sur cet appareil et partiront au retour du réseau. 2 en attente.</p>
+          </div>
+          <div class="sync" data-sync="error" role="alert">
+            <svg class="icon" aria-hidden="true"><use href="icons.svg#i-cloud-alert"/></svg>
+            <p class="sync-text"><strong>Pas encore enregistré sur le serveur</strong>Rien n'est perdu sur cet appareil. Nouvel essai dans 30 s.</p>
+            <button class="btn btn--secondary btn--small" type="button"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg>Réessayer</button>
+          </div>
+          <div class="sync" data-sync="saving" role="status">
+            <svg class="icon spin" aria-hidden="true"><use href="icons.svg#i-spinner"/></svg>
+            <p class="sync-text">Enregistrement…</p>
+          </div>
+          <div class="sync" data-sync="saved" role="status">
+            <svg class="icon" aria-hidden="true"><use href="icons.svg#i-cloud-ok"/></svg>
+            <p class="sync-text">Enregistré à 14 h 05</p>
+          </div>
+        </div>
+        <p class="specimen-cap"><strong>États</strong><code>.sync[data-sync="offline|error|saving|saved"]</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Mouvement ───────── -->
+  <section class="ref-section" id="mouvement" aria-labelledby="mouvement-h">
+    <h2 id="mouvement-h">Mouvement</h2>
+    <p class="ref-lead">Jetons repris de la revue (MOTION.md). En mouvement réduit (préférence du système ou réglage <code>&lt;html data-motion="reduce"&gt;</code>) : plus de déplacement ni d'échelle, les distances tombent à zéro par <code>--motion: 0</code>, il reste des fondus de 150 ms au plus et les boucles s'arrêtent.</p>
+    <div class="table-scroll">
+      <table class="ref-table">
+        <thead><tr><th scope="col">Jeton</th><th scope="col">Valeur</th><th scope="col">Usage</th><th scope="col">Mouvement réduit</th></tr></thead>
+        <tbody>
+          <tr><td>--t-press</td><td>90 ms</td><td>bouton qui descend sur son socle</td><td>couleur seulement</td></tr>
+          <tr><td>--t-micro</td><td>150 ms</td><td>puces, cases, survol</td><td>inchangé (fondu)</td></tr>
+          <tr><td>--t-short</td><td>220 ms</td><td>dépliage des alternatives, sortie de feuille</td><td>150 ms, sans glissement</td></tr>
+          <tr><td>--t-medium</td><td>320 ms</td><td>feuille qui monte, panneau replié ↔ ouvert</td><td>150 ms, fondu</td></tr>
+          <tr><td>--t-long</td><td>480 ms</td><td>rotation, grands déplacements (semaine 2)</td><td>150 ms</td></tr>
+          <tr><td>--t-camera</td><td>600 ms</td><td>caméra du monde</td><td>instantané</td></tr>
+          <tr><td>--t-celebrate</td><td>1 200 ms</td><td>fil de lumière (au plus 1,4 s, un toucher l'accélère)</td><td>150 ms + annonce</td></tr>
+          <tr><td>--ease-out</td><td>cubic-bezier(.16,1,.3,1)</td><td>entrées</td><td>—</td></tr>
+          <tr><td>--ease-in</td><td>cubic-bezier(.55,0,.75,.2)</td><td>sorties (70 % de la durée d'entrée)</td><td>—</td></tr>
+          <tr><td>--ease-back</td><td>cubic-bezier(.34,1.56,.64,1)</td><td>chiffre du HUD à l'impact</td><td>sans échelle</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="ref-foot">Fichiers : <code>css/tokens.css</code>, <code>css/base.css</code>, <code>css/components.css</code>, pictos <code>design/icons.svg</code>. Contrat : <code>app/DESIGN.md</code>.</p>
+</main>
+
+</body>
+</html>

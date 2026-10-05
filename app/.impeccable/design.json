@@ -1,0 +1,975 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T05:26:13Z",
+  "title": "Design System: La lisière rallumée",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Encre végétale",
+        "canonical": "#273026",
+        "tonalRamp": [
+          "#080d07",
+          "#222921",
+          "#3f483e",
+          "#5f695e",
+          "#828c81",
+          "#a8b1a7",
+          "#c9d0c8",
+          "#eaf0ea"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Encre mousse",
+        "canonical": "#4f5848",
+        "tonalRamp": [
+          "#080d05",
+          "#22291d",
+          "#40483a",
+          "#606a59",
+          "#848d7d",
+          "#a9b1a3",
+          "#c9d0c4",
+          "#ebf1e7"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Encre lichen",
+        "canonical": "#5c6452",
+        "tonalRamp": [
+          "#090d05",
+          "#23291c",
+          "#414838",
+          "#616957",
+          "#858c7b",
+          "#aab1a1",
+          "#cad0c3",
+          "#ecf1e6"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papier récolte",
+        "canonical": "#fff8e8",
+        "tonalRamp": [
+          "#0e0b05",
+          "#2a261c",
+          "#4a4438",
+          "#6c6658",
+          "#8e897b",
+          "#b3ada1",
+          "#d2cdc3",
+          "#f2eee6"
+        ]
+      },
+      "paper-raised": {
+        "role": "neutral",
+        "displayName": "Papier neuf",
+        "canonical": "#fffdf6",
+        "tonalRamp": [
+          "#0c0b08",
+          "#282622",
+          "#464540",
+          "#686660",
+          "#8b8983",
+          "#afaea9",
+          "#cfcec9",
+          "#efeeeb"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Papier creusé",
+        "canonical": "#f6edd6",
+        "tonalRamp": [
+          "#0f0b03",
+          "#2c2617",
+          "#4b4433",
+          "#6d6551",
+          "#908975",
+          "#b4ad9c",
+          "#d3cdbe",
+          "#f3eee2"
+        ]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Crème",
+        "canonical": "#f5e6c0",
+        "tonalRamp": [
+          "#110a00",
+          "#2f250b",
+          "#504425",
+          "#726543",
+          "#958868",
+          "#b9ad90",
+          "#d7cdb4",
+          "#f6eedb"
+        ]
+      },
+      "cream-face": {
+        "role": "neutral",
+        "displayName": "Socle du crème",
+        "canonical": "#dcc58e",
+        "tonalRamp": [
+          "#140900",
+          "#332400",
+          "#55420e",
+          "#78632f",
+          "#9b8756",
+          "#beac82",
+          "#dccca8",
+          "#faeed1"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Filet",
+        "canonical": "#e6dbbf",
+        "tonalRamp": [
+          "#100a01",
+          "#2d2613",
+          "#4d442e",
+          "#6f654c",
+          "#928871",
+          "#b6ad98",
+          "#d4cdbb",
+          "#f4eee0"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Filet marqué",
+        "canonical": "#cdbb8d",
+        "tonalRamp": [
+          "#120900",
+          "#312502",
+          "#52431b",
+          "#756439",
+          "#98885f",
+          "#bbad89",
+          "#d9cdae",
+          "#f7eed6"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sauge",
+        "canonical": "#718c5d",
+        "tonalRamp": [
+          "#040f00",
+          "#1a2c09",
+          "#364d24",
+          "#556f42",
+          "#799267",
+          "#a0b790",
+          "#c1d5b4",
+          "#e5f5da"
+        ]
+      },
+      "sage-deep": {
+        "role": "primary",
+        "displayName": "Sauge d'autonomie",
+        "canonical": "#3f6047",
+        "tonalRamp": [
+          "#010f04",
+          "#142d1b",
+          "#2f4d37",
+          "#4e7056",
+          "#729379",
+          "#9ab7a0",
+          "#bdd5c2",
+          "#e1f4e5"
+        ]
+      },
+      "sage-hover": {
+        "role": "primary",
+        "displayName": "Sauge de survol",
+        "canonical": "#47694f",
+        "tonalRamp": [
+          "#010f04",
+          "#132d1a",
+          "#2e4d36",
+          "#4e7055",
+          "#729379",
+          "#9ab7a0",
+          "#bcd5c1",
+          "#e1f5e5"
+        ]
+      },
+      "sage-face": {
+        "role": "primary",
+        "displayName": "Socle sauge",
+        "canonical": "#2c4733",
+        "tonalRamp": [
+          "#020f05",
+          "#172c1d",
+          "#334c39",
+          "#526e59",
+          "#76917c",
+          "#9db5a2",
+          "#bfd4c4",
+          "#e3f4e6"
+        ]
+      },
+      "sage-wash": {
+        "role": "primary",
+        "displayName": "Lavis sauge",
+        "canonical": "#e4edda",
+        "tonalRamp": [
+          "#090d05",
+          "#23291d",
+          "#414839",
+          "#626959",
+          "#858c7c",
+          "#aab1a2",
+          "#cad0c4",
+          "#ecf0e7"
+        ]
+      },
+      "glass": {
+        "role": "secondary",
+        "displayName": "Verre solaire",
+        "canonical": "#58a9a4",
+        "tonalRamp": [
+          "#001110",
+          "#00302e",
+          "#00514e",
+          "#1c7570",
+          "#4e9893",
+          "#7dbbb7",
+          "#a6dad5",
+          "#d0f8f5"
+        ]
+      },
+      "glass-deep": {
+        "role": "secondary",
+        "displayName": "Verre profond",
+        "canonical": "#2d7473",
+        "tonalRamp": [
+          "#001111",
+          "#002f2f",
+          "#02504f",
+          "#2c7372",
+          "#579694",
+          "#84bab8",
+          "#abd8d7",
+          "#d4f7f5"
+        ]
+      },
+      "glass-ink": {
+        "role": "secondary",
+        "displayName": "Encre de verre",
+        "canonical": "#245f5e",
+        "tonalRamp": [
+          "#001010",
+          "#002e2d",
+          "#164f4e",
+          "#387170",
+          "#609493",
+          "#8ab8b7",
+          "#b0d7d5",
+          "#d8f6f4"
+        ]
+      },
+      "glass-wash": {
+        "role": "secondary",
+        "displayName": "Lavis de verre",
+        "canonical": "#dcefeb",
+        "tonalRamp": [
+          "#050d0c",
+          "#1d2927",
+          "#3a4946",
+          "#5a6a67",
+          "#7d8d8a",
+          "#a3b2af",
+          "#c5d1ce",
+          "#e7f1ef"
+        ]
+      },
+      "soil": {
+        "role": "secondary",
+        "displayName": "Terre de l'Orée",
+        "canonical": "#aa6c43",
+        "tonalRamp": [
+          "#1e0100",
+          "#431800",
+          "#6a350a",
+          "#91552c",
+          "#b47a54",
+          "#d6a180",
+          "#f1c3a7",
+          "#ffe6d0"
+        ]
+      },
+      "soil-deep": {
+        "role": "secondary",
+        "displayName": "Terre profonde",
+        "canonical": "#75472f",
+        "tonalRamp": [
+          "#1a0400",
+          "#3d1c09",
+          "#633923",
+          "#885941",
+          "#ac7d66",
+          "#cea38e",
+          "#eac5b3",
+          "#ffe8d9"
+        ]
+      },
+      "soil-wash": {
+        "role": "secondary",
+        "displayName": "Lavis de terre",
+        "canonical": "#f3e2cf",
+        "tonalRamp": [
+          "#110a03",
+          "#2f2418",
+          "#4f4234",
+          "#726353",
+          "#958776",
+          "#b9ac9d",
+          "#d7ccbf",
+          "#f6ede3"
+        ]
+      },
+      "lantern": {
+        "role": "tertiary",
+        "displayName": "Lumière de matin",
+        "canonical": "#f3c879",
+        "tonalRamp": [
+          "#1a0500",
+          "#3c1f00",
+          "#603d00",
+          "#855e00",
+          "#a8833a",
+          "#caa96d",
+          "#e6ca97",
+          "#ffecc4"
+        ]
+      },
+      "lantern-glow": {
+        "role": "tertiary",
+        "displayName": "Lueur de lanterne",
+        "canonical": "#ffd98c",
+        "tonalRamp": [
+          "#180600",
+          "#3a2100",
+          "#5d3f00",
+          "#826001",
+          "#a5843e",
+          "#c7aa6f",
+          "#e3cb9a",
+          "#ffecc6"
+        ]
+      },
+      "lantern-ink": {
+        "role": "tertiary",
+        "displayName": "Encre de lanterne",
+        "canonical": "#7a5200",
+        "tonalRamp": [
+          "#1a0500",
+          "#3c1f00",
+          "#613c00",
+          "#865d15",
+          "#a98146",
+          "#cba875",
+          "#e7c99e",
+          "#ffebc9"
+        ]
+      },
+      "lantern-wash": {
+        "role": "tertiary",
+        "displayName": "Lavis de lanterne",
+        "canonical": "#fbe8b4",
+        "tonalRamp": [
+          "#130900",
+          "#312500",
+          "#534315",
+          "#756434",
+          "#98885b",
+          "#bbad86",
+          "#d9cdac",
+          "#f8eed4"
+        ]
+      },
+      "ash": {
+        "role": "tertiary",
+        "displayName": "Cendre chaude",
+        "canonical": "#a39b8d",
+        "tonalRamp": [
+          "#0e0b05",
+          "#2b261c",
+          "#4b4439",
+          "#6c6558",
+          "#8f887c",
+          "#b4ada2",
+          "#d3cdc3",
+          "#f2eee6"
+        ]
+      },
+      "ash-ink": {
+        "role": "tertiary",
+        "displayName": "Encre de cendre",
+        "canonical": "#625c52",
+        "tonalRamp": [
+          "#0e0b06",
+          "#2a261f",
+          "#4a443b",
+          "#6b655b",
+          "#8e887e",
+          "#b3ada4",
+          "#d2cdc5",
+          "#f2eee8"
+        ]
+      },
+      "ash-wash": {
+        "role": "tertiary",
+        "displayName": "Lavis de cendre",
+        "canonical": "#ebe6dc",
+        "tonalRamp": [
+          "#0d0b07",
+          "#292620",
+          "#48453d",
+          "#6a665d",
+          "#8d8980",
+          "#b1ada6",
+          "#d1cdc7",
+          "#f1eee9"
+        ]
+      },
+      "frost": {
+        "role": "tertiary",
+        "displayName": "Givre",
+        "canonical": "#9cc0cc",
+        "tonalRamp": [
+          "#000e13",
+          "#112a32",
+          "#2c4a54",
+          "#4b6c77",
+          "#6f8f9a",
+          "#97b3bd",
+          "#bad3db",
+          "#dff2f9"
+        ]
+      },
+      "frost-ink": {
+        "role": "tertiary",
+        "displayName": "Encre de givre",
+        "canonical": "#3d6577",
+        "tonalRamp": [
+          "#000e17",
+          "#0a2a37",
+          "#254a5a",
+          "#446c7e",
+          "#6a8fa1",
+          "#93b4c4",
+          "#b7d3e1",
+          "#dcf3fd"
+        ]
+      },
+      "frost-wash": {
+        "role": "tertiary",
+        "displayName": "Lavis de givre",
+        "canonical": "#e2edf1",
+        "tonalRamp": [
+          "#070c0e",
+          "#21282a",
+          "#3e474a",
+          "#5e686b",
+          "#828b8e",
+          "#a7b0b3",
+          "#c8cfd2",
+          "#eaf0f2"
+        ]
+      },
+      "ember": {
+        "role": "tertiary",
+        "displayName": "Braise",
+        "canonical": "#bf5a38",
+        "tonalRamp": [
+          "#260000",
+          "#500100",
+          "#7b2100",
+          "#a54320",
+          "#c96b4c",
+          "#ea9579",
+          "#ffb9a1",
+          "#ffdfcb"
+        ]
+      },
+      "ember-ink": {
+        "role": "tertiary",
+        "displayName": "Encre de braise",
+        "canonical": "#a3462a",
+        "tonalRamp": [
+          "#250000",
+          "#4e0500",
+          "#792407",
+          "#a2462a",
+          "#c66d52",
+          "#e7967e",
+          "#ffbaa5",
+          "#ffe0cf"
+        ]
+      },
+      "ember-face": {
+        "role": "tertiary",
+        "displayName": "Socle braise",
+        "canonical": "#7c3320",
+        "tonalRamp": [
+          "#210000",
+          "#481003",
+          "#712d1b",
+          "#994d39",
+          "#bd735f",
+          "#de9b89",
+          "#f8beae",
+          "#ffe2d6"
+        ]
+      },
+      "ember-wash": {
+        "role": "tertiary",
+        "displayName": "Lavis de braise",
+        "canonical": "#f8e1d6",
+        "tonalRamp": [
+          "#120905",
+          "#31231c",
+          "#524138",
+          "#756158",
+          "#98857b",
+          "#bbaaa1",
+          "#d9cac3",
+          "#f8ece6"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Anneau de focus",
+        "canonical": "#1d3b3a",
+        "tonalRamp": [
+          "#010e0e",
+          "#142b2a",
+          "#2f4b4a",
+          "#4e6d6c",
+          "#72908e",
+          "#9ab4b3",
+          "#bdd3d2",
+          "#e1f3f2"
+        ]
+      },
+      "sky-top": {
+        "role": "neutral",
+        "displayName": "Ciel haut",
+        "canonical": "#8ccbe0",
+        "tonalRamp": [
+          "#000f19",
+          "#002c3a",
+          "#0c4d5e",
+          "#316f82",
+          "#5a93a5",
+          "#86b7c7",
+          "#add6e4",
+          "#d5f5ff"
+        ]
+      },
+      "sky-horizon": {
+        "role": "neutral",
+        "displayName": "Ciel d'horizon",
+        "canonical": "#eef0d2",
+        "tonalRamp": [
+          "#0c0c02",
+          "#272815",
+          "#464730",
+          "#67684e",
+          "#8a8b72",
+          "#afb099",
+          "#ced0bc",
+          "#eff0e1"
+        ]
+      },
+      "lake": {
+        "role": "neutral",
+        "displayName": "Lac",
+        "canonical": "#7bbabb",
+        "tonalRamp": [
+          "#001011",
+          "#002e2f",
+          "#0f4f50",
+          "#327273",
+          "#5c9596",
+          "#88b9b9",
+          "#aed7d7",
+          "#d6f6f6"
+        ]
+      },
+      "lake-deep": {
+        "role": "neutral",
+        "displayName": "Lac profond",
+        "canonical": "#5b9ca3",
+        "tonalRamp": [
+          "#001014",
+          "#002e33",
+          "#094f55",
+          "#2f7178",
+          "#59949b",
+          "#86b8be",
+          "#acd7dc",
+          "#d5f6f9"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Affichage",
+        "purpose": "Titre de la quête n° 1 dès 700 px en portrait, total du « Pourquoi ? ». Pile arrondie du système, graisse 800."
+      },
+      "headline": {
+        "displayName": "Grand titre",
+        "purpose": "Titre de la quête n° 1 (compact et colonne), titre de feuille, valeur de Cote."
+      },
+      "title": {
+        "displayName": "Titre",
+        "purpose": "Titres de carte et de section, chiffres du HUD, valeurs du pas à pas."
+      },
+      "body": {
+        "displayName": "Corps",
+        "purpose": "Texte courant, champs, titre de ligne de quête (graisse 600). Pile système."
+      },
+      "meta": {
+        "displayName": "Métadonnées",
+        "purpose": "Lignes de méta, aides de champ, raison d'un bouton désactivé."
+      },
+      "label": {
+        "displayName": "Étiquette",
+        "purpose": "Étiquettes, libellés de ressource et de Cote, plafonds. Sans capitales."
+      },
+      "numeral": {
+        "displayName": "Chiffre rond",
+        "purpose": "Chiffres qui bougent : HUD, Cote, pas à pas, annonce. Tabulaires, pile arrondie."
+      }
+    },
+    "shadows": [
+      {
+        "name": "socle",
+        "value": "0 3px 0 var(--btn-face)",
+        "purpose": "Face latérale pleine des boutons (--face-h: 3px). Disparaît à l'appui. Plaque de Cote : 0 2px 0 var(--c-line-strong)."
+      },
+      {
+        "name": "hud",
+        "value": "0 1px 1px rgb(66 43 25 / 0.08), 0 6px 16px rgb(66 43 25 / 0.16)",
+        "purpose": "Tuiles de ressources et annonce, posées sur le monde."
+      },
+      {
+        "name": "float",
+        "value": "0 1px 2px rgb(66 43 25 / 0.10), 0 12px 28px rgb(66 43 25 / 0.20)",
+        "purpose": "Feuilles centrées dès 700 px et feuilles posées dans la page."
+      },
+      {
+        "name": "sheet",
+        "value": "0 -2px 6px rgb(40 30 15 / 0.08), 0 -12px 32px rgb(40 30 15 / 0.20)",
+        "purpose": "Panneau et feuille du bas."
+      },
+      {
+        "name": "column",
+        "value": "-1px 0 0 rgb(58 65 48 / 0.12), -14px 0 32px rgb(40 30 15 / 0.14)",
+        "purpose": "Panneau en colonne latérale à droite."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(66 43 25 / 0.08)",
+        "purpose": "Cartes de recommandation."
+      },
+      {
+        "name": "backdrop",
+        "value": "rgb(39 48 38 / 0.40)",
+        "purpose": "Fond derrière une feuille modale."
+      }
+    ],
+    "motion": [
+      {
+        "name": "t-press",
+        "value": "90ms",
+        "purpose": "Appui d'un bouton."
+      },
+      {
+        "name": "t-micro",
+        "value": "150ms",
+        "purpose": "Couleurs, bords, coche."
+      },
+      {
+        "name": "t-short",
+        "value": "220ms",
+        "purpose": "Dépliage d'une quête, chevron, entrée du fond de feuille. 150 ms en mouvement réduit."
+      },
+      {
+        "name": "t-medium",
+        "value": "320ms",
+        "purpose": "Panneau qui monte et descend, entrée de feuille. 150 ms en mouvement réduit."
+      },
+      {
+        "name": "t-long",
+        "value": "480ms",
+        "purpose": "Réservé au monde (semaine 2). 150 ms en mouvement réduit."
+      },
+      {
+        "name": "t-camera",
+        "value": "600ms",
+        "purpose": "Réservé au monde. 0 ms en mouvement réduit."
+      },
+      {
+        "name": "t-celebrate",
+        "value": "1200ms",
+        "purpose": "Réservé au monde. 150 ms en mouvement réduit."
+      },
+      {
+        "name": "t-day",
+        "value": "1600ms",
+        "purpose": "Réservé au monde. 300 ms en mouvement réduit."
+      },
+      {
+        "name": "t-announce-hold",
+        "value": "3600ms",
+        "purpose": "Durée d'affichage de l'annonce de gain (plus 400 ms de fondu)."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Courbe par défaut."
+      },
+      {
+        "name": "ease-in",
+        "value": "cubic-bezier(.55, 0, .75, .2)",
+        "purpose": "Sorties (feuille qui part, panneau qui se vide)."
+      },
+      {
+        "name": "ease-inout",
+        "value": "cubic-bezier(.65, 0, .35, 1)",
+        "purpose": "Réservé au monde."
+      },
+      {
+        "name": "ease-back",
+        "value": "cubic-bezier(.34, 1.56, .64, 1)",
+        "purpose": "Rebond du chiffre de ressource."
+      },
+      {
+        "name": "ease-bounce",
+        "value": "linear(0, .36 12%, .9 25%, 1.08 35%, 1 46%, .97 58%, 1)",
+        "purpose": "Réservé au monde."
+      },
+      {
+        "name": "motion",
+        "value": "1 | 0",
+        "purpose": "1 = mouvement complet ; 0 = réduit. Toute distance animée est multipliée par var(--motion). Réglage : <html data-motion=\"reduce|full\"> ou prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "moyen",
+        "value": "(min-width: 700px)"
+      },
+      {
+        "name": "large",
+        "value": "(min-width: 1000px), (min-width: 700px) and (orientation: landscape)"
+      },
+      {
+        "name": "tres-etroit",
+        "value": "(max-width: 339px)"
+      },
+      {
+        "name": "conteneur-hud",
+        "value": "560px"
+      },
+      {
+        "name": "conteneur-liste",
+        "value": "420px"
+      },
+      {
+        "name": "conteneur-cartes",
+        "value": "620px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Bouton principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action principale, une par vue. Sauge profonde avec socle plein de 3 px.",
+      "html": "<button class=\"ds-btn ds-btn-primary\" type=\"button\">Fait <svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m5 12.6 4.3 4.3L19 7.2\" stroke-width=\"2.6\"/></svg></button>",
+      "css": ".ds-icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid transparent;border-radius:var(--r-md);font:700 1rem/1.15 var(--font-ui);white-space:nowrap;cursor:pointer;transition:transform var(--t-press) var(--ease-out),box-shadow var(--t-press) var(--ease-out),background-color var(--t-micro) var(--ease-out)}.ds-btn:active{transform:translateY(calc(var(--motion) * var(--face-h)));box-shadow:0 calc((1 - var(--motion)) * var(--face-h)) 0 var(--ds-face)}.ds-btn:focus-visible{outline:3px solid var(--c-focus);outline-offset:3px}.ds-btn-primary{--ds-face:var(--c-sage-face);background:var(--c-sage-deep);color:var(--c-paper);box-shadow:0 var(--face-h) 0 var(--ds-face)}.ds-btn-primary:hover{background:var(--c-sage-hover)}"
+    },
+    {
+      "name": "Bouton secondaire",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Action de second rang, crème avec socle crème foncé.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\" type=\"button\">Je m'y mets</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid transparent;border-radius:var(--r-md);font:700 1rem/1.15 var(--font-ui);white-space:nowrap;cursor:pointer;transition:transform var(--t-press) var(--ease-out),box-shadow var(--t-press) var(--ease-out),background-color var(--t-micro) var(--ease-out)}.ds-btn:active{transform:translateY(calc(var(--motion) * var(--face-h)));box-shadow:0 calc((1 - var(--motion)) * var(--face-h)) 0 var(--ds-face)}.ds-btn:focus-visible{outline:3px solid var(--c-focus);outline-offset:3px}.ds-btn-secondary{--ds-face:var(--c-cream-face);background:var(--c-cream);color:var(--c-ink);box-shadow:0 var(--face-h) 0 var(--ds-face)}.ds-btn-secondary:hover{background:#f8ecce}"
+    },
+    {
+      "name": "Bouton désactivé lisible",
+      "kind": "button",
+      "refersTo": "button-disabled",
+      "description": "À plat, bord en tirets, cadenas, raison écrite dessous liée par aria-describedby.",
+      "html": "<div><button class=\"ds-btn ds-btn-off\" type=\"button\" aria-disabled=\"true\" aria-describedby=\"ds-why\">Remballer</button><p class=\"ds-reason\" id=\"ds-why\">Possible seulement dans les 24 h qui suivent la quête.</p></div>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid transparent;border-radius:var(--r-md);font:700 1rem/1.15 var(--font-ui);white-space:nowrap;cursor:pointer;transition:transform var(--t-press) var(--ease-out),box-shadow var(--t-press) var(--ease-out),background-color var(--t-micro) var(--ease-out)}.ds-btn:active{transform:translateY(calc(var(--motion) * var(--face-h)));box-shadow:0 calc((1 - var(--motion)) * var(--face-h)) 0 var(--ds-face)}.ds-btn:focus-visible{outline:3px solid var(--c-focus);outline-offset:3px}.ds-btn-off{background:transparent;color:var(--c-ink-muted);border:1.5px dashed var(--c-line-strong);box-shadow:none;cursor:not-allowed}.ds-reason{margin:8px 0 0;font-size:.875rem;line-height:1.35;color:var(--c-ink-soft)}"
+    },
+    {
+      "name": "Tuile de ressource",
+      "kind": "custom",
+      "refersTo": "resource-tile",
+      "description": "Ressource du HUD : picto, valeur ronde, mot. Matière du monde, jamais la couleur seule.",
+      "html": "<button class=\"ds-res\" type=\"button\" aria-label=\"Énergie : 30 sur 40\"><span class=\"ds-res-tile\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M13.4 2.6 5.6 13.3h5.6l-1.1 8.1 8.1-11h-5.6z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.3\"/></svg></span><span class=\"ds-res-value\">30</span><span class=\"ds-res-label\">Énergie</span></button>",
+      "css": ".ds-icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.ds-res{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:5px;row-gap:2px;min-width:96px;min-height:52px;padding:6px 7px;border:0;border-radius:var(--r-lg);background:var(--surface-hud);box-shadow:var(--shadow-hud);color:var(--c-ink);text-align:left}.ds-res-tile{color:var(--res-energie)}.ds-res-value{font:800 1.125rem/1 var(--font-num);font-variant-numeric:tabular-nums}.ds-res-label{grid-column:1/-1;font-size:.75rem;font-weight:600;line-height:1.25;color:var(--c-ink-soft)}"
+    },
+    {
+      "name": "Plaque de Cote",
+      "kind": "custom",
+      "refersTo": "cote-plate",
+      "description": "Cote d'une quête sur une plaque à socle de 2 px ; ouvre « Pourquoi ? ».",
+      "html": "<button class=\"ds-cote\" type=\"button\" aria-label=\"Cote 82. Pourquoi ?\"><span class=\"ds-cote-value\">82</span><span class=\"ds-cote-label\">Cote</span></button>",
+      "css": ".ds-cote{display:inline-grid;justify-items:center;align-content:center;gap:2px;min-width:48px;min-height:48px;padding:4px 8px 3px;border:1px solid var(--c-line-strong);border-radius:var(--r-sm);background:var(--c-paper-raised);box-shadow:0 2px 0 var(--c-line-strong);color:var(--c-ink);cursor:pointer}.ds-cote:active{transform:translateY(calc(var(--motion) * 2px));box-shadow:0 calc((1 - var(--motion)) * 2px) 0 var(--c-line-strong)}.ds-cote-value{font:800 1.25rem/1 var(--font-num);font-variant-numeric:tabular-nums}.ds-cote-label{font:600 .75rem/1.1 var(--font-ui);color:var(--c-ink-soft)}"
+    },
+    {
+      "name": "Puce de filtre",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Bascule aria-pressed ; l'état actif se remplit de sauge et ajoute une coche dessinée.",
+      "html": "<button class=\"ds-chip\" type=\"button\" aria-pressed=\"true\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m5 12.6 4.3 4.3L19 7.2\" stroke-width=\"2.6\"/></svg>Atelier</button>",
+      "css": ".ds-icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.ds-chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 12px;border:1px solid var(--c-line-strong);border-radius:var(--r-pill);background:var(--surface-card);color:var(--c-ink);font:600 .9375rem/1 var(--font-ui);cursor:pointer}.ds-chip .ds-icon{width:18px;height:18px}.ds-chip:hover{border-color:var(--c-sage)}.ds-chip[aria-pressed=\"true\"]{border-color:var(--c-sage-deep);background:var(--c-sage-deep);color:var(--c-paper)}.ds-chip:focus-visible{outline:3px solid var(--c-focus);outline-offset:2px}"
+    },
+    {
+      "name": "Champ avec erreur",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Champ de 48 px ; l'erreur est en terre (bord, filet intérieur, picto et phrase), pas en braise.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-t\">Quête</label><input class=\"ds-input\" id=\"ds-t\" aria-invalid=\"true\" aria-describedby=\"ds-err\"><p class=\"ds-error\" id=\"ds-err\">Écris d'abord ce qu'il y a à faire.</p></div>",
+      "css": ".ds-field{display:grid;gap:6px}.ds-label{font-size:.875rem;font-weight:700;color:var(--c-ink-soft)}.ds-input{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--c-line-strong);border-radius:var(--r-md);background:var(--surface-card);color:var(--c-ink);font:inherit}.ds-input:focus{border-color:var(--c-sage-deep)}.ds-input:focus-visible{outline:3px solid var(--c-focus);outline-offset:2px}.ds-input[aria-invalid=\"true\"]{border-color:var(--c-soil-deep);box-shadow:inset 0 0 0 1px var(--c-soil-deep)}.ds-error{margin:0;font-size:.875rem;font-weight:600;line-height:1.4;color:var(--c-soil-deep)}"
+    },
+    {
+      "name": "Carte de recommandation",
+      "kind": "card",
+      "refersTo": "card-reco-first",
+      "description": "Carte « À faire d'abord » : lavis sauge qui s'éteint, filet sauge de 1,5 px. La catégorie est dans la ligne de méta.",
+      "html": "<article class=\"ds-reco\"><h3 class=\"ds-reco-title\">Réparer une poignée</h3><p class=\"ds-meta\">≈ 15 min · Atelier</p></article>",
+      "css": ".ds-reco{display:flex;flex-direction:column;gap:8px;padding:12px 16px 16px;border:1.5px solid rgb(63 96 71 / .45);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--c-sage-wash) 0,var(--c-paper-raised) 72px);box-shadow:var(--shadow-card);color:var(--c-ink)}.ds-reco-title{margin:0;font:800 1.125rem/1.25 var(--font-display);overflow-wrap:anywhere}.ds-meta{margin:0;font-size:.875rem;line-height:1.4;color:var(--c-ink-soft)}"
+    },
+    {
+      "name": "Ligne de quête en retard",
+      "kind": "custom",
+      "refersTo": "quest-row",
+      "description": "Un retard est une caisse de terre : texte « Attend depuis 3 j », picto de caisse, jamais du rouge.",
+      "html": "<div class=\"ds-quest\"><span class=\"ds-quest-ring\"></span><span class=\"ds-quest-text\"><span class=\"ds-quest-title\">Vérifier la pression des pneus</span><span class=\"ds-late\">Attend depuis 3 j</span></span></div>",
+      "css": ".ds-quest{display:grid;grid-template-columns:44px 1fr;align-items:center;min-height:64px;border-bottom:1px solid var(--c-line);color:var(--c-ink)}.ds-quest-ring{justify-self:center;width:26px;height:26px;border:2px solid var(--c-sage);border-radius:50%;background:var(--c-paper-raised)}.ds-quest-text{display:grid;gap:3px}.ds-quest-title{font-weight:600;line-height:1.25}.ds-late{font-size:.875rem;font-weight:600;color:var(--c-soil-deep)}"
+    },
+    {
+      "name": "État de synchronisation",
+      "kind": "custom",
+      "refersTo": "sync-error",
+      "description": "Erreur de synchronisation : lavis de braise, filet braise, texte en encre mousse (5,9:1). La braise reste sur le picto et le filet.",
+      "html": "<div class=\"ds-sync\" role=\"alert\"><span class=\"ds-sync-text\"><strong>Pas enregistré</strong>La connexion a coupé. Réessaie.</span></div>",
+      "css": ".ds-sync{display:flex;align-items:center;min-height:48px;padding:8px 8px 8px 12px;border:1px solid rgb(191 90 56 / .4);border-radius:var(--r-md);background:var(--c-ember-wash);color:var(--c-ink-soft);font-size:.875rem;line-height:1.35}.ds-sync strong{display:block;font-size:.9375rem;color:var(--c-ink)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Le papier de lanterne",
+    "overview": "L'interface est un papier de lanterne posé sur l'Orée. Le monde (ciel, lac, île) reste dessous et visible ; la feuille est chaude, opaque sous le texte, et ne l'écrase jamais. Alex consulte surtout au téléphone, en visites de quelques secondes : en deux secondes il lit la quête n° 1, sa durée et sa Cote, et touche « Fait ». Tout le reste se déplie à la demande.\n\nLe monde d'origine (006, « La lisière réparée ») est étendu, pas remplacé : papier récolte et crème, sauge, verre solaire, terre, lanterne, cendre. S'y ajoute une matière propre à cette construction, le socle plein : ce qui s'enfonce a une face latérale pleine, comme les strates de l'île ; ce qui flotte a une ombre douce et chaude. La palette est claire et chaude, sans fond sombre ni cyan néon.",
+    "keyCharacteristics": [
+      "Monde dominant : 70 % de la hauteur à 390×844, 74 % à 834×1112, 67 % de la largeur à 1280×900.",
+      "Une seule action principale par vue, en sauge profonde, avec socle.",
+      "Chaque ressource est une matière du monde, toujours doublée d'un picto et d'un mot.",
+      "Aucune couleur seule ne porte un sens : texte, picto ou motif l'accompagne.",
+      "Braise réservée aux menaces et à la casse ; un retard est une caisse de terre, jamais du rouge.",
+      "Cibles de 44 px au minimum, texte à 4,5:1 au minimum, mouvement réductible à presque rien."
+    ],
+    "rules": [
+      {
+        "name": "The Socle Rule",
+        "body": "Ce qui s'enfonce (boutons, plaque de Cote) a une face latérale pleine de 3 px (`--face-h`), verticale seulement, de la même famille de couleur en plus sombre. Ce qui flotte au-dessus du monde (HUD, panneau, feuilles, annonce) a une ombre douce et chaude. On ne mélange pas : un élément a un socle ou une ombre, jamais les deux.",
+        "section": "overview"
+      },
+      {
+        "name": "The Embers Rule",
+        "body": "La braise (`--c-ember`, `--c-ember-ink`) est réservée aux menaces et à la casse. Dans la construction actuelle : l'action destructrice, la confirmation d'une action risquée et l'erreur de synchronisation. Jamais décorative, jamais pour une échéance.",
+        "section": "overview"
+      },
+      {
+        "name": "The Late Crate Rule",
+        "body": "Un retard est une caisse de terre (`--c-soil-deep` sur `--c-soil-wash`, picto de caisse, texte « Attend depuis 3 j »). Aucun rouge, aucune alarme : la tâche attend, elle n'a pas échoué. Même logique pour l'erreur d'un champ : terre, pas braise.",
+        "section": "overview"
+      },
+      {
+        "name": "The Doubled Color Rule",
+        "body": "Toute couleur est doublée : un mot, un picto ou un motif (case pleine avec coche, puce active avec coche dessinée, bord en tirets pour le désactivé, cadenas, « · plein »).",
+        "section": "overview"
+      },
+      {
+        "name": "The World First Rule",
+        "body": "Le panneau replié ne prend que 30 % de l'écran compact. Rien de nouveau n'est ajouté au panneau replié sans retirer autre chose : la quête n° 1, sa Cote, sa raison et deux boutons.",
+        "section": "overview"
+      },
+      {
+        "name": "The Ember Is Not Ink Rule",
+        "body": "`ember` (4,2:1) ne porte jamais de texte. Pictos, filets et fonds seulement.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-Not-Hue Rule",
+        "body": "Un texte coloré utilise la variante `-ink` ou `-deep` de sa famille, jamais la couleur de décor (`sage`, `glass`, `soil`, `lantern`, `ash`, `frost`).",
+        "section": "colors"
+      },
+      {
+        "name": "The Number Is Round Rule",
+        "body": "Les chiffres qui bougent (HUD, Cote, pas à pas, annonce) sont toujours tabulaires et dans la pile arrondie.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Lines Rule",
+        "body": "Un titre de quête ne dépasse pas 2 lignes ; au-delà, il est coupé, et le titre complet vit dans la fiche.",
+        "section": "typography"
+      },
+      {
+        "name": "The Reserved Lane Rule",
+        "body": "L'annonce de gain vit dans une voie réservée de 40 px sous le HUD, où rien d'autre n'est posé : elle ne peut recouvrir aucun bouton.",
+        "section": "layout"
+      },
+      {
+        "name": "The Narrow Column Rule",
+        "body": "En large, tout le contenu du panneau reste lisible dans 340 px.",
+        "section": "layout"
+      },
+      {
+        "name": "The One Matter Rule",
+        "body": "Un élément a un socle ou une ombre douce, jamais les deux, jamais une ombre dure décalée sur le côté.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Motion Is Distance Rule",
+        "body": "Toute translation ou mise à l'échelle se multiplie par `var(--motion)`. Un nouvel effet qui ne le fait pas casse le mouvement réduit.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** doubler chaque couleur d'un mot, d'un picto ou d'un motif.",
+      "**Do** garder une cible de 44×44 px au minimum sur tout élément interactif, 48 px pour les actions.",
+      "**Do** utiliser `ink`, `ink-soft`, `ink-muted` pour le texte sur papier ; `-ink` ou `-deep` pour le texte coloré.",
+      "**Do** placer l'annonce de gain dans la voie réservée et la dire aussi dans `#live`.",
+      "**Do** donner au bouton désactivé une raison écrite et un cadenas.",
+      "**Do** multiplier toute distance animée par `var(--motion)`.",
+      "**Do** utiliser `aria-pressed` pour une bascule et `aria-expanded` pour un dépliage.",
+      "**Do** laisser le monde dominer : panneau replié à 30 % au plus en compact."
+    ],
+    "donts": [
+      "**Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.",
+      "**Don't** utiliser `ember` (4,2:1) pour du texte.",
+      "**Don't** couvrir un bouton avec une annonce ou une notification.",
+      "**Don't** appeler la ressource « Réputation » ; elle s'appelle « Confiance ».",
+      "**Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.",
+      "**Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.",
+      "**Don't** montrer l'état seulement par la couleur.",
+      "**Don't** charger une police ou une bibliothèque depuis Internet."
+    ]
+  }
+}
