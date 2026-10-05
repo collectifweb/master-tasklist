@@ -1,0 +1,2 @@
+# Type du manifeste (installation sur l'écran d'accueil) : certains hébergeurs le servent en octet-stream.
+AddType application/manifest+json .webmanifest
