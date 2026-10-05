@@ -156,6 +156,92 @@ test('mode jeton : empreinte SHA-256, 401 sans, 200 avec', () => {
   });
 });
 
+// ---- Blocage après jetons faux ----
+const lockoutEnv = (jeton) => ({ OREE_TOKEN_HASH: createHash('sha256').update(jeton).digest('hex') });
+const JETON = 'jeton-fictif-' + 'b'.repeat(40);
+const bad = { Authorization: 'Bearer mauvais' };
+const good = { Authorization: `Bearer ${JETON}` };
+const cptFile = (s) => join(s.dataDir, 'lockout.json');
+
+test('blocage : 4 jetons faux puis le bon → 200 et compteur remis à zéro', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  for (let i = 0; i < 4; i++) assert.equal((await s.get(bad)).status, 401);
+  assert.equal((await s.get(good)).status, 200);
+  assert.equal(existsSync(cptFile(s)), false, 'plus aucune entrée après un bon jeton');
+  // le compteur repart de zéro : 4 nouveaux faux ne bloquent pas
+  for (let i = 0; i < 4; i++) assert.equal((await s.get(bad)).status, 401);
+  assert.equal((await s.get(good)).status, 200);
+}));
+
+test('blocage : 5 jetons faux → 429 avec Retry-After, même avec le bon jeton', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  for (let i = 0; i < 5; i++) assert.equal((await s.get(bad)).status, 401);
+  let r = await s.get(bad);
+  assert.equal(r.status, 429);
+  const ra = Number(r.headers.get('retry-after'));
+  assert.ok(ra > 880 && ra <= 900, `Retry-After = ${ra}`);
+  const j = await r.json();
+  assert.equal(j.ok, false);
+  assert.equal(j.code, 'too_many_attempts');
+  assert.equal(j.retryAfter, ra);
+  assert.equal((await s.get(good)).status, 429);
+  assert.equal((await s.get()).status, 429);
+  assert.equal((await s.op([], 'o-bloque', good)).status, 429);
+  // l'adresse brute n'est jamais gardée
+  const raw = readFileSync(cptFile(s), 'utf8');
+  assert.ok(!raw.includes('127.0.0.1'));
+  assert.ok(raw.includes(createHash('sha256').update('127.0.0.1').digest('hex')));
+}));
+
+test('blocage : les requêtes sans jeton ne comptent pas', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  for (let i = 0; i < 12; i++) assert.equal((await s.get()).status, 401);
+  assert.equal(existsSync(cptFile(s)), false);
+  assert.equal((await s.get(good)).status, 200);
+}));
+
+test('blocage : un jeton faux est ralenti d’environ 250 ms', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  const t0 = Date.now();
+  assert.equal((await s.get(bad)).status, 401);
+  assert.ok(Date.now() - t0 >= 240, `${Date.now() - t0} ms`);
+}));
+
+test('blocage : le blocage expire, et les vieilles entrées sont purgées', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  for (let i = 0; i < 5; i++) await s.get(bad);
+  assert.equal((await s.get(good)).status, 429);
+  const d = JSON.parse(readFileSync(cptFile(s), 'utf8'));
+  const [k] = Object.keys(d);
+  const now = Math.floor(Date.now() / 1000);
+  d[k].until = now - 1; // blocage échu
+  d['autre-cle'] = { fails: [now - 90000], until: now - 90000 }; // plus de 24 h
+  writeFileSync(cptFile(s), JSON.stringify(d));
+  assert.equal((await s.get(good)).status, 200);
+  // une écriture suivante purge l'entrée oubliée
+  writeFileSync(cptFile(s), JSON.stringify({ 'autre-cle': { fails: [now - 90000], until: now - 90000 } }));
+  assert.equal((await s.get(bad)).status, 401);
+  const after = JSON.parse(readFileSync(cptFile(s), 'utf8'));
+  assert.ok(!('autre-cle' in after) && Object.keys(after).length === 1);
+}));
+
+test('blocage : fichier de compteurs abîmé → aucun blocage', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  assert.equal((await s.get(good)).status, 200); // crée le dossier de données
+  for (const junk of ['{pas du json', '"texte"', '[1,2', '']) {
+    writeFileSync(cptFile(s), junk);
+    assert.equal((await s.get(good)).status, 200, `contenu : ${junk}`);
+  }
+  writeFileSync(cptFile(s), '{pas du json');
+  assert.equal((await s.get(bad)).status, 401); // repart d'un fichier vide et le réécrit proprement
+  assert.equal(typeof JSON.parse(readFileSync(cptFile(s), 'utf8')), 'object');
+}));
+
+test('blocage : entrée abîmée dans un fichier lisible → ni plantage ni blocage', () => withServer({ env: lockoutEnv(JETON) }, async (s) => {
+  assert.equal((await s.get(good)).status, 200); // crée le dossier de données
+  const moi = createHash('sha256').update('127.0.0.1').digest('hex');
+  for (const entry of [{ until: 'abc' }, { fails: 'x', until: [] }, 'texte', 7]) {
+    writeFileSync(cptFile(s), JSON.stringify({ [moi]: entry, autre: entry }));
+    assert.equal((await s.get(good)).status, 200, `bon jeton, entrée : ${JSON.stringify(entry)}`);
+    writeFileSync(cptFile(s), JSON.stringify({ autre: entry }));
+    assert.equal((await s.get(bad)).status, 401, `jeton faux, entrée : ${JSON.stringify(entry)}`);
+  }
+}));
+
 test('tasks.json corrompu : 503 et fichier intact', () => withServer({ tasksRaw: '[{"id": "a1", "task": ' }, async (s) => {
   const before = s.readTasksRaw();
   const t0 = Date.now();

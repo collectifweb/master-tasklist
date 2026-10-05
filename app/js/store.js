@@ -88,6 +88,7 @@ export class Store {
     this.gen = 0;
     this.retryTimer = null;
     this.needsToken = false;
+    this.lockedUntil = 0; // blocage du serveur après trop d'essais (429) : on ne l'interroge plus avant l'heure
     window.addEventListener('online', () => this.flush().then(() => this.refresh({ force: true })));
     window.addEventListener('offline', () => this.setSync('offline'));
     window.addEventListener('storage', (e) => {
@@ -108,9 +109,11 @@ export class Store {
     let resp = null;
     let fromCache = false;
     try {
+      if (this.lockLeft()) throw new ApiError(429, 'too_many_attempts', '', { retryAfter: this.lockLeft() });
       resp = await api.get();
     } catch (err) {
       if (err.status === 401) { this.needsToken = true; throw err; }
+      if (err.status === 429) { this.lockFrom(err); throw err; }
       if (err.status !== 0 && !(err.status >= 500)) throw err;
       try { resp = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { resp = null; }
       if (!resp) throw err;
@@ -119,6 +122,17 @@ export class Store {
     }
     this.adopt(resp, fromCache);
     if (this.queue.length) this.flush();
+  }
+
+  /** Secondes de blocage qui restent (0 = pas bloqué). */
+  lockLeft() { return Math.max(0, Math.ceil((this.lockedUntil - Date.now()) / 1000)); }
+
+  /** Le serveur a répondu 429 : plus aucune requête avant la fin du blocage, et les relances en attente sont annulées. */
+  lockFrom(err) {
+    const s = Number(err.body && err.body.retryAfter);
+    this.lockedUntil = Date.now() + (s > 0 ? s : 900) * 1000;
+    this.needsToken = true;
+    clearTimeout(this.retryTimer);
   }
 
   adopt(resp, skipCache) {
@@ -206,6 +220,7 @@ export class Store {
         let e = this.queue[0];
         if (!e) { this.afterIdle(); return; }
         if (!navigator.onLine) { this.setSync('offline'); return; }
+        if (this.lockLeft()) { this.setSync('error', t('state.error.save')); this.emit('need-token', { locked: this.lockLeft() }); return; }
 
         if (!e.body) {
           let r;
@@ -255,6 +270,12 @@ export class Store {
   async onError(err, e) {
     if (!(err instanceof ApiError)) { this.setSync('error', t('state.error.generic')); this.scheduleRetry(); return 'stop'; }
     if (err.status === 0) { this.setSync('offline'); this.scheduleRetry(10000); return 'stop'; }
+    if (err.status === 429) {
+      this.lockFrom(err);
+      this.setSync('error', t('state.error.save'));
+      this.emit('need-token', { locked: this.lockLeft() });
+      return 'stop';
+    }
     const tries = (e.tries || 0) + 1;
     switch (err.code) {
       case 'game_conflict': {
@@ -331,6 +352,7 @@ export class Store {
 
   // ───────── Relecture régulière ─────────
   async refresh({ force = false } = {}) {
+    if (this.lockLeft()) return;
     if (this.flushing || loadQueue().length) { if (!this.flushing) this.flush(); return; }
     const gen = this.gen;
     try {
@@ -344,6 +366,7 @@ export class Store {
     } catch (err) {
       if (err.status === 0) this.setSync('offline');
       else if (err.status === 401) { this.needsToken = true; this.emit('need-token', {}); }
+      else if (err.status === 429) { this.lockFrom(err); this.emit('need-token', { locked: this.lockLeft() }); }
     }
   }
 }

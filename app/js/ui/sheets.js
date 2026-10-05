@@ -3,7 +3,7 @@
 import {
   SECTORS, sectorOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes, isPinned,
 } from '../../core/index.js';
-import { t, content } from '../content.js';
+import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
 import { durationText, capitalize, num } from './format.js';
 import { taskModel } from './model.js';
@@ -420,7 +420,8 @@ export function confirmRemballer() {
 }
 
 // ───────── Jeton d'accès ─────────
-export function openToken(onSaved, { bad = false } = {}) {
+export function openToken(onSaved, { bad = false, locked = 0 } = {}) {
+  const err = locked ? tn('token.locked', Math.max(1, Math.ceil(locked / 60))) : bad ? t('token.bad') : '';
   const dlg = $('#dlg-token');
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title" id="tok-t">${esc(t('token.title'))}</h2></header>
@@ -428,8 +429,8 @@ export function openToken(onSaved, { bad = false } = {}) {
       <p>${esc(t('token.text'))}</p>
       <div class="field">
         <label class="field-label" for="tok-in">${esc(t('token.label'))}</label>
-        <input class="input" id="tok-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"${bad ? ' aria-invalid="true" aria-describedby="tok-err"' : ''}>
-        ${bad ? `<p class="field-error" id="tok-err">${icon('why')}${esc(t('token.bad'))}</p>` : ''}
+        <input class="input" id="tok-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"${err ? ' aria-invalid="true" aria-describedby="tok-err"' : ''}>
+        ${err ? `<p class="field-error" id="tok-err">${icon('why')}${esc(err)}</p>` : ''}
       </div>
     </form>
     <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="token-form">${esc(t('token.save'))}</button></footer>`;

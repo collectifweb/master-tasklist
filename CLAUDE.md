@@ -35,7 +35,7 @@ TASKS_WRITE_TOKEN=dev python3 tasks-server.py
 
 # Nouvelle app : tests de la logique et de l'API (Node 24 : motifs entre guillemets, pas un dossier)
 node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
-# Nouvelle app : 22 scénarios navigateur aux 3 largeurs (plus de 10 minutes ; Playwright est une bibliothèque)
+# Nouvelle app : 23 scénarios navigateur aux 3 largeurs (plus de 10 minutes ; Playwright est une bibliothèque)
 PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
 
 # Vérifications attendues avant commit (README / CONTRIBUTING)

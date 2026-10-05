@@ -384,6 +384,8 @@
   "token.label": "Jeton d’accès",
   "token.save": "Enregistrer le jeton",
   "token.bad": "Ce jeton n’a pas été accepté. Vérifie-le et réessaie.",
+  "token.locked.one": "Trop d’essais. Réessaie dans {n} minute.",
+  "token.locked.other": "Trop d’essais. Réessaie dans {n} minutes.",
   "load.fail.title": "Impossible de charger tes quêtes",
   "load.fail.text": "Rien n’est perdu : réessaie dans un instant.",
   "load.retry": "Réessayer",

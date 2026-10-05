@@ -240,7 +240,12 @@ store.on('change', (payload) => {
 const STORY_EVENTS = new Set(['objectif-atteint', 'chapitre-fin', 'chapitre', 'avis-annonce', 'avis-resolu']);
 store.on('sync', (s) => sync.set(s));
 store.on('notice', (n) => sync.notice(n));
-store.on('need-token', () => openToken(() => (started ? store.retryNow() : start()), { bad: token.has() }));
+const askToken = (locked = 0) => openToken(
+  // pendant un blocage, le nouveau jeton attend : la feuille se rouvre avec le temps qui reste
+  () => (store.lockLeft() ? askToken(store.lockLeft()) : started ? store.retryNow() : start()),
+  { bad: token.has() && !locked, locked },
+);
+store.on('need-token', (p) => askToken((p && p.locked) || 0));
 
 // Après ces gestes, le temps du jeu avance (objectifs, fin de chapitre, Avis) : advanceTime est idempotente.
 const AFTER_TIME = new Set(['completeQuest', 'createQuest', 'toggleStep', 'build', 'sow', 'harvest', 'shareHarvest', 'storeReserve', 'directFil']);
@@ -555,6 +560,7 @@ async function start() {
     await store.load();
   } catch (err) {
     if (err.status === 401) return store.emit('need-token', {});
+    if (err.status === 429) return store.emit('need-token', { locked: store.lockLeft() });
     return showLoadError(t('load.fail.text'));
   }
   renderAll();

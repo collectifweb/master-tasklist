@@ -17,6 +17,11 @@ const READ_RETRIES = 3;
 const READ_RETRY_US = 200000;
 const LOCK_WAIT_S = 5.0;
 const TASKS_WRITE_ATTEMPTS = 3;
+const LOCKOUT_MAX_FAILS = 5;          // jetons faux tolérés dans la fenêtre
+const LOCKOUT_WINDOW_S = 900;         // fenêtre de comptage : 15 minutes
+const LOCKOUT_DURATION_S = 900;       // durée du blocage : 15 minutes
+const LOCKOUT_PRUNE_S = 86400;        // entrées oubliées après 24 h
+const LOCKOUT_DELAY_US = 250000;      // délai fixe après un jeton faux
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -127,6 +132,83 @@ function auth_decision(string $hash, bool $allowOpen, string $sapi, ?string $tok
     }
     if ($allowOpen || $sapi === 'cli-server') return null;
     return new ApiError(503, 'auth_not_configured', 'L’API n’est pas configurée : aucun jeton défini.');
+}
+
+// ---------- Blocage après jetons faux ----------
+
+function lockout_key(): string
+{
+    return hash('sha256', (string)($_SERVER['REMOTE_ADDR'] ?? '')); // jamais X-Forwarded-For ; l'adresse brute n'est pas gardée
+}
+
+/** Compteurs lus sans verrou (les écritures sont atomiques). Fichier absent ou abîmé : liste vide. */
+function lockout_read(string $dataDir): array
+{
+    $raw = @file_get_contents($dataDir . '/lockout.json');
+    $d = is_string($raw) ? json_decode($raw, true) : null;
+    return is_array($d) ? $d : [];
+}
+
+/** Secondes restantes de blocage pour cette clé, 0 si elle n'est pas bloquée. */
+function lockout_remaining(array $all, string $key, int $now): int
+{
+    $until = $all[$key]['until'] ?? 0;
+    return is_int($until) && $until > $now ? $until - $now : 0;
+}
+
+/** Relit, modifie et réécrit le fichier de compteurs sous verrou ; purge ce qui a plus de 24 h. */
+function lockout_update(string $dataDir, string $key, int $now, callable $change): void
+{
+    prepare_data_dir($dataDir);
+    $lock = lock_file($dataDir . '/.lockout.lock', LOCK_EX);
+    try {
+        $all = lockout_read($dataDir);
+        $all = $change($all);
+        foreach ($all as $k => $e) {
+            $last = is_array($e) ? max([0, ...array_filter(array_merge((array)($e['fails'] ?? []), [$e['until'] ?? 0]), 'is_int')]) : 0; // max() d'un tableau : jamais vide, même entrée abîmée
+            if ($last < $now - LOCKOUT_PRUNE_S) unset($all[$k]);
+        }
+        if ($all === []) {
+            @unlink($dataDir . '/lockout.json');
+        } else {
+            atomic_write($dataDir . '/lockout.json', jenc($all), 0640);
+        }
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
+
+/** Avant l'authentification : 429 si la clé est bloquée, même avec le bon jeton. */
+function lockout_guard(string $dataDir, int $now): void
+{
+    $left = lockout_remaining(lockout_read($dataDir), lockout_key(), $now);
+    if ($left > 0) {
+        throw new ApiError(429, 'too_many_attempts', 'Trop d’essais. Réessayez plus tard.', ['retryAfter' => $left], ['Retry-After: ' . $left]);
+    }
+}
+
+/** Jeton présent et faux : on le compte (5 en 15 min = blocage de 15 min) et on ralentit. */
+function lockout_fail(string $dataDir, int $now): void
+{
+    $key = lockout_key();
+    lockout_update($dataDir, $key, $now, function (array $all) use ($key, $now): array {
+        $fails = array_values(array_filter((array)($all[$key]['fails'] ?? []), fn($t) => is_int($t) && $t > $now - LOCKOUT_WINDOW_S));
+        $fails[] = $now;
+        $entry = ['fails' => $fails];
+        if (count($fails) >= LOCKOUT_MAX_FAILS) $entry = ['fails' => [], 'until' => $now + LOCKOUT_DURATION_S];
+        $all[$key] = $entry;
+        return $all;
+    });
+    usleep(LOCKOUT_DELAY_US);
+}
+
+/** Jeton juste : le compteur de cette clé repart de zéro (sans rien écrire s'il n'y en a pas). */
+function lockout_reset(string $dataDir, int $now): void
+{
+    $key = lockout_key();
+    if (!isset(lockout_read($dataDir)[$key])) return;
+    lockout_update($dataDir, $key, $now, function (array $all) use ($key): array { unset($all[$key]); return $all; });
 }
 
 // ---------- Fichiers, verrous, sauvegardes ----------
@@ -486,7 +568,15 @@ function handle(): void
 {
     $cfg = load_config();
     $token = bearer_token();
+    $dataDir = rtrim($cfg['data'], '/\\');
+    $guarded = $cfg['hash'] !== '';
+    $now = time();
+    if ($guarded) lockout_guard($dataDir, $now);
     $denied = auth_decision($cfg['hash'], $cfg['allow_open'], PHP_SAPI, $token);
+    if ($guarded) {
+        if ($denied && $token !== null) lockout_fail($dataDir, $now);
+        elseif (!$denied) lockout_reset($dataDir, $now);
+    }
     if ($denied) throw $denied;
 
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -512,7 +602,6 @@ function handle(): void
         $opsHash = sha1(jenc($body->ops));
     }
 
-    $dataDir = rtrim($cfg['data'], '/\\');
     prepare_data_dir($dataDir);
     $gameFile = $dataDir . '/game-state.json';
     $ledgerFile = $dataDir . '/ledger.jsonl';
