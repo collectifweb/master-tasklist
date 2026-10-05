@@ -14,3 +14,4 @@ export * from './avis.js';
 export * from './letters.js';
 export * from './recycling.js';
 export * from './cote-a-cote.js';
+export * from './village.js';
