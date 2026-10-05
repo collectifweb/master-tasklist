@@ -1,5 +1,6 @@
 // Jour du recyclage (dimanche) : bilan informatif de la semaine et quêtes ouvertes depuis plus de 60 jours, à garder
-// ou à archiver (l'archivage passe par archiveQuest de quests.js) ; bilans des semaines passées. Rien n'est modifié ici.
+// ou à archiver (l'archivage passe par archiveQuest de quests.js) ; bilans des semaines passées, figés par advanceTime
+// (quests.js) avec figerBilans. Rien n'est modifié ici.
 import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js';
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
@@ -7,6 +8,7 @@ import { reverseKey, quartierOfEntry } from './ledger.js';
 import { releve } from './cote-a-cote.js';
 
 export const RECYCLE_AGE_DAYS = 60;
+export const BILANS_MAX = 104; // deux ans de bilans figés gardés dans la partie
 
 const hours = (min) => Math.round(min / 6) / 10;
 
@@ -38,6 +40,18 @@ export function bilansPasses(tasks, game, ledger, now) {
   const current = weekStart(gameDay(now));
   const weeks = new Set(paidQuests(ledger).map((e) => weekStart(e.day)).filter((w) => w < current));
   return [...weeks].sort().map((w) => bilanSemaine(tasks, game, ledger, w, now));
+}
+
+/**
+ * Bilans figés de la partie (game.bilans, du plus ancien au plus récent), complétés par ceux des semaines finies
+ * après le dernier (bilansPasses) : un bilan déjà figé ne change plus et n'est jamais doublé. BILANS_MAX au plus, les
+ * plus anciens partent. Renvoie le tableau d'origine quand rien ne s'ajoute.
+ */
+export function figerBilans(tasks, game, ledger, now) {
+  const kept = game.bilans;
+  const last = kept.length ? kept[kept.length - 1].semaine?.start ?? '' : '';
+  const added = bilansPasses(tasks, game, ledger, now).filter((b) => b.semaine.start > last);
+  return added.length ? [...kept, ...added].slice(-BILANS_MAX) : kept;
 }
 
 // Gains de quête datés du registre, sans ceux qui ont été remballés.

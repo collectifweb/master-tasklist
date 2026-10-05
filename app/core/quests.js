@@ -10,7 +10,7 @@
 // Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant
 // inventé ou renommé), `game.set` sans `params.gameRevision` (null permis pour le tout premier état), récurrence
 // refaite trop tôt, date calculée invalide.
-import { gameDay, toISO, addDays, addMonths, dayOnly, isValidDay, daysBetween } from './time.js';
+import { gameDay, toISO, addDays, addMonths, dayOnly, isValidDay, daysBetween, weekStart } from './time.js';
 import { clampScale } from './migrate.js';
 import { orderByCote } from './cote.js';
 import { applyFreeze, freezeValues, effectiveValues, questPe, stepPe, completionPe, MAX_STEPS } from './reward.js';
@@ -21,6 +21,7 @@ import {
 import { applyEntry } from './economy.js';
 import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
 import { migrateState, isV1State } from './state.js';
+import { figerBilans } from './recycling.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -512,14 +513,31 @@ export function openApp(tasks, game, ledger, params, now) {
 
 /**
  * Passage du temps, à appeler à l'ouverture (après openApp), au changement de jour de jeu et après les gestes du jeu.
- * Note le jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis ferme une
- * séance côte à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js). Idempotente : rejouée avec le
- * même instant, elle ne fait rien. Événement : 'seance-fin' (raison 'oubliee').
+ * Au premier passage d'une nouvelle semaine, fige le bilan des semaines finies (figerBilans, recycling.js). Note le
+ * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis ferme une séance côte
+ * à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js). Idempotente : rejouée avec le même instant,
+ * elle ne fait rien. Événement : 'seance-fin' (raison 'oubliee').
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
-  if (!ctx.game.lastSeenDay || ctx.day > ctx.game.lastSeenDay) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
+  const seen = ctx.game.lastSeenDay;
+  if (!seen || weekStart(ctx.day) > weekStart(seen)) {
+    const bilans = figerBilans(ctx.tasks, ctx.game, ctx.ledger, now);
+    if (bilans !== ctx.game.bilans) ctx.game = { ...ctx.game, bilans };
+  }
+  if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   tidySeances(ctx);
+  return ctx.result();
+}
+
+/**
+ * Version d'essai seulement : avance la date du jeu d'un jour (game.horloge.decalage + 1, en jours). L'interface lit
+ * ce décalage par son horloge (js/horloge.js) et le passage au nouveau jour suit comme pour un vrai (openApp,
+ * advanceTime). Une partie qui porte `horloge` est refusée par le serveur hors de la version d'essai.
+ */
+export function jourSuivant(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  ctx.game = { ...ctx.game, horloge: { decalage: (Math.floor(Number(ctx.game.horloge?.decalage)) || 0) + 1 } };
   return ctx.result();
 }
 

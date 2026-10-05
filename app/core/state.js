@@ -2,7 +2,7 @@
 import { gameDay, toISO } from './time.js';
 import { QUARTIER_IDS, PLACE_ID, quartierOfTask } from './domains.js';
 import { quartierOfEntry } from './ledger.js';
-import { bilansPasses } from './recycling.js';
+import { figerBilans } from './recycling.js';
 
 export const STATE_VERSION = 2;
 
@@ -89,7 +89,7 @@ export function migrateState(raw, now, { tasks = [], ledger = [] } = {}) {
   g.version = STATE_VERSION;
   if (isObj(raw)) g.migratedAt = toISO(now); // partie v1 convertie (lettre de passage) ; une partie absente est neuve
   g.quartiers = recountQuartiers(tasks, ledger);
-  g.bilans = bilansPasses(tasks, g, ledger, now);
+  g.bilans = figerBilans(tasks, g, ledger, now); // g.bilans est vide : toutes les semaines finies, 104 au plus
   return g;
 }
 
