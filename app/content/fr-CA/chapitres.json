@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "langue": "fr-CA",
+  "introduction": {
+    "id": "introduction",
+    "declencheur": {"type": "premier_lancement"},
+    "passable": true,
+    "suite": "Le Fil du jour monte avec la quête n° 1. « Plus tard » laisse tout utilisable; l’ouverture du chapitre 1 attend la première quête terminée.",
+    "lignes": [
+      {"voix": "narration", "texte": "Ici, c’est l’Orée, une colonie de champs et d’ateliers au bord de la lisière."},
+      {"voix": "narration", "texte": "Il y a 184 cycles, Geneviève, la sixième intendante, a voulu porter l’Orée toute seule. Elle s’est épuisée. La lisière s’est éteinte, et la cendre est tombée."},
+      {"voix": "narration", "texte": "Au centre, le Relais tient encore debout. Une phrase y est gravée."},
+      {"voix": "inscription", "texte": "Ce que tu accomplis hors d’ici devient notre capacité d’agir ici."},
+      {"voix": "fanal", "texte": "Ah ben. Quelqu’un a lu l’inscription. Moi, c’est Fanal, la lanterne du Relais."},
+      {"voix": "fanal", "texte": "T’es {prenom}, le septième intendant. Cette fois, personne porte tout seul. Moi non plus."},
+      {"voix": "fanal", "texte": "Une vaisselle, un appel, le bac au chemin, une poignée revissée : tout ça traverse. Ici, ça devient de la lumière."},
+      {"voix": "fanal", "texte": "Choisis une vraie quête. Fais-la quand tu peux, ou coche-la si c’est déjà fait."}
+    ]
+  },
+  "chapitres": [
+    {
+      "numero": 1,
+      "id": "premier-sillon",
+      "titre": "Le premier sillon",
+      "voix": "solene",
+      "secteur": "champs",
+      "confianceMin": 0,
+      "dureeMinJours": 3,
+      "ouverture": {
+        "declencheur": {"type": "objectif_atteint", "objectif": "ch1.lisiere"},
+        "note": "Se joue après l’impact de la première quête terminée. Solène offre alors 12 Lueur aux Champs pour que la première parcelle existe.",
+        "lignes": [
+          {"voix": "narration", "texte": "La lumière touche la Place du Bastion. Les pavés reprennent leur couleur, un à un."},
+          {"voix": "solene", "texte": "Ç’a marché. Ça faisait longtemps que j’avais pas vu du vert."},
+          {"voix": "solene", "texte": "Solène. Je m’occupe des Champs, ou de ce qu’il en reste."},
+          {"voix": "solene", "texte": "Tiens, je te prête un peu de lumière pour la première parcelle. On commence par une courge."},
+          {"voix": "fanal", "texte": "Je vais chercher l’arrosoir. Il est quelque part. Depuis 184 cycles."}
+        ]
+      },
+      "objectifs": [
+        {
+          "id": "ch1.lisiere",
+          "texte": "Allumer la lisière",
+          "detail": "Termine une vraie quête, n’importe laquelle.",
+          "condition": {"type": "lisiere", "min": 1}
+        },
+        {
+          "id": "ch1.semis",
+          "texte": "Semer une courge",
+          "detail": "Touche la parcelle des Champs. Il faut {cout}.",
+          "condition": {"type": "semis", "culture": "courge", "min": 1},
+          "annonce": [
+            {"voix": "solene", "texte": "La parcelle est prête. Une courge, ça demande pas grand-chose."}
+          ],
+          "atteint": [
+            {"voix": "solene", "texte": "Semée. Elle pousse les jours où la lisière s’allume. Pas besoin de la surveiller."}
+          ]
+        },
+        {
+          "id": "ch1.recolte",
+          "texte": "Récolter la courge",
+          "detail": "Elle pousse un peu chaque jour où la lisière s’allume. Elle ne pourrit jamais.",
+          "condition": {"type": "recolte", "culture": "courge", "min": 1},
+          "atteint": [
+            {"voix": "solene", "texte": "Première récolte depuis des cycles. Elle est croche, mais elle est à nous."}
+          ]
+        },
+        {
+          "id": "ch1.tour",
+          "texte": "Réparer la Tour",
+          "detail": "La Tour de veille demande {cout}.",
+          "condition": {"type": "batiment", "id": "tour", "etat": "repare"},
+          "annonce": [
+            {"voix": "solene", "texte": "La Tour de veille est muette depuis longtemps. Avec des Matériaux et un peu d’Énergie, elle repartirait."}
+          ],
+          "atteint": [
+            {"voix": "solene", "texte": "La Tour tient debout. Elle grésille, par contre. Ça, c’est nouveau."}
+          ]
+        },
+        {
+          "id": "ch1.confiance",
+          "texte": "Atteindre 3 de Confiance",
+          "detail": "La Confiance monte de 1 chaque jour où la lisière s’allume. Les jours n’ont pas besoin de se suivre.",
+          "condition": {"type": "confiance", "min": 3},
+          "annonce": [
+            {"voix": "fanal", "texte": "Les gens de l’Orée te connaissent pas encore. Ils regardent la lisière. Trois jours où elle s’allume, et ils sauront."}
+          ],
+          "atteint": [
+            {"voix": "solene", "texte": "Troisième jour. Les gens sortent quand la lisière s’allume. Ici, ça veut dire quelque chose."}
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "id": "ch1.beat.jour2",
+          "declencheur": {"type": "jour_du_chapitre", "jour": 2},
+          "lignes": [
+            {
+              "voix": "solene",
+              "si": {"type": "semis", "culture": "courge", "min": 1},
+              "texte": "Il a gelé cette nuit dans l’Orée, mais ta courge a tenu."
+            },
+            {
+              "voix": "solene",
+              "si": {"type": "semis", "culture": "courge", "max": 0},
+              "texte": "Il a gelé cette nuit. Rien de semé, donc rien à couvrir. La parcelle t’attend."
+            }
+          ]
+        }
+      ],
+      "fin": {
+        "declencheur": {"type": "objectifs_tous_atteints", "note": "Et jour du chapitre ≥ dureeMinJours."},
+        "lignes": [
+          {"voix": "narration", "texte": "La Tour grésille plus fort. Un signal monte de très loin, sous le Bastion."},
+          {"voix": "echo7", "texte": "… signal… sous… assise…"},
+          {"voix": "echo7", "texte": "Fonction reconnue : intendant de continuité. Vous êtes en retard de 184 cycles."},
+          {"voix": "solene", "texte": "En retard? On t’attendait même plus. T’es là, c’est ça qui compte."},
+          {"voix": "fanal", "texte": "Moi, je trouve que t’es arrivé pile à l’heure."},
+          {"voix": "narration", "texte": "Plus loin, sous la cendre, l’Atelier attend son tour."}
+        ]
+      },
+      "recompense": {"confiance": 2}
+    },
+    {
+      "numero": 2,
+      "id": "rouge-des-erables",
+      "titre": "Le rouge des érables",
+      "voix": "milo",
+      "secteur": "atelier",
+      "confianceMin": 3,
+      "dureeMinJours": 12,
+      "ouvreSecteur": "atelier",
+      "ouverture": {
+        "declencheur": {"type": "chapitre_termine", "chapitre": 1},
+        "note": "La Lueur de la maison gardée sous la cendre depuis le jour 1 perce d’un coup à l’ouverture de l’Atelier.",
+        "lignes": [
+          {
+            "voix": "narration",
+            "si": {"type": "lueur_en_reserve", "secteur": "atelier", "min": 1},
+            "texte": "L’Atelier sort de la cendre. Tout ce que tu as fait pour la maison depuis ton arrivée attendait là. Ça perce d’un coup."
+          },
+          {
+            "voix": "narration",
+            "si": {"type": "lueur_en_reserve", "secteur": "atelier", "max": 0},
+            "texte": "L’Atelier sort de la cendre. Les établis sont froids, mais entiers."
+          },
+          {"voix": "milo", "texte": "Milo Kern, technicien. L’Atelier dort sous la cendre depuis avant ma naissance."},
+          {"voix": "milo", "texte": "Chaque fois que tu répares quelque chose chez vous, il devrait se réveiller un peu."},
+          {"voix": "milo", "texte": "Si ça a des vis, c’est à moi. Le reste, on verra."},
+          {"voix": "fanal", "texte": "Il est toujours comme ça. C’est une qualité, je pense."},
+          {"voix": "solene", "texte": "Les matins commencent à être frisquets. Le gel s’en vient, on va s’y préparer ensemble."}
+        ]
+      },
+      "objectifs": [
+        {
+          "id": "ch2.atelier",
+          "texte": "Rallumer l’Atelier",
+          "detail": "Les quêtes de la maison le rallument. Le Fil libre aussi, si tu l’y envoies.",
+          "condition": {"type": "secteur_palier", "secteur": "atelier", "palier": "reparer"},
+          "annonce": [
+            {"voix": "milo", "texte": "Douze cases à rallumer. On commence par celle de la porte, c’est la plus utile."}
+          ],
+          "atteint": [
+            {"voix": "milo", "texte": "Ça tourne. Je dis rien, mais j’ai souri. Une fois."}
+          ]
+        },
+        {
+          "id": "ch2.etabli",
+          "texte": "Construire l’établi",
+          "detail": "Il ouvre les décors. Il faut {cout}.",
+          "condition": {"type": "batiment", "id": "etabli", "etat": "construit"},
+          "annonce": [
+            {"voix": "milo", "texte": "Un établi, c’est la base. Sans ça, je répare des affaires sur mes genoux."}
+          ],
+          "atteint": [
+            {"voix": "milo", "texte": "L’établi est debout. Tu peux poser des décors, maintenant. Avec goût, idéalement."}
+          ]
+        },
+        {
+          "id": "ch2.chantier",
+          "texte": "Découper un premier chantier",
+          "detail": "Prends une grosse quête, coupe-la en étapes et coches-en une. Pas de grosse quête en vue? Termine deux quêtes de la maison.",
+          "condition": {
+            "type": "un_parmi",
+            "conditions": [
+              {"type": "etape", "longueurMin": 6, "min": 1},
+              {"type": "quetes", "secteur": "atelier", "min": 2}
+            ]
+          },
+          "annonce": [
+            {"voix": "milo", "texte": "Les gros travaux, on les coupe en morceaux. Sinon, ils nous regardent de haut."}
+          ],
+          "atteint": [
+            {"voix": "milo", "texte": "Bon. Le gros ouvrage avance par morceaux. C’est la seule façon que je connais."}
+          ]
+        },
+        {
+          "id": "ch2.tunnel",
+          "texte": "Bâtir un tunnel de culture",
+          "detail": "Il abrite les Champs du gel et ajoute de la Préparation. Il faut {cout}.",
+          "condition": {"type": "batiment", "id": "tunnel", "etat": "construit"},
+          "annonce": [
+            {"voix": "solene", "texte": "Le gel s’en vient. Un tunnel sur les rangs, et les plants passent la nuit au chaud."}
+          ],
+          "atteint": [
+            {"voix": "solene", "texte": "Le tunnel est monté. Les plants ont déjà l’air soulagés."}
+          ]
+        },
+        {
+          "id": "ch2.reserve",
+          "texte": "Mettre une courge en réserve",
+          "detail": "Chaque courge en réserve donne +1 Préparation, jusqu’à 6.",
+          "condition": {"type": "reserve", "min": 1},
+          "annonce": [
+            {"voix": "solene", "texte": "Une courge en réserve, c’est un peu de Préparation pour l’hiver."}
+          ],
+          "atteint": [
+            {"voix": "solene", "texte": "Rangée. Celle-là, on la mange pas. Elle sert à tenir."}
+          ]
+        },
+        {
+          "id": "ch2.gel",
+          "texte": "Traverser le Premier gel",
+          "detail": "Tenu ou voilé, les deux font avancer le chapitre.",
+          "condition": {"type": "avis", "id": "premier_gel"}
+        },
+        {
+          "id": "ch2.erables",
+          "texte": "Planter trois érables",
+          "detail": "Des décors, près de l’Atelier. Il faut {cout} pour chacun.",
+          "condition": {"type": "decor", "id": "erable", "min": 3},
+          "annonce": [
+            {"voix": "milo", "texte": "Trois érables près de l’Atelier. Pour la couleur. Je suis technicien, pas aveugle."}
+          ],
+          "atteint": [
+            {"voix": "narration", "texte": "Les érables virent au rouge. L’Atelier est le seul coin rouge de l’Orée."},
+            {"voix": "milo", "texte": "Bon. Je vais regarder ça encore une minute."}
+          ]
+        },
+        {
+          "id": "ch2.confiance",
+          "texte": "Atteindre 9 de Confiance",
+          "detail": "+1 par jour où la lisière s’allume, +1 par semaine tenue (4 jours sur 7).",
+          "condition": {"type": "confiance", "min": 9},
+          "annonce": [
+            {"voix": "fanal", "texte": "La Confiance grimpe tranquillement. À 9, quelqu’un d’autre devrait se manifester."}
+          ],
+          "atteint": [
+            {"voix": "fanal", "texte": "Neuf. Les gens me saluent, maintenant. Enfin, ils saluent la lanterne."}
+          ]
+        }
+      ],
+      "avis": {
+        "id": "premier_gel",
+        "nom": "Premier gel",
+        "tutoriel": true,
+        "annonce": [
+          {"voix": "solene", "texte": "Le Premier gel arrive {jour}. On a le temps de se préparer."},
+          {"voix": "fanal", "texte": "La jauge compare notre Préparation à la Force du gel. Plus elle monte, mieux on tient."},
+          {"voix": "solene", "texte": "Le tunnel et les courges en réserve aident. Tes quêtes d’ici là aussi : chacune ajoute un peu."},
+          {"voix": "fanal", "texte": "Et si le gel passe quand même, il pose un voile. Un voile, ça se lève."}
+        ],
+        "tenu": [
+          {"voix": "narration", "texte": "Le gel est passé cette nuit. Les rangs ont tenu."},
+          {"voix": "solene", "texte": "Pas une feuille de perdue. Une famille est redescendue au village ce matin."},
+          {"voix": "fanal", "texte": "J’ai gardé le sceau de l’Avis. Il est beau. Il est froid aussi."}
+        ],
+        "voile": [
+          {"voix": "narration", "texte": "Le gel a posé un voile sur deux cases {du_secteur}."},
+          {"voix": "solene", "texte": "Rien de perdu. La prochaine quête de ce secteur lève le voile."},
+          {"voix": "fanal", "texte": "Sinon, une Énergie par case. Ou on attend trois jours, et il part tout seul."}
+        ],
+        "absent": [
+          {"voix": "narration", "texte": "Le Premier gel est passé pendant que t’étais ailleurs."},
+          {"voix": "solene", "texte": "Rien n’est voilé. Tout est à sa place."}
+        ]
+      },
+      "beats": [
+        {
+          "id": "ch2.beat.jour6",
+          "declencheur": {"type": "jour_du_chapitre", "jour": 6},
+          "lignes": [
+            {"voix": "milo", "texte": "J’ai une question technique. Chez vous, est-ce que les portes grincent aussi? Ici, elles grincent moins depuis que t’es là."}
+          ]
+        }
+      ],
+      "fin": {
+        "declencheur": {"type": "objectifs_tous_atteints", "note": "Et jour du chapitre ≥ dureeMinJours."},
+        "lignes": [
+          {"voix": "narration", "texte": "Sous l’établi, Milo dégage une plaque de métal. Il frotte la cendre avec sa manche."},
+          {"voix": "inscription", "texte": "ARCHIVES · 3e ASSISE"},
+          {"voix": "milo", "texte": "Une troisième assise. Sous l’Atelier. Personne m’avait dit qu’il y avait des étages."},
+          {"voix": "fanal", "texte": "Moi non plus, je le savais pas. Ça fait une surprise pour deux."},
+          {"voix": "narration", "texte": "La vieille radio de l’Atelier grésille."},
+          {"voix": "naima", "texte": "Ici Naïma Sorel, poste de coordination. Si l’Atelier tourne, c’est que quelqu’un est revenu. J’arrive."}
+        ]
+      },
+      "recompense": {"confiance": 2},
+      "suivant": {"numero": 3, "titre": "Sous la troisième assise", "confianceMin": 9}
+    }
+  ]
+}

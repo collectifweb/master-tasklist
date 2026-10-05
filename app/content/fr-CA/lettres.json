@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "langue": "fr-CA",
+  "signature": "fanal",
+  "matin": [
+    {
+      "id": "matin.01",
+      "texte": ["Bon matin.", "La lisière dort encore, comme moi il y a cinq minutes. J’ai mis « {quete} » sur le dessus de la pile. Je suis assis dessus, pour pas qu’elle s’envole."]
+    },
+    {
+      "id": "matin.02",
+      "texte": ["Bon matin, {prenom}.", "Solène dit qu’il a fait frais cette nuit. Moi, je sens rien, je suis une lanterne. Si tu cherches par où commencer, il y a « {quete} »."]
+    },
+    {
+      "id": "matin.03",
+      "texte": ["Allô.", "J’ai compté les pavés de la Place. Il y en a autant qu’hier, c’est rassurant. Pour aujourd’hui, je te propose « {quete} »."]
+    },
+    {
+      "id": "matin.04",
+      "texte": ["Bon matin.", "Une petite chose, puis on verra. Je commencerais par « {quete} ». Le reste de la liste peut attendre son tour."]
+    },
+    {
+      "id": "matin.05",
+      "texte": ["Salut.", "J’ai dormi sur ta liste. Elle est encore là, un peu froissée. Celle qui dépasse, c’est « {quete} »."]
+    },
+    {
+      "id": "matin.06",
+      "texte": ["Bon matin.", "Si tu veux un plan, écris-le comme ça : quand ceci, alors cela. Par exemple, quand je finis mon café, alors je fais « {quete} ».", "Pas de plan, c’est correct aussi."]
+    },
+    {
+      "id": "matin.07",
+      "texte": ["Bon matin.", "Ici, rien ne presse. Chez vous, je sais pas. Si t’as un moment, « {quete} » t’attend."]
+    },
+    {
+      "id": "matin.08",
+      "texte": ["Allô.", "Le Relais a ronronné toute la nuit. C’est bon signe, ou c’est moi. Je te propose « {quete} » pour aujourd’hui."]
+    },
+    {
+      "id": "matin.09",
+      "texte": ["Bon matin.", "Pas besoin de tout faire aujourd’hui. Juste de commencer quelque part. Moi, je commencerais par « {quete} »."]
+    },
+    {
+      "id": "matin.10",
+      "texte": ["Allô.", "Une perdrix a traversé la Place ce matin. Elle m’a ignoré. Ça arrive. Pour toi, je suggère « {quete} », tranquillement."]
+    },
+    {
+      "id": "matin.11",
+      "texte": ["Bon matin.", "Les lanternes ont tenu toute la nuit. Moi aussi, presque. Si tu veux un point de départ, essaie « {quete} »."]
+    },
+    {
+      "id": "matin.12",
+      "texte": ["Bon matin.", "Je propose « {quete} ». Si c’est pas le bon jour pour elle, « Plus tard » est un vrai bouton. Je l’ai essayé."]
+    },
+    {
+      "id": "matin.13",
+      "texte": ["Salut.", "La cendre recule un peu chaque fois que tu passes. Je l’ai mesurée avec mon pied. Aujourd’hui, je miserais sur « {quete} »."]
+    },
+    {
+      "id": "matin.14",
+      "texte": ["Bon matin, {prenom}.", "Je me suis levé avant la lisière, pour une fois. J’ai rien fait de spécial, mais j’étais debout. Ta quête conseillée, c’est « {quete} ». Quand tu veux."]
+    },
+    {
+      "id": "matin.15",
+      "texte": ["Allô.", "J’ai essayé de siffler. Ça marche pas, j’ai une tête en verre. Pour aujourd’hui, je te propose « {quete} »."]
+    },
+    {
+      "id": "matin.16",
+      "texte": ["Bon matin.", "Solène a oublié ses bottes sur le seuil du Relais. Je les garde. Pendant ce temps, « {quete} » t’attend, si ça te dit."]
+    },
+    {
+      "id": "matin.17",
+      "periode": "automne",
+      "texte": ["Bon matin.", "Gel blanc sur les planches. Solène a couvert les rangs avec les nappes de la cantine. Rien de perdu. Je te propose « {quete} »."]
+    },
+    {
+      "id": "matin.18",
+      "periode": "automne",
+      "texte": ["Bon matin.", "Les érables du chemin ont rougi pendant la nuit. Les nôtres, pas encore. Pour aujourd’hui, j’ai mis « {quete} » sur le dessus."]
+    },
+    {
+      "id": "matin.19",
+      "periode": "automne",
+      "texte": ["Allô.", "Des outardes passent au-dessus de l’Orée depuis l’aube. Elles savent où elles vont. Nous aussi, à peu près, avec « {quete} »."]
+    },
+    {
+      "id": "matin.20",
+      "periode": "neige",
+      "texte": ["Bon matin.", "Il a neigé. Ma lanterne fait fondre un rond parfait autour de moi. J’en suis assez fier. Pour aujourd’hui, je te propose « {quete} »."]
+    },
+    {
+      "id": "matin.21",
+      "periode": "neige",
+      "texte": ["Bon matin.", "Tout est blanc. Même la cendre a l’air propre. Si tu cherches quoi faire, « {quete} » est en haut de la pile."]
+    }
+  ],
+  "matinSansQuete": [
+    {
+      "id": "matin_sans_quete.01",
+      "texte": ["Bon matin.", "Ta liste est vide ce matin. Si une chose te revient en tête, ajoute-la. Sinon, profite de ta journée."]
+    },
+    {
+      "id": "matin_sans_quete.02",
+      "texte": ["Bon matin.", "Rien sur la pile aujourd’hui. L’Orée tient. Moi aussi."]
+    },
+    {
+      "id": "matin_sans_quete.03",
+      "texte": ["Allô.", "Aucune quête ouverte. C’est rare, et c’est correct. Je reste sur le Relais, au cas où."]
+    }
+  ],
+  "retour": [
+    {
+      "id": "retour.01",
+      "texte": ["Te revoilà.", "Pendant que t’étais ailleurs, j’ai verni la rampe du Relais. Deux fois : la première était croche. Tout a tenu. On reprend où on était."]
+    },
+    {
+      "id": "retour.02",
+      "texte": ["Allô!", "J’ai gardé ta place. Solène a réparé la clôture du champ. Elle dit que c’était pour s’occuper les mains. Pas besoin de rattraper quoi que ce soit."]
+    },
+    {
+      "id": "retour.03",
+      "texte": ["Te v’là.", "Un renard s’est installé près des Champs. Solène l’a appelé Comptable, je sais pas pourquoi. Tout le reste a tenu."]
+    },
+    {
+      "id": "retour.04",
+      "texte": ["Bon retour.", "Les lanternes se sont allumées chaque soir, toutes seules. Je leur avais montré. Si tu veux reprendre doucement, il y a « {quete} »."]
+    },
+    {
+      "id": "retour.05",
+      "texte": ["Salut.", "Pendant ce temps-là, j’ai trié les graines par couleur, puis par grosseur. Je pense que j’aimais mieux par couleur. L’Orée t’attendait sans s’inquiéter."]
+    },
+    {
+      "id": "retour.06",
+      "texte": ["Bon retour, {prenom}.", "La cendre a pas bougé d’un pouce. Ce que t’avais rallumé est resté allumé. On repart quand tu veux."]
+    },
+    {
+      "id": "retour.07",
+      "periode": "automne",
+      "texte": ["Te revoilà.", "Solène a planté de l’ail dans un coin. Elle dit que ça se fait à l’automne. Je la crois sur parole. Rien à rattraper, juste à continuer."]
+    },
+    {
+      "id": "retour.08",
+      "texte": ["Allô!", "Pendant que t’étais ailleurs, une famille de mésanges s’est installée sur le toit du Relais. Elles paient pas de loyer. Je les laisse faire."]
+    }
+  ]
+}
