@@ -24,6 +24,8 @@
 - **Un `.htaccess` remplacé n'est pas relu instantanément.** Juste après la bascule, l'ancienne API a répondu 405 (donc exécutée) au lieu de 403 ; quelques secondes plus tard, 403 stable. Règle : refaire les contrôles d'accès après une courte pause, plusieurs fois, avant de conclure dans un sens ou dans l'autre.
 - **Un contrôle de mise en ligne ne doit jamais écrire.** Le premier script de bascule envoyait une liste vide à l'adresse de la liste de production pour vérifier qu'elle était bloquée : sans danger si le blocage tient, destructeur sinon. Règle : contrôles en lecture seule (GET), le blocage d'un fichier valant pour toutes les méthodes.
 
+- **Ne jamais réécrire la table des tâches planifiées par un tuyau.** Le 5 octobre, `(crontab -l; echo …) | crontab -` a remplacé les 10 lignes du compte par la seule ligne ajoutée. Restaurée en moins d'une minute grâce à la copie faite juste avant ; d'après les horaires, aucune tâche n'a été manquée. Règle : copier la table dans un fichier, ajouter la ligne au fichier, installer avec `crontab <fichier>`, puis comparer ligne à ligne avec la copie.
+
 ## Sécurité
 
 - **Un plafond qui efface les compteurs les plus anciens ouvre un contournement.** Pour borner le fichier des essais ratés, j'avais gardé les 500 entrées les plus récentes : quelqu'un qui alterne entre 501 adresses fait effacer chaque compteur avant qu'il atteigne le seuil. Règle : ne jamais évincer une information de sécurité encore utile ; borner la taille par une limite commune, pas par l'oubli.

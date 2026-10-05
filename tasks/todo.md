@@ -188,10 +188,14 @@ Pour le joueur : le bilan garde l'historique des semaines. Dans la version d'ess
 
 ### Lot 7 — Rappel du matin (ntfy)
 Pour le joueur : chaque jour à 8 h, une notification au texte général ; la toucher ouvre l'Orée.
-- [ ] Petit script PHP lancé par une tâche planifiée de l'hébergement à 8 h (le serveur est à l'heure de Toronto, la même que Montréal : vérifié le 5 octobre). Refusé s'il est appelé depuis le web. Un envoi par jour au plus.
-- [ ] Nom du canal et adresse de l'app dans la configuration serveur, jamais dans le dépôt. Textes sans titre ni nombre de tâches.
-- [ ] Tests avec un faux serveur ntfy : un seul envoi, aucun titre de tâche, refus depuis le web.
+- [x] Petit script PHP lancé par une tâche planifiée de l'hébergement à 8 h (le serveur est à l'heure de Toronto, la même que Montréal : vérifié le 5 octobre). Refusé s'il est appelé depuis le web. Un envoi par jour au plus.
+- [x] Nom du canal et adresse de l'app dans la configuration serveur, jamais dans le dépôt. Textes sans titre ni nombre de tâches.
+- [x] Tests avec un faux serveur ntfy : un seul envoi, aucun titre de tâche, refus depuis le web.
 - [ ] Alex : installer ntfy (F-Droid) et s'abonner au canal ; tâche planifiée (question 2).
+- *Fait le 5 octobre par moi (commit du rappel : `app/serveur/`, test `app/tests/api/rappel.test.mjs`). 6 tests ; chaque règle cassée volontairement fait échouer au moins un test (un envoi par jour, rien de la liste, pas depuis le web, échec non noté comme fait, réglages manquants). PHP du serveur réglé sur UTC : le script fixe lui-même l'heure de Montréal.*
+- *Installé en production vers 17 h 45 (accord d'Alex) : script dans `app/serveur/` (interdit au web, 403 vérifié), canal aléatoire et adresse de l'app ajoutés au `config.php` de production (copie gardée dans `api/data/backups/`, API vérifiée ensuite : 200 avec code, 401 sans), tâche planifiée « 0 8 * * * ». Incident : la première écriture de la table planifiée a effacé les 10 lignes existantes ; restaurées à l'identique en moins d'une minute (voir `tasks/lessons.md`). Essai réel : le serveur a envoyé, ntfy a reçu le message avec le lien (gardé 12 h).*
+- *Le script vit dans `app/serveur/` de la production avant la bascule : le déploiement de `v1` ne le retire pas (envoi sans suppression), la v2 le contient.*
+
 
 ### Lot 8 — Documentation, essai complet, bascule
 - [ ] Service worker : nouvelle version, liste des fichiers à jour.
