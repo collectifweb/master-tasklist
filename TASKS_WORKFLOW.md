@@ -140,6 +140,18 @@ journalctl --user -u tasks-sync.service --no-pager -n 30
 
 ---
 
+## Débloquer l'accès à l'app (trop de codes faux)
+
+Après 5 codes d'accès faux en 15 minutes depuis une même adresse, ou 20 en tout, l'app refuse tout code pendant 15 minutes et affiche « Trop d'essais ». Pour débloquer tout de suite, par SSH sur l'hébergement, dans le dossier du site (celui de `tasks.json`) :
+
+```bash
+rm -f app/api/data/lockout.json
+```
+
+Ce fichier ne contient que les compteurs d'essais ratés (les adresses y sont gardées sous forme d'empreinte, jamais en clair). Le supprimer débloque tout le monde d'un coup, sans avoir besoin de l'adresse d'Alex, et n'efface rien d'autre. Ne jamais toucher aux autres fichiers de `app/api/data/` : état du jeu, registre, sauvegardes.
+
+---
+
 ## Cycle de vie d'une tâche
 
 ```
