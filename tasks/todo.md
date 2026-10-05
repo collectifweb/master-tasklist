@@ -68,6 +68,8 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 - [ ] Installer le script corrigé sur la machine d'Hermes (Alex).
 - [x] Essai sur une copie des vraies tâches, faite sur le serveur dans un second dossier d'essai protégé par un code. L'API relit chaque tâche à l'identique, aucun champ perdu ; vérifié sur le serveur, sans rapatrier de données.
 - [x] Alex utilise cette copie sur son téléphone : jalon « utilisable au quotidien ». *Remplacé par la bascule : Alex utilise directement la production.*
+- [x] Blocage des mauvais codes (5 octobre, demandé par Alex : code d'accès court) : 5 codes faux en 15 minutes bloquent l'adresse 15 minutes, même avec le bon code. Essayé pour de vrai sur le bac à sable : l'adresse comptée est bien celle du visiteur, une autre adresse passe. En production depuis le commit 2889c41.
+- [x] Copie d'essai des vraies tâches supprimée du serveur (5 octobre, accord d'Alex).
 - [x] Sauvegarder ce qui est en ligne : copie datée de la liste, de la page, de l'ancienne API et du `.htaccess` dans un dossier du site interdit au web (5 octobre 2026).
 - [x] Version d'essai dans un sous-dossier, avec une liste fictive et un code d'accès. Parcours réel vérifié en HTTPS : code demandé, quête enregistrée sur le serveur, relance hors ligne, dossier de données interdit au web.
 - [x] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil. *Fait le 5 octobre vers 11 h 15 (accord d'Alex) : sauvegarde datée, app dans `app/`, accueil renvoyé vers elle, accès web direct à la liste et à l'ancienne API bloqué (403). L'API sert les 27 tâches à l'identique, champ pour champ. Code d'accès choisi par Alex.*
