@@ -10,7 +10,8 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 - Calendrier réel : heure de Montréal, journée de 4 h à 3 h 59, neige le 15 novembre, trêve du 21 décembre au 4 janvier.
 - Progression du jeu sauvegardée sur le serveur, pas dans le navigateur.
 - Site laissé ouvert pour l'instant. La protection se décide avant la mise en ligne de la nouvelle app.
-- À trancher en semaine 3 : côte à côte avec Fanal (écran allumé ou simple relevé du temps), rappel quotidien.
+- Côte à côte : simple relevé du temps (décidé le 5 octobre au matin). Rappel quotidien : encore à trancher.
+- Protection : code d'accès. Hermes : synchro SSH avec verrou partagé. Essai sur les vraies tâches : copie faite sur le serveur (décidé le 5 octobre au matin).
 
 ## Principes
 
@@ -56,13 +57,15 @@ Référence : `docs/revue-2026-10/RECOMMANDATION.md` (sections 3 à 8). Statut :
 
 - [x] Introduction, chapitre 1, chapitre 2 jusqu'au premier Avis (Premier gel). Chapitres pilotés par `chapitres.json`, Avis annoncé 7 jours d'avance avec sa jauge, résultat tenu, voilé ou absent sans perte (scénarios 16, 17, 18).
 - [x] Potager (semer, récolter au glissé ou au bouton, garde-manger, partager, réserve) et lettre du matin (scénarios 15, 19).
-- [ ] Côte à côte : attend la décision d'Alex.
+- [ ] Côte à côte : simple relevé du temps passé, sans garder l'écran allumé (décidé le 5 octobre).
 - [x] Jour du recyclage, première version ; installation sur l'écran d'accueil du téléphone, lancement hors ligne (scénarios 20, 21).
 
 ## Mise en ligne
 
-- [ ] Choisir la protection : connexion par code ou mot de passe du serveur. *La connexion par code est prête et vérifiée sur la version d'essai.*
-- [ ] Décider comment Hermes écrit : par la nouvelle API, ou par SSH avec le même verrou.
+- [x] Choisir la protection : connexion par code d'accès (Alex, 5 octobre). Prête et vérifiée sur la version d'essai.
+- [x] Décider comment Hermes écrit : par SSH, avec le même verrou que l'API (Alex, 5 octobre).
+- [ ] Correctif du script de synchro d'Hermes : verrou partagé et empreinte du contenu envoyé.
+- [ ] Essai sur une copie des vraies tâches faite sur le serveur.
 - [x] Sauvegarder ce qui est en ligne : copie datée de la liste, de la page, de l'ancienne API et du `.htaccess` dans un dossier du site interdit au web (5 octobre 2026).
 - [x] Version d'essai dans un sous-dossier, avec une liste fictive et un code d'accès. Parcours réel vérifié en HTTPS : code demandé, quête enregistrée sur le serveur, relance hors ligne, dossier de données interdit au web.
 - [ ] Tester sur le téléphone d'Alex, puis déployer avec les vraies tâches et basculer l'accueil.

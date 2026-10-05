@@ -274,12 +274,17 @@ Hors plafond :
 **Réponses d'Alex, 5 octobre 2026**
 1. La colonie de l'Orée.
 2. Avis actifs (pas de « Saison douce » par défaut).
-3. À trancher en semaine 3.
+3. Simple relevé du temps passé, sans garder l'écran allumé (réponse du 5 octobre, au matin).
 4. Domaines regroupés : Jardin et Ferme dans Terrain, Professionnel dans Administratif.
 5. À trancher en semaine 3.
 6. Calendrier réel.
 
 Aussi décidé : la progression du jeu est sauvegardée sur le serveur ; le site reste ouvert pour l'instant, la protection se choisit avant la mise en ligne ; on construit cette direction avant tout déploiement. Plan : `tasks/todo.md`.
+
+Décidé le 5 octobre au matin :
+- **Protection** : connexion par code d'accès. À la bascule, l'accès direct à `tasks.json` et à l'ancienne API est bloqué.
+- **Hermes** : il garde sa synchronisation par SSH, avec un verrou partagé avec l'API et l'empreinte du contenu envoyé.
+- **Essai sur les vraies tâches** : sur une copie faite sur le serveur, dans un dossier d'essai protégé par un code. Rien ne quitte le serveur.
 
 ---
 Simulation : `simulations/recommandation-3-semaines.mjs` (données : `simulations/taches-006.json`).
