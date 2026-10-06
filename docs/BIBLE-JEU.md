@@ -37,7 +37,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 | **Nourriture** | Les récoltes : potager de mai à octobre, serre toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, faire des réserves pour l'hiver |
 | **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
 
-**Ce qui disparaît** : Lueur, Fil libre, Souffler, cendre, voile et Confiance. Leur rôle passe aux Habitants (la progression) et aux quartiers (le lien avec tes domaines de vie).
+**Ce qui disparaît** : Lueur, Fil libre, Souffler, cendre, voile et Confiance. Leur rôle passe aux Habitants (la progression) et aux quartiers (des réglages du jeu que tu fais monter, au choix, avec des permis).
 
 **Règle d'or** : la Nourriture n'est jamais consommée en cachette. On la dépense pour un geste choisi (accueillir, échanger, mettre en réserve). Personne ne meurt de faim, personne ne part.
 
@@ -52,13 +52,13 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 | Village | 6 à 10 | Nouvelle bande de terrain ; tour de guet, scierie, poulailler, cabane à sucre |
 | Bourg | 11 à 20 | Nouvelle bande ; marché, école, centrale solaire, garage à chasse-neige |
 | Ville | 21 à 35 | Une île voisine reliée par un pont ; gare, musée |
-| Ville +1, +2… | +15 chaque fois | Chaque palier : du terrain, un bâtiment ou une amélioration, un nouveau type de visiteur |
+| Ville +1, +2… | +15 chaque fois | Chaque palier : du terrain, un bâtiment, un permis, un nouveau type de visiteur |
 
 Le prochain rang est toujours affiché avec ce qui manque, par exemple : « Hameau : encore 2 habitants. »
 
 ### Les quartiers (tes domaines de vie)
 
-Chaque domaine de ta vie a son quartier au village. Les tâches d'un domaine font grandir son quartier.
+Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne compte plus pour les niveaux : le compte des quêtes par quartier reste affiché (mémoire, filtre), rien de plus.
 
 | Domaine | Quartier |
 |---|---|
@@ -69,7 +69,30 @@ Chaque domaine de ta vie a son quartier au village. Les tâches d'un domaine fon
 | Véhicule | Le Garage |
 | Autre | La Place du village |
 
-Un quartier monte de niveau au fil des tâches terminées dans son domaine (par exemple 5, 15, 30, 60, 100 tâches). Chaque niveau lui ajoute une amélioration visible : l'Atelier niveau 2 répare deux fois moins cher, les Champs niveau 3 ajoutent une parcelle. L'affichage est un compte simple : « Champs : niveau 2, encore 7 tâches Terrain pour le niveau 3. »
+**Les quartiers montent par permis, au choix du joueur.** Rien ne monte tout seul. Le permis est délivré par la Mairie :
+
+- un tous les 4 jours travaillés (un jour travaillé est un jour avec au moins une quête payée et non remballée ; une journée à 5 quêtes compte comme une journée à 1) ;
+- un à chaque nouveau rang du village ;
+- un pour l'objectif de saison réussi.
+
+Il n'y a pas de date limite : un jour sans quête ne fait rien perdre, le compte attend. Remballer une quête ne reprend jamais un permis.
+
+Monter un quartier au niveau n coûte n permis, plus des travaux en Énergie et en Matériaux qui croissent avec le niveau (les chiffres sont réglés par simulation). Tu touches un quartier, sa fiche dit ce qu'il fait, ce que le prochain niveau change et ce qu'il coûte.
+
+**Chaque niveau change un seul réglage du jeu**, écrit sur la fiche du quartier. Un niveau ne change jamais ce que rapporte une tâche.
+
+| Quartier | Réglage | Niveau 1 | Niveau 2 | Niveau 3 |
+|---|---|---|---|---|
+| Les Champs | Nourriture par récolte du potager | 5 « Compost » | 6 « Rangs serrés » | 7 « Terre noire » |
+| L'Atelier | Nourriture par récolte de la petite serre | 5 « Tablettes de culture » | 6 « Double paroi » | 7 « Lampes de culture » |
+| Le Garage | Jours de pousse d'une culture | 4 « Motoculteur » | 3 « Tracteur » | (reporté : la « tournée d'hiver ») |
+| L'École | Places par chalet | 3 « Classe ouverte » | 4 « Cantine » | 5 « Terrain de jeu » |
+| La Mairie | Nourriture pour accueillir une famille | 15 « Formulaire d'une page » | 12 « Comité d'accueil » | 9 « Annonce dans les journaux du Sud » |
+| La Place du village | Nourriture gardée | +20 « Caveau » | +40 « Chambre froide » | +60 « Entrepôt communal » |
+
+Les niveaux 1 à 3 existent pour l'instant, sauf le Garage, arrêté au niveau 2. Les niveaux 4 et suivants viendront. Pistes : plus de Nourriture par récolte, plus de stockage, le camion de ravitaillement du Garage, et les effets que la bible promet quand leurs systèmes existeront (l'Atelier qui répare moins cher, le chasse-neige du Garage, un visiteur de plus pour la Place, une alerte annoncée plus tôt pour la Mairie).
+
+**L'effort paie.** Les points d'effort d'une quête valent arrondi(4 × longueur × (0,6 + 0,08 × difficulté) × (0,8 + 0,04 × priorité)). Une quête longue et difficile rapporte beaucoup plus que plusieurs courtes et faciles : priorité 9, longueur 2, difficulté 2 donne 7 points ; priorité 9, longueur 9, difficulté 9 en donne 55. L'ordre des quêtes (la Cote) ne change pas. Le plafond quotidien (plein tarif jusqu'à 45 points dans la journée, moitié jusqu'à 90, 20 % au-delà) et les bonus d'échéance et d'ancienneté (plafonnés à +40 %) non plus. Les valeurs d'une quête (priorité, longueur, difficulté) se figent à la première étape cochée ou 24 h après sa création.
 
 ## 5. Les bâtiments : un rôle chacun
 
@@ -108,17 +131,17 @@ Le jeu suit la date réelle. Quand il neige dehors, il neige à l'Orée.
 | Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue ; semis en mai | Faire les sucres |
 | Été | juin à août | Pleine production ; mouches noires en juin ; fête de la Saint-Jean le 24 juin ; plus de visiteurs | Accueillir une nouvelle famille |
 
-Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : un décor unique, un plan de bâtiment, une famille qui s'installe.
+Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : un décor unique, un permis, une famille qui s'installe.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
 
 ## 7. Les visiteurs et leurs commandes
 
-Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : par exemple « 6 Nourriture et 10 Matériaux ». En échange, il laisse quelque chose d'**unique** : un plan de bâtiment rare, un décor qu'on ne trouve nulle part ailleurs, une famille prête à s'installer, ou un gros lot de Matériaux.
+Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : par exemple « 6 Nourriture et 10 Matériaux ». En échange, il laisse quelque chose d'**unique** : un permis, un décor qu'on ne trouve nulle part ailleurs, une famille prête à s'installer, ou un gros lot de Matériaux. Un visiteur donne au plus un permis.
 
 Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
-**Catalogue de départ** : le colporteur (décors), la scientifique (plans et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
+**Catalogue de départ** : le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
 
 ## 8. Les imprévus, bons et mauvais
 
@@ -167,9 +190,9 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - jusqu'à quatre imprévus par semaine, plus exigeants, mais toujours réparables ;
 - des commandes plus grosses, contre des récompenses plus rares ;
 - des **grands chantiers** sur plusieurs semaines (un phare, une digue, un pont, un monument) qui avalent beaucoup d'Énergie et de Matériaux et laissent une trace permanente sur l'île ;
-- des améliorations de bâtiments, au niveau 2 puis 3, qui coûtent cher.
+- les niveaux de quartier, qui coûtent cher (voir §4).
 
-**Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
+**Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, le prix d'un niveau de quartier, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
 
 **Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes en tient compte quand il révise la semaine qui vient (§12). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
 
@@ -184,7 +207,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - **Les fiches à trois lignes** pour tout ce qui se touche.
 - **Menus renommés** :
   - « Finir la visite » disparaît : la visite se termine d'elle-même ;
-  - « Plan accessible » devient « Carte en liste » ;
+  - « Plan accessible » devient « Carte en liste », rangée dans le bouton « Vue » de la carte ;
   - l'écran « L'Orée veille » devient « Tout est enregistré, à demain ».
 - **Le bilan de la semaine**, avec l'historique des semaines passées et l'allure du village (§9).
 - **Le rappel du matin** : chaque jour à 8 h, heure de Montréal, une notification arrive par l'app gratuite ntfy (sur F-Droid) ; la toucher ouvre l'Orée. Le texte reste général, sans titre de tâche : il passe par le serveur public de ntfy, où le nom du canal fait office de mot de passe.
@@ -218,7 +241,7 @@ Une chronique contient :
 - 0 à 2 imprévus, choisis dans le catalogue ;
 - une « nouvelle du village » qui fait écho à ce que tu as accompli, par domaine ; écrite deux semaines d'avance, elle est mise à jour lors de la révision du dimanche.
 
-L'app vérifie ce fichier avant de l'utiliser : la forme, les entrées du catalogue et des quantités bornées. S'il est absent ou invalide, l'app prend son contenu de base. Hermes ne peut donc ni casser l'équilibre du jeu ni toucher à tes tâches.
+L'app vérifie ce fichier avant de l'utiliser : la forme, les entrées du catalogue et des quantités bornées, dont les permis qu'une chronique ou un visiteur distribue. S'il est absent ou invalide, l'app prend son contenu de base. Hermes ne peut donc ni casser l'équilibre du jeu ni toucher à tes tâches.
 
 **Chaque mois**, Hermes propose des améliorations dans une version à part, jamais directement en ligne : nouvelles entrées du catalogue, nouveaux bâtiments, histoires, équilibrage, code. Les tests doivent passer, on relit, puis on met en ligne.
 
@@ -237,7 +260,6 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 
 - les tâches et leur cote ;
 - les gains d'Énergie et de Matériaux par tâche ;
-- « Je m'y mets » et le relevé du temps ;
 - le mode hors ligne, l'API et ses sauvegardes ;
 - l'île en SVG ;
 - le vrai calendrier, la trêve des Fêtes et la règle d'absence ;
@@ -245,13 +267,14 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 
 **On change** :
 
-- les secteurs deviennent des quartiers, qui progressent au nombre de tâches ;
+- les secteurs deviennent des quartiers, qui progressent au choix du joueur, par permis ;
+- les gains d'une quête suivent l'effort : longue et difficile, elle rapporte plus que plusieurs courtes et faciles (§4) ;
 - les Avis deviennent des alertes météo ;
 - les chapitres deviennent des rangs et des saisons ;
 - la Tour de veille devient la tour de guet, avec un effet clair ;
 - l'île de 12 sur 12 devient une île qui s'agrandit.
 
-**On retire** : Lueur, Fil libre, Souffler, cendre, voile, Confiance, ÉCHO-7 et le mystère des chapitres 3 à 8. L'histoire du vieux village survit en douceur : la conteuse et le musée en livrent des souvenirs.
+**On retire** : « Je m'y mets » (bouton, épingle en tête du Fil, relevé du temps, temps au bilan, proposition de découper liée au temps ; le bouton « Découper » des grands chantiers reste), Lueur, Fil libre, Souffler, cendre, voile, Confiance, ÉCHO-7 et le mystère des chapitres 3 à 8. L'histoire du vieux village survit en douceur : la conteuse et le musée en livrent des souvenirs.
 
 **Ta partie** : au passage à la v2, l'état du jeu repart, mais tes tâches déjà terminées sont recomptées depuis le registre. Rien n'est perdu.
 
@@ -278,3 +301,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12).
 4. **Le jeu suit le rythme d'usage** : allure du village et reprise après une absence (§9).
 5. **Calendrier** : le jeu garde le vrai calendrier. Pour que l'hiver ne bloque pas un village qui démarre (le potager dort de novembre à avril), la petite serre est construisible dès le campement. Elle produit l'hiver en consommant de l'Énergie, ce qui rend l'objectif « garder la serre allumée » jouable dès le premier hiver.
+6. **Les quartiers montent par permis** (5 octobre 2026, au soir). Le nom « permis » est retenu. Sur l'essai, les niveaux déjà atteints sont convertis en permis à placer où Alex veut. Le détail est dans `docs/conception-niveaux-quartiers.md` (§4).
+7. **L'effort paie** (5 octobre 2026, au soir) : une quête longue et difficile rapporte beaucoup plus que plusieurs courtes et faciles. L'ordre des quêtes, le plafond quotidien et les bonus ne changent pas (§4).
+8. **« Je m'y mets » est retiré** (5 octobre 2026, au soir) : plus de bouton, d'épingle, de relevé du temps ni de temps au bilan.
+9. **« Carte en liste » est rangée dans le bouton « Vue »** de la carte, avec Rapprocher, Éloigner et Toute l'île (5 octobre 2026, au soir).
