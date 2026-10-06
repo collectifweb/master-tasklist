@@ -384,4 +384,42 @@ Alex a joué sur l'essai après l'envoi du lot R, jusqu'au jour de jeu 42 (déca
 | 5 | Aucun imprévu en 40 jours : normal ? Côté Hermes ? | Normal : pas encore construits. C'est l'app qui les tire de son catalogue (semaines 3 et 4) ; Hermes ne fera qu'enrichir, aux semaines 7 et 8 (bible §11, §12) | Inchangé |
 | 6 | Réglages : définir la quête par défaut | Réglages ne contient que le prénom ; valeurs par défaut fixes dans `sheets.js:14`. Hermes évalue ses quêtes lui-même (`TASKS_WORKFLOW.md`) : il n'est pas touché | « Quête par défaut » (priorité, longueur, difficulté) dans Réglages |
 
-**Questions pour Alex** : voir la réponse du 6 octobre au matin (décisions du topo du lot R et de ces retours).
+**Réponses d'Alex (6 octobre, matin)** : d'accord avec les onze recommandations.
+1. Prix des niveaux inversé : n × 100 Énergie, n × 75 Matériaux ; les permis ne changent pas.
+2. « Quête par défaut » dans Réglages, la même sur tous les appareils (gardée avec la partie).
+3. Compteur « Permis » dans la barre des ressources ; plus de pastille sur « Construire » ; les icônes seules restent.
+4. Deuxième serre, débloquée au rang Hameau.
+5. Quatre ou cinq répliques de plus pour « permis gagné » et « nouveau rang ».
+6. Fiche de quartier sur tablette : le bouton ne doit plus descendre après un achat.
+7. Le marchand (échange Énergie contre Matériaux ou Nourriture, et l'inverse) devient le premier visiteur, aux semaines 3 et 4.
+8. Pas de taxe pour l'instant.
+9. Plafond du jour inchangé.
+10. Rabat à 360×640 accepté.
+11. Ordre : lot R2 ci-dessous, essai, puis lot 8 (bascule), puis visiteurs et imprévus.
+
+Idée nouvelle d'Alex : un bonus quand la semaine présentée au bilan est complète (« 7 jours actifs donnent X ressources »). Ma recommandation, en attente de son accord : « Semaine tenue » à 5 jours travaillés sur 7, payée en Matériaux, sans compteur de jours consécutifs (revue d'octobre, `docs/revue-2026-10/RECOMMANDATION.md:37` : « compteur cumulatif, jamais de série »). Sur les 5 semaines finies de l'essai (6, 7, 7, 5 et 6 jours travaillés), une règle à 7 sur 7 aurait payé 2 semaines, une règle à 5 sur 7 les 5.
+
+## Lot R2 — Équilibrage, réglages, semaine tenue (avant le lot 8)
+
+À faire valider par Alex avant de commencer. Rien en production : tout part sur l'essai.
+
+### R2a — Économie (logique seule)
+- [ ] Prix des niveaux inversé dans `core/quartiers.js` (`coutNiveau`) ; tests de `quartiers.test.mjs` mis à jour.
+- [ ] Deuxième serre : `max: 2` pour la serre, la seconde au rang Hameau (règle par exemplaire, raison écrite « Il faut d'abord le rang Hameau ») ; semis, récolte, chauffage et effet de l'Atelier valables pour `serre-2` ; un emplacement de plus sur l'île (`world/layout.js`, le test de correspondance des emplacements suit).
+- [ ] Semaine tenue (si Alex est d'accord) : au 5e jour travaillé d'une semaine (lundi au dimanche), une entrée au registre `semaine:{lundi}` (unique, rejouable sans doublon), payée en Matériaux ; le bilan de la semaine l'affiche. Montant réglé par la simulation.
+- [ ] `tests/core/simulation.test.mjs` relancée et recalée : premier niveau acheté, permis en main, usage de l'Énergie, au rythme d'Alex (1 à 2 quêtes par jour) et au rythme régulier. Chiffres refaits par moi avant d'être donnés à Alex.
+
+### R2b — Interface
+- [ ] Réglages : section « Quête par défaut » (priorité, longueur, difficulté), gardée dans la partie (`game.reglages`, par `game.set`) ; le formulaire d'ajout la lit à la place de `DEFAULTS` (`js/ui/sheets.js:14`). Hermes n'est pas touché.
+- [ ] Compteur « Permis » dans la barre des ressources (/impeccable, tenue vérifiée à 360 px) ; pastille retirée de « Construire », nom du bouton remis à « Construire ».
+- [ ] Fiche de quartier : le bouton d'achat reste à sa place après un achat (tablette).
+- [ ] Répliques de Fanal : quatre ou cinq variantes pour « permis gagné » et « nouveau rang » (`content/fr-CA/repliques.json`, typographie de `app/content/README.md`).
+- [ ] Scénarios navigateur : réglage de la quête par défaut (deux appareils voient la même), compteur des permis, deuxième serre, semaine tenue ; scénarios existants qui lisent la pastille mis à jour.
+
+### R2c — Vérification, documents, essai
+- [ ] `node --test`, série complète aux trois largeurs (machine au calme), `world-s3` et `world-perf` (l'île change) ; relecture indépendante.
+- [ ] Documents : bible (§4 prix, §5 serre, §7 marchand, §15 décisions du 6 octobre), `PRODUCT.md` (semaine tenue = bonus plafonné), `docs/conception-niveaux-quartiers.md` (annexe des écarts), `app/ARCHITECTURE.md`, `app/content/README.md`, `app/DESIGN.md`.
+- [ ] Essai : cache v9, photo de `api/data`, envoi, contrôles en lecture seule. La partie d'essai n'a pas besoin de conversion (`game.reglages` absent = valeurs actuelles).
+- [ ] Topo pour Alex, avec les statuts Vérifié / Lu / Rapporté.
+
+Non inclus (défauts connus du topo du lot R, laissés pour plus tard) : panneau caché qui revient hors ligne, bulle de Fanal sur « Construire » à 360×640, plaques qui se chevauchent rangée « Vue » dépliée, boutons de la carte tabulables sous le panneau, jour travaillé perdu par un second appareil hors ligne.
