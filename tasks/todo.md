@@ -223,6 +223,7 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
 2. Pas de séparation : l'essai **ferme à la bascule** (ses données gardées en sauvegarde) ; un futur essai sera séparé (dossier de stockage à part ou sous-domaine) quand un lot en aura besoin. D'ici la bascule, le risque de mélange reste, accepté.
 3. La production **convertit sa partie v1** (pas de départ à zéro, pas de reprise de la partie d'essai : dates en avance de 41 jours, 57 quêtes ajoutées sur l'essai).
 4. **Ressources en entiers à l'écran, dans ce lot** : le calcul garde ses dixièmes ; à l'écran, ce qu'on a est arrondi vers le bas, ce qui manque vers le haut, un gain au plus proche. Mesuré sur la copie de l'essai : 63 entrées du registre sur 168 ont un montant à virgule ; 2 gains de quête sur 67 ont moins de 0,5 en Énergie et en Matériaux (ils n'affichent aucun chiffre, l'annonce reste).
+5. **Feu vert de bascule donné d'avance** (6 octobre, après-midi : « Je donne le feu vert de bascule d'ores et déjà, d'avance »). La bascule part dès que les étapes ci-dessous sont faites, sans nouvelle demande ; Alex est prévenu juste avant la fermeture de l'essai.
 
 - [ ] Ressources en entiers à l'écran (décision 4), tests et scénarios touchés repassés aux trois largeurs.
 - [ ] Fermer l'essai à la bascule : sauvegarde de `essai/api/data`, puis dossier rendu inaccessible (sur accord, avec la bascule).
@@ -238,7 +239,7 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
   - *Faite le 6 octobre vers 13 h, avec l'accord d'Alex. Copie identique au serveur (empreintes) : partie v1, 28 tâches (12 faites, 16 à faire), registre de 3 entrées (5 et 6 octobre), aucune `game-state.v1.json` dans les 20 sauvegardes. Rejouée dans la vraie app (HEAD) sous Chromium, serveur `php -S` local : partie passée en v2, aucune erreur console ; copie v1 identique octet pour octet à l'original ; `tasks.json` identique octet pour octet ; registre inchangé (aucune entrée ajoutée). Après : 10 Énergie, 20 Matériaux, 5 Nourriture (stock de départ ; avant : 17,7 Énergie, 24,5 Matériaux, Confiance 1, Lueur 14,2), 0 habitant, les 12 tâches faites comptées (Champs 7, Atelier 4, Mairie 1), 1 permis, écrans d'accueil au premier lancement.*
 - [ ] Documents restés en vocabulaire v1 : section « semaine 3 » d'`app/ARCHITECTURE.md`, lignes v1 d'`app/DESIGN.md` (Confiance, Lueur, `quest-row-doing`), `app/design/reference.html` ; `TASKS_WORKFLOW.md` (rien ne change pour Hermes : à vérifier).
 - [ ] Tout relancer (tests, série aux trois largeurs, machine au calme).
-- [ ] Bascule, sur accord d'Alex au moment même : étiquette `v2`, sauvegarde datée, `deploy-prod.sh v2`, retrait à la main des fichiers v1 restés, contrôles en lecture seule.
+- [ ] Bascule (feu vert d'avance, décision 5) : cache `oree-coquille-v10`, étiquette `v2`, `bascule-v2.sh avant`, photo de `essai/api/data` puis essai fermé, `bascule-v2.sh envoi`, retrait à la main des fichiers v1 restés, `bascule-v2.sh apres`, lecture dans un navigateur neuf sans écrire.
 
 ### Risques
 - Un onglet v1 resté ouvert à la bascule : son geste suivant est refusé avec un message, rien n'est écrit, il faut le refaire après rechargement.
