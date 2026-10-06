@@ -222,6 +222,9 @@ const jourSuivant = async (page, srv, k) => {
     })));
     R.check('bilan : trois semaines figées, la plus récente en haut', rows.length === 3, JSON.stringify(rows));
     R.check('bilan : la semaine tenue affiche « Semaine tenue : +12 Matériaux », doublé d’une icône', rows[0] && /Semaine tenue : \+12 Matériaux/.test(rows[0].text) && rows[0].icone, JSON.stringify(rows[0]));
+    const teinte = await page.evaluate(() => { const e = document.querySelector('#dlg-review .review-weeks .review-tenue'); const r = document.querySelector('.res[data-res="materiaux"]'); return e && { ligne: getComputedStyle(e).color, icone: getComputedStyle(e.querySelector('.icon')).color, materiaux: getComputedStyle(document.documentElement).getPropertyValue('--res-materiaux').trim() }; });
+    const rgb = await page.evaluate((h) => { const d = document.createElement('i'); d.style.color = h; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }, teinte.materiaux);
+    R.check('bilan : la ligne d’une semaine passée est en brun Matériaux, pas en gris', teinte.ligne === rgb && teinte.icone === rgb, JSON.stringify({ ...teinte, rgb }));
     R.check('bilan : les semaines non tenue et sans le champ n’affichent rien', rows.slice(1).every((r) => !/Semaine tenue/.test(r.text) && !r.icone), JSON.stringify(rows.slice(1)));
     R.check('bilan : aucune ligne « Semaine tenue » pour la semaine en cours (lundi, 0 quête)', !(await page.evaluate(() => !!document.querySelector('#dlg-review .review-sum .review-tenue'))));
     R.check('bilan : aucun mot « série » ni compteur de jours de suite', !/série|de suite|consécutif/i.test(await page.textContent('#dlg-review')));
@@ -245,6 +248,46 @@ const jourSuivant = async (page, srv, k) => {
     R.check('360 px : le bilan avec la ligne de semaine tenue ne déborde pas', (await horsEcran(p360, '#dlg-review')).length === 0 && await sansDefilement(p360) && /Semaine tenue/.test(nbsp(await p360.textContent('#dlg-review .review-weeks'))), JSON.stringify(await horsEcran(p360, '#dlg-review')));
     await shot(p360, '34-bilan-360');
     await p360.close();
+
+    // ───── un permis des jours et la semaine tenue le même jour : l'annonce la plus chargée, à 320, 360 et 390 px
+    //       (le quartier cède la place sans laisser de séparateur ; rien n'est rogné par la pastille #announce elle-même)
+    for (const [largeur, avecPermis] of tag === 390 ? [[320, true], [360, true], [390, true], [320, false]] : []) {
+      const srvP = await L.startServer({ tasks: w.tasks, sandbox: true, game: avecPermis ? { ...game, permis: { ...(game.permis || {}), depuis: LUNDI } } : game, ledger: w.ledger });
+      try {
+        const { page: pp } = await newPage({}, { viewport: { width: largeur, height: 740 } });
+        await pp.clock.install({ time: FRIDAY });
+        await pp.goto(srvP.url);
+        await L.ready(pp);
+        await L.closeWelcome(pp, 1500);
+        await L.waitFor(() => srvP.ledger().some((e) => e.bonus === 'ouverture' && e.day === ymdOf(FRIDAY)), 4000);
+        await L.openPanel(pp);
+        await pp.click('#fil-quest [data-action="complete"]');
+        const arrive = await L.waitFor(() => srvP.ledger().some((e) => e.type === 'semaine') && (!avecPermis || srvP.ledger().some((e) => e.type === 'permis')), 5000);
+        await pp.waitForTimeout(450);
+        const m = await pp.evaluate(() => {
+          const a = document.getElementById('announce');
+          const cs = getComputedStyle(a), ar = a.getBoundingClientRect();
+          const bord = ar.right - parseFloat(cs.paddingRight);
+          const kids = [...a.children];
+          const mot = a.querySelector('[data-semaine]');
+          return {
+            texte: a.textContent.replace(/ /g, ' ').replace(/\s+/g, ' ').trim(), shown: a.classList.contains('is-shown'),
+            coupe: a.scrollWidth > a.clientWidth + 1,
+            motFin: mot ? Math.round(mot.getBoundingClientRect().right) : null, motPlein: !!mot && mot.scrollWidth <= mot.clientWidth,
+            bord: Math.round(bord), dernier: kids.length ? Math.round(kids[kids.length - 1].getBoundingClientRect().right) : null,
+            sepFinal: !!kids.length && kids[kids.length - 1].classList.contains('announce-sep'),
+            quartier: !!a.querySelector('[data-quartier]'), permis: !!a.querySelector('[data-res="permis"] use[href$="#i-permis"]'),
+          };
+        });
+        const cas = avecPermis ? 'permis et semaine le même jour' : 'semaine seule';
+        R.check(`${largeur} px : ${cas} : tout à l’annonce, en toutes lettres, rien de rogné`, arrive && m.shown && /Semaine tenue/.test(m.texte) && m.permis === avecPermis && (!avecPermis || /\+1/.test(m.texte)) && m.motPlein && !m.coupe && m.dernier <= m.bord + 1, JSON.stringify(m));
+        R.check(`${largeur} px (${cas}) : le quartier cède la place sans séparateur orphelin`, !m.quartier && !m.sepFinal && !/→|·\s*$/.test(m.texte), JSON.stringify(m));
+        await shot(pp, `34-annonce-${avecPermis ? 'permis-' : ''}${largeur}`);
+        await pp.close();
+      } finally {
+        srvP.stop();
+      }
+    }
 
     // ───── Partie B : janvier, village au Hameau (3 habitants) : la 2e serre se bâtit, se sème l'hiver, se récolte
     const ymdJ = (n) => ymdOf(JAN, n);

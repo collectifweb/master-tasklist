@@ -65,3 +65,24 @@ test('compteur Permis : une teinte à lui (ni le givre des Avis ni une autre res
   assert.ok(contraste(ink, wash) >= 4.5, `encre sur lavis : ${contraste(ink, wash).toFixed(2)}`);
   assert.ok(contraste(ink, jeton('--c-paper')) >= 4.5, `encre sur papier : ${contraste(ink, jeton('--c-paper')).toFixed(2)}`);
 });
+
+// ───── tirage des répliques : une situation hebdomadaire ne redit pas la même variante deux semaines de suite
+test('pickReply : « semaine tenue » ne répète jamais la variante de la semaine d’avant (52 vendredis)', async () => {
+  const mem = new Map();
+  globalThis.localStorage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  globalThis.document = { baseURI: 'http://localhost/app/' };
+  const { content, pickReply } = await import('../../js/content.js');
+  content.repliques = rep;
+  let precedente = null;
+  const debut = Date.UTC(2026, 9, 9, 14); // vendredi 9 octobre 2026
+  for (let i = 0; i < 52; i++) {
+    const r = pickReply('semaine.tenue', { now: new Date(debut + i * 7 * 86400000), quartier: 'place', length: 0, vars: {} }, { gate: false });
+    assert.ok(r, `vendredi ${i}`);
+    assert.notEqual(r.id, precedente, `vendredi ${i} : ${r.id} deux fois de suite`);
+    precedente = r.id;
+  }
+});
+
+test('répliques : « permis.rang » ne dit pas « le village passe au rang de » (le rang porte déjà le mot Village)', () => {
+  for (const v of rep.situations['permis.rang'].variantes) assert.ok(!/village passe au rang/i.test(v.texte), v.id);
+});

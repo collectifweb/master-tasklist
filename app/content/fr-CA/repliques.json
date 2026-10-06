@@ -81,7 +81,7 @@
       "frequence": 1,
       "variantes": [
         {"id": "permis.rang.01", "voix": "fanal", "texte": "{rang}. Ça vaut un permis. Et un tampon."},
-        {"id": "permis.rang.02", "voix": "fanal", "texte": "Le village passe au rang de {rang}. La Mairie t’envoie un permis pour fêter ça."},
+        {"id": "permis.rang.02", "voix": "fanal", "texte": "L’Orée passe au rang de {rang}. La Mairie t’envoie un permis pour fêter ça."},
         {"id": "permis.rang.03", "voix": "fanal", "texte": "{rang}, rien de moins. J’ai changé la pancarte et poli la lanterne."},
         {"id": "permis.rang.04", "voix": "fanal", "texte": "Un nouveau rang, un permis dans la poche. Le village grandit, la pancarte aussi."},
         {"id": "permis.rang.05", "voix": "fanal", "texte": "Les familles ont fait grandir l’Orée. {rang}, officiellement, avec un permis à la clé."}

@@ -69,13 +69,16 @@ export function createAnnounce(lane, live) {
         if (s.energy > 0) items.push(`<span class="announce-item" data-res="energie">+${num(s.energy)} ${icon('energie')}<span class="sr-only">${esc(t('resource.energy'))}</span></span>`);
         if (s.materials > 0) items.push(`<span class="announce-item" data-res="materiaux">+${num(s.materials)} ${icon('materiaux')}<span class="sr-only">${esc(t('resource.materials.other'))}</span></span>`);
         if (s.food > 0) items.push(`<span class="announce-item" data-res="nourriture">+${num(s.food)} ${icon('nourriture')}<span class="sr-only">${esc(t('resource.food'))}</span></span>`);
-        // un permis qui tombe : « +1 permis » (le mot double le chiffre) ; la tâche compte pour son quartier : « → Champs »
-        if (s.permis > 0) items.push(`<span class="announce-item" data-res="permis">${esc(t('gain.permis', { n: s.permis }))}</span>`);
+        // un permis qui tombe : « +1 » et son picto, comme les ressources (le nom est lu aux lecteurs d'écran) ; la tâche compte pour son quartier : « → Champs »
+        if (s.permis > 0) items.push(`<span class="announce-item" data-res="permis">+${s.permis} ${icon('permis')}<span class="sr-only">${esc(t('resource.permis'))}</span></span>`);
         // la semaine tenue : ses Matériaux sont dans le chiffre ci-dessus, le mot dit d'où vient le surplus
         if (s.tenue) items.push(`<span class="announce-item announce-tail" data-semaine>${esc(t('announce.semaine'))}</span>`);
-        if (s.quartier) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
+        // la semaine tenue prend la place du quartier (qui reste lisible sur la plaque du monde) : ni mot coupé, ni séparateur orphelin
+        if (s.quartier && !s.tenue) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
         if (!items.length) return say(liveText);
       }
+      // 4 gains et plus (ressources, permis, semaine tenue) : sans les points médians, pour que tout tienne à 320 px
+      el.classList.toggle('is-dense', items.length >= 4);
       el.innerHTML = `<span class="announce-done">${icon('check')}</span>` + items.join('<span class="announce-sep">·</span>');
       if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
       restart(el, 'is-shown');

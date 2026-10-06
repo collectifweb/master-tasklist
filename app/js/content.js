@@ -110,13 +110,16 @@ export function pickReply(situation, ctx, { gate = true, record = true } = {}) {
   if (!cands.length) { if (record) writeHist(hist); return null; }
   const last = (c) => hist[c.v.id];
   let pool = cands.filter((c) => !last(c) || daysBetween(last(c), day) > 6);
+  // jamais deux fois de suite la même variante d'une situation, même passé 7 jours (celles qui reviennent chaque semaine)
+  const dernier = hist[`>${situation}`];
+  if (pool.length > 1 && pool.some((c) => c.v.id === dernier)) pool = pool.filter((c) => c.v.id !== dernier);
   let pick;
   if (pool.length) {
     pick = pool[hash(`${situation}|${day}|${occ}`) % pool.length];
   } else {
     pick = cands.slice().sort((a, b) => (last(a) < last(b) ? -1 : last(a) > last(b) ? 1 : 0))[0];
   }
-  if (record) { hist[pick.v.id] = day; writeHist(hist); }
+  if (record) { hist[pick.v.id] = day; hist[`>${situation}`] = pick.v.id; writeHist(hist); }
   return { id: pick.v.id, voix: pick.v.voix, nom: pick.voix.nom, texte: pick.texte };
 }
 
