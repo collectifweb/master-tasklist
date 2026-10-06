@@ -362,8 +362,6 @@ function openPlan() {
   worldPlan.focus();
 }
 /** Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi. */
-let catalogueAt = 0;
-let quartierAt = 0; // dernier achat d'un niveau : un double toucher n'achète pas le suivant
 function openConstruire() {
   if (!world || !store.view) return;
   const c = ctx();
@@ -373,6 +371,23 @@ function openConstruire() {
 // ───────── Clics ─────────
 const idOf = (el) => (el.closest('[data-task-id]') || {}).dataset?.taskId || null;
 const disabled = (el) => el.getAttribute('aria-disabled') === 'true';
+
+// Gestes qui dépensent (bâtir, monter un niveau, geste d'un bâtiment) : un double toucher ne dépense qu'une fois.
+// Moins de 600 ms après l'ouverture de sa feuille, un geste touché au doigt (ou par le second clic d'un double clic)
+// est le second toucher de celui qui l'a ouverte (« Construire », une ligne du catalogue, une plaque) : ignoré. Le
+// clavier (detail 0) et un simple clic de souris passent. Puis le même geste n'est pas refait dans les 800 ms, et la
+// raison d'un bouton déjà mis à jour n'est pas relue.
+const SPEND_OPEN_MS = 600;
+const SPEND_AGAIN_MS = 800;
+let spent = { key: '', at: 0 };
+const spendKey = (action, target) => (action === 'bat-geste' ? `${action}:${target.closest('dialog')?.dataset.batId}` : action);
+function spendBlocked(e, target, action) {
+  const dlg = target.closest('dialog');
+  const ghost = e.detail > 0 && (e.pointerType !== 'mouse' || e.detail > 1);
+  if (ghost && dlg && Date.now() - (dlg._openedAt || 0) < SPEND_OPEN_MS) return true;
+  return spent.key === spendKey(action, target) && Date.now() - spent.at < SPEND_AGAIN_MS;
+}
+const markSpent = (action, target) => { spent = { key: spendKey(action, target), at: Date.now() }; };
 
 document.addEventListener('click', (e) => {
   const target = e.target.closest('button, [data-action], [data-close], input[data-action]');
@@ -465,9 +480,9 @@ document.addEventListener('click', (e) => {
     case 'jour-suivant': return jourSuivant();
     case 'cat-construire': {
       // un double toucher ne bâtit pas deux fois, et ne lit pas le refus de la ligne déjà mise à jour
-      if (Date.now() - catalogueAt < 800) return;
+      if (spendBlocked(e, target, action)) return;
       if (disabled(target)) return announce.say($(`#cat-${target.dataset.type}-etat`).textContent.trim());
-      catalogueAt = Date.now();
+      markSpent(action, target);
       const bid = target.dataset.id;
       if (!run('construire', { type: target.dataset.type, id: bid })) return;
       closeSheet($('#dlg-construire'));
@@ -475,10 +490,10 @@ document.addEventListener('click', (e) => {
     }
     case 'qrt-ouvrir': return openQuartierSheet(target.dataset.quartier);
     case 'qrt-monter': {
-      if (Date.now() - quartierAt < 800) return;
+      if (spendBlocked(e, target, action)) return;
       // achat impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($('#qrt-raison') || target).textContent.trim());
-      quartierAt = Date.now();
+      markSpent(action, target);
       return run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
     }
     case 'qrt-quetes': {
@@ -487,10 +502,12 @@ document.addEventListener('click', (e) => {
       return filterByQuartier(target.dataset.quartier);
     }
     case 'bat-geste': {
+      if (spendBlocked(e, target, action)) return;
       // geste impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($(`#${target.getAttribute('aria-describedby')}`) || target).textContent.trim());
       let params = {};
       try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
+      markSpent(action, target);
       return run(target.dataset.geste, params);
     }
   }
