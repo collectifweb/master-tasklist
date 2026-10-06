@@ -83,6 +83,7 @@ Trois règles :
 | `semaine.tenue` | La semaine tenue est payée, avec la quête payée qui la déclenche (quête terminée ou ajoutée déjà faite). Ne dit jamais un nombre de jours et ne parle jamais de série |
 | `quartier.monte` | Un quartier monte au niveau 1 (permis placés, travaux payés). Une variante par quartier ; rien aux niveaux 2 et 3 |
 | `batiment.construit` | Un bâtiment vient d'être bâti, rebâti ou réparé |
+| `marchand.arrive` | Le marchand est au quai : dit une fois par semaine et par appareil, à l'ouverture (après l'accueil, la lettre et le bilan, et après une réplique en cours), ou quand le quai vient d'être rebâti, à la place de `batiment.construit` (lot V) |
 | `famille.arrive` | Une famille s'installe dans un chalet (geste « Accueillir une famille ») |
 | `return.after_absence` | Première ouverture après 3 jours ou plus sans visite, le jour où le bonus de retour est versé (au plus une fois par 14 jours) |
 | `visit.end` | Écran « Tout est enregistré, à demain » |
@@ -105,7 +106,7 @@ La même règle vaut pour chaque situation de `repliques.json` et pour chaque gr
 
 **Jamais deux fois de suite la même variante** (répliques seulement, lot R2). Avant le tirage de l'étape 4, si la dernière variante dite pour cette situation est encore parmi les candidates retenues et qu'il en reste au moins une autre, on la retire : même passé 7 jours, une situation qui revient chaque semaine (`semaine.tenue`) ne répète pas son dernier mot. L'identifiant de la dernière variante dite est gardé par situation, dans le même `oree.replies.v1`, sous la clé `>situation` (`js/content.js`). S'il n'y a qu'une seule variante candidate, elle joue : la règle ne bloque jamais une réplique.
 
-Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées le 6 octobre 2026, après le lot R2) ; `batiment.construit`, `famille.arrive`, `list.empty` et `semaine.tenue` en ont 4, `permis.gagne` et `permis.rang` en ont 5 depuis le lot R2. Seule exception : `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
+Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées le 6 octobre 2026, après le lot R2) ; `batiment.construit`, `famille.arrive`, `list.empty` et `semaine.tenue` en ont 4, `permis.gagne` et `permis.rang` en ont 5 depuis le lot R2, `marchand.arrive` aussi (lot V). Seule exception : `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
 
 ## `lettres.json`
 

@@ -145,7 +145,24 @@ Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : pa
 
 Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
-**Le premier visiteur sera le marchand** (idée d'Alex, 6 octobre). Il échange de l'Énergie contre des Matériaux ou de la Nourriture, et l'inverse. C'est ce que le Marché du rang Bourg fera sans attendre personne ; le marchand donne le goût de l'échange bien avant. Prévu aux semaines 3 et 4 (§14), avec les autres visiteurs. Les taux d'échange restent à régler à la construction.
+**Le premier visiteur sera le marchand** (idée d'Alex, 6 octobre). Il échange de l'Énergie contre des Matériaux ou de la Nourriture, et l'inverse. C'est ce que le Marché du rang Bourg fera sans attendre personne ; le marchand donne le goût de l'échange bien avant.
+
+**Le marchand, tel qu'il est construit** (lot V, 6 octobre 2026, décisions d'Alex) :
+- il arrive dès que le quai est rebâti, et revient chaque semaine : il est au quai du lundi au dimanche (semaine de jeu, celle de la semaine tenue), même quand le quai est rebâti en milieu de semaine. Son chaland solaire est amarré au quai ; Fanal annonce son arrivée une fois par semaine ;
+- son comptoir a quatre offres fixes, chacune prise une fois par semaine. Elles reviennent le lundi. Laisser passer une semaine ne fait rien perdre ;
+
+| Tu donnes | Tu reçois |
+|---|---|
+| 30 Énergie | 15 Matériaux |
+| 20 Énergie | 10 Nourriture |
+| 15 Matériaux | 15 Énergie |
+| 10 Nourriture | 10 Énergie |
+
+- règle simple : il vend Matériaux et Nourriture 2 Énergie pièce et les rachète 1 Énergie pièce. Un aller-retour rend la moitié : le comptoir ne fabrique aucune ressource ;
+- une offre impossible reste visible avec sa raison (il manque N Énergie, la réserve est pleine, déjà fait cette semaine). La Nourriture reçue ne dépasse jamais la réserve ;
+- il ne donne aucun permis et ne touche à aucune tâche. Un échange ne fait que convertir ce qui a déjà été gagné.
+
+Taux validés par Alex le 6 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (h), départs d'octobre) : au rythme de l'essai, un joueur qui n'échange que ce qu'il a en trop achète autant de niveaux en 16 semaines et remplit le village vers la fin décembre, au lieu d'après la 16e semaine ; au rythme régulier, il gagne un niveau. Échanger de l'Énergie contre des Matériaux chaque semaine sans compter ne paie pas : 2 niveaux au lieu de 6 au rythme de l'essai.
 
 **Catalogue de départ** : le marchand (échange de ressources), le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
 
@@ -333,3 +350,8 @@ Décisions du 6 octobre 2026 (après-midi), lot 8 :
 
 22. **Ressources en nombres entiers à l'écran** : le calcul garde ses dixièmes ; ce qu'on a est arrondi vers le bas, ce qui manque vers le haut, un gain au plus proche.
 23. **La v2 remplace la v1 en production le 6 octobre 2026**, en convertissant la partie v1 (pas de départ à zéro, pas de reprise de la partie d'essai). L'essai est fermé, ses données gardées ; un futur essai aura son propre stockage (dossier à part ou sous-domaine).
+
+Décisions du 6 octobre 2026 (fin d'après-midi), lot V :
+
+24. **Le marchand** : quatre offres fixes, chacune une fois par semaine ; il revient chaque semaine tant qu'il est le seul visiteur ; le quai reste au rang Hameau. Taux en §7.
+25. **Son allure** : un chaland solaire (barge de bois, toit de panneaux solaires, caisses et paniers, un fanion) amarré au quai ; son comptoir, une ligne par offre.
