@@ -18,7 +18,7 @@ app/
   css/                  tokens.css (variables), base.css, composants
   js/                   interface : main.js, store.js (état client + synchro), api-client.js, horloge.js (date du jeu), ui/*.js
   core/                 logique pure, un module par sujet (voir plus bas), index.js réexporte tout
-  content/fr-CA/        textes et dictionnaires en JSON (ancres, mots-clés, répliques)
+  content/fr-CA/        textes et dictionnaires en JSON (interface, ancres, bâtiments, lettres, répliques)
   api/api.php           API unique (voir plus bas)
   api/config.example.php
   api/data/             données du jeu (ignoré par Git, interdit au web)
