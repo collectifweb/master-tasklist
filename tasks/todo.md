@@ -531,7 +531,8 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 - [x] Documents : bible §7 (règles et taux), `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md` ; `PRODUCT.md` n'a pas à changer ; cache `oree-coquille-v11`.
 
 ### V4 — Envoi
-- [ ] Selon la réponse d'Alex à la question 4 : photo des données, envoi d'une étiquette `v2.1`, contrôles en lecture seule.
+- [x] Selon la réponse d'Alex à la question 4 : photo des données, envoi d'une étiquette `v2.1`, contrôles en lecture seule.
+- *Envoyé le 6 octobre vers 18 h 18 : étiquette `v2.1` = 5e8c9fd, poussée avec la branche. Photo de la production `api/data/backups/avant-v2.1-20261006-181753/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques). `deploy-prod.sh v2.1` : app 200, API sans code 401, avec code 200, données 403, config vide, cache `oree-coquille-v11`, bac à sable inactif. Après l'envoi : 80 fichiers en ligne identiques à l'étiquette ; les 4 fichiers de données inchangés depuis la photo ; `core/visiteurs.js` servi, la page et `sw.js` le connaissent. Pas regardé : la partie de production elle-même (le quai bâti est la parole d'Alex), ni l'app ouverte avec le code.*
 
 ### Questions pour Alex
 1. **Comptoir** : quatre offres fixes, une fois chacune par visite (recommandé : simple, borné, lisible) ? Ou un échange libre jusqu'à un plafond par visite ?
