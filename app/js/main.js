@@ -12,7 +12,7 @@ import { createSync } from './ui/sync.js';
 import { renderFil, renderAlts, renderList } from './ui/quests.js';
 import { num } from './ui/format.js';
 import {
-  wireDialogs, openAdd, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
+  wireDialogs, openAdd, refreshAddDefaults, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
@@ -49,6 +49,7 @@ const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: sto
 const story = createStory({
   ctx: () => (store.view ? ctx() : null),
   run: (action, params) => run(action, params),
+  attempt: (action, params) => { try { store.do(action, params); return null; } catch (err) { return err.message; } },
   announce: (text) => announce.say(text),
   focusHome,
   thumb: (id) => (world ? world.thumb(id) : ''),
@@ -74,6 +75,7 @@ function renderAll({ deferHud = false } = {}) {
   renderAlts($('#panel-scroll'), c, cards);
   renderList($('#panel-scroll'), c, ui);
   refreshFiche(c);
+  refreshAddDefaults(queteDefaut(c.game));
   setText($('#panel-date'), panelDate(c.now));
   bandeau.render(c);
   renderEssai();

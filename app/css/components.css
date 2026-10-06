@@ -34,7 +34,7 @@
   right: calc(var(--sp-2) + var(--safe-right) + var(--world-cover-right));
   display: grid;
   /* quatre ressources de même largeur, puis les permis (un petit entier) qui prennent la place de leur contenu */
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(44px, auto); /* 44 px au moins : sous 340 px le libellé des permis sort du flux */
   gap: 6px;
   container: hud / inline-size;
   pointer-events: none;
@@ -572,6 +572,11 @@
     overflow: hidden;
     clip-path: inset(50%);
   }
+  /* sans libellé, la puce des permis garde ses 44 px : l'icône et le chiffre restent au milieu */
+  .res[data-res="permis"] {
+    grid-template-columns: auto auto;
+    justify-content: center;
+  }
 }
 
 /* HUD étroit (téléphone) : cinq puces dans la largeur, le chiffre à 16 px (15 px sous 350 px) pour que « 206,1 » tienne */
@@ -589,6 +594,15 @@
   }
   .res-value {
     font-size: var(--text-16);
+  }
+  /* puces étroites : le chiffre de gain passe sur la ligne du libellé, il ne recouvre plus la valeur */
+  .res-delta {
+    top: auto;
+    bottom: 3px;
+    right: 4px;
+    padding: 0 2px;
+    border-radius: 4px;
+    background: var(--surface-hud);
   }
 }
 @container hud (max-width: 349px) {
@@ -688,13 +702,18 @@
   color: var(--text-muted);
   font-weight: var(--w-regular);
 }
-/* annonce chargée (4 gains et plus) : sans points médians, un peu plus serrée, pour tenir à 320 px sans rien rogner */
-.announce.is-dense {
-  gap: 4px;
-  padding-right: 10px;
-  font-size: var(--text-14);
+/* annonce chargée (4 gains et plus) sur écran étroit : sans points médians, un peu plus serrée, pour tenir à 320 px sans
+   rien rogner. Le picto se colle à son nombre, et l'écart entre deux gains reste plus grand que celui d'un gain, pour que
+   le regroupement se lise sans les points. Au-delà de 379 px, la place suffit : points médians comme d'habitude. */
+@media (max-width: 379px) {
+  .announce.is-dense {
+    gap: 5px;
+    padding-right: 10px;
+    font-size: var(--text-14);
+  }
+  .announce.is-dense .announce-sep { display: none; }
+  .announce.is-dense .announce-item .icon { margin-left: -2px; }
 }
-.announce.is-dense .announce-sep { display: none; }
 .announce-tail {
   display: block;
   flex: 0 1 auto;
