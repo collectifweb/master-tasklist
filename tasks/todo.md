@@ -325,13 +325,16 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 - *Point de repli P1 vérifié par moi le 6 octobre (dossier principal) : première série 25 scénarios sur 27, sous charge (R3 tournait) ; le scénario 1 mesurait « Fait » pendant un mouvement du panneau et le scénario 7 levait une erreur dans le second onglet (course de la semaine 1 : la file recalculée avant la lecture de la partie). Les deux passent seuls ; corrigés (test qui attend une page posée, écouteur gardé). Seconde série, avec le correctif : 27 sur 27, 1 705 vérifications, « TOUT REUSSI ». `world-s3` : 94 contrôles, 0 échec. `world-perf` pas relancé (machine chargée ; le code du monde est celui que R2b a mesuré).*
 
 ### R3 — Le permis à l'écran (après la fusion de R2a et R2b) [impeccable]
-- [ ] Fiche de quartier (feuille propre, ses propres identifiants) ; toucher une plaque ouvre la fiche.
-- [ ] Plaques « Champs · niv. 2 » sans barre. Le signal « niveau possible » sur la plaque est reporté : la pastille sur « Construire » mène à la section Quartiers, qui montre le prix et ce qui manque.
-- [ ] Carte en liste : chaque quartier ouvre sa fiche ; son texte vient du niveau acheté. Toucher Fanal ouvre la fiche de la Place.
-- [ ] `monterQuartier` dans les actions du magasin (`js/store.js`) ; places par chalet réelles dans `world/view.js` ; la fiche « Voir les quêtes » ferme toutes les feuilles ouvertes.
-- [ ] Section « Quartiers » du catalogue ; pastille des permis sur « Construire ».
-- [ ] Annonces et Fanal : permis gagné, quartier monté ; lettre de conversion ; fiches des bâtiments aux vraies valeurs.
-- [ ] Nouveau scénario navigateur aux trois largeurs (toucher, clavier, Carte en liste) ; `ui-12` et `world-s3` réécrits.
+- [x] Fiche de quartier (feuille propre, ses propres identifiants) ; toucher une plaque ouvre la fiche.
+- [x] Plaques « Champs · niv. 2 » sans barre. Le signal « niveau possible » sur la plaque est reporté : la pastille sur « Construire » mène à la section Quartiers, qui montre le prix et ce qui manque.
+- [x] Carte en liste : chaque quartier ouvre sa fiche ; son texte vient du niveau acheté. Toucher Fanal ouvre la fiche de la Place.
+- [x] `monterQuartier` dans les actions du magasin (`js/store.js`) ; places par chalet réelles dans `world/view.js` ; la fiche « Voir les quêtes » ferme toutes les feuilles ouvertes.
+- [x] Section « Quartiers » du catalogue ; pastille des permis sur « Construire ».
+- [x] Annonces et Fanal : permis gagné, quartier monté ; lettre de conversion ; fiches des bâtiments aux vraies valeurs.
+- [x] Nouveau scénario navigateur aux trois largeurs (toucher, clavier, Carte en liste) ; `ui-12` et `world-s3` réécrits.
+- *Fait le 6 octobre vers 1 h 55 (agent dans sa copie, partie de la branche d’intégration des permis ; commits 1c13a84 et e8cdef9 ; fusion c232ca3 dans `feat/village-v2`, sans conflit, avec R2a). Vérifié par moi après la fusion : 363 tests `node --test` sur 363. D’après le rapport de l’agent (relu, pas relancé) : série de 28 scénarios « TOUT REUSSI » (`ui-31` : 141 vérifications), `world-s3` 97 contrôles sans échec, `world-perf` sans erreur.*
+- *Écarts décidés par l’agent : « Voir les quêtes » compte les quêtes à faire du quartier (ce que la liste montre ensuite) ; dans la Carte en liste, « Ouvrir la fiche » remplace « Ses quêtes » ; la lettre de conversion remplace la lettre du matin ce jour-là ; la réplique de rang est générale (« {rang}. Ça vaut un permis. Et un tampon. ») ; les répliques des permis n’ont qu’une variante. Toucher Fanal ou un repère ouvre la fiche : d’après l’agent, lu dans le code, et `world-s3` constate dans la démo du monde que Fanal renvoie la Place ; aucun scénario de l’app ne le teste.*
+- *Vérifié par moi sur la fusion (c232ca3, plus les documents ad80b26), machine au calme : série complète 28 scénarios sur 28, 1 855 vérifications, « TOUT REUSSI » (environ 18 minutes) ; `world-s3` 97 contrôles, 0 échec ; `world-perf` lancé seul : 60 images par seconde en moyenne pendant une montée de niveau (la plus lente 16,8 ms), aucune animation au repos, aucune erreur, aucun défilement horizontal. `world-perf` liste la plaque de l’École à 390 comme cible trop petite : 43,99998 px, arrondi sous 44 (`world-s3` tolère 43,99).*
 
 ### R4 — Vérification et relecture
 - [ ] Tout relancer : `node --test`, série complète aux trois largeurs, `world-s3`, `world-perf`.
