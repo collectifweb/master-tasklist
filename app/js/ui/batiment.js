@@ -56,7 +56,7 @@ export function batimentModel(c, id) {
   };
   if (!bati) {
     m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
-    m.raison = refusConstruire(game, type);
+    m.raison = refusConstruire(game, type, id);
     m.geste = { action: 'construire', params: { type, id }, label: t(`bat.${type}.geste`) };
   } else if (def.culture) {
     const st = etatCulture(game, ledger, id, now);

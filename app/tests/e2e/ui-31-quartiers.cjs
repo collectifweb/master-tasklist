@@ -92,7 +92,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('toucher la plaque ouvre la fiche des Champs', f.open && f.quartier === 'champs' && f.titre === 'Champs', JSON.stringify(f));
   R.check('en-tête : « Quartier · quêtes Terrain · niveau 0 »', f.ligne === 'Quartier · quêtes Terrain · niveau 0', f.ligne);
   R.check('ce qu’il fait : « Rien encore. » ; niveau 1 : 5 Nourriture par récolte', /^Ce qu’il fait Rien encore\./.test(f.corps) && /Niveau 1 5 Nourriture par récolte du potager\./.test(f.corps), f.corps);
-  R.check('prix : 1 permis, 75 Énergie et 100 Matériaux', /Prix 1 permis, 75 Énergie et 100 Matériaux\./.test(f.corps), f.corps);
+  R.check('prix : 1 permis, 100 Énergie et 75 Matériaux', /Prix 1 permis, 100 Énergie et 75 Matériaux\./.test(f.corps), f.corps);
   R.check('permis : « Tu as 3 permis. » et le prochain', /^Tu as 3 permis\. Le prochain : (encore \d+ jours? travaillés?|avec ta prochaine quête payée)\.$/.test(f.permis), f.permis);
   R.check('« Monter au niveau 1 » : bouton principal actif, décrit par le prix', f.monter && f.monter.text === 'Monter au niveau 1' && !f.monter.off && f.monter.primaire && f.monter.desc === 'qrt-prix qrt-permis', JSON.stringify(f.monter));
   R.check('« Voir les quêtes Terrain (1) »', f.quetes === 'Voir les quêtes Terrain (1)', f.quetes);
@@ -110,7 +110,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('achat enregistré : Champs au niveau 1', await L.waitFor(() => srv.game()?.niveaux?.champs === 1, 6000), JSON.stringify(srv.game()?.niveaux));
   await page.waitForTimeout(1200);
   let g = srv.game();
-  R.check('double toucher : un seul niveau payé (1 permis, 75 Énergie, 100 Matériaux)', g.niveaux.champs === 1 && g.permis.dispo === g0.permis.dispo - 1 && g.resources.energy === g0.resources.energy - 75 && g.resources.materials === g0.resources.materials - 100, JSON.stringify({ n: g.niveaux, avant: [g0.permis, g0.resources], apres: [g.permis, g.resources] }));
+  R.check('double toucher : un seul niveau payé (1 permis, 100 Énergie, 75 Matériaux)', g.niveaux.champs === 1 && g.permis.dispo === g0.permis.dispo - 1 && g.resources.energy === g0.resources.energy - 100 && g.resources.materials === g0.resources.materials - 75, JSON.stringify({ n: g.niveaux, avant: [g0.permis, g0.resources], apres: [g.permis, g.resources] }));
   let dits = (await L.said(page)).filter((x) => /^Champs : niveau/.test(sp(x.text)));
   R.check('annonce « Champs : niveau 1. 5 Nourriture par récolte du potager. », une seule fois, dans la fiche', dits.length === 1 && sp(dits[0].text).startsWith('Champs : niveau 1. 5 Nourriture par récolte du potager.') && dits[0].sheet === 'dlg-quartier', JSON.stringify(await L.said(page)));
   const v = await L.voice(page, 'live');
@@ -120,7 +120,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   bd = await badge(page);
   R.check('pastille à jour : « 2 »', bd.text === '2' && bd.label === 'Construire, 2 permis à placer', JSON.stringify(bd));
   f = await fiche(page);
-  R.check('fiche à jour sur place : niveau 1, ce qu’il fait, niveau 2 à 2 permis', f.open && f.ligne.endsWith('niveau 1') && /Ce qu’il fait 5 Nourriture par récolte du potager \(\d+ au départ\)\./.test(f.corps) && /Prix 2 permis, 150 Énergie et 200 Matériaux\./.test(f.corps) && /^Tu as 2 permis\./.test(f.permis), JSON.stringify(f));
+  R.check('fiche à jour sur place : niveau 1, ce qu’il fait, niveau 2 à 2 permis', f.open && f.ligne.endsWith('niveau 1') && /Ce qu’il fait 5 Nourriture par récolte du potager \(\d+ au départ\)\./.test(f.corps) && /Prix 2 permis, 200 Énergie et 150 Matériaux\./.test(f.corps) && /^Tu as 2 permis\./.test(f.permis), JSON.stringify(f));
   // le focus après un achat se contrôle au niveau 2 (clic) : en fenêtre centrée (834, 1280), la ligne de réussite
   // agrandit la fiche et le second toucher tombe à côté du bouton, sur la feuille (sans rien acheter)
   if (tag < 834) R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
@@ -138,7 +138,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('le focus reste sur le bouton après l’achat (« Monter au niveau 3 », verrouillé)', f.focus === 'qrt-monter' && f.focusNiveau === '3', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
   R.check('réussite du niveau 2 visible en tête de la fiche', f.monte && f.monte.check && f.monte.premier && f.monte.vu && /^Champs : niveau 2\. \d+ Nourriture par récolte du potager\.$/.test(f.monte.text), JSON.stringify(f.monte));
   g = srv.game();
-  const raison = `Il manque 3 permis, ${300 - g.resources.materials} Matériaux et ${225 - g.resources.energy} Énergie.`;
+  const raison = `Il manque 3 permis, ${225 - g.resources.materials} Matériaux et ${300 - g.resources.energy} Énergie.`;
   R.check('raison écrite par le cœur, avec le cadenas', f.raison && f.raison.lock && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
   R.check('« Tu n’as aucun permis. »', /^Tu n’as aucun permis\./.test(f.permis), f.permis);
   bd = await badge(page);
@@ -187,9 +187,9 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   const row = (id) => cat.rows.find((r) => r.q === id) || {};
   R.check('catalogue : en tête, les permis (« Tu n’as aucun permis. … »)', /^Tu n’as aucun permis\. Le prochain/.test(cat.permis), cat.permis);
   R.check('catalogue : section « Quartiers », six lignes, après les 7 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 7, JSON.stringify(cat.rows.map((r) => r.q)));
-  R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 225 Énergie et 300 Matériaux', JSON.stringify(row('champs')));
+  R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 300 Énergie et 225 Matériaux', JSON.stringify(row('champs')));
   R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').suivant === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
-  const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${300 - g.resources.materials} Matériaux et ${225 - g.resources.energy} Énergie.`; })());
+  const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${225 - g.resources.materials} Matériaux et ${300 - g.resources.energy} Énergie.`; })());
   R.check('ligne des Champs : ce qui manque (la phrase de la fiche), avec le cadenas', row('champs').data === 'verrou' && row('champs').lock && row('champs').etat === manque, JSON.stringify({ vu: row('champs'), attendu: manque }));
   R.check('ligne de l’Atelier : « Il manque 1 permis… », cadenas', row('atelier').data === 'verrou' && row('atelier').lock && /^Il manque 1 permis/.test(row('atelier').etat), JSON.stringify(row('atelier')));
   R.check('ligne du Garage : pas de ligne d’état (déjà au plus haut)', row('garage').etat === '' && row('garage').data === '', JSON.stringify(row('garage')));
@@ -262,7 +262,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
     const today = core.gameDay(new Date());
     for (const id of core.PAS_IDS) g.premiersPas[id] = today; // un niveau s'achète après les premiers pas
     g.permis = { ...g.permis, dispo: 3 };
-    g.resources = { ...g.resources, energy: 240, materials: 320, food: 5 };
+    g.resources = { ...g.resources, energy: 320, materials: 320, food: 5 };
     g.niveaux = { ...g.niveaux, garage: 2 };
     return g;
   },

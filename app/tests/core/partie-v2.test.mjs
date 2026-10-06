@@ -136,7 +136,8 @@ test('bilans recomptés depuis le registre : une entrée par semaine finie, remb
   ]);
   const [s1] = bilans;
   assert.equal(s1.heures, 0.8); // 15 + 30 min estimées
-  assert.deepEqual(Object.keys(s1).sort(), ['domaines', 'heures', 'joursTravailles', 'quetes', 'semaine']);
+  assert.deepEqual(Object.keys(s1).sort(), ['domaines', 'heures', 'joursTravailles', 'quetes', 'semaine', 'tenue']);
+  assert.deepEqual(bilans.map((b) => b.tenue), [false, false]); // aucune semaine tenue payée en v1
   assert.deepEqual(bilansPasses([], createInitialState(NOW), [], NOW), []);
 });
 

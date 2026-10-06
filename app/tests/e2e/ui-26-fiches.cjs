@@ -87,11 +87,14 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
     nom: li.querySelector('.ow-plan-bat-name').textContent, etat: li.querySelector('.ow-plan-bat-etat').textContent.replace(/\u00a0/g, ' '),
     h: Math.round(li.querySelector('[data-bat]').getBoundingClientRect().height), id: li.querySelector('[data-bat]').dataset.bat,
   })));
-  R.check('la liste montre les 11 emplacements', rows.length === 11, JSON.stringify(rows.map((r) => r.id)));
+  R.check('la liste montre les 12 emplacements', rows.length === 12, JSON.stringify(rows.map((r) => r.id)));
   const row = (id) => rows.find((r) => r.id === id) || {};
   R.check('liste : même nom et même état que la fiche (grenier verrouillé, chalet à rebâtir, parcelle du départ)',
     row('grenier-1').etat === 'Verrouillé : Hameau : encore 3 habitants.' && row('chalet-1').nom === 'Chalet vide' && row('chalet-1').etat === 'À rebâtir' && row('parcelle-1').etat === 'Rien de semé',
     JSON.stringify([row('grenier-1'), row('chalet-1'), row('parcelle-1')]));
+  R.check('liste : la seconde serre est verrouillée au rang Hameau, la première ne l’est pas',
+    row('serre-2').etat === 'Verrouillé : Il faut d’abord le rang Hameau : encore 3 habitants.' && !!row('serre-1').etat && !/rang Hameau/.test(row('serre-1').etat),
+    JSON.stringify([row('serre-1'), row('serre-2')]));
   R.check('liste : boutons « Ouvrir la fiche » de 44 px au moins', rows.every((r) => r.h >= 44), JSON.stringify(rows.map((r) => r.h)));
   // le titre de la liste a le focus ; Tab mène au premier bouton, les flèches parcourent la liste
   let inList = false;
@@ -123,6 +126,13 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
   R.check('Échap : retour à la liste, sur le bouton du chalet', await L.waitFor(() => page.evaluate(() => document.activeElement?.dataset?.bat === 'chalet-1'), 2000), await page.evaluate(() => document.activeElement?.outerHTML?.slice(0, 80)));
   R.check('la liste suit : le chalet est « Prêt pour une famille »', await L.waitFor(() => page.evaluate(() => document.querySelector('#dlg-plan [data-bat="chalet-1"]').closest('li').querySelector('.ow-plan-bat-etat').textContent === 'Prêt pour une famille'), 3000));
   R.check('aucun défilement horizontal', await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+  // la fiche du second emplacement de serre dit la même chose que la liste
+  await page.focus('#dlg-plan [data-bat="serre-2"]');
+  await page.keyboard.press('Enter');
+  const s2 = await L.waitFor(async () => { const x = await sheetInfo(page); return x.open && x.id === 'serre-2' ? x : null; }, 3000);
+  R.check('fiche de serre-2 : geste verrouillé, raison « Il faut d’abord le rang Hameau… »', s2 && s2.raison === 'Il faut d’abord le rang Hameau : encore 3 habitants.' && s2.cadenas && s2.geste?.off, JSON.stringify(s2));
+  await page.keyboard.press('Escape');
+  await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
   await shot(page, '26-liste');
 }, {
   tasks: TASKS,

@@ -4,7 +4,7 @@
 import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js';
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
-import { reverseKey, quartierOfEntry } from './ledger.js';
+import { reverseKey, quartierOfEntry, hasKey, semaineKey } from './ledger.js';
 
 export const RECYCLE_AGE_DAYS = 60;
 export const BILANS_MAX = 104; // deux ans de bilans figés gardés dans la partie
@@ -15,11 +15,12 @@ const hours = (min) => Math.round(min / 6) / 10;
  * Bilan de la semaine (lundi à dimanche) qui contient `now` :
  * { day, dimanche, semaine: { start, end }, quetes, heures,
  *   domaines: [{ quartier, domain, quetes, minutes, heures }],
- *   joursTravailles, aTrier: [{ id, task, domain, ageDays }], ratioJeuQuetes: null }.
+ *   joursTravailles, tenue, aTrier: [{ id, task, domain, ageDays }], ratioJeuQuetes: null }.
  * Quêtes = gains de quête du registre (remballées exclues) ; heures estimées par estimatedMinutes(Durée) ; domaine
  * lu par le quartier du gain (domain null = Place du village, « autres quêtes » ; un gain écrit en v1 porte son ancien
  * secteur, traduit). Jours travaillés = jours de la semaine avec au moins une de ces quêtes. `ratioJeuQuetes` reste null :
- * il demande de mesurer le temps passé dans le jeu, que rien ne mesure encore.
+ * il demande de mesurer le temps passé dans le jeu, que rien ne mesure encore. `tenue` : vrai si la semaine a payé le
+ * bonus « semaine tenue » (clé semaine:{lundi} au registre, quartiers.js) ; un bilan figé avant ce champ ne l'a pas.
  */
 export function weeklyReview(tasks, game, ledger, now) {
   const today = gameDay(now);
@@ -82,5 +83,6 @@ function bilanSemaine(tasks, game, ledger, start, now) {
     semaine: { start, end },
     quetes, heures: hours(minutes), domaines,
     joursTravailles: jours.size,
+    tenue: hasKey(ledger, semaineKey(start)),
   };
 }

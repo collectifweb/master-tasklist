@@ -208,9 +208,13 @@ test('refus : ce qui manque, en une phrase (permis, Matériaux, Énergie)', () =
 
 // ───────── Achat ─────────
 
-test('prix d’un niveau : n permis + n × ECHELLE × (3 Énergie + 4 Matériaux)', () => {
+test('prix d’un niveau : n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 100 Énergie et n × 75 Matériaux', () => {
   assert.ok(Number.isInteger(ECHELLE) && ECHELLE > 0);
-  for (const n of [1, 2, 3]) assert.deepEqual(coutNiveau(n), { permis: n, energy: n * ECHELLE * 3, materials: n * ECHELLE * 4 });
+  for (const n of [1, 2, 3]) assert.deepEqual(coutNiveau(n), { permis: n, energy: n * ECHELLE * 4, materials: n * ECHELLE * 3 });
+  // décision d'Alex du 6 octobre : les Matériaux, plus durs à gagner, coûtent moins cher que l'Énergie
+  assert.equal(ECHELLE, 25);
+  assert.deepEqual(coutNiveau(1), { permis: 1, energy: 100, materials: 75 });
+  assert.deepEqual(coutNiveau(3), { permis: 3, energy: 300, materials: 225 });
 });
 
 test('monter : le prix exact est retiré, le niveau monte de 1, l’événement sort ; ni registre ni tâches', () => {
