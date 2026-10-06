@@ -1,7 +1,7 @@
 // Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  QUARTIERS, QUETE_DEFAUT, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
+  QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -456,7 +456,8 @@ export function openHelp(name) {
   const nom = HELP[name];
   if (!nom) return;
   const dlg = $('#dlg-help');
-  const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`))}</dd></div>`;
+  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours }; // la phrase des Matériaux dit le bonus de la semaine tenue
+  const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`, vars))}</dd></div>`;
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title help-title" id="help-t" data-res="${esc(name)}">${icon(name)}<span>${esc(t(nom))}</span></h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('add.close'))}">${icon('x')}</button></header>

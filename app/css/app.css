@@ -501,6 +501,23 @@
   height: 18px;
   color: var(--text-muted);
 }
+/* Semaine tenue : Matériaux (picto + mot), en sol et non en vert d'action ; rien d'écrit pour une semaine non tenue */
+.review-tenue,
+.why-line dt .review-tenue,
+.review-weeks .why-line dt .review-tenue {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  color: var(--res-materiaux);
+  font-weight: var(--w-semibold);
+}
+.review-weeks .why-line dt .review-tenue { margin-top: 2px; }
+.review-tenue .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
 .review-domains .why-line dd,
 .review-weeks .why-line dd {
   font-size: var(--text-16);

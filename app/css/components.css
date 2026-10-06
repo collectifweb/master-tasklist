@@ -676,8 +676,10 @@
 .announce-item[data-res="energie"] .icon { color: var(--res-energie); }
 .announce-item[data-res="materiaux"] .icon { color: var(--res-materiaux); }
 .announce-item[data-res="nourriture"] .icon { color: var(--res-nourriture); }
+.announce-item[data-res="permis"] .icon { color: var(--res-permis); }
 /* la tâche compte pour son quartier : « → Champs », ou son picto et « Champs · niveau 2 » quand il monte */
 .announce-tail[data-quartier] { color: var(--c-sage-deep); }
+.announce-tail[data-semaine] { flex: none; color: var(--res-materiaux); } /* le mot ne se coupe pas : la semaine tenue remplace le quartier (announce.js) */
 .announce-tail .icon {
   margin-right: 4px;
   vertical-align: -3px;
@@ -686,6 +688,13 @@
   color: var(--text-muted);
   font-weight: var(--w-regular);
 }
+/* annonce chargée (4 gains et plus) : sans points médians, un peu plus serrée, pour tenir à 320 px sans rien rogner */
+.announce.is-dense {
+  gap: 4px;
+  padding-right: 10px;
+  font-size: var(--text-14);
+}
+.announce.is-dense .announce-sep { display: none; }
 .announce-tail {
   display: block;
   flex: 0 1 auto;
