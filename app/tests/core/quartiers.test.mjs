@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   completeQuest, remballerQuest, toggleStep, accueillir, recolter, construire, advanceTime, markLetterShown,
-  monterQuartier, refusMonter, coutNiveau, ECHELLE, EFFETS_QUARTIERS, niveauMax, valeur, placesParChalet,
+  withoutStaleBodies, monterQuartier, refusMonter, coutNiveau, ECHELLE, EFFETS_QUARTIERS, niveauMax, valeur, placesParChalet,
   progressionPermis, conversionLetter, passageLetter, JOURS_PAR_PERMIS, QUARTIER_IDS, PAS_IDS, STOCKAGE,
   createInitialState, migrateState, objectifSaison, etatCulture, refusRecolter, refusAccueillir, logements, stockage,
   addDays,
@@ -208,13 +208,13 @@ test('refus : ce qui manque, en une phrase (permis, Matériaux, Énergie)', () =
 
 // ───────── Achat ─────────
 
-test('prix d’un niveau : n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 100 Énergie et n × 75 Matériaux', () => {
+test('prix d’un niveau : n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 80 Énergie et n × 60 Matériaux', () => {
   assert.ok(Number.isInteger(ECHELLE) && ECHELLE > 0);
   for (const n of [1, 2, 3]) assert.deepEqual(coutNiveau(n), { permis: n, energy: n * ECHELLE * 4, materials: n * ECHELLE * 3 });
   // décision d'Alex du 6 octobre : les Matériaux, plus durs à gagner, coûtent moins cher que l'Énergie
-  assert.equal(ECHELLE, 25);
-  assert.deepEqual(coutNiveau(1), { permis: 1, energy: 100, materials: 75 });
-  assert.deepEqual(coutNiveau(3), { permis: 3, energy: 300, materials: 225 });
+  assert.equal(ECHELLE, 20);
+  assert.deepEqual(coutNiveau(1), { permis: 1, energy: 80, materials: 60 });
+  assert.deepEqual(coutNiveau(3), { permis: 3, energy: 240, materials: 180 });
 });
 
 test('monter : le prix exact est retiré, le niveau monte de 1, l’événement sort ; ni registre ni tâches', () => {
@@ -467,4 +467,26 @@ test('lettre de passage v1 → v2 : elle parle des permis', () => {
   const V1 = { version: 1, createdAt: '2026-09-01T14:00:00.000Z', startDay: '2026-09-01', resources: { energy: 1, materials: 1 } };
   const l = passageLetter(lettres, migrateState(V1, NOW));
   assert.ok(l.lignes.join(' ').includes('Tous les quatre jours de travail, la Mairie tamponne un permis'), l.lignes.join(' '));
+});
+
+test('file hors ligne : un achat de niveau calculé à l’ancien prix (100 et 75) repart recalculé à 80 et 60', () => {
+  const at0 = '2026-10-06T14:00:00.000Z';
+  const w = pret({ permis: 3, energy: 500, materials: 600 });
+  const params = { quartier: 'champs', niveau: 1 };
+  // calcul gardé en file par un onglet d'avant le changement de prix (sans marque de version, puis marqué 3)
+  const vieux = (client) => ({
+    opId: 'a1', name: 'monterQuartier', params, at: at0,
+    body: { opId: 'a1', ...(client ? { client } : {}), ops: [{ type: 'game.set', game: { ...w.game, resources: { energy: 400, materials: 525, food: 5 } } }] },
+  });
+  const courant = { ...vieux(4), opId: 'a2' };
+  const sortie = withoutStaleBodies([vieux(), vieux(3), courant, { opId: 'a3', name: 'completeQuest', params: {}, at: at0, body: null }, null], 4);
+  assert.deepEqual(sortie.map((e) => e && e.body && e.body.client), [null, null, 4, null, null]);
+  assert.equal(sortie[0].body, null);
+  assert.equal(sortie[1].body, null);
+  // l'entrée effacée garde son opId (le serveur a pu l'appliquer sans que l'onglet le sache), son nom, ses paramètres, son instant
+  assert.deepEqual({ ...sortie[0], body: 0 }, { ...vieux(), body: 0 });
+  assert.deepEqual(withoutStaleBodies('pas une file', 4), []);
+  // le cœur courant refait le calcul à l'envoi : 80 et 60, pas 100 et 75
+  const r = step(w, monterQuartier, sortie[0].params, new Date(sortie[0].at).toISOString());
+  assert.deepEqual(r.world.game.resources, { energy: 420, materials: 540, food: 5 });
 });

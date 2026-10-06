@@ -17,14 +17,14 @@ import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 
 /** Jours travaillés pour un permis. */
 export const JOURS_PAR_PERMIS = 4;
-/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 100 et n × 75 à 25. */
-export const ECHELLE = 25;
+/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 80 et n × 60 à 20. */
+export const ECHELLE = 20;
 /**
  * Semaine tenue : à partir du 5e jour travaillé d'une semaine (lundi au dimanche), un bonus en Matériaux, une seule fois
- * par semaine. 12 est une valeur de départ à valider, pas un réglage mesuré : c'est le plus petit entier à partir duquel
- * un bonus plus gros ne change plus aucun jour d'achat de niveau dans la simulation (tests/core/simulation.test.mjs). Ce
- * critère ne dit pas que le bonus aide : la simulation ne lui fait avancer aucun premier niveau, et en retarde un. Des
- * Matériaux, jamais de compteur.
+ * par semaine. 12 est une valeur de départ à décider, pas un réglage mesuré. Dans la simulation (tests/core/simulation.test.mjs,
+ * joueur (g), mesuré le 6 octobre aux départs du 23 octobre, 25 octobre, 15 août et 1er juin), le premier niveau arrive aux
+ * jours 30, 30, 58 et 61 sans bonus, 22, 22, 42 et 42 avec 12, 22, 22, 28 et 27 avec 30 : plus le bonus est gros, plus tôt
+ * on monte. Des Matériaux, jamais de compteur.
  */
 export const SEMAINE_TENUE = { jours: 5, materials: 12 };
 

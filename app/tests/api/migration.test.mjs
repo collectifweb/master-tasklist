@@ -48,14 +48,14 @@ async function withV1(fn, { copy } = {}) {
   }
 }
 
-test('ancienne app : écriture sans version de client (ou < 3) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
+test('ancienne app : écriture sans version de client (ou < 4) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
   const before = snapshot(s);
   const listing = readdirSync(s.dataDir).sort();
   const ops = [
     { type: 'task.upsert', task: { id: 'a2', status: 'done' } },
     { type: 'game.set', game: { version: 1, resources: { energy: 99 } }, baseGameRevision: sha1(V1_GAME) },
   ];
-  for (const extra of [{}, { client: 1 }, { client: 2 }, { client: '3' }, { client: null }]) {
+  for (const extra of [{}, { client: 1 }, { client: 2 }, { client: 3 }, { client: '4' }, { client: null }]) {
     const r = await s.post({ opId: 'vieil-onglet', ops, ...extra });
     assert.equal(r.status, 409, JSON.stringify(extra));
     const j = await r.json();
@@ -133,12 +133,12 @@ test('opId de la v1 rejoué : sans effet, par l’ancienne app comme par la v2',
   assert.equal(r.status, 409);
   assert.equal((await r.json()).code, 'client_outdated');
   // la v2 la rejoue telle quelle : déjà appliquée, rien n'est refait
-  r = await s.post({ client: 3, opId: 'v1-op', ops: V1_OPS });
+  r = await s.post({ client: 4, opId: 'v1-op', ops: V1_OPS });
   let j = await r.json();
   assert.equal(r.status, 200);
   assert.equal(j.replay, true);
   // la v2 la rejoue recalculée (autre corps) : refusée
-  r = await s.post({ client: 3, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
+  r = await s.post({ client: 4, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
   j = await r.json();
   assert.equal(r.status, 409);
   assert.equal(j.code, 'op_id_reused');
@@ -153,19 +153,21 @@ test('quête payée en v1 : la v2 ne peut pas l’inscrire une seconde fois', ()
   assert.deepEqual(snapshot(s), before);
 }));
 
-test('version 2 refusée (409 client_outdated) : un onglet resté sur la règle d’avant les permis n’écrit plus', async () => {
+test('version 3 refusée (409 client_outdated) : un onglet resté à l’ancien prix des niveaux, sans semaine tenue, n’écrit plus', async () => {
   const s = await startServer();
   try {
     const before = s.readTasksRaw();
     const ops = [{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }];
-    const r = await s.post({ client: 2, opId: 'onglet-v2', ops });
-    assert.equal(r.status, 409);
-    const j = await r.json();
-    assert.equal(j.code, 'client_outdated');
-    assert.equal(j.error, OUTDATED);
-    assert.equal(s.readTasksRaw(), before);
-    // la version 3 passe, et l'opId refusé n'a pas été retenu
-    const ok = await s.post({ client: 3, opId: 'onglet-v2', ops });
+    for (const client of [2, 3]) {
+      const r = await s.post({ client, opId: 'onglet-ancien', ops });
+      assert.equal(r.status, 409, `client ${client}`);
+      const j = await r.json();
+      assert.equal(j.code, 'client_outdated');
+      assert.equal(j.error, OUTDATED);
+      assert.equal(s.readTasksRaw(), before);
+    }
+    // la version 4 passe, et l'opId refusé n'a pas été retenu
+    const ok = await s.post({ client: 4, opId: 'onglet-ancien', ops });
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).replay, undefined);
   } finally {

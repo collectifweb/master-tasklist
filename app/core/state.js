@@ -145,6 +145,21 @@ export function withoutRetiredGestures(queue) {
 }
 
 /**
+ * Entrées de file dont le calcul (`body`) a été fait par une version d'app plus ancienne que `version` : le calcul est
+ * effacé, l'entrée garde son opId, son nom, ses paramètres et son instant, et le cœur courant le refait à l'envoi (au
+ * prix, aux règles et aux bonus du jour). Sans cela, un achat calculé à l'ancien prix et resté en file hors ligne
+ * partirait tel quel sous la version courante, que le serveur accepte. Un calcul sans `client` vient d'une version
+ * d'avant ce marquage : il est effacé. Fonction pure.
+ */
+export function withoutStaleBodies(queue, version) {
+  return (Array.isArray(queue) ? queue : []).map((e) => {
+    if (!isObj(e) || !e.body) return e;
+    const fait = isObj(e.body) ? e.body.client : undefined;
+    return typeof fait === 'number' && fait >= version ? e : { ...e, body: null };
+  });
+}
+
+/**
  * File d'attente hors ligne de la v1 (`oree.queue.v1`) → v2, une seule fois au démarrage. `known(name)` : l'action
  * existe en v2. Gardés : les gestes connus (quêtes, bonus, tenue) avec leur opId, nom, paramètres et instant ; le corps
  * calculé en v1 et les compteurs d'essais sont jetés (le cœur v2 recalcule l'effet à l'envoi), et l'entrée est marquée
