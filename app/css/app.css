@@ -292,6 +292,128 @@
 }
 .bat-foot[hidden] { display: none; }
 
+/* Comptoir du marchand (lot V) : la fiche du quai quand il est là. Une ligne par offre, séparées par des filets (comme
+   la carte en liste) : le troc, ce que tu donnes → ce que tu reçois (picto teinté de la ressource, doublé du nombre et du
+   mot), puis « Échanger » (secondaire, aucune action principale ici), « Fait cette semaine » (coche, sauge), ou le
+   cadenas et la raison du cœur sous la ligne. */
+.comptoir {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-line);
+}
+.comptoir-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  line-height: var(--lh-snug);
+}
+.comptoir-titre .icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--c-sage-deep);
+}
+.comptoir-intro {
+  margin: var(--sp-1) 0 var(--sp-3);
+  font-size: var(--text-14);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.comptoir-offres {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-line);
+}
+/* deux colonnes : le troc (sur deux lignes quand la place manque : ce que tu donnes, puis ce que tu reçois) et l'action */
+.offre {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  min-height: calc(var(--target) + 2 * var(--sp-2));
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.offre-troc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+  margin: 0;
+}
+.offre-res {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--w-semibold);
+  white-space: nowrap;
+}
+.offre-res b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--w-heavy);
+}
+.offre-res .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.offre-res[data-res="energie"] .icon { color: var(--res-energie); }
+.offre-res[data-res="materiaux"] .icon { color: var(--res-materiaux); }
+.offre-res[data-res="nourriture"] .icon { color: var(--res-nourriture); }
+.offre-fleche {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+/* « ✓ Fait », et « cette semaine » dessous en plus petit : la colonne de l'action reste étroite */
+.offre-fait {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target);
+  margin: 0;
+  font-weight: var(--w-bold);
+  line-height: 1.2;
+  color: var(--c-sage-deep);
+}
+.offre-fait .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.offre-fait small {
+  display: block;
+  font-size: var(--text-12);
+  font-weight: var(--w-semibold);
+}
+.offre[data-etat="fait"] .offre-troc {
+  color: var(--text-soft);
+}
+.offre-raison {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.offre-raison .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+
 /* Catalogue « Construire » : les lignes de la carte en liste (.ow-plan-bat), avec le dessin du bâtiment debout à gauche */
 .cat-body {
   gap: 0;
@@ -670,6 +792,62 @@
   align-items: center;
   gap: 4px;
 }
+/* Cette semaine, le marchand au quai : sa ligne remplace le compte des quêtes et ouvre son comptoir. Toute la case
+   se touche (le bouton s'étend sous le libellé) ; le compte passe dans la carte dépliée. */
+#bandeau-semaine[hidden],
+.bandeau-visiteur[hidden] {
+  display: none;
+}
+.bandeau-semaine:has(.bandeau-visiteur:not([hidden])) {
+  cursor: pointer;
+}
+.bandeau-visiteur {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bandeau-visiteur::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.bandeau-visiteur .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--c-sage-deep);
+}
+.bandeau-visiteur > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.bandeau-visiteur:focus-visible {
+  outline: none;
+}
+.bandeau-visiteur:focus-visible::after {
+  outline: 3px solid var(--c-focus);
+  outline-offset: -3px;
+  border-radius: var(--r-lg);
+}
+@media (hover: hover) {
+  .bandeau-semaine:has(.bandeau-visiteur:not([hidden])):hover {
+    background: var(--c-paper-raised);
+  }
+}
+.bandeau-semaine-detail {
+  display: none;
+  font-size: var(--text-12);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
 .bandeau-saison .bandeau-value > span {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -845,7 +1023,8 @@
   white-space: normal;
 }
 .bandeau[data-open="true"] .bandeau-raison:not([hidden]),
-.bandeau[data-open="true"] .bandeau-saison-detail:not([hidden]) {
+.bandeau[data-open="true"] .bandeau-saison-detail:not([hidden]),
+.bandeau[data-open="true"] .bandeau-semaine-detail:not([hidden]) {
   display: block;
 }
 .bandeau-saison-detail {
@@ -964,7 +1143,8 @@
     white-space: normal;
     line-height: 1.22;
   }
-  .bandeau .bandeau-saison .bandeau-value {
+  .bandeau .bandeau-saison .bandeau-value,
+  .bandeau .bandeau-visiteur:not([hidden]) {
     display: flex;
   }
 }

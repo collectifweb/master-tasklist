@@ -21,7 +21,8 @@ export function situationFor(action, params, events, task) {
     case 'toggleStep': return events.some((e) => e.type === 'etape' && e.done) ? 'step.done' : null;
     case 'remballerQuest': return 'quest.undo';
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
-    case 'construire': return 'batiment.construit';
+    // le quai rebâti : le marchand accoste aussitôt, Fanal l'annonce à la place du mot de chantier
+    case 'construire': return events.some((e) => e.type === 'construction' && String(e.id).startsWith('quai')) ? 'marchand.arrive' : 'batiment.construit';
     case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
     // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
     case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;

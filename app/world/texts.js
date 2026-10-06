@@ -82,7 +82,8 @@ export function batimentNom(t, b) {
 
 /**
  * Où en est un bâtiment (vue de view.js), en quelques mots : « à rebâtir », « verrouillé : Hameau : encore 2
- * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 »… Le même texte sur la carte et dans la liste.
+ * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 », « le marchand est au quai, encore 5 jours »… Le
+ * même texte sur la carte et dans la liste.
  * Un chalet compte ses places dans b.places (École), 2 au départ.
  */
 export function batimentEtat(t, b) {
@@ -91,6 +92,7 @@ export function batimentEtat(t, b) {
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
   if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
+  if (b.type === 'quai' && b.visiteur) return t(`bat.etat.quai.${b.visiteur.id}.${b.visiteur.joursRestants === 1 ? 'one' : 'other'}`, { n: b.visiteur.joursRestants });
   return t('bat.etat.debout');
 }
 

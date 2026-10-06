@@ -4,10 +4,13 @@
 // Rien n'est calculé ici qui ne vienne de core/batiments.js ; les valeurs que les niveaux de quartier changent (récolte
 // selon le lieu, jours de pousse, places par chalet, prix d'une famille, stockage) sont lues au cœur, jamais des
 // constantes de départ. Le geste passe par data-action="bat-geste".
+// Quand le marchand est au quai (core/visiteurs.js), la fiche du quai devient son comptoir : une ligne par offre, ce
+// que tu donnes → ce que tu reçois, et « Échanger » (bouton secondaire, data-geste="echanger"), le cadenas et la raison
+// du cœur, ou « Fait cette semaine ». Pas de geste principal : le pied de la fiche reste caché.
 import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
-  recolteDe, prixFamille, placesParChalet, valeur,
+  recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -37,7 +40,18 @@ function occupantsDe(game, id) {
   return 0;
 }
 
-/** Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null }. */
+// « 30 Énergie », « 15 Matériaux », « 10 Nourriture » : une ressource d'un côté d'une offre du marchand
+const RES = { energy: 'energie', materials: 'materiaux', food: 'nourriture' };
+export function ressource(obj) {
+  const [k, n] = Object.entries(obj)[0];
+  const nom = k === 'materials' ? t(n < 2 ? 'resource.materials.one' : 'resource.materials.other') : t(k === 'energy' ? 'resource.energy' : 'resource.food');
+  return { res: RES[k], n, nom, texte: `${n} ${nom}` };
+}
+
+/**
+ * Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null,
+ * comptoir: [{ id, donne, recoit, prise, raison }] | null } (comptoir : le quai debout, quand le marchand y est).
+ */
 export function batimentModel(c, id) {
   const type = typeOf(id);
   if (!Object.hasOwn(BATIMENTS, type)) return null;
@@ -52,7 +66,7 @@ export function batimentModel(c, id) {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
       n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
     }),
-    maintenant: '', raison: null, geste: null,
+    maintenant: '', raison: null, geste: null, comptoir: null,
   };
   if (!bati) {
     m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
@@ -82,6 +96,15 @@ export function batimentModel(c, id) {
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {
     m.maintenant = eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
+  } else if (type === 'quai') {
+    const v = visiteurDeLaSemaine(game, now);
+    if (v) {
+      m.maintenant = t(`bat.quai.maintenant.${v.joursRestants === 1 ? 'one' : 'other'}`, { n: v.joursRestants });
+      m.comptoir = v.offres.map((o) => ({
+        id: o.id, donne: ressource(o.donne), recoit: ressource(o.recoit), prise: o.prise,
+        raison: o.prise ? null : refusEchanger(game, { offre: o.id }, now),
+      }));
+    }
   } else if (type === 'grenier') {
     m.maintenant = t('bat.grenier.maintenant', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) });
   } else {
@@ -92,10 +115,31 @@ export function batimentModel(c, id) {
 
 const GESTE_ICON = { construire: 'chantier', semer: 'champs', recolter: 'nourriture', accueillir: 'habitants' };
 
+const resHtml = (r) => `<span class="offre-res" data-res="${r.res}">${icon(r.res)}<b>${r.n}</b> ${esc(r.nom)}</span>`;
+
+// Une offre du marchand : le troc sur une ligne, puis « Échanger » (ou « Fait cette semaine ») ; la raison du cœur dessous.
+function offreHtml(o) {
+  const etat = o.prise ? 'fait' : o.raison ? 'verrou' : 'libre';
+  const action = o.prise
+    ? `<p class="offre-fait" id="offre-${o.id}-etat" tabindex="-1">${icon('check')}<span>${esc(t('bat.comptoir.fait'))} <small>${esc(t('bat.comptoir.fait.quand'))}</small></span></p>`
+    : `<button class="btn btn--small offre-go" type="button" data-action="bat-geste" data-geste="echanger"
+      data-params="${esc(JSON.stringify({ offre: o.id }))}" aria-label="${esc(t('bat.comptoir.geste.label', { donne: o.donne.texte, recoit: o.recoit.texte }))}"${o.raison ? ` aria-disabled="true" aria-describedby="offre-${o.id}-raison"` : ''}>${icon(o.raison ? 'lock' : 'echange')}<span>${esc(t('bat.comptoir.geste'))}</span></button>`;
+  return `<li class="offre" data-offre="${o.id}" data-etat="${etat}">
+    <p class="offre-troc">${resHtml(o.donne)}${icon('fleche', 'offre-fleche')}<span class="sr-only"> ${esc(t('bat.comptoir.contre'))} </span>${resHtml(o.recoit)}</p>
+    ${action}${o.raison ? `<p class="offre-raison" id="offre-${o.id}-raison">${icon('lock')}<span>${esc(o.raison)}</span></p>` : ''}</li>`;
+}
+
+function comptoirHtml(offres) {
+  return `<section class="comptoir" aria-labelledby="comptoir-t">
+    <h3 class="comptoir-titre" id="comptoir-t">${icon('barque')}<span>${esc(t('bat.comptoir.titre'))}</span></h3>
+    <p class="comptoir-intro">${esc(t('bat.comptoir.intro'))}</p>
+    <ul class="comptoir-offres" role="list">${offres.map(offreHtml).join('')}</ul></section>`;
+}
+
 function bodyHtml(m) {
   const line = (k, html) => `<div class="help-line"><dt>${esc(t(`bat.fiche.${k}`))}</dt><dd>${html}</dd></div>`;
   const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}`;
-  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>`;
+  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.comptoir ? comptoirHtml(m.comptoir) : ''}`;
 }
 
 function footHtml(m) {
@@ -134,7 +178,12 @@ function fill(dlg, m) {
   const th = $('.bat-thumb', dlg);
   setHtml(th, art || '');
   th.hidden = !art;
-  setHtml($('.bat-body', dlg), bodyHtml(m));
+  // une offre prise ou devenue impossible change de bouton : le focus reste sur sa ligne (bouton, ou « Fait cette semaine »)
+  const body = $('.bat-body', dlg);
+  const offre = body.contains(document.activeElement) ? document.activeElement.closest('.offre')?.dataset.offre : null;
+  setHtml(body, bodyHtml(m));
+  const li = offre && !body.contains(document.activeElement) ? $(`.offre[data-offre="${offre}"]`, body) : null;
+  if (li) ($('.offre-go', li) || $('.offre-fait', li))?.focus();
   const foot = $('.bat-foot', dlg);
   const had = foot.contains(document.activeElement);
   setHtml(foot, footHtml(m));

@@ -131,6 +131,17 @@
   <symbol id="i-chantier" viewBox="0 0 24 24">
     <path d="M6 20.5V4M18 20.5V4M6 8h12M6 14h12M6 8l12 6M3.5 20.5h17"/>
   </symbol>
+  <!-- Le marchand : son chaland (toit solaire, fanion) et l'échange (deux flèches opposées) -->
+  <symbol id="i-barque" viewBox="0 0 24 24">
+    <path d="M2.8 14.6h18.4l-2.4 4.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/>
+    <path d="M2.8 14.6h18.4l-2.4 4.3H5.6zM5.2 14.6V9.4M12 14.6V9.4M4 9.4h9.2M18 14.6V4.2l3 1.6-3 1.6"/>
+  </symbol>
+  <symbol id="i-echange" viewBox="0 0 24 24">
+    <path d="M4.5 8.5h14M15 5l3.5 3.5L15 12M19.5 15.5h-14M9 12l-3.5 3.5L9 19"/>
+  </symbol>
+  <symbol id="i-fleche" viewBox="0 0 24 24">
+    <path d="M4 12h15.5M14 6.5l5.5 5.5-5.5 5.5"/>
+  </symbol>
 
   <!-- Système -->
   <symbol id="i-offline" viewBox="0 0 24 24">

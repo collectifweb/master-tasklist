@@ -25,7 +25,8 @@ const anyOpen = () => document.querySelector('dialog[open]');
 /**
  * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, attempt(action, params) → null ou
  * le message du refus (pour l'écrire dans la feuille ouverte, la page derrière étant inerte), announce(texte), focusHome(),
- * thumb(id) → dessin d'un bâtiment (ou ''), lightBandeau(), focusBandeau() }.
+ * thumb(id) → dessin d'un bâtiment (ou ''), lightBandeau(), focusBandeau(), arrivee() : le mot de Fanal quand le marchand
+ * vient d'arriver (une fois par semaine sur l'appareil) }.
  */
 export function createStory(app) {
   let welcoming = false;
@@ -281,8 +282,8 @@ export function createStory(app) {
    * pendant cette visite, rien d'autre ne suit : pas de mur d'écrans), sinon la lettre de passage à la v2 (une seule
    * fois, partie convertie), puis la lettre de conversion des niveaux en permis (une seule fois, partie v2 d'avant les
    * permis), sinon la lettre du matin (pas le premier jour ; la lettre de passage ou de conversion en tient lieu le jour
-   * où elle est montrée), puis le bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend
-   * sa fermeture.
+   * où elle est montrée), puis le bilan le dimanche (une fois par appareil), puis le mot de Fanal sur le marchand. Si une
+   * autre feuille est ouverte, attend sa fermeture.
    */
   function welcome() {
     if (welcoming) return;
@@ -314,8 +315,9 @@ export function createStory(app) {
     }
     const r = readReview();
     if (r.shown !== today && weeklyReview(c.tasks, c.game, c.ledger, c.now).dimanche) {
-      welcoming = true; openReview(c, () => { welcoming = false; refocus(); }); return;
+      welcoming = true; openReview(c, () => { welcoming = false; refocus(); app.arrivee?.(); }); return;
     }
+    app.arrivee?.(); // rien d'autre n'attend : Fanal annonce le marchand, s'il vient d'arriver
   }
 
   return {

@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, topCards, queteDefaut } from '../core/index.js';
+import { SORTS, gameDay, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
@@ -16,7 +16,7 @@ import {
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
-import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
+import { openBatiment, refreshBatiment, coutText, ressource } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { openQuartier, refreshQuartier, monteText, showMonte } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
@@ -55,6 +55,7 @@ const story = createStory({
   thumb: (id) => (world ? world.thumb(id) : ''),
   lightBandeau: () => bandeau.light(),
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
+  arrivee: () => annonceVisiteur(),
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -123,6 +124,7 @@ function react(payload) {
   const taskId = params.id || created || (events.find((e) => e.type === 'reward' && e.taskId) || {}).taskId || null;
   const task = findTask(taskId) || (result && result.tasks.find((x) => x.id === taskId)) || null;
   const title = task ? task.task : '';
+  if (action === 'construire' && params.type === 'quai') noterVisite(result.game, now || maintenant()); // Fanal l'annonce ici
   const reply = speech.react({ action, params, events, task, now: now || maintenant() });
   const replyText = reply ? ` ${reply.nom}\u00a0: ${reply.texte}` : '';
   const gains = gainList(s);
@@ -160,7 +162,7 @@ function react(payload) {
   if (bat) announce.say(remember(bat + replyText));
 }
 
-const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier'];
+const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger'];
 
 /** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine tenue. */
 function objectifsSay(events) {
@@ -174,7 +176,10 @@ function objectifsSay(events) {
   return out.join(' ');
 }
 
-/** Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang, quartier monté. */
+/**
+ * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang, quartier monté,
+ * échange au comptoir du marchand.
+ */
 function batimentSay(events) {
   const out = [];
   const nom = (id) => t(`bat.${String(id).replace(/-\d+$/, '')}.nom`);
@@ -185,6 +190,7 @@ function batimentSay(events) {
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
     else if (e.type === 'quartier-monte') out.push(monteText(e));
+    else if (e.type === 'echange') out.push(t('bat.sr.echange', { donne: ressource(e.donne).texte, recoit: ressource(e.recoit).texte }));
   }
   return out.join(' ');
 }
@@ -442,6 +448,11 @@ document.addEventListener('click', (e) => {
     case 'toggle-panel': return setPanel(app.dataset.panel !== 'open');
     case 'bandeau-toggle': return bandeau.toggle();
     case 'bandeau-go': return goToday();
+    case 'visiteur-go': {
+      bandeau.toggle(false);
+      const quai = store.view && batimentsDuVillage(store.view.game).find((b) => b.type === 'quai');
+      return quai && openBatimentSheet(quai.id);
+    }
     case 'accueil-suivant': return story.accueilSuivant();
     case 'add': return openAdd(queteDefaut(store.view?.game));
     case 'res-help': return openHelp(target.dataset.res);
@@ -536,6 +547,27 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+// Le marchand est au quai : Fanal l'annonce une fois par semaine sur cet appareil, à la première visite de sa semaine
+// (après la lettre et le bilan), ou en le voyant accoster quand le quai vient d'être rebâti (situation de « construire »).
+const VISITE_KEY = 'oree.visite.v1';
+function noterVisite(game, now) {
+  const v = visiteurDeLaSemaine(game, now);
+  if (v) try { localStorage.setItem(VISITE_KEY, v.semaine); } catch { /* sans stockage : pas d'annonce répétée */ }
+}
+const visiteVue = (semaine) => { try { return localStorage.getItem(VISITE_KEY) === semaine; } catch { return true; } };
+function annonceVisiteur() {
+  if (!started || !store.view) return;
+  const c = ctx();
+  const v = visiteurDeLaSemaine(c.game, c.now);
+  if (!v || visiteVue(v.semaine)) return;
+  if (!$('#speech').hidden) { setTimeout(annonceVisiteur, 7500); return; } // Fanal finit d'abord sa phrase en cours
+  noterVisite(c.game, c.now);
+  const reply = pickReply('marchand.arrive', { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
+  if (!reply) return;
+  speech.showText(reply.nom, reply.texte);
+  announce.say(`${reply.nom}\u00a0: ${reply.texte}`);
+}
 
 /** Toucher « Aujourd'hui » dans le bandeau : la fiche où se fait le geste proposé (bâtiment, quête), ou l'ajout. */
 function goToday() {

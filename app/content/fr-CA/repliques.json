@@ -143,6 +143,17 @@
         {"id": "batiment.construit.04", "voix": "fanal", "texte": "Les planches ont trouvé leur place. Moi aussi, un peu."}
       ]
     },
+    "marchand.arrive": {
+      "quand": "Le marchand est au quai : à la première visite de sa semaine sur cet appareil (une fois par semaine), ou quand le quai vient d’être rebâti (prend alors la place de batiment.construit). Ni taux ni chiffre : les offres sont au comptoir.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "marchand.arrive.01", "voix": "fanal", "texte": "Le marchand a accosté. Il a des caisses, et un fanion qui a vu du pays."},
+        {"id": "marchand.arrive.02", "voix": "fanal", "texte": "Une barque au quai. C’est le marchand, il échange jusqu’à dimanche."},
+        {"id": "marchand.arrive.03", "voix": "fanal", "texte": "Le marchand est là. Il troque, il ne vend pas. Il insiste là-dessus."},
+        {"id": "marchand.arrive.04", "voix": "fanal", "texte": "Le chaland du marchand est amarré. Ses panneaux solaires brillent plus que moi."},
+        {"id": "marchand.arrive.05", "voix": "fanal", "texte": "Le marchand est arrivé par le lac. J’ai serré l’amarre, par habitude."}
+      ]
+    },
     "famille.arrive": {
       "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,

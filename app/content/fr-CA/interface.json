@@ -498,6 +498,8 @@
   "bandeau.semaine.quetes.other": "{n} quêtes faites",
   "bandeau.semaine.jours.one": "sur {n} jour",
   "bandeau.semaine.jours.other": "sur {n} jours",
+  "bandeau.visiteur.one": "Le marchand est au quai, dernier jour",
+  "bandeau.visiteur.other": "Le marchand est au quai, encore {n} jours",
   "bandeau.pas.fait": "fait",
   "bandeau.pas.courant": "à faire maintenant",
   "bandeau.saison.grenier": "Grenier : {stock} sur {max}",

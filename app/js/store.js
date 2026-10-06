@@ -16,6 +16,7 @@ const ACTIONS = {
   jourSuivant: core.jourSuivant,
   construire: core.construire, semer: core.semer, recolter: core.recolter, accueillir: core.accueillir,
   voirAccueil: core.voirAccueil, monterQuartier: core.monterQuartier, reglerQueteDefaut: core.reglerQueteDefaut,
+  echanger: core.echanger,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */

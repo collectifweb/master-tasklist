@@ -3,7 +3,9 @@
 // En compact, la rangée montre Aujourd'hui et le prochain rang ; « Voir tous les objectifs » la déplie en carte.
 // À partir de 700 px, les quatre sont sur la rangée. Couleur toujours doublée : la barre du rang a son texte, un pas
 // fait a sa coche et le mot « fait » pour les lecteurs d'écran.
-import { bandeau as lireBandeau } from '../../core/index.js';
+// Cette semaine (bible §10, « la commande du visiteur ») : quand le marchand est au quai, sa ligne prend la place du
+// compte des quêtes et ouvre son comptoir (data-action="visiteur-go") ; le compte passe dans la carte dépliée.
+import { bandeau as lireBandeau, visiteurDeLaSemaine } from '../../core/index.js';
 import { t, tn } from '../content.js';
 import { $, esc, icon, setAttr, setHtml, setText, restart } from './dom.js';
 import { numPossede } from './format.js';
@@ -66,7 +68,14 @@ export function createBandeau(root) {
     q('.bandeau-raison').hidden = !a.raison;
     setAttr(q('.bandeau-today'), 'data-kind', b.aujourdhui.kind);
 
+    const v = b.semaine.kind === 'semaine' ? visiteurDeLaSemaine(c.game, c.now) : null;
     setText(q('#bandeau-semaine'), semaineText(b.semaine));
+    q('#bandeau-semaine').hidden = !!v;
+    q('.bandeau-visiteur').hidden = !v;
+    setText(q('#bandeau-visiteur'), v ? tn('bandeau.visiteur', v.joursRestants) : '');
+    const sd = q('.bandeau-semaine-detail');
+    sd.hidden = !v;
+    setText(sd, v ? semaineText(b.semaine) : '');
     const liste = q('.bandeau-pas-liste');
     liste.hidden = b.semaine.kind !== 'pas';
     setHtml(liste, b.semaine.kind === 'pas' ? pasHtml(b.semaine) : '');

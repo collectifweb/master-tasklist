@@ -234,6 +234,15 @@
   animation-play-state: paused;
 }
 @keyframes ow-rotor { to { transform: rotate(360deg); } }
+/* chaland du marchand amarré au quai : il se balance d'un pixel sur l'eau, seulement quand l'île est éveillée */
+.ow-barge {
+  animation: ow-barge 4.2s ease-in-out infinite;
+  animation-play-state: paused;
+}
+@keyframes ow-barge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.2px); }
+}
 /* ombre du panier d'une culture mûre */
 .ow-basket-shadow { fill: rgb(66 43 25 / 0.18); stroke: none; }
 
@@ -492,7 +501,7 @@
 
 /* ---------------------------------------------------------------- ambiance : seulement après une activité,
    jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor) {
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }

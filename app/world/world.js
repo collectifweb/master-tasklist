@@ -35,7 +35,7 @@ import {
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
 import { Scene } from './scene.js';
-import { artFor } from './models.js';
+import { artFor, QUAI_MARCHAND_H } from './models.js';
 import { createTicker, createBus } from './ticker.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
@@ -102,7 +102,8 @@ export function entitiesFor(v, tasks = []) {
     };
     if (b.type === 'chalet') Object.assign(e, { model: 'chalet', variant: !b.bati ? 'vide' : b.occupants ? 'habite' : '' });
     else if (b.type === 'atelier') Object.assign(e, { model: 'atelier', variant: b.bati ? '' : 'abime' });
-    else if (b.type === 'quai') Object.assign(e, { model: 'quai', variant: b.bati ? '' : 'vieux' });
+    // le marchand amarré : son chaland est dessiné avec le quai, dont l'emprise s'allonge vers le large pour le toucher
+    else if (b.type === 'quai') Object.assign(e, { model: 'quai', variant: !b.bati ? 'vieux' : b.visiteur ? 'marchand' : '' }, b.visiteur ? { h: QUAI_MARCHAND_H } : {});
     else if (!b.bati) Object.assign(e, { model: 'piquets', variant: `${slot.w}x${slot.h}` });
     else Object.assign(e, { model: b.type, variant: b.etat === 'bati' ? '' : b.etat });
     if (b.bati && LIGHT[e.model] && (b.type !== 'chalet' || b.occupants)) { e.light = LIGHT[e.model]; e.allume = !!v.veille; }

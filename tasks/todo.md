@@ -515,10 +515,12 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 - *Taux validés par Alex le 6 octobre, après-midi (« Essayons ça ! »).*
 
 ### V2 — Écran [impeccable]
-- [ ] Barque du marchand au quai : touchable, cible de 44 px au moins, mouvement réduit respecté.
-- [ ] Fiche du quai en comptoir ; « Cette semaine » du bandeau ; carte en liste (le marchand y figure, avec un bouton) ; annonce de l'échange (une seule voix) ; réplique de Fanal à l'arrivée.
-- [ ] Textes dans `content/fr-CA/`, typographie de `app/content/README.md`.
-- [ ] Scénario navigateur neuf : quai bâti, arrivée, échange, double toucher qui n'échange qu'une fois, réserve pleine, départ du dimanche avec « Jour suivant », deux appareils.
+- [x] Barque du marchand au quai : touchable, cible de 44 px au moins, mouvement réduit respecté.
+- [x] Fiche du quai en comptoir ; « Cette semaine » du bandeau ; carte en liste (le marchand y figure, avec un bouton) ; annonce de l'échange (une seule voix) ; réplique de Fanal à l'arrivée.
+- [x] Textes dans `content/fr-CA/`, typographie de `app/content/README.md`.
+- [x] Scénario navigateur neuf : quai bâti, arrivée, échange, double toucher qui n'échange qu'une fois, réserve pleine, départ du dimanche avec « Jour suivant », deux appareils.
+- *Fait (6 octobre, fin d'après-midi) : chaland solaire dessiné avec le quai (`world/models.js`, groupe `.ow-barge` qui se balance d'un pixel quand l'île est éveillée, jamais en mouvement réduit ; l'emprise du quai s'allonge vers le large pour que le chaland se touche). Fiche du quai en comptoir (`js/ui/batiment.js`) : une ligne par offre en deux colonnes, le troc à gauche (sur deux lignes à 390 px), « Échanger » secondaire, « Fait cette semaine » ou cadenas et raison du cœur ; le focus reste sur la ligne après un échange. « Cette semaine » : la ligne du marchand remplace le compte des quêtes, qui passe dans la carte dépliée (choix fait sans Alex, à lui montrer). Fanal annonce l'arrivée une fois par semaine et par appareil (`oree.visite.v1`), ou quand le quai vient d'être rebâti (situation `marchand.arrive`, 5 variantes). Cache `oree-coquille-v11`, `core/visiteurs.js` ajouté à la coquille hors ligne.*
+- *Vérifié : une ronde de captures à 390, 834 et 1280 px, un lot de corrections (lignes d'offre trop hautes à 390 px, « Fait cette semaine » sur sa propre ligne), une ronde de confirmation. Détecteur impeccable : rien sur les lignes du lot. `ui-36-marchand.cjs` : 51 contrôles réussis à chaque largeur (lancé largeur par largeur pendant la mise au point ; la série complète reste à faire en V3).*
 
 ### V3 — Vérification et documents
 - [ ] `node --test` ; série complète aux trois largeurs sur un code figé, machine au calme ; `world-s3` et `world-perf` (l'île change).

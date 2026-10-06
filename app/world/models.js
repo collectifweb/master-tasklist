@@ -394,7 +394,54 @@ export function grenier() {
   return a.done(3);
 }
 
-/** Quai, emprise 1 × 0,9, posé sur le lac. etat : 'vieux' (planches manquantes, poteaux cassés) ou neuf. */
+/** Hauteur (en cases) de l'emprise du quai quand le marchand y est amarré : le chaland est dans la zone de toucher. */
+export const QUAI_MARCHAND_H = 1.55;
+
+// Chaland solaire du marchand (lot V), amarré le long de la face +v du quai, du côté du large : coque plate, cabine
+// couverte de panneaux solaires à l'arrière, caisses et paniers sur le pont avant, un fanion à la proue. Dans un
+// groupe .ow-barge : il se balance sur l'eau quand l'île est éveillée (world.css), jamais en mouvement réduit.
+function chaland(a) {
+  const u0 = -0.04, du = 0.98, v0 = 1.02, dv = 0.46, H = 6;
+  const u1 = u0 + du, v1 = v0 + dv;
+  a.raw('<g class="ow-barge">');
+  a.box(u0, v0, du, dv, -1, H, 'woodd', { rim: true, cast: false });
+  a.seg([u0, v1, 2.6], [u1, v1, 2.6], 'k-woodb-l', 1.1); // listel clair sur le flanc
+  a.seg([u1, v0, 2.6], [u1, v1, 2.6], 'k-woodb-r', 1.1);
+  a.box(u0 + 0.05, v0 + 0.05, du - 0.1, dv - 0.1, H - 1, 1.6, 'woodb', { cast: false }); // pont
+  for (let vv = v0 + 0.14; vv < v1 - 0.06; vv += 0.1) a.seg([u0 + 0.05, vv, H + 0.7], [u1 - 0.05, vv, H + 0.7], 'k-woodd-t', 0.5, ' opacity=".5"');
+  // cabine à l'arrière : poteaux du fond, banquette, poteaux de devant, toit solaire incliné vers le large
+  const c0 = u0 + 0.05, c1 = u0 + 0.46, w0 = v0 + 0.06, w1 = v1 - 0.06, zt = 25, zb = 22.5;
+  a.seg([c0, w0, H], [c0, w0, zt], 'k-wooddk-l', 1.3);
+  a.seg([c1, w0, H], [c1, w0, zt], 'k-wooddk-r', 1.3);
+  a.box(c0 + 0.04, w0 + 0.04, 0.3, 0.14, H + 0.6, 5, 'woodd', { rim: true, cast: false });
+  a.box(c0 + 0.05, w0 + 0.2, 0.15, 0.13, H + 0.6, 7, 'woodb', { rim: true, cast: false }); // caisse sous l'abri
+  a.seg([c0, w1, H], [c0, w1, zb], 'k-wooddk-l', 1.3);
+  a.seg([c1, w1, H], [c1, w1, zb], 'k-wooddk-l', 1.3);
+  a.poly([[c0 - 0.03, w1 + 0.03, zb], [c1 + 0.03, w1 + 0.03, zb], [c1 + 0.03, w1 + 0.03, zb - 1.6], [c0 - 0.03, w1 + 0.03, zb - 1.6]], 'metal-l');
+  a.poly([[c1 + 0.03, w0 - 0.03, zt], [c1 + 0.03, w1 + 0.03, zb], [c1 + 0.03, w1 + 0.03, zb - 1.6], [c1 + 0.03, w0 - 0.03, zt - 1.6]], 'metal-r');
+  a.poly([[c0 - 0.03, w0 - 0.03, zt], [c1 + 0.03, w0 - 0.03, zt], [c1 + 0.03, w1 + 0.03, zb], [c0 - 0.03, w1 + 0.03, zb]], 'panel-t');
+  const zAt = (vv) => zt + (zb - zt) * ((vv - (w0 - 0.03)) / (w1 - w0 + 0.06));
+  for (const uu of [c0 + 0.13, c0 + 0.27]) a.seg([uu, w0 - 0.03, zt], [uu, w1 + 0.03, zb], 'k-glass-t', 0.6, ' opacity=".7"');
+  const vm = (w0 + w1) / 2;
+  a.seg([c0 - 0.03, vm, zAt(vm)], [c1 + 0.03, vm, zAt(vm)], 'k-glass-t', 0.6, ' opacity=".7"');
+  // pont avant : caisses et paniers, du fond vers le devant
+  a.box(c1 + 0.08, v0 + 0.07, 0.17, 0.15, H + 0.6, 8, 'woodb', { rim: true, cast: false });
+  a.seg([c1 + 0.08, v0 + 0.22, H + 4.6], [c1 + 0.25, v0 + 0.22, H + 4.6], 'k-woodd-l', 0.6);
+  a.prism(c1 + 0.39, v0 + 0.15, 0.075, H + 0.6, 6.5, 'hay', 7, { rim: true, cast: false });
+  a.prism(c1 + 0.17, v1 - 0.13, 0.08, H + 0.6, 6, 'hay', 7, { rim: true, cast: false });
+  a.box(c1 + 0.3, v1 - 0.24, 0.15, 0.15, H + 0.6, 6, 'woodb', { rim: true, cast: false });
+  a.prism(c1 + 0.38, v1 - 0.17, 0.05, H + 6.6, 3, 'squash', 6, { cast: false }); // courges sur la caisse
+  // mât et fanion à la proue
+  const mu = u1 - 0.07, mv = v0 + dv / 2;
+  a.seg([mu, mv, H], [mu, mv, 36], 'k-wooddk-r', 1.3);
+  a.poly([[mu, mv, 36], [mu + 0.3, mv, 32.5], [mu, mv, 29]], 'gold-l');
+  a.raw('</g>');
+}
+
+/**
+ * Quai, emprise 1 × 0,9, posé sur le lac. etat : 'vieux' (planches manquantes, poteaux cassés), neuf, ou 'marchand'
+ * (neuf, le chaland du marchand amarré au large ; l'entité prend alors QUAI_MARCHAND_H de profondeur).
+ */
 export function quai(etat = '') {
   const vieux = etat === 'vieux';
   const a = new Art();
@@ -408,7 +455,11 @@ export function quai(etat = '') {
     a.box(0, 0.02, 0.96, 0.9, 1.5, 2.5, 'woodb', { rim: true, cast: false });
     for (let vv = 0.17; vv < 0.9; vv += 0.15) a.seg([0, vv, 4], [0.96, vv, 4], 'k-woodd-t', 0.6, ' opacity=".55"');
     a.prism(0.82, 0.74, 0.06, 4, 7, 'woodd', 6, { rim: true }); // bitte d'amarrage
-    a.seg([0.82, 0.74, 9], [0.5, 1.15, 0], 'k-rope-t', 1);
+    if (etat === 'marchand') {
+      chaland(a);
+      a.seg([0.82, 0.74, 9], [0.74, 1.04, 6], 'k-rope-t', 1); // amarres, hors du groupe qui se balance
+      a.seg([0.08, 0.86, 10], [0.04, 1.04, 6], 'k-rope-t', 1);
+    } else a.seg([0.82, 0.74, 9], [0.5, 1.15, 0], 'k-rope-t', 1);
   }
   const r = a.done(2);
   r.shadow = null;

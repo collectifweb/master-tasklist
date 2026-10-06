@@ -6,6 +6,7 @@ import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
 import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
 import { placesParChalet } from '../core/quartiers.js';
+import { visiteurDeLaSemaine } from '../core/visiteurs.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
@@ -26,7 +27,7 @@ export function sectorView(id, game, tasks = []) {
  * { id, type, bati, etat, refus, reste, occupants }. etat : 'vide' (pas encore bâti), 'bati', et pour une culture
  * 'seme' | 'pousse' | 'mure' ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
  * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets) ;
- * places : places par chalet (École).
+ * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine.
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
   const g = { ...game, resources: { energy: 0, materials: 0, food: 0, ...(game.resources || {}) } };
@@ -46,6 +47,10 @@ export function batimentsView(game, ledger = [], now = new Date()) {
       } else {
         b.etat = 'bati';
         if (type === 'chalet') { b.occupants = Math.min(places, loges); loges -= b.occupants; }
+        if (type === 'quai') {
+          const v = visiteurDeLaSemaine(g, now);
+          if (v) b.visiteur = { id: v.id, joursRestants: v.joursRestants };
+        }
       }
       out.push(b);
     });
