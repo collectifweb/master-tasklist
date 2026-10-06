@@ -17,8 +17,8 @@ import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 
 /** Jours travaillés pour un permis. */
 export const JOURS_PAR_PERMIS = 4;
-/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 100 et n × 75 à 25. */
-export const ECHELLE = 25;
+/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 80 et n × 60 à 20. */
+export const ECHELLE = 20;
 /**
  * Semaine tenue : à partir du 5e jour travaillé d'une semaine (lundi au dimanche), un bonus en Matériaux, une seule fois
  * par semaine. 12 est une valeur de départ à valider, pas un réglage mesuré : c'est le plus petit entier à partir duquel
