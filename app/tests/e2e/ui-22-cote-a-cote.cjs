@@ -61,6 +61,8 @@ L.runScenario('22. côte à côte', async ({ R, srv, newPage, shot }) => {
   R.check('la quête n° 1 est « Ranger la remise »', await page.getAttribute('#fil-quest', 'data-task-id') === 'c1');
   const home = await fanal(page);
   const e0 = await L.resValue(page, 'energie');
+  // l'écran montre le bonus d'ouverture avant que son écriture arrive au registre : on l'attend avant de compter
+  await L.waitFor(() => srv.ledger().some((e) => e.bonus === 'ouverture'), 3000);
   const ledger0 = srv.ledger().length;
 
   // ───── « Je m'y mets »
