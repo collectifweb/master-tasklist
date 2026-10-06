@@ -402,6 +402,12 @@
   color: var(--text-soft);
 }
 .qrt-body .help-line dd p.qrt-permis { margin-top: var(--sp-1); color: var(--text-soft); }
+/* Tablette et plus : la feuille est centrée, donc une feuille qui grandit (ligne de réussite après un achat, raison d'un
+   refus) descend son bouton d'achat sous le doigt. Hauteur fixe : le corps défile s'il le faut, le pied ne bouge plus.
+   Sur téléphone, la feuille est posée en bas : en grandissant, elle monte et le pied reste en place. */
+@media (min-width: 700px) {
+  #dlg-quartier { height: min(620px, calc(100dvh - 48px)); }
+}
 /* achat réussi, en tête de la fiche : la coche et le sauge de « Disponible » (catalogue), jusqu'à la prochaine ouverture */
 .qrt-monte {
   display: flex;

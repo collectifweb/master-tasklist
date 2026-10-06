@@ -2,12 +2,12 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
+import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom } from '../content.js';
-import { $, esc, icon } from './dom.js';
+import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
-import { num, shortDate } from './format.js';
-import { openSheet, closeSheet } from './sheets.js';
+import { num, shortDate, durationText } from './format.js';
+import { openSheet, closeSheet, stepperRow, syncStepper, stepValue } from './sheets.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
 const KEEP_DAYS = 28; // « Garder » : la quête ne revient pas dans le bilan avant 4 semaines
@@ -56,9 +56,13 @@ export function createStory(app) {
     whenClosed(dlg, onDone);
   }
 
-  // ───────── Réglages : prénom facultatif ─────────
+  // ───────── Réglages : prénom facultatif (sur l'appareil), quête par défaut (dans la partie) ─────────
+  let queteOuverte = null; // valeurs montrées à l'ouverture : seul un geste sur « + » ou « − » les fait partir au serveur
   function openSettings() {
     const dlg = $('#dlg-settings');
+    const quete = queteDefaut(app.ctx()?.game);
+    queteOuverte = quete;
+    const depuisLettre = !!$('#dlg-letter[open]'); // le lien « prénom » de la lettre vient pour écrire le prénom
     dlg.innerHTML = `
       <header class="sheet-head">
         <h2 class="sheet-title" id="settings-t">${esc(t('settings.title'))}</h2>
@@ -70,17 +74,31 @@ export function createStory(app) {
           <input class="input" id="set-prenom" name="prenom" type="text" maxlength="40" autocomplete="given-name" autocapitalize="words" enterkeyhint="done" value="${esc(prenom())}" aria-describedby="set-prenom-hint">
           <p class="field-hint" id="set-prenom-hint">${esc(t('settings.prenom.hint'))}</p>
         </div>
+        <fieldset class="field set-quete" aria-describedby="set-quete-hint">
+          <legend class="field-label">${esc(t('settings.quete'))}</legend>
+          <p class="field-hint" id="set-quete-hint">${esc(t('settings.quete.hint'))}</p>
+          ${stepperRow('set', 'priority', quete.priority)}${stepperRow('set', 'length', quete.length)}${stepperRow('set', 'difficulty', quete.difficulty)}
+        </fieldset>
       </form>
       <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="settings-form">${esc(t('settings.save'))}</button></footer>`;
+    for (const row of $$('.stepper-row', dlg)) syncStepper(row);
     openSheet(dlg);
-    $('#set-prenom', dlg).focus();
+    // clavier virtuel : il ne s'ouvre que si l'on vient écrire le prénom, sinon il cacherait les trois rangées
+    (depuisLettre ? $('#set-prenom', dlg) : $('[data-close]', dlg)).focus();
   }
   function saveSettings(form) {
+    const avantPrenom = prenom();
     const v = setPrenom(form.elements.prenom.value);
+    const quete = { priority: stepValue(form, 'priority'), length: stepValue(form, 'length'), difficulty: stepValue(form, 'difficulty') };
+    const avant = queteOuverte || queteDefaut(app.ctx()?.game); // pas la partie relue depuis : un autre appareil a pu la changer
+    const change = Object.keys(quete).some((k) => quete[k] !== avant[k]);
+    if (change && !app.run('reglerQueteDefaut', quete)) return; // refus : la feuille reste ouverte, le message est affiché
     const link = $('#dlg-letter[open] .letter-prenom .link-btn');
     if (link) link.textContent = v ? t('letter.prenom.change', { prenom: v }) : t('letter.prenom.add');
     closeSheet($('#dlg-settings'));
-    app.announce(v ? t('settings.saved', { prenom: v }) : t('settings.saved.none'));
+    const dit = v ? t('settings.saved', { prenom: v }) : t('settings.saved.none');
+    const diteQuete = t('settings.saved.quete', { p: quete.priority, d: durationText(quete.length), e: quete.difficulty });
+    app.announce(!change ? dit : v === avantPrenom ? diteQuete : `${dit} ${diteQuete}`);
   }
 
   // ───────── Bilan de la semaine ─────────

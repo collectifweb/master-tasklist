@@ -1,7 +1,7 @@
 // Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  QUARTIERS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
+  QUARTIERS, QUETE_DEFAUT, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -11,7 +11,6 @@ import { token } from '../api-client.js';
 import { maintenant } from '../horloge.js';
 
 const QUARTIER_ORDER = ['atelier', 'champs', 'mairie', 'ecole', 'garage', 'place'];
-const DEFAULTS = { priority: 5, length: 2, difficulty: 3 };
 
 // ───────── Ouverture / fermeture ─────────
 let stacked = 0; // ordre d'ouverture : la dernière feuille ouverte est au-dessus des autres
@@ -50,7 +49,7 @@ function hint(kind, v) {
   if (kind === 'priority') return v >= 8 ? t('hint.prio.high') : v >= 4 ? t('hint.prio.mid') : t('hint.prio.low');
   return v >= 7 ? t('hint.effort.high') : v >= 4 ? t('hint.effort.mid') : t('hint.effort.low');
 }
-function stepperRow(prefix, kind, value, disabled) {
+export function stepperRow(prefix, kind, value, disabled) {
   const name = kind === 'priority' ? t('field.priority') : kind === 'length' ? t('field.length') : t('field.difficulty');
   const dis = disabled ? ' disabled' : '';
   value = Math.round(Number(value)) || 0;
@@ -62,7 +61,7 @@ function stepperRow(prefix, kind, value, disabled) {
       <button type="button" data-step="1" aria-label="${esc(t('step.inc.' + kind))}"${dis}>${icon('plus')}</button>
     </span></div>`;
 }
-function syncStepper(row) {
+export function syncStepper(row) {
   const out = $('output', row);
   const v = Number(out.textContent);
   $('[data-step="-1"]', row).disabled = v <= 1 || row.dataset.locked === '1';
@@ -73,11 +72,15 @@ export function handleStep(btn) {
   const row = btn.closest('.stepper-row');
   const out = $('output', row);
   out.textContent = String(Math.min(10, Math.max(1, Number(out.textContent) + Number(btn.dataset.step))));
+  const focused = document.activeElement === btn;
   syncStepper(row);
+  // borne atteinte : le bouton touché se désactive, le focus passe au bouton opposé au lieu de tomber sur la page
+  if (btn.disabled && focused) $(`[data-step="${-Number(btn.dataset.step)}"]`, row).focus();
   const dlg = row.closest('dialog');
   if (dlg && dlg.id === 'dlg-add') updateAddSummary();
 }
 const valueOf = (root, kind) => Number($(`.stepper-row[data-kind="${kind}"] output`, root).textContent);
+export { valueOf as stepValue };
 
 // ───────── Ajout rapide ─────────
 function quartierOptions(name, checked) {
@@ -94,7 +97,8 @@ function updateAddSummary() {
   setHtml($('.disclosure-summary', form), `${esc(t('add.summary.prio'))} <b>${p}</b> · <b>${esc(durationText(l))}</b> · ${esc(t('add.summary.effort'))} <b>${d}</b>`);
 }
 
-export function openAdd() {
+/** quete : { priority, length, difficulty } de départ du formulaire (la quête par défaut des Réglages, core/reglages.js). */
+export function openAdd(quete = QUETE_DEFAUT) {
   const dlg = $('#dlg-add');
   dlg.innerHTML = `
     <header class="sheet-head">
@@ -115,7 +119,7 @@ export function openAdd() {
       <details class="disclosure">
         <summary><span class="disclosure-summary"></span><span class="disclosure-action">${esc(t('add.adjust'))} ${icon('chevron-down')}</span></summary>
         <div class="disclosure-body">
-          ${stepperRow('add', 'priority', DEFAULTS.priority)}${stepperRow('add', 'length', DEFAULTS.length)}${stepperRow('add', 'difficulty', DEFAULTS.difficulty)}
+          ${stepperRow('add', 'priority', quete.priority)}${stepperRow('add', 'length', quete.length)}${stepperRow('add', 'difficulty', quete.difficulty)}
         </div>
       </details>
       <label class="check-row"><input type="checkbox" name="already-done"><span>${esc(t('add.done_today'))}<small>${esc(t('add.done_today.hint'))}</small></span></label>
@@ -447,7 +451,7 @@ export function openToken(onSaved, { bad = false, locked = 0 } = {}) {
 }
 
 // ───────── Aide d'une ressource : ce que c'est, d'où ça vient, à quoi ça sert ─────────
-const HELP = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants' };
+const HELP = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants', permis: 'resource.permis' };
 export function openHelp(name) {
   const nom = HELP[name];
   if (!nom) return;

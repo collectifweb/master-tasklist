@@ -30,10 +30,13 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
   await page.waitForSelector('#dlg-settings[open]');
   await page.waitForTimeout(300);
   R.check('réglages : « Prénom (facultatif) », focus dans le champ', /Prénom \(facultatif\)/.test(await page.textContent('#dlg-settings')) && await page.evaluate(() => document.activeElement.id === 'set-prenom'));
+  const quete = await page.evaluate(() => [...document.querySelectorAll('#dlg-settings .stepper-row output')].map((o) => o.textContent.trim()).join());
+  R.check('réglages : « Quête par défaut » montre 5, 2, 3 tant que rien n’est réglé, avec la phrase « mêmes sur tous tes appareils »', quete === '5,2,3' && /Quête par défaut/.test(await page.textContent('#dlg-settings')) && /mêmes sur tous tes appareils/.test(await page.textContent('#dlg-settings')), quete);
   await page.fill('#set-prenom', '  Sam  ');
   await shot(page, '19-reglages');
   await page.click('#dlg-settings [type="submit"]');
   R.check('enregistré sur l’appareil seulement (localStorage)', await L.waitFor(() => page.evaluate(() => localStorage.getItem('oree.prenom.v1') === 'Sam'), 2000) && !JSON.stringify(srv.game()).includes('Sam'));
+  R.check('prénom seul : la quête par défaut n’écrit rien dans la partie', !('reglages' in (srv.game() || {})), JSON.stringify(srv.game()?.reglages));
   R.check('la lettre reste ouverte et le lien dit le prénom', await L.waitFor(async () => (await letter(page)).open && /Sam/.test(await page.textContent('#dlg-letter .letter-prenom')), 2000));
   await page.click('#dlg-letter .sheet-foot [data-close]');
   R.check('« Ranger la lettre » la referme', await L.waitFor(async () => !(await page.evaluate(() => document.getElementById('dlg-letter').open)), 2000));

@@ -1,6 +1,6 @@
 // Monde v2 (app/world/demo.html, état fictif) aux trois largeurs : six quartiers ouverts avec leur niveau, plus rien de
 // la v1 (cendre, brume, braseros, givre, germes, personnages autres que Fanal), front de givre en sommeil, quête qui
-// compte sans monter de niveau, niveau acheté joué (quartier-monte), pastille des permis sur « Construire »,
+// compte sans monter de niveau, niveau acheté joué (quartier-monte), « Construire » sans pastille de permis,
 // sélections typées (onSelect), cibles de 44 px, plaques « Champs · niv. 1 » entières à côté
 // de la colonne des commandes (Construire, Quêtes, Vue, et la rangée « Vue » dépliée), « Quêtes » qui cache le panneau,
 // focusEntity (quai hors grille, parcelle du départ), bouton « Passer l'animation » touchable panneau ouvert et jamais
@@ -138,8 +138,8 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     check(`${tag} front de givre en sommeil (caché)`, r.start.front, r.start.front);
     r.champs = await plaque(page, 'champs');
     check(`${tag} plaque des Champs : « niv. 1 », lue « Champs : niveau 1. »`, r.champs.line === 'niv.\u00a01' && r.champs.label === 'Champs : niveau 1.', r.champs);
-    r.badge = await page.evaluate(() => { const b = document.querySelector('[data-ow="build"]'); const p = b.querySelector('.ow-badge'); return { text: p.textContent, hidden: p.hidden, label: b.getAttribute('aria-label') }; });
-    check(`${tag} pastille « 2 » sur « Construire », dite par son nom`, r.badge.text === '2' && !r.badge.hidden && r.badge.label === 'Construire, 2 permis à placer', r.badge);
+    r.badge = await page.evaluate(() => { const b = document.querySelector('[data-ow="build"]'); return { pastille: !!b.querySelector('.ow-badge'), label: b.getAttribute('aria-label') }; });
+    check(`${tag} « Construire » sans pastille : son nom ne dit plus de chiffre (les permis sont dans la barre des ressources)`, !r.badge.pastille && r.badge.label === 'Construire', r.badge);
 
     // ---- sélections typées : plaque, repère, caisse, Fanal ; retoucher rappelle onSelect ; clearSelection()
     await page.click('.ow-plaque[data-sector="mairie"]');
@@ -186,8 +186,8 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     await idle(page);
     r.atelier = await plaque(page, 'atelier');
     r.niveauEvents = await page.evaluate(() => (window.__lastEvents || []).map((e) => e.type));
-    r.badgeApres = await page.evaluate(() => document.querySelector('[data-ow="build"] .ow-badge').textContent);
-    check(`${tag} niveau acheté à l'Atelier : événement du cœur, plaque et pastille à jour`, r.niveauEvents.includes('quartier-monte') && a0.niveau === '0' && r.atelier.niveau === '1' && r.atelier.line === 'niv.\u00a01' && r.atelier.label === 'Atelier : niveau 1.' && r.badgeApres === '1', { a0, a1: r.atelier, ev: r.niveauEvents, badge: r.badgeApres });
+    r.badgeApres = await page.evaluate(() => { const b = document.querySelector('[data-ow="build"]'); return b.querySelector('.ow-badge') ? 'pastille' : b.getAttribute('aria-label'); });
+    check(`${tag} niveau acheté à l'Atelier : événement du cœur, plaque à jour, toujours aucune pastille sur « Construire »`, r.niveauEvents.includes('quartier-monte') && a0.niveau === '0' && r.atelier.niveau === '1' && r.atelier.line === 'niv.\u00a01' && r.atelier.label === 'Atelier : niveau 1.' && r.badgeApres === 'Construire', { a0, a1: r.atelier, ev: r.niveauEvents, badge: r.badgeApres });
 
     // ---- événements sans dessin et type inconnu : ignorés sans erreur
     await run(page, 'muets');

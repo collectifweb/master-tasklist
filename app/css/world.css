@@ -448,29 +448,6 @@
 .ow-zbtn[aria-disabled="true"] { cursor: default; border-style: dashed; color: var(--text-muted); background: var(--c-sunken); box-shadow: none; }
 .ow-zbtn:focus { outline: none; }
 .ow-zbtn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
-/* pastille des permis sur « Construire » : un chiffre sobre, sauge pleine, cerclée de papier ; jamais animée */
-.ow-zbtn[data-ow="build"] { position: relative; }
-.ow-badge {
-  position: absolute;
-  top: -7px;
-  right: -7px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: var(--r-pill);
-  background: var(--c-sage-deep);
-  color: var(--c-paper);
-  box-shadow: 0 0 0 2px var(--c-paper);
-  font-family: var(--font-num);
-  font-size: var(--text-12);
-  font-weight: var(--w-heavy, 800);
-  font-variant-numeric: tabular-nums;
-  line-height: 20px;
-  text-align: center;
-  pointer-events: none;
-}
-.ow-badge[hidden] { display: none; }
-
 .ow-skip {
   position: absolute;
   z-index: 6;
