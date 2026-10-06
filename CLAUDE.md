@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet en bref
 
-Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobile/tablette) transformée en jeu de gestion de ferme agro-futuriste. Les tâches terminées produisent des ressources qui servent à développer la ferme. Toute la documentation, le code UI et les messages sont en français. Lire `PRODUCT.md` avant toute décision de produit ou de game design : c’est le cahier des charges (aléas récupérables, bonus plafonnés, contraintes d’hébergement). Le récit, l’économie à quatre ressources et le plan de la v2 sont dans `docs/BIBLE-JEU.md`, validée par Alex le 5 octobre 2026.
+Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobile/tablette) transformée en jeu de gestion de ferme agro-futuriste. Les tâches terminées produisent des ressources qui servent à développer la ferme. Toute la documentation, le code UI et les messages sont en français. Lire `PRODUCT.md` avant toute décision de produit ou de game design : c’est le cahier des charges (aléas récupérables, bonus plafonnés, contraintes d’hébergement). Le récit, l’économie à quatre ressources (plus les permis, un compteur à part) et le plan de la v2 sont dans `docs/BIBLE-JEU.md`, validée par Alex le 5 octobre 2026.
 
 Trois applications cohabitent :
 
@@ -35,7 +35,7 @@ TASKS_WRITE_TOKEN=dev python3 tasks-server.py
 
 # Nouvelle app : tests de la logique et de l'API (Node 24 : motifs entre guillemets, pas un dossier)
 node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
-# Nouvelle app : 28 scénarios navigateur aux 3 largeurs (environ 18 minutes, mesuré le 6 octobre 2026 ; Playwright est une bibliothèque).
+# Nouvelle app : 32 scénarios navigateur aux 3 largeurs (environ 18 minutes, mesuré le 6 octobre 2026 ; Playwright est une bibliothèque).
 # Ne pas la lancer pendant qu’un autre agent fait tourner ses essais : sous charge, des mesures de position échouent.
 # Un seul essai par scénario ; ESSAIS=3 seulement pour diagnostiquer une instabilité.
 PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
@@ -76,7 +76,7 @@ Schéma `tasks.json` (tableau) : `{ id, task, domain, difficulty 1-10, length 1-
 ## Règles du dépôt
 
 - **Confidentialité** : le dépôt est public et son historique a été réécrit le 5 octobre 2026 pour retirer des données réelles. Ne jamais committer `tasks.json`, `PUBLIC_URL.txt`, un fichier `.env`, les fichiers d’état de synchronisation ni des captures (les dossiers `review/` sont ignorés). Aucune donnée réelle dans le code, les exemples, les tests ou les captures : ni titre de tâche, ni prénom de proche, ni fournisseur, ni domaine, IP, compte ou chemin `/home` de production. Utiliser uniquement `tasks.example.json` et des titres fictifs génériques. Ne jamais réécrire l’historique ni forcer un push sans demande explicite.
-- **Design** : `sketches/006-oree-vivante/DESIGN.md` (et `.impeccable/design.json`) est le contrat visuel. Palette chaude terre/sauge/verre solaire, sans fond sombre ni cyan néon. L’orange braise (`#bf5a38`) est réservé aux menaces. La carte doit dominer l’écran mobile. Dans 006, la ressource s’appelle « Confiance », jamais « Réputation » ; `app/` v2 n’a plus de Confiance (Énergie, Matériaux, Nourriture, Habitants).
+- **Design** : `sketches/006-oree-vivante/DESIGN.md` (et `.impeccable/design.json`) est le contrat visuel. Palette chaude terre/sauge/verre solaire, sans fond sombre ni cyan néon. L’orange braise (`#bf5a38`) est réservé aux menaces. La carte doit dominer l’écran mobile. Dans 006, la ressource s’appelle « Confiance », jamais « Réputation » ; `app/` v2 n’a plus de Confiance (Énergie, Matériaux, Nourriture, Habitants, plus les permis, un compteur à part).
 - **Accessibilité (exigée par PRODUCT.md)** : cibles d’au moins 44 px ; toute couleur doublée par du texte, une icône ou un motif ; chaque geste a un bouton équivalent ; respect de `prefers-reduced-motion` ; aucun son automatique. En mode construction, une seule tuile est tabulable (`tabindex="0"`) ; hors construction, toutes les tuiles sont à `-1`.
 - **Aléas de jeu** : leurs conséquences restent virtuelles et réparables. Ils ne modifient jamais une tâche réelle.
 - `.hermes/skills/impeccable/` est un outil de design hérité de l’ancien agent (référencé par les fichiers `.impeccable/`). Ce n’est pas du code applicatif.
