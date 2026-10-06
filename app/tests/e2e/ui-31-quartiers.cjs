@@ -154,6 +154,14 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.keyboard.press('Escape');
   R.check('Échap ferme la fiche', await closed(page, 'dlg-quartier'));
 
+  // ───── filtres déjà posés dans la liste (« Faites », une recherche, « 15 min ») : « Voir les quêtes » les retire plus bas
+  await page.waitForTimeout(400);
+  await L.openPanel(page);
+  await page.click('.seg-option:has(input[value="done"])');
+  await page.fill('#search', 'zz');
+  await page.click('.chip[data-filter="quick"]');
+  if (compact) { await page.click('.panel-toggle'); await page.waitForTimeout(450); }
+
   // ───── clavier : « Construire » → Quartiers ; la fiche s'empile sur le catalogue
   await page.waitForTimeout(400);
   await page.focus('[data-ow="build"]');
@@ -215,6 +223,16 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
     && document.getElementById('app').dataset.panel === 'open'
     && document.querySelector('.chip[data-quartier="atelier"]').getAttribute('aria-pressed') === 'true'
     && [...document.querySelectorAll('#quest-list .quest-title')].map((e) => e.textContent.trim()).join('|') === 'Changer une ampoule'), 2500), f.quetes);
+  const filtres = await page.evaluate(() => ({ statut: document.querySelector('input[name="statut"]:checked')?.value, search: document.getElementById('search').value, quick: document.querySelector('.chip[data-filter="quick"]').getAttribute('aria-pressed'), liste: [...document.querySelectorAll('#quest-list:not([hidden]) .quest-title')].map((e) => e.textContent.trim()) }));
+  R.check('« Voir les quêtes » remet « À faire », vide la recherche et retire « 15 min » : la liste montre la quête comptée', filtres.statut === 'todo' && filtres.search === '' && filtres.quick === 'false' && filtres.liste.join('|') === 'Changer une ampoule', JSON.stringify(filtres));
+  const foc = await L.waitFor(() => page.evaluate(() => {
+    const a = document.activeElement;
+    if (!a || !a.matches('#quest-list .quest-main')) return null;
+    const r = a.getBoundingClientRect();
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return { titre: a.querySelector('.quest-title')?.textContent.trim(), vu: !!top && a.contains(top) };
+  }), 2000);
+  R.check('au clavier, le focus arrive sur la quête de la liste filtrée, visible', foc && foc.titre === 'Changer une ampoule' && foc.vu, JSON.stringify(foc || await page.evaluate(() => document.activeElement?.outerHTML?.slice(0, 80))));
   await page.locator('.chip[data-quartier="atelier"]').click(); // retire le filtre
 
   // ───── clavier : « Vue » → Carte en liste → « Ouvrir la fiche »

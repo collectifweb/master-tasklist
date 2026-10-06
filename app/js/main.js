@@ -314,12 +314,25 @@ document.addEventListener('focusin', (e) => {
 });
 
 // ───────── Monde : sélection d'un quartier, carte en liste ─────────
-/** « Voir les quêtes » (fiche d'un quartier) : la liste ne montre que les quêtes de ce quartier, et le panneau s'ouvre. */
+/**
+ * « Voir les quêtes » (fiche d'un quartier) : la liste montre exactement les quêtes à faire de ce quartier, celles que
+ * le bouton compte (statut « À faire », sans recherche ni filtre rapide), et le panneau s'ouvre.
+ */
 function filterByQuartier(id) {
-  ui.quartier = id;
-  for (const c of $$('.chip[data-quartier]')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
+  Object.assign(ui, { status: 'todo', quick: false, lowEnergy: false, thisWeek: false, search: '', quartier: id });
+  $('input[name="statut"][value="todo"]').checked = true;
+  for (const c of $$('.chips .chip')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
+  $('#search').value = ''; $('.search-clear').hidden = true;
   renderAll();
   setPanel(true);
+}
+/** Le clavier arrive sur la première quête de la liste filtrée (sur le titre de la liste si elle est vide). */
+function focusQuestList() {
+  const first = $('#quest-list:not([hidden]) .quest-main');
+  if (first) return first.focus();
+  const h = $('#list-h');
+  h.tabIndex = -1;
+  h.focus();
 }
 /** Toucher la carte : une caisse ouvre sa quête ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
 function onWorldSelect(info) {
@@ -500,8 +513,14 @@ document.addEventListener('click', (e) => {
     }
     case 'qrt-quetes': {
       // le panneau s'ouvre derrière : toutes les feuilles se ferment (fiche, catalogue, carte en liste)
-      for (const d of $$('dialog.sheet[open]')) closeSheet(d);
-      return filterByQuartier(target.dataset.quartier);
+      const sheets = $$('dialog.sheet[open]');
+      for (const d of sheets) closeSheet(d);
+      filterByQuartier(target.dataset.quartier);
+      // chaque feuille rend le focus en se fermant (événement close, après l'animation) : la dernière l'envoie à la liste
+      const toList = () => { if (!document.querySelector('dialog.sheet[open]')) focusQuestList(); };
+      for (const d of sheets) d.addEventListener('close', toList, { once: true });
+      if (!sheets.length) focusQuestList();
+      return;
     }
     case 'bat-geste': {
       if (spendBlocked(e, target, action)) return;
