@@ -419,7 +419,9 @@ Bords : filets de 1 px (`line` entre lignes, `line-strong` autour des champs et 
 Tout vit dans `app/css/components.css`, 16 sections numérotées. Chaque composant est en français, avec classes en anglais court ou en français selon le code existant.
 
 ### Coquille (1) et monde (2)
-`.app[data-panel="peek|open"]` contient `.world-slot` (monde plein écran), `.hud`, `.announce-lane`, `#live` et `.panel`. Le monde de la semaine 1 est un fond (`.world-backdrop` : dégradé ciel, horizon, lac) et une légende ; l'île SVG arrive en semaine 2 dans `.world-stage`. Le panneau a une poignée (`.panel-grip`), une tête (`.panel-head` : titre, ajout, bascule), un défilement (`.panel-scroll`) et un corps caché quand replié (`.panel-rest`).
+`.app[data-panel="peek|open|cache"]` contient `.world-slot` (monde plein écran), `.hud`, `.announce-lane`, `#live` et `.panel`. Le monde de la semaine 1 est un fond (`.world-backdrop` : dégradé ciel, horizon, lac) et une légende ; l'île SVG arrive en semaine 2 dans `.world-stage`. Le panneau a une poignée (`.panel-grip`), une tête (`.panel-head` : titre, ajout, bascule ; en compact, elle se touche et se glisse), un défilement (`.panel-scroll`) et un corps caché quand replié (`.panel-rest`). `cache` : le panneau sort du champ (vers le bas en compact, vers la droite en large), devient `inert`, et la carte prend tout l'écran.
+
+Commandes de la carte (`.ow-zoom`, dans `world.css`) : une colonne de boutons `.ow-zbtn` de 44 px, « Construire », « Quêtes », « Vue », posée 12 px au-dessus du haut réel du panneau (`--world-ctl-bottom`). « Vue » (`aria-expanded`, enfoncé et lavé de sauge quand ouvert) déplie vers la gauche la rangée `.ow-zrow` : Rapprocher, Éloigner, Toute l'île, Carte en liste. « Quêtes » prend le même aspect enfoncé quand le panneau est caché (la carte seule est alors le mode en cours). Aux limites du zoom, `aria-disabled` (tirets, comme le désactivé lisible). Le catalogue « Construire » (`#dlg-construire`, `.cat-*` dans `app.css`) reprend les lignes de la carte en liste (`.ow-plan-bat`) avec le dessin du bâtiment, son coût, « Disponible » (coche, sauge) ou la raison du cœur (cadenas), et un bouton secondaire.
 
 ### Boutons (3)
 Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), picto de 20 px, socle de 3 px.
@@ -534,7 +536,7 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 
 | Quoi | Où | Valeurs |
 |---|---|---|
-| `data-panel` | `.app` | `peek` ou `open` |
+| `data-panel` | `.app` | `peek`, `open` ou `cache` (avec `inert` sur `.panel`) |
 | `aria-expanded` | `.panel-toggle` (et `.panel-toggle-label` : « Tout voir » ou « Replier ») | `true` ou `false` |
 | `data-state` | `.fil-quest`, `li.quest` | `todo`, `doing`, `done`, `archived` |
 | `data-late="true"` | `li.quest` | crochet de données seulement ; la présentation passe par `.meta-item--late` ou `.tag--late` (aucune règle CSS ne lit `data-late`) |

@@ -71,11 +71,12 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 
   // écrans de jeu : carte en liste, bilan de la semaine, prénom
-  await page.click('[data-action="open-plan"]');
+  await L.openPlan(page);
   await page.waitForSelector('#dlg-plan[open]'); await page.waitForTimeout(400);
   await audit('carte en liste');
   await shot(page, '09-carte-en-liste');
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await L.openPanel(page); // la carte en liste s'ouvre panneau replié (colonne de la carte) ; le bilan est dans le panneau
   await page.click('[data-action="open-review"]');
   await page.waitForSelector('#dlg-review[open]'); await page.waitForTimeout(500);
   await audit('bilan de la semaine');

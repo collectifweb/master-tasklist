@@ -105,5 +105,13 @@
   "plan": {
     "titre": "Bâtiments",
     "intro": "Chaque emplacement de l’île, ce qui s’y trouve et ce qu’on peut y faire."
+  },
+  "catalogue": {
+    "titre": "Construire",
+    "intro": "Choisis un bâtiment : il se bâtit sur le premier emplacement libre, et la carte te le montre.",
+    "section": "Bâtiments",
+    "dispo": "Disponible",
+    "geste.label": "{geste} : {nom}",
+    "fermer": "Fermer"
   }
 }
