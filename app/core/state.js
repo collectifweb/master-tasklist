@@ -149,13 +149,15 @@ export function withoutRetiredGestures(queue) {
  * effacé, l'entrée garde son opId, son nom, ses paramètres et son instant, et le cœur courant le refait à l'envoi (au
  * prix, aux règles et aux bonus du jour). Sans cela, un achat calculé à l'ancien prix et resté en file hors ligne
  * partirait tel quel sous la version courante, que le serveur accepte. Un calcul sans `client` vient d'une version
- * d'avant ce marquage : il est effacé. Fonction pure.
+ * d'avant ce marquage : il est effacé. L'entrée effacée est marquée `stale: true` : son opId a pu être appliqué par le
+ * serveur (réponse perdue) ; si le serveur répond `op_id_reused` au recalcul, l'envoi est écarté au lieu de repartir
+ * sous un nouvel opId (comme `v1`). Fonction pure.
  */
 export function withoutStaleBodies(queue, version) {
   return (Array.isArray(queue) ? queue : []).map((e) => {
     if (!isObj(e) || !e.body) return e;
     const fait = isObj(e.body) ? e.body.client : undefined;
-    return typeof fait === 'number' && fait >= version ? e : { ...e, body: null };
+    return typeof fait === 'number' && fait >= version ? e : { ...e, body: null, stale: true };
   });
 }
 
