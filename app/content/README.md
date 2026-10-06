@@ -34,6 +34,7 @@ Un gabarit s'écrit `{nom}`. Le code le remplace avant l'affichage.
 | `{cout}` | Coût lisible, tiré des données de jeu (« 20 Matériaux et 6 Énergie ») |
 | `{rang}` | Nom du nouveau rang du village (« Hameau »), pour `permis.rang` seulement ; hors d'un changement de rang, il n'est pas rempli et la variante est écartée |
 | `{n}`, `{p}`, `{l}`, `{d}`, `{points}`, `{cote}`, `{duree}`… | Nombres et valeurs de l'interface, nommés dans chaque clé |
+| `{n}`, `{jours}` (`help.materiaux.source`), `{parPermis}` (`help.permis.source`) | Valeurs lues dans le code au moment d'afficher, jamais écrites dans le texte : `{n}` = les Matériaux de la semaine tenue (`SEMAINE_TENUE.materials`), `{jours}` = les jours travaillés qu'elle demande (`SEMAINE_TENUE.jours`), `{parPermis}` = les jours travaillés pour un permis (`JOURS_PAR_PERMIS`). Si le réglage change dans le code, le texte suit |
 
 Dans les textes `monde.*` d'`interface.json`, `{secteur}`, `{du_secteur}` et `{au_secteur}` gardent leur ancien nom mais reçoivent les formes d'un quartier (`the`, `of`, `in`). Les textes des bâtiments (`bat.<groupe>.<clé>`) viennent de `batiments.json`, pas d'`interface.json`.
 
@@ -79,6 +80,7 @@ Trois règles :
 | `deadline.passed` | Une fois par quête, à la première visite après la date |
 | `permis.gagne` | Un permis tombe après quatre jours travaillés, avec la quête payée qui le donne (quête terminée ou ajoutée déjà faite) |
 | `permis.rang` | Une famille fait passer le village à un nouveau rang, qui donne un permis (geste « Accueillir une famille ») |
+| `semaine.tenue` | La semaine tenue est payée, avec la quête payée qui la déclenche (quête terminée ou ajoutée déjà faite). Ne dit jamais un nombre de jours et ne parle jamais de série |
 | `quartier.monte` | Un quartier monte au niveau 1 (permis placés, travaux payés). Une variante par quartier ; rien aux niveaux 2 et 3 |
 | `batiment.construit` | Un bâtiment vient d'être bâti, rebâti ou réparé |
 | `famille.arrive` | Une famille s'installe dans un chalet (geste « Accueillir une famille ») |
@@ -89,7 +91,7 @@ Trois règles :
 
 Pas encore jouées par le code : `deadline.soon`, `deadline.passed`, `list.empty` et `list.all_done`. Leurs textes existent, aucun geste ne les déclenche pour l'instant.
 
-**Une seule réplique par action.** Quand plusieurs situations s'appliquent au même geste, la première de cette liste l'emporte : `permis.gagne`, `quest.done.big`, `quest.already_done`, puis `quest.done.medium` ou `quest.done.short`. À « Accueillir une famille », `permis.rang` prend la place de `famille.arrive` quand un nouveau rang donne un permis. Le permis de l'objectif de saison n'a pas de réplique. Une quête déjà récompensée ne joue aucune de ces situations.
+**Une seule réplique par action.** Quand plusieurs situations s'appliquent au même geste, la première de cette liste l'emporte : `permis.gagne`, `semaine.tenue`, `quest.done.big`, `quest.already_done`, puis `quest.done.medium` ou `quest.done.short`. La semaine tenue passe donc après le permis des jours : un seul mot de Fanal par geste, et le bonus reste annoncé à l'écran. À « Accueillir une famille », `permis.rang` prend la place de `famille.arrive` quand un nouveau rang donne un permis. Le permis de l'objectif de saison n'a pas de réplique. Une quête déjà récompensée ne joue aucune de ces situations.
 
 ## Tirage sans répétition sur 7 jours
 
@@ -101,7 +103,9 @@ La même règle vaut pour chaque situation de `repliques.json` et pour chaque gr
 4. Choisir par un tirage déterministe : `hash(situation + jourDeJeu + rang du tirage dans la journée) % nombre de candidates`. Les tests restent reproductibles et un rechargement de page ne change pas la réplique. Pour une lettre, le tirage ne dépend que du jour de jeu.
 5. Noter `id → jourDeJeu` : pour les répliques, dans le `localStorage` de l'appareil (`oree.replies.v1`, avec le rang du tirage de la journée) ; pour les lettres, dans l'état du jeu sur le serveur (`game.letters`). La dernière date par `id` suffit.
 
-Chaque situation d'avant le lot R compte au moins 4 variantes sans filtre (comptées le 6 octobre 2026 : de 4 à 6) ; `batiment.construit`, `famille.arrive` et `list.empty` n'en ont que 4. Les trois situations du lot R n'atteignent pas ce seuil (comptées le même jour) : `permis.gagne` et `permis.rang` n'ont qu'une variante chacune, donc la même ligne revient chaque fois ; `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
+**Jamais deux fois de suite la même variante** (répliques seulement, lot R2). Avant le tirage de l'étape 4, si la dernière variante dite pour cette situation est encore parmi les candidates retenues et qu'il en reste au moins une autre, on la retire : même passé 7 jours, une situation qui revient chaque semaine (`semaine.tenue`) ne répète pas son dernier mot. L'identifiant de la dernière variante dite est gardé par situation, dans le même `oree.replies.v1`, sous la clé `>situation` (`js/content.js`). S'il n'y a qu'une seule variante candidate, elle joue : la règle ne bloque jamais une réplique.
+
+Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées le 6 octobre 2026, après le lot R2) ; `batiment.construit`, `famille.arrive`, `list.empty` et `semaine.tenue` en ont 4, `permis.gagne` et `permis.rang` en ont 5 depuis le lot R2. Seule exception : `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
 
 ## `lettres.json`
 
@@ -136,17 +140,18 @@ Un objet plat `clé → texte`. Les clés sont stables, en anglais minuscule ave
 | `sort`, `filter`, `search` | Les 7 tris (Cote, Priorité, Échéance, Courtes d'abord, Faciles d'abord, Plus anciennes, Plus récentes) et les filtres |
 | `why` | Gabarits du « Pourquoi? », une ligne par composante de la Cote |
 | `duration`, `deadline` | Durée estimée ; échéance en pastille (`deadline.label.*`, majuscule) ou dans une phrase (`deadline.phrase.*`) |
-| `resource`, `gain` | Noms des ressources, gains affichés (dont `gain.permis`, « +1 permis ») |
-| `sr`, `a11y` | Annonces pour lecteurs d'écran (région `aria-live`) et libellés d'accessibilité |
+| `resource`, `gain` | Noms des ressources et du Permis (`resource.permis`, cinquième puce de la barre), gains affichés (dont `gain.permis`, « +1 permis », lu aux lecteurs d'écran ; à l'écran, l'annonce montre « +1 » et le pictogramme) |
+| `sr`, `a11y` | Annonces pour lecteurs d'écran (région `aria-live`), dont `sr.semaine` (la semaine tenue : Matériaux de plus), et libellés d'accessibilité |
+| `announce` | Fin de l'annonce de gain à l'écran : « Déjà comptée », « Remballée », « → Champs » (`announce.quartier_to`) et « Semaine tenue » (`announce.semaine`, qui remplace le quartier ce jour-là) |
 | `state` | Chargement, vide, hors ligne, synchronisation, conflit, erreurs |
 | `confirm` | Confirmations (suppression, remballage) |
-| `visit`, `letter`, `plan`, `review` | Écrans de jeu : fin de visite, lettre du matin, plan de la journée et carte en liste, bilan de la semaine et semaines passées |
+| `visit`, `letter`, `plan`, `review` | Écrans de jeu : fin de visite, lettre du matin, plan de la journée et carte en liste, bilan de la semaine et semaines passées (dont `review.tenue`, la ligne « Semaine tenue : +{n} Matériaux », écrite seulement pour une semaine qui l'a payée) |
 | `quartier` | Formes de chaque nom de quartier (`name`, `the`, `of`, `in`) et domaine regroupé (`domain`) ; la fiche d'un quartier : `fiche` (lignes, boutons, raisons), `effet` (une phrase par réglage que les niveaux changent), `cout`, `permis` et `prochain` (permis en main, jours travaillés qui manquent pour le prochain), `sr` (phrase lue après l'achat) ; `catalogue` (section « Quartiers » du catalogue « Construire ») |
 | `accueil`, `pas`, `bandeau`, `saison` | Les trois écrans d'accueil, les cinq premiers pas (`pas.<id>.nom`, `pas.geste.*`), le bandeau d'objectifs, les saisons |
-| `monde` | La carte : région, commandes (Construire, Quêtes, Vue, Rapprocher, Éloigner, Toute l'île, Carte en liste), plaques de quartier (`monde.niveau.court`, « niv. 2 »), pastille des permis sur « Construire » (`monde.ctl.construire.permis.*`), noms des objets, carte en liste (quêtes à faire par quartier : `monde.quetes.*` ; bouton « Ouvrir la fiche » : `monde.plan.open*`) |
-| `help`, `res` | Aide des quatre ressources (Énergie, Matériaux, Nourriture, Habitants) : ce que c'est, d'où ça vient, à quoi ça sert |
+| `monde` | La carte : région, commandes (Construire, Quêtes, Vue, Rapprocher, Éloigner, Toute l'île, Carte en liste), plaques de quartier (`monde.niveau.court`, « niv. 2 »), noms des objets, carte en liste (quêtes à faire par quartier : `monde.quetes.*` ; bouton « Ouvrir la fiche » : `monde.plan.open*`) |
+| `help`, `res` | Aide des cinq puces de la barre (Énergie, Matériaux, Nourriture, Habitants, Permis : `help.permis.*`) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue, celle du Permis le nombre de jours par permis (gabarits, voir plus haut) |
 | `essai` | Version d'essai : texte du décalage de date et bouton « Jour suivant » |
-| `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom) |
+| `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom ; « Quête par défaut » : `settings.quete`, `settings.quete.hint`, `settings.quete.attente` pour la feuille ouverte avant la lecture de la partie, `settings.saved.quete`) |
 
 Durée correspond au champ `length` d'une tâche, Effort au champ `difficulty`.
 
@@ -155,6 +160,8 @@ Durée correspond au champ `length` d'une tâche, Effort au champ `difficulty`.
 - Français québécois standard et tutoiement.
 - Jamais « tu n'as pas », « manqué », « négligé », ni rien qui culpabilise. Une échéance passée n'est ni rouge ni un échec. « En retard » n'apparaît dans aucun texte du jeu.
 - Mots du jeu : Quête, Cote, Étape, Énergie, Matériaux, Nourriture, Habitants, permis, quartier, rang, bâtiment. Confiance, Lueur, Fil libre, Secteur, Lot, Avis, Préparation, Voile, Lisière et Relais sont des mots de la v1 : ils ne servent plus que dans la lettre de passage et dans les noms des anciens gestes écartés (`migration.geste.*`). Jamais « Réputation ».
+- Dans un prix, un manque ou une raison de refus, les ressources se disent toujours dans le même ordre : permis, Énergie, Matériaux (comme la barre du haut). Le code l'applique (`manque`, `core/batiments.js` ; `prixText`, `js/ui/quartier.js`) ; les textes écrits à la main le suivent.
+- La semaine tenue ne se dit jamais comme une série : pas de nombre de jours de suite, pas de « tu l'as manquée ». Une semaine non tenue n'a aucune ligne ni aucun mot.
 - Fanal parle en 20 mots au plus par réplique (par phrase dans ses lettres) et n'est jamais triste. Une réplique tient en 110 caractères.
 - La célébration suit la taille de la quête : une réplique brève, une fois sur trois, pour une petite ou une moyenne ; une réplique chaque fois pour un grand chantier.
 - Aucune donnée réelle : ni vraie tâche, ni prénom de proche, ni lieu identifiable.
