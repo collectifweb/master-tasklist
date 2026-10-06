@@ -541,3 +541,70 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 4. **Envoi** : directement en production (rien ne change avant le quai), après la série complète et des captures envoyées à Alex ? Ou d'abord un essai sur un sous-domaine qu'Alex crée (stockage séparé d'office), avec une partie déjà au quai et « Jour suivant » ? Recommandé : l'essai si la production n'a pas de quai, l'envoi direct sinon.
 
 **Réponses d'Alex (6 octobre, après-midi)** : 1. quatre offres fixes, une fois chacune par visite ; 2. chaque semaine ; 3. le quai reste au Hameau, et le quai est déjà bâti dans sa partie de production (dit par Alex, production non regardée) ; 4. envoi direct en production. Pas de second avis (/confront-codex) : « go ».
+
+## Lot I — Imprévus : première série
+
+Référence : bible §8 (imprévus), §9 (retour après une absence), §6 (saisons), §14 (semaines 3 et 4) ; `PRODUCT.md` (aléas récupérables, lignes 41 à 43 et 60) ; revue d'octobre, `docs/revue-2026-10/DIRECTIONS.md` (« spirale de culpabilité », lignes 778 à 784 ; les Avis, lignes 1170 à 1180). **Statut : proposé le 6 octobre 2026 au soir, à valider par Alex. Le code se fera dans une autre session.**
+
+Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin sur l'île, la voix de Fanal, les réparations. Hors du lot :
+- tempête de neige, alertes météo annoncées d'avance avec leur barre de préparation, tour de guet, garage à chasse-neige : lot de l'hiver, à livrer avant le 1er décembre (bible §14) ;
+- allure du village (au ralenti, régulier, plein régime) : lot à part ; d'ici là, tout le monde est à « régulier » ;
+- mouches noires (juin ; il faudrait des chantiers qui durent) et visiteur surprise (il faudrait des commandes) : plus tard ;
+- chronique d'Hermes : semaines 7 et 8.
+
+### Ce que verra Alex
+- Au plus deux imprévus par semaine, à l'ouverture de l'app : Fanal le raconte, l'île le montre.
+- Les bons, annoncés comme les autres gains :
+  1. Aurore boréale : de l'Énergie en plus ; des rubans verts dans le ciel.
+  2. Bonne pêche : de la Nourriture en plus (jamais au-delà de la réserve, et c'est dit) ; une caisse de poissons au bord du lac.
+  3. Trouvaille en forêt : des Matériaux en plus ; une pile de bois à l'orée.
+  4. Un orignal traverse le village : rien, c'est juste beau.
+- Les mauvais, toujours réparables :
+  1. Panne d'éolienne : elle ne donne plus son Énergie des jours travaillés. Réparer : quelques Matériaux.
+  2. Ours au potager : la prochaine récolte de la parcelle est réduite. Le chasser : un peu d'Énergie.
+  3. Gel précoce (septembre et octobre) : la culture d'une parcelle demande un jour de pousse de plus. La couvrir : un peu d'Énergie.
+- Le bâtiment ou la parcelle touchés portent une marque couleur braise (la couleur des menaces), doublée d'un picto et du texte. La fiche dit ce qui s'est passé et ce que ça change, puis propose « Réparer » avec son prix, ou dit « Se répare seul dans N jours ». Ne rien faire coûte un peu plus qu'agir, mais reste acceptable (revue d'octobre).
+- Jamais : une tâche touchée, des ressources retirées, un habitant ou un niveau perdu.
+- Calendrier réel : le potager dort de novembre à avril (`core/batiments.js`). L'ours et le gel n'ont donc de cible que jusqu'à la fin d'octobre ; ensuite, seule la panne d'éolienne peut frapper, jusqu'au lot de l'hiver.
+
+### Règles proposées
+- Chaque semaine, deux imprévus au plus, à des jours tirés au sort. Le premier est toujours bon ; le second, bon ou mauvais à pile ou face. Un mauvais sans cible (pas d'éolienne, rien de semé) devient un bon.
+- Un mauvais imprévu ne frappe que le jour où tu ouvres l'app, jamais à cause d'une absence. Un bon imprévu manqué t'attend jusqu'au dimanche.
+- Après une absence de 5 jours ou plus : trois jours sans mauvais imprévu (bible §9).
+- Trêve des Fêtes, du 21 décembre au 4 janvier : aucun mauvais imprévu.
+- Un dégât se répare seul après quelques jours, même si tu n'ouvres pas l'app. Un bâtiment ne porte qu'un dégât à la fois.
+- Montants (gains, prix des réparations, jours avant la guérison) : réglés par la simulation et montrés à Alex avant l'écran, comme les taux du marchand. Cible : sur 16 semaines, les imprévus ne déplacent le premier niveau de quartier que de quelques jours, dans un sens ou dans l'autre.
+
+### Comment ça marche
+- Le calendrier de la semaine (quels jours, bon ou au hasard) se déduit de la date, comme le marchand : tous les appareils voient le même, même hors ligne. Ce qui arrive se décide le jour même, selon ce que le village possède. Tirage déterministe : la fonction `hash` de `core/letters.js`.
+- Déclenchement au passage du temps (`advanceTime`, `core/quests.js`), déjà appelé à l'ouverture et au changement de jour, et sans effet s'il est rejoué. L'absence se lit comme le bonus de retour d'`openApp` (`game.lastOpenDay`).
+- Un bon imprévu s'inscrit au registre sous une clé unique, comme l'objectif de saison (`saison:{clé}`) : deux appareils ne le paient jamais deux fois. Un dégât et sa réparation s'écrivent dans la partie, comme une construction ; un conflit entre deux appareils se règle par le contrôle de version déjà en place.
+- Les dégâts agissent sur ce qui existe : l'éolienne ne produit plus (`produireEolienne`), la récolte est réduite (`recolter`), la pousse est retardée (jours travaillés depuis `semeLe`).
+- Un onglet resté ouvert sur la v2.1 garde les nouvelles clés en réécrivant la partie (même preuve qu'au lot V) ; il ne déclenche simplement pas d'imprévu.
+- Leçons du lot V, à appliquer d'entrée : un geste rejoué hors ligne après coup (réparer un dégât déjà guéri) est refusé avec sa raison ; un contrôle de visibilité mesure l'affichage, pas le texte ; un double toucher se teste là où le second toucher tombe ; la forme du lot V sert de modèle (`core/visiteurs.js`, `tests/core/marchand.test.mjs`, `tests/e2e/ui-36-marchand.cjs`).
+
+### I1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `core/imprevus.js` : catalogue, calendrier de la semaine, déclenchement, geste `reparer`, guérison seule. Tests : jamais de tâche touchée ; jamais de ressource retirée ; rien de mauvais pendant la reprise ni la trêve, ni à cause d'une absence ; un seul paiement avec deux appareils ; un mauvais sans cible devient bon ; aucun stock négatif ; Nourriture plafonnée par la réserve, sans perte cachée.
+- [ ] Simulation : montants et durées réglés ; **tableau montré à Alex avant I2**.
+- [ ] Une partie qui porte les nouvelles clés les garde à travers les gestes d'avant le lot (test).
+
+### I2 — Écran [impeccable]
+- [ ] Sur l'île : aurore (avec le mouvement d'ambiance seulement), orignal, caisse de poissons, pile de bois ; marques des dégâts (braise, picto, texte) ; mouvement réduit respecté ; rien qui tourne au repos.
+- [ ] Fiches : le dégât dans « Maintenant », le geste « Réparer » protégé du double toucher ; carte en liste.
+- [ ] Fanal : une situation par imprévu, 4 variantes au moins (règle de `app/content/README.md`), relues avec la grille « zéro culpabilité » ; une seule réplique par ouverture, après celle du marchand.
+- [ ] Scénario navigateur neuf (37) : « Jour suivant » jusqu'aux jours d'imprévus, bon payé une seule fois, dégât réparé, guérison seule, deux appareils, reprise après une absence.
+
+### I3 — Vérification et documents
+- [ ] `node --test` ; série complète aux trois largeurs (code figé, machine au calme) ; `world-s3` et `world-perf`.
+- [ ] Relecture indépendante.
+- [ ] Bible §8 (règles et montants), `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md` ; cache `oree-coquille-v12`.
+
+### I4 — Envoi
+- [ ] Selon la réponse d'Alex à la question 5 : photo des données, étiquette `v2.2`, contrôles en lecture seule.
+
+### Questions pour Alex
+1. **Fréquence** : deux par semaine au plus, le premier toujours bon, le second à pile ou face (en moyenne, un mauvais toutes les deux semaines) ? Ou un seul par semaine pour commencer ?
+2. **Réparer** : payer, ou attendre qu'il se répare seul. La revue d'octobre proposait une troisième voie : terminer une vraie quête du bon domaine répare gratuitement (Terrain pour le potager, Maison pour l'éolienne). Ça relie le jeu à tes tâches sans jamais y toucher. On l'ajoute ?
+3. **Catalogue** : 4 bons et 3 mauvais ; tempête de neige et alertes au lot de l'hiver. D'accord ?
+4. **Allure** : tout le monde à « régulier » dans ce lot, les trois allures dans un lot à part ?
+5. **Envoi** : directement en production, comme le marchand (un imprévu peut tomber dès le lendemain) ?
