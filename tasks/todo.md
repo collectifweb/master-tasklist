@@ -572,7 +572,7 @@ Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin s
 - Un mauvais imprévu ne frappe que le jour où tu ouvres l'app, jamais à cause d'une absence. Un bon imprévu manqué t'attend jusqu'au dimanche.
 - Après une absence de 5 jours ou plus : trois jours sans mauvais imprévu (bible §9).
 - Trêve des Fêtes, du 21 décembre au 4 janvier : aucun mauvais imprévu.
-- Un dégât se répare seul après quelques jours, même si tu n'ouvres pas l'app. Un bâtiment ne porte qu'un dégât à la fois.
+- Trois façons d'en sortir : payer la réparation ; terminer une vraie quête du bon domaine, qui répare gratuitement (Terrain pour le potager, Maison pour l'éolienne ; la quête n'est jamais modifiée) ; ou attendre, car un dégât se répare seul après quelques jours, même si tu n'ouvres pas l'app. Un bâtiment ne porte qu'un dégât à la fois.
 - Montants (gains, prix des réparations, jours avant la guérison) : réglés par la simulation et montrés à Alex avant l'écran, comme les taux du marchand. Cible : sur 16 semaines, les imprévus ne déplacent le premier niveau de quartier que de quelques jours, dans un sens ou dans l'autre.
 
 ### Comment ça marche
@@ -584,7 +584,7 @@ Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin s
 - Leçons du lot V, à appliquer d'entrée : un geste rejoué hors ligne après coup (réparer un dégât déjà guéri) est refusé avec sa raison ; un contrôle de visibilité mesure l'affichage, pas le texte ; un double toucher se teste là où le second toucher tombe ; la forme du lot V sert de modèle (`core/visiteurs.js`, `tests/core/marchand.test.mjs`, `tests/e2e/ui-36-marchand.cjs`).
 
 ### I1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `core/imprevus.js` : catalogue, calendrier de la semaine, déclenchement, geste `reparer`, guérison seule. Tests : jamais de tâche touchée ; jamais de ressource retirée ; rien de mauvais pendant la reprise ni la trêve, ni à cause d'une absence ; un seul paiement avec deux appareils ; un mauvais sans cible devient bon ; aucun stock négatif ; Nourriture plafonnée par la réserve, sans perte cachée.
+- [ ] `core/imprevus.js` : catalogue, calendrier de la semaine, déclenchement, geste `reparer`, guérison seule. Tests : une quête payée du bon domaine répare, sans changer la quête ni ce qu'elle rapporte ; jamais de tâche touchée ; jamais de ressource retirée ; rien de mauvais pendant la reprise ni la trêve, ni à cause d'une absence ; un seul paiement avec deux appareils ; un mauvais sans cible devient bon ; aucun stock négatif ; Nourriture plafonnée par la réserve, sans perte cachée.
 - [ ] Simulation : montants et durées réglés ; **tableau montré à Alex avant I2**.
 - [ ] Une partie qui porte les nouvelles clés les garde à travers les gestes d'avant le lot (test).
 
@@ -608,3 +608,5 @@ Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin s
 3. **Catalogue** : 4 bons et 3 mauvais ; tempête de neige et alertes au lot de l'hiver. D'accord ?
 4. **Allure** : tout le monde à « régulier » dans ce lot, les trois allures dans un lot à part ?
 5. **Envoi** : directement en production, comme le marchand (un imprévu peut tomber dès le lendemain) ?
+
+**Réponses d'Alex (6 octobre, soir)** : 1. deux par semaine au plus, le premier toujours bon, le second à pile ou face ; 2. oui à la troisième voie (une vraie quête du bon domaine répare gratuitement) ; 5. envoi direct en production. Questions 3 et 4 : réexpliquées, en attente.
