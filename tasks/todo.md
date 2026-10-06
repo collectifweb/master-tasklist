@@ -218,9 +218,14 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
 - Aujourd'hui (déduit du code) : taper le code de l'essai remplace celui de la production dans ce navigateur ; un geste de la production resté en file hors ligne peut être repris et envoyé à l'essai ; la production peut afficher au démarrage ou hors ligne la partie de l'essai gardée en cache.
 - Après la bascule (les deux en v2, file `oree.queue.v2` commune) : un geste de l'essai resté en file pourrait partir vers la production, par exemple une quête fictive écrite dans la vraie liste.
 
-**Décision demandée à Alex** : A (recommandé) séparer dans le code : la production garde ses noms de clés, l'essai prend les siens, chaque service worker n'efface que ses caches ; B : l'essai sur un sous-domaine à lui (cPanel, certificat), hors du dépôt.
+**Décisions d'Alex (6 octobre, après-midi)** :
+1. Ordre des ressources du lot R2 (permis, Énergie, Matériaux) : accepté.
+2. Pas de séparation : l'essai **ferme à la bascule** (ses données gardées en sauvegarde) ; un futur essai sera séparé (dossier de stockage à part ou sous-domaine) quand un lot en aura besoin. D'ici la bascule, le risque de mélange reste, accepté.
+3. La production **convertit sa partie v1** (pas de départ à zéro, pas de reprise de la partie d'essai : dates en avance de 41 jours, 57 quêtes ajoutées sur l'essai).
+4. **Ressources en entiers à l'écran, dans ce lot** : le calcul garde ses dixièmes ; à l'écran, ce qu'on a est arrondi vers le bas, ce qui manque vers le haut, un gain au plus proche. Mesuré sur la copie de l'essai : 63 entrées du registre sur 168 ont un montant à virgule ; 2 gains de quête sur 67 ont moins de 0,5 en Énergie et en Matériaux (ils n'affichent aucun chiffre, l'annonce reste).
 
-- [ ] Séparer le stockage de l'essai et de la production (selon la décision), avec un scénario qui sert deux copies sous deux dossiers du même serveur local et prouve qu'aucune clé ni aucun cache ne se croise.
+- [ ] Ressources en entiers à l'écran (décision 4), tests et scénarios touchés repassés aux trois largeurs.
+- [ ] Fermer l'essai à la bascule : sauvegarde de `essai/api/data`, puis dossier rendu inaccessible (sur accord, avec la bascule).
 - [ ] Relecture indépendante (lecture seule) : conversion v1 → v2 de la vraie partie, garde-fou du bac à sable en production (`SANDBOX` absent = faux), `deploy-prod.sh` pour la v2.
 - [ ] Preuve de conversion sur une copie locale de la partie de production (lecture seule par SSH, copie dans le dossier temporaire de session, jamais commitée) : conversion rejouée en local, comptes avant et après.
 - [ ] Documents restés en vocabulaire v1 : section « semaine 3 » d'`app/ARCHITECTURE.md`, lignes v1 d'`app/DESIGN.md` (Confiance, Lueur, `quest-row-doing`), `app/design/reference.html` ; `TASKS_WORKFLOW.md` (rien ne change pour Hermes : à vérifier).
