@@ -13,6 +13,10 @@
 //     4 jours travaillés, le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
 //     nettement plus bas qu'une partie sans niveaux. ECHELLE (quartiers.js) se règle ici. (a) se mesure sans niveaux ;
 //     (a′) mesure la même chose avec niveaux, cible élargie à 15-25 (voir plus bas).
+// (g) (lot R2) le rythme mesuré sur l'essai d'Alex (24 jours : 17 à une quête, 4 à deux, 3 sans ; toutes à priorité 5,
+//     longueur 2, difficulté 3, soit 7 points), avec les prix inversés (n × 100 Énergie, n × 75 Matériaux) et la semaine
+//     tenue (SEMAINE_TENUE.materials, quartiers.js, réglée ici). Le joueur joue comme en (f). La cible « premier niveau
+//     vers le jour 21 » ne tient pas : voir le dernier test, marqué « todo » avec ses chiffres.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -20,6 +24,7 @@ import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
   prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
+  SEMAINE_TENUE, coutNiveau, createInitialState,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -226,4 +231,79 @@ test('(f) permis et niveaux : un permis tous les 4 jours travaillés, le premier
   const long = simuler('2026-10-25', SEMAINES * 7, regulier, { profil: longues });
   t.diagnostic(`longues, 2026-10-25, régulier : 1er niveau j${long.niveaux[0]}, ${long.niveaux.length} niveaux en ${SEMAINES} semaines, `
     + `semaine ${SEMAINES} : ${f(long.monde.game.resources.energy)} Énergie et ${f(long.monde.game.resources.materials)} Matériaux`);
+});
+
+// ───────── (g) le rythme mesuré sur l'essai ─────────
+
+// 24 jours : 17 à une quête, 4 à deux, 3 sans, répartis à intervalles à peu près égaux (le 3 octobre est un jour sans quête).
+const MOTIF_ESSAI = [1, 1, 1, 2, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 2, 1, 0, 1];
+const rythmeEssai = (i) => MOTIF_ESSAI[i % MOTIF_ESSAI.length];
+// quêtes par défaut du formulaire : priorité 5, longueur 2, difficulté 3 (7 points d'effort). Créées « dans le futur » : la
+// liste de départ est faite d'avance, et l'ancienneté (+2 points par 14 jours) les ferait passer à 10 points ; Alex, lui,
+// termine ses quêtes peu après les avoir ajoutées.
+const parDefaut = (n) => Array.from({ length: n }, (_, k) => ({
+  id: `s${k}`, task: `Quête par défaut ${k}`, domain: DOMAINS[k % 5],
+  difficulty: 3, length: 2, priority: 5, status: 'todo', created: '2099-12-31', deadline: null,
+}));
+
+test('(g) le motif de l’essai : par période de 24 jours, 17 jours à une quête, 4 à deux, 3 sans ; 7 points par quête', () => {
+  const compte = (n) => MOTIF_ESSAI.filter((x) => x === n).length;
+  assert.deepEqual([MOTIF_ESSAI.length, compte(1), compte(2), compte(0)], [24, 17, 4, 3]);
+  const log = simuler('2026-10-23', 24, rythmeEssai, { profil: parDefaut });
+  const gains = log.monde.ledger.filter((e) => e.type === 'reward');
+  assert.equal(gains.length, 25);
+  assert.equal(new Set(gains.map((e) => e.day)).size, 21);
+  assert.ok(gains.every((e) => e.pe === 7), JSON.stringify(gains.map((e) => e.pe)));
+});
+
+test('(g) au rythme de l’essai : un niveau est acheté dans les 16 semaines, presque toutes les semaines sont tenues', (t) => {
+  const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+  for (const debut of ['2026-10-23', '2026-10-25', '2026-08-15', '2026-06-01']) {
+    const log = simuler(debut, 16 * 7, rythmeEssai, { profil: parDefaut });
+    const r = log.monde.game.resources;
+    const tenues = log.monde.ledger.filter((e) => e.type === 'semaine').length;
+    t.diagnostic(`(g) ${debut} : niveaux aux jours ${log.niveaux.join(', ')}, permis en main ${log.monde.game.permis.dispo}, `
+      + `${f(r.energy)} Énergie et ${f(r.materials)} Matériaux, ${tenues} semaines tenues sur 16`);
+    assert.ok(log.niveaux.length >= 1 && log.niveaux[0] <= 60, `${debut} : premier niveau au jour ${log.niveaux[0]} (garde-fou, pas la cible)`);
+    assert.ok(tenues >= 14, `${debut} : ${tenues} semaines tenues sur 16`);
+  }
+});
+
+test('(g) au-delà du montant réglé de la semaine tenue, un bonus plus gros ne change aucun jour d’achat', () => {
+  // 12 est le plus petit entier qui donne, aux quatre départs de (g) et aux deux de (f), les mêmes jours d'achat qu'un bonus de
+  // 30 (mesuré le 6 octobre : 11 retarde d'un jour le premier niveau du départ du 25 octobre). Au-delà, l'Énergie, pas les
+  // Matériaux, décide du jour des niveaux.
+  const sauve = SEMAINE_TENUE.materials;
+  const jours = (debut, profil, rythme) => simuler(debut, 16 * 7, rythme, { profil }).niveaux;
+  try {
+    for (const debut of ['2026-10-23', '2026-10-25', '2026-08-15', '2026-06-01']) {
+      const regle = jours(debut, parDefaut, rythmeEssai);
+      SEMAINE_TENUE.materials = 30;
+      assert.deepEqual(jours(debut, parDefaut, rythmeEssai), regle, `${debut} : (g) change avec un bonus de 30`);
+      SEMAINE_TENUE.materials = sauve;
+    }
+    for (const debut of ['2026-10-25', '2026-06-01']) {
+      const regle = jours(debut, quetes, regulier);
+      SEMAINE_TENUE.materials = 30;
+      assert.deepEqual(jours(debut, quetes, regulier), regle, `${debut} : (f) change avec un bonus de 30`);
+      SEMAINE_TENUE.materials = sauve;
+    }
+  } finally { SEMAINE_TENUE.materials = sauve; }
+});
+
+// CIBLE NON TENUE, signalée et non élargie : le premier niveau « vers le jour 21 (18 à 24) » au rythme de l'essai.
+// Mesuré avec les prix d'Alex (100 Énergie, 75 Matériaux) et 12 Matériaux de semaine tenue : jour 42 (départ du 23 octobre),
+// 50 (25 octobre), 54 (15 août), 56 (1er juin) ; sans bonus : 42, 42, 55, 56. Cause : l'Énergie. Une quête de 7 points rend
+// 2,1 Énergie ; à ce rythme, 25 quêtes en 24 jours et 1 Énergie d'ouverture par jour font moins que les 100 Énergie du
+// premier niveau, même sans rien semer ni bâtir. Le test garde la cible : il passera quand l'économie le permettra.
+test('(g) cible : premier niveau entre les jours 18 et 24 au rythme de l’essai', { todo: 'cible non tenue : l’Énergie (voir le commentaire)' }, (t) => {
+  const log = simuler('2026-10-23', 16 * 7, rythmeEssai, { profil: parDefaut });
+  t.diagnostic(`premier niveau au jour ${log.niveaux[0]}`);
+  assert.ok(log.niveaux[0] >= 18 && log.niveaux[0] <= 24, `premier niveau au jour ${log.niveaux[0]}`);
+});
+
+test('(g) preuve de la cause : en 24 jours, ce joueur gagne moins d’Énergie que le prix du niveau 1, même s’il n’en dépensait aucune', () => {
+  const log = simuler('2026-10-23', 24, rythmeEssai, { profil: parDefaut });
+  const gagnee = log.monde.ledger.reduce((s, e) => s + (e.energy || 0), 0) + createInitialState('2026-10-23T12:00:00Z').resources.energy;
+  assert.ok(gagnee < coutNiveau(1).energy, `${gagnee} Énergie gagnée, stock de départ compris, pour ${coutNiveau(1).energy} au niveau 1`);
 });
