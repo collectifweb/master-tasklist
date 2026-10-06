@@ -27,20 +27,17 @@ function restart(el, cls) {
 }
 
 const res = {
-  energie: { value: 30, cap: 40, label: 'Énergie' },
-  materiaux: { value: 78, cap: 150, label: 'Matériaux' },
-  confiance: { value: 8, label: 'Confiance' },
-  lueur: { value: 61, label: 'Lueur' },
+  energie: { value: 30, label: 'Énergie' },
+  materiaux: { value: 78, label: 'Matériaux' },
 };
 
 function gain(name, delta) {
   const r = res[name];
-  r.value = r.cap ? Math.min(r.cap, r.value + delta) : r.value + delta;
+  r.value += delta;
   const btn = $(`.hud .res[data-res="${name}"]`);
   const valueEl = $('.res-value', btn);
   valueEl.firstChild.nodeValue = String(r.value);
-  btn.setAttribute('aria-label', r.cap ? `${r.label} : ${r.value} sur ${r.cap}` : `${r.label} : ${r.value}`);
-  btn.dataset.full = String(Boolean(r.cap && r.value >= r.cap));
+  btn.setAttribute('aria-label', `${r.label} : ${r.value}`);
   const d = $('.res-delta', btn);
   d.textContent = `+${delta}`;
   restart(d, 'is-shown');
@@ -54,11 +51,10 @@ function announce(title) {
   setTimeout(() => {
     gain('energie', 3);
     gain('materiaux', 5);
-    gain('lueur', 10);
   }, reduced() ? 0 : 320);
   live.textContent = '';
   setTimeout(() => {
-    live.textContent = `Quête terminée : ${title}. Plus 10 points d'effort, plus 3 Énergie, plus 5 Matériaux. La Lueur part vers l'Atelier.`;
+    live.textContent = `Quête terminée : ${title}. Gains : +3 Énergie, +5 Matériaux.`;
   }, 60);
 }
 
@@ -160,17 +156,6 @@ document.addEventListener('click', (e) => {
         announce(title || 'Quête');
       }
       break;
-    case 'start': {
-      if (!inShell || !t.closest('#fil-quest')) break;
-      const card = $('#fil-quest');
-      const doing = card.dataset.state !== 'doing';
-      card.dataset.state = doing ? 'doing' : 'todo';
-      t.setAttribute('aria-pressed', String(doing));
-      $('.start-label', t).textContent = doing ? 'Pause' : "Je m'y mets";
-      $('use', t).setAttribute('href', doing ? 'icons.svg#i-pause' : 'icons.svg#i-start');
-      $('[data-doing-only]', card).hidden = !doing;
-      break;
-    }
     case 'why':
       if (inShell) openSheet('dlg-why');
       break;

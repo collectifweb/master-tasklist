@@ -75,10 +75,10 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 
 ## Evidence on Hand
 
-- Application actuelle: `index.html`.
+- Application actuelle : `app/` (« La lisière rallumée »). L’application historique `index.html` n’est plus servie en ligne.
 - Données réelles: `tasks.json`.
 - Workflow et architecture de synchronisation: `TASKS_WORKFLOW.md` et `sync-tasks-remote.sh`.
-- Endpoint d’écriture hébergé existant: `tasks-api.php` dans l’artefact de déploiement local.
+- Endpoint d’écriture de l’application historique : `tasks-api.php` dans l’artefact de déploiement local. L’app actuelle écrit `tasks.json` par `app/api/api.php`.
 - Aucun actif graphique, univers visuel définitif, économie de récompenses validée ou donnée de progression historique n’est encore fourni. Ces éléments ne doivent pas être présentés comme existants.
 
 ## Product Principles

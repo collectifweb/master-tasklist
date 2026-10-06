@@ -250,16 +250,16 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 - **Sauge d'autonomie** (`sage-deep`) : action principale (fond du bouton, de la puce active, de la case faite), Nourriture, texte d'accent. Papier dessus : 6,7:1.
 - **Sauge de survol** (`sage-hover`) : survol et appui du bouton principal. Papier dessus : 5,8:1.
 - **Socle sauge** (`sage-face`) : face latérale du bouton principal.
-- **Lavis sauge** (`sage-wash`) : fond « en cours », « faite », carte n° 1, secteur choisi.
+- **Lavis sauge** (`sage-wash`) : fond « faite », quartier choisi.
 
 ### Secondary
 - **Verre profond** (`glass-deep`) : liens, information, Énergie. **Encre de verre** (`glass-ink`) : texte sur lavis de verre (étiquette « estimée »). **Lavis de verre** (`glass-wash`).
 - **Terre profonde** (`soil-deep`) : Matériaux, caisses d'échéance, erreur de champ. **Lavis de terre** (`soil-wash`).
-- **Encre de lanterne** (`lantern-ink`) : Habitants, « Prioritaire ». **Lavis de lanterne** (`lantern-wash`). **Lueur de lanterne** (`lantern-glow`) : sélection de texte, cœur de la lanterne de Fanal et anneau du cristal sur la carte.
+- **Encre de lanterne** (`lantern-ink`) : Habitants, « Prioritaire ». **Lavis de lanterne** (`lantern-wash`). **Éclat de lanterne** (`lantern-glow`) : sélection de texte, cœur de la lanterne de Fanal et anneau du cristal sur la carte.
 
 ### Tertiary
 - **Encre de cendre** (`ash-ink`) sur **lavis de cendre** (`ash-wash`) : quête archivée, fond des squelettes de chargement.
-- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne et Avis, rien d'autre. Le Permis n'en emprunte pas : il a sa propre famille, l'airelle.
+- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne, rien d'autre (le front de givre du monde, en sommeil, en emprunte aussi les teintes : `world.css`). Le Permis n'en emprunte pas : il a sa propre famille, l'airelle.
 - **Encre d'airelle** (`airelle-ink`, `#6f3f62`) sur **lavis d'airelle** (`airelle-wash`, `#f5e6ee`) : réservée au Permis, comme le papier timbré de la Mairie. Elle teinte le compteur de la barre, la feuille d'aide du Permis et le « +1 » de l'annonce, jamais autre chose. Papier dessus : 7,7:1 ; lavis dessus : 6,8:1 (chiffres du commentaire de `tokens.css`, non recalculés ici).
 - **Braise** : `ember-ink` (texte et fond du bouton danger), `ember-face` (socle), `ember-wash` (fond de confirmation et d'erreur de synchronisation). `ember` seul n'est utilisé qu'en pictos et filets (`rgb(191 90 56 / .4–.45)`).
 
@@ -268,7 +268,7 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 - **Papier récolte** (`paper`) : panneau, feuilles. **Papier neuf** (`paper-raised`) : cartes, champs. **Papier creusé** (`sunken`) : champs de recherche, contrôle segmenté, étiquettes neutres. **Crème** (`cream`) et son socle (`cream-face`) : bouton secondaire.
 - **Filets** : `line` entre les lignes, `line-strong` aux bords de champs et plaques.
 - **Anneau de focus** (`focus`) : 3 px, décalé de 2 px (3 px sur les boutons).
-- **Monde** : `sky-top`, `sky-horizon`, `lake`, `lake-deep` (fond de la coquille). `glass`, `soil`, `lantern`, `ash`, `frost`, `sage` (bruts) servent au décor du monde de la semaine 2 ; seuls `sage` et `glass` sont consommés par les composants actuels (bord de la case de quête, survol de puce).
+- **Monde** : `sky-top`, `sky-horizon`, `lake`, `lake-deep` (fond de la coquille). Les bruts `glass`, `soil`, `lantern`, `ash`, `frost`, `sage` : d'après une recherche de `var(--c-…)` dans `app/css/` (hors `tokens.css`), `sage` (`components.css`, `app.css`), `lantern` (`app.css`, `world.css`), `ash` (`app.css`) et `frost` (`world.css`) sont lus tels quels ; `glass` et `soil` ne le sont pas.
 
 ### Contrastes mesurés
 
@@ -286,7 +286,7 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 | `paper` | `#fff8e8` | texte du bouton principal, survol | 5,8:1 | `sage-hover` |
 | `paper` | `#fff8e8` | texte du bouton danger | 5,7:1 | `ember-ink` |
 | `sage-deep` | `#3f6047` | action, Nourriture | 6,7:1 | `paper` |
-| `sage-deep` | `#3f6047` | « en cours », « faite » | 5,9:1 | `sage-wash` |
+| `sage-deep` | `#3f6047` | « faite » | 5,9:1 | `sage-wash` |
 | `glass-deep` | `#2d7473` | liens, Énergie | 5,1:1 | `paper` |
 | `glass-ink` | `#245f5e` | étiquette de verre | 6,1:1 | `glass-wash` |
 | `soil-deep` | `#75472f` | Matériaux, caisses, erreur de champ | 7,4:1 | `paper` |
@@ -294,7 +294,7 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 | `lantern-ink` | `#7a5200` | Habitants, « Prioritaire » | 6,5:1 | `paper` |
 | `lantern-ink` | `#7a5200` | texte sur lavis de lanterne | 5,7:1 | `lantern-wash` |
 | `ash-ink` | `#625c52` | archivé | 5,3:1 | `ash-wash` |
-| `frost-ink` | `#3d6577` | hors ligne, Avis | 5,3:1 | `frost-wash` |
+| `frost-ink` | `#3d6577` | hors ligne | 5,3:1 | `frost-wash` |
 | `airelle-ink` | `#6f3f62` | Permis | 7,7:1 | `paper` |
 | `airelle-ink` | `#6f3f62` | Permis, sur son lavis | 6,8:1 | `airelle-wash` |
 | `ember-ink` | `#a3462a` | texte et picto de braise | 5,7:1 | `paper` |
@@ -324,9 +324,9 @@ Mesure sur la page (Chromium, 390×844, 834×1112, 1280×900 et 844×390, mouvem
 Provisoire. La pile système est le choix de la semaine 1 (pas de fichier de police libre disponible ni d'outil de sous-ensemble sur le poste, dépôt public). C'est un compromis que la construction porte, pas une identité : ne pas en faire la voix de la marque pour les prochaines surfaces. Voir « Ce qui reste ouvert ».
 
 ### Hierarchy
-- **Display** (800, 1.5rem / 24 px, 1.25) : titre de la quête n° 1 à partir de 700 px en portrait ; total du « Pourquoi ? ».
+- **Display** (800, 1.5rem / 24 px, 1.25) : titre de la quête n° 1 à partir de 700 px en portrait ; total du « Pourquoi? ».
 - **Headline** (800, 1.25rem / 20 px, 1.25) : titre de la quête n° 1 (compact et colonne large), titre de feuille, valeur de Cote.
-- **Title** (800, 1.125rem / 18 px, 1.25) : titre de carte, de section, chiffres du HUD (`.res-value`), valeur du pas à pas, ligne du « Pourquoi ? ».
+- **Title** (800, 1.125rem / 18 px, 1.25) : titre de carte, de section, chiffres du HUD (`.res-value`), valeur du pas à pas, ligne du « Pourquoi? ».
 - **Body** (400, 1rem / 16 px, 1.45) : corps, champs, titre de ligne de quête (600).
 - **Meta** (400, 0.875rem / 14 px, 1.4) : métadonnées, aide de champ, raison d'un bouton désactivé.
 - **Label** (700, 0.75rem / 12 px, 1.2) : étiquettes, libellés du HUD (600), libellé de Cote (600), plafonds. Pas de capitales, pas d'espacement ajouté.
@@ -398,7 +398,7 @@ Le panneau est opaque sous le texte : le monde ne transparaît pas. Les ombres s
 
 ### Mouvement
 
-Jetons : `--t-press` 90 ms (appui), `--t-micro` 150 ms, `--t-short` 220 ms, `--t-medium` 320 ms (panneau, feuille), `--t-long` 480 ms, `--t-camera` 600 ms, `--t-celebrate` 1200 ms, `--t-day` 1600 ms, `--t-announce-hold` 3600 ms. Courbes : `--ease-out` (par défaut), `--ease-in`, `--ease-inout`, `--ease-back` (rebond du chiffre de ressource), `--ease-bounce`. Distances : `--lift-1` 2 px, `--lift-2` 6 px, `--drop` 28 px, `--stagger` 40 ms. En usage actuel dans `components.css` : `--t-press`, `--t-micro`, `--t-short`, `--t-medium`, `--t-announce-hold`, `--ease-out`, `--ease-in`, `--ease-back`. Les autres (caméra, célébration, jour, levée, chute, décalage, `--ease-inout`, `--ease-bounce`) sont posés pour le monde de la semaine 2 et ne sont pas encore consommés ici.
+Jetons : `--t-press` 90 ms (appui), `--t-micro` 150 ms, `--t-short` 220 ms, `--t-medium` 320 ms (panneau, feuille), `--t-long` 480 ms, `--t-camera` 600 ms, `--t-celebrate` 1200 ms, `--t-day` 1600 ms, `--t-announce-hold` 3600 ms. Courbes : `--ease-out` (par défaut), `--ease-in`, `--ease-inout`, `--ease-back` (rebond du chiffre de ressource), `--ease-bounce`. Distances : `--lift-1` 2 px, `--lift-2` 6 px, `--drop` 28 px, `--stagger` 40 ms. En usage actuel dans `components.css` : `--t-press`, `--t-micro`, `--t-short`, `--t-medium`, `--t-announce-hold`, `--ease-out`, `--ease-in`, `--ease-back`. `app.css` et `world.css` lisent aussi `--t-celebrate` (reflet du bandeau d'objectifs), `--t-long` et `--t-day`. Aucune feuille de `app/css/` n'emploie encore `--t-camera`, `--ease-inout`, `--ease-bounce`, `--lift-1`, `--lift-2`, `--drop` ni `--stagger` (recherche de `var(--…)`).
 
 Ce qui bouge : le panneau monte et descend (`translateY`, 320 ms) ; la quête se déplie (grille `0fr` vers `1fr`, 220 ms) ; le bouton s'enfonce de 3 px ; la valeur de ressource gonfle de 12 % et la variation (+3) monte en 1100 ms ; l'annonce reste 4 s (3600 ms plus 400 ms de fondu) ; la feuille entre de 48 px.
 
@@ -424,7 +424,7 @@ Bords : filets de 1 px (`line` entre lignes, `line-strong` autour des champs et 
 Tout vit dans `app/css/components.css`, 16 sections numérotées. Chaque composant est en français, avec classes en anglais court ou en français selon le code existant.
 
 ### Coquille (1) et monde (2)
-`.app[data-panel="peek|open|cache"]` contient `.world-slot` (monde plein écran), `.hud`, `.announce-lane`, `#live` et `.panel`. Le monde de la semaine 1 est un fond (`.world-backdrop` : dégradé ciel, horizon, lac) et une légende ; l'île SVG arrive en semaine 2 dans `.world-stage`. Le panneau a une poignée (`.panel-grip`), une tête (`.panel-head` : titre, ajout, bascule ; en compact, elle se touche et se glisse), un défilement (`.panel-scroll`) et un corps caché quand replié (`.panel-rest`). `cache` : le panneau sort du champ (vers le bas en compact, vers la droite en large), devient `inert`, et la carte prend tout l'écran.
+`.app[data-panel="peek|open|cache"]` contient `.world-slot` (monde plein écran), `.hud`, `.announce-lane`, `#live` et `.panel`. Le monde se compose d'un fond (`.world-backdrop` : dégradé ciel, horizon, lac) et de `.world-stage` ; l'île isométrique vient de `world/` (voir `app/ARCHITECTURE.md`). La légende `.world-caption` n'est posée par aucune page : sa règle reste dans `components.css`. Le panneau a une poignée (`.panel-grip`), une tête (`.panel-head` : titre, ajout, bascule ; en compact, elle se touche et se glisse), un défilement (`.panel-scroll`) et un corps caché quand replié (`.panel-rest`). `cache` : le panneau sort du champ (vers le bas en compact, vers la droite en large), devient `inert`, et la carte prend tout l'écran.
 
 Commandes de la carte (`.ow-zoom`, dans `world.css`) : une colonne de boutons `.ow-zbtn` de 44 px, « Construire », « Quêtes », « Vue », posée 12 px au-dessus du haut réel du panneau (`--world-ctl-bottom`). « Vue » (`aria-expanded`, enfoncé et lavé de sauge quand ouvert) déplie vers la gauche la rangée `.ow-zrow` : Rapprocher, Éloigner, Toute l'île, Carte en liste. « Quêtes » prend le même aspect enfoncé quand le panneau est caché (la carte seule est alors le mode en cours). Aux limites du zoom, `aria-disabled` (tirets, comme le désactivé lisible). Le catalogue « Construire » (`#dlg-construire`, `.cat-*` dans `app.css`) reprend les lignes de la carte en liste (`.ow-plan-bat`) avec le dessin du bâtiment, son coût, « Disponible » (coche, sauge) ou la raison du cœur (cadenas), et un bouton secondaire.
 
@@ -439,7 +439,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - Survol (si `hover: hover`), appui (`:active` ou `.is-pressed`), focus (anneau 3 px, décalage 3 px).
 - **Désactivé lisible** : `:disabled` ou `[aria-disabled="true"]` à plat, sans socle, bord en tirets, texte `ink-muted` (5,8:1), cadenas, raison sous le bouton dans `.btn-reason` liée par `aria-describedby`. Préférer `aria-disabled` pour garder le focus.
 - **Occupé** : `[aria-busy="true"]`, picto `.spin` qui tourne, libellé qui dit ce qui se passe.
-- **Bouton texte** `.link-btn` (« Pourquoi ? ») : allure de lien, cible de 44 px.
+- **Bouton texte** `.link-btn` (« Pourquoi? ») : allure de lien, cible de 44 px.
 
 ### Ressources, HUD (4)
 `.res[data-res="energie|materiaux|nourriture|habitants|permis"]` : tuile de 52 px, picto, valeur (`.res-value`, sans plafond), libellé. Cinq puces : les quatre ressources de même largeur, puis le Permis, qui prend la place de son contenu (44 px au moins, `grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(44px, auto)`). Chaque puce est un bouton qui ouvre sa feuille d'aide. Variation `.res-delta` (+ `.res-delta--spend` pour une dépense), coup `.res.is-hit`. À partir de 1 000, la valeur passe en forme courte (« 1,2 k ») ; la valeur entière reste dans le nom lu. Matières : Énergie en verre, Matériaux en terre, Nourriture en sauge, Habitants en lanterne, Permis en **airelle** (`--res-permis` : `#6f3f62` sur `#f5e6ee`), une famille réservée au Permis. Le pictogramme du Permis (`i-permis`) est une feuille au coin plié avec une coche ; le chiffre et le mot « Permis » le doublent. Largeurs étroites : voir « Mise en page aux trois largeurs ».
@@ -448,13 +448,13 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 `.announce` dans `.announce-lane` : pastille de coche, gains avec picto (le Permis : « +1 » et son pictogramme en airelle ; le mot n'est lu qu'aux lecteurs d'écran), puis « → Champs » ou, le jour où la semaine est tenue, « Semaine tenue » (en terre, comme les Matériaux ; le mot remplace le quartier et ne se coupe jamais). Serrée sous 380 px de large quand elle porte 4 gains ou plus (voir « Mise en page »). Visible avec `.is-shown` pendant 4 s ; `.announce--static` pour la référence. Décorative : le texte complet part dans `#live`.
 
 ### Cote, étiquettes, métadonnées (6)
-`.cote` : plaque de 48 px avec valeur et mot « Cote » ; `.cote--sm` (42×40) à l'intérieur d'une ligne cliquable (la cible de 44 px est celle de la ligne). `button.cote` ouvre le « Pourquoi ? ». `.tag` (`--done`, `--prio`, `--late`, `--archived`, `--guess`) : pastille de 24 px avec picto. `.meta` : ligne de métadonnées avec pictos ; `.meta-item--late` (terre).
+`.cote` : plaque de 48 px avec valeur et mot « Cote » ; `.cote--sm` (42×40) à l'intérieur d'une ligne cliquable (la cible de 44 px est celle de la ligne). `button.cote` ouvre le « Pourquoi? ». `.tag` (`--done`, `--prio`, `--late`, `--archived`, `--guess`) : pastille de 24 px avec picto. `.meta` : ligne de métadonnées avec pictos ; `.meta-item--late` (terre).
 
 ### Fil du jour et alternatives (7)
 `.fil-quest[data-state]` : titre sur 2 lignes et Cote, méta, raison, un bouton (« Fait »). `.alts` / `.alt` / `.alt-row[aria-expanded]` : alternatives repliées, dépliage sans saut dans `.alt-panel`.
 
-### Trois cartes (8)
-`.reco-wrap` (conteneur) > `.reco-list` > `.reco` : À faire d'abord (`.reco--first`, lavis sauge), Victoire rapide, Grand chantier. La catégorie est le premier élément de la ligne de méta (`.reco-kind`), jamais une étiquette au-dessus du titre.
+### Trois cartes (8) : retirées
+`.reco-wrap` > `.reco-list` > `.reco` (À faire d'abord, Victoire rapide, Grand chantier) était la version dépliée du Fil. Rien ne les emploie plus (ni `app/index.html`, ni `app/js/`, ni `app/world/`, ni la page de référence) : les alternatives repliées (`.alts`, section 7) les remplacent. Leurs règles restent dans `components.css` (code mort, à retirer sur ordre).
 
 ### Barre d'outils (9)
 `.search` (champ de 48 px, picto, bouton d'effacement de 44 px), `.seg` (statut, boutons radio), `.sort` + `.select` (liste native), `.chips` / `.chip[aria-pressed]` (la puce active se remplit de sauge et ajoute une coche dessinée `.chip-check`), `.chips--scroll` (défilement horizontal interne avec fondu aux bords).
@@ -476,7 +476,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 `.why` : relevé en `dl`, lignes pointillées (`.why-line`, `--zero` en lichen), total `.why-total` sous un filet de 2 px, valeurs en sauge.
 
 ### Confirmation (14)
-`.confirm` : seul usage de braise en semaine 1 avec le bouton danger. Fond `ember-wash`, filet braise, picto, deux actions.
+`.confirm` : fond `ember-wash`, filet braise, picto, deux actions.
 
 ### États (15)
 
@@ -508,7 +508,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - **Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.
 - **Don't** utiliser `ember` (4,2:1) pour du texte.
 - **Don't** couvrir un bouton avec une annonce ou une notification.
-- **Don't** mettre l'airelle ailleurs que sur le Permis, ni le givre ailleurs que sur le hors ligne et les Avis.
+- **Don't** mettre l'airelle ailleurs que sur le Permis, ni le givre ailleurs que sur le hors ligne.
 - **Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.
 - **Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.
 - **Don't** montrer l'état seulement par la couleur.
@@ -562,7 +562,7 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 
 ### Actions de la démo (`data-action`)
 
-`complete`, `start`, `why`, `add`, `open`, `toggle-panel`, `split`, `search-clear`, `sort`, `replay-announce`. Dans la démo, `split` et `sort` ne font rien : à brancher. Le pas à pas utilise `data-step="-1|1"`.
+`complete`, `why`, `add`, `open`, `toggle-panel`, `split`, `search-clear`, `sort`, `replay-announce`. Dans la démo, `split` et `sort` ne font rien : à brancher. Le pas à pas utilise `data-step="-1|1"`.
 
 ### Feuilles
 
@@ -574,12 +574,12 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg>
 ```
 
-Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages ne sont plus dans ce dossier. Pictos disponibles : `i-energie`, `i-materiaux`, `i-nourriture`, `i-habitants`, `i-permis`, `i-check`, `i-start`, `i-pause`, `i-plus`, `i-minus`, `i-x`, `i-edit`, `i-archive`, `i-unarchive`, `i-trash`, `i-undo`, `i-split`, `i-search`, `i-sort`, `i-chevron-down`, `i-chevron-up`, `i-why`, `i-lock`, `i-sliders`, `i-refresh`, `i-clock`, `i-calendar`, `i-crate`, `i-steps`, `i-repeat`, `i-note`, `i-pin`, `i-flag`, `i-target`, `i-quick`, `i-chantier`, `i-offline`, `i-cloud-alert`, `i-cloud-ok`, `i-spinner`, `i-champs`, `i-atelier`, `i-mairie`, `i-ecole`, `i-garage`, `i-place`. Le sprite garde aussi des restes de la v1, que l'app d'aujourd'hui n'emploie plus : `i-confiance`, `i-lueur`, `i-archives`, `i-maison-commune`, `i-relais`, `i-bastion`.
+Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages ne sont plus dans ce dossier. Pictos disponibles : `i-energie`, `i-materiaux`, `i-nourriture`, `i-habitants`, `i-permis`, `i-check`, `i-plus`, `i-minus`, `i-x`, `i-edit`, `i-archive`, `i-unarchive`, `i-trash`, `i-undo`, `i-split`, `i-search`, `i-sort`, `i-chevron-down`, `i-chevron-up`, `i-why`, `i-lock`, `i-sliders`, `i-refresh`, `i-clock`, `i-calendar`, `i-crate`, `i-steps`, `i-repeat`, `i-note`, `i-pin`, `i-flag`, `i-target`, `i-quick`, `i-chantier`, `i-offline`, `i-cloud-alert`, `i-cloud-ok`, `i-spinner`, `i-champs`, `i-atelier`, `i-mairie`, `i-ecole`, `i-garage`, `i-place`. Le sprite garde aussi des restes de la v1, que l'app d'aujourd'hui n'emploie plus : `i-start`, `i-pause`, `i-pin`, `i-confiance`, `i-lueur`, `i-archives`, `i-maison-commune`, `i-relais`, `i-bastion` (aucun n'est appelé par `app/index.html`, `app/js/` ni `app/design/reference.html`).
 
 ### Ce que la logique doit faire elle-même
 
 - Remettre `scrollTop` de `.panel-scroll` à 0 quand on replie le panneau.
-- Garder les entités du monde sous `--world-safe-top` en semaine 2 (HUD et voie d'annonce sont posés sur le monde).
+- Garder les entités du monde sous `--world-safe-top` (HUD et voie d'annonce sont posés sur le monde).
 - Remplir `#live` : vider, puis écrire le texte après une courte pause, pour que le lecteur d'écran le relise.
 - Remonter la page en haut avant l'annonce (la démo le fait si `scrollY > 0`) et changer les chiffres à « l'impact », 320 ms après l'apparition de l'annonce (0 en mouvement réduit).
 - Mettre à jour `aria-label` des `.res` (« Énergie : 30 », « Permis : 2 » : aucune ressource n'a de plafond).
@@ -588,7 +588,6 @@ Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages
 ## Ce qui reste ouvert
 
 - **Police embarquée.** Choisir et embarquer un fichier de police libre pour le rôle d'affichage (il se glisse en tête de `--font-display`). Aujourd'hui : pile système.
-- **Carte des secteurs du monde (semaine 2).** L'île SVG, ses secteurs (Champs, Atelier, Archives, Maison commune, Relais, Bastion) et leur lien avec le sélecteur de secteur.
 - **Exclure `app/.impeccable/` du déploiement.** Le dossier contient le contrat de direction et ce sidecar ; il n'est pas du code applicatif.
 - **Jetons posés mais non consommés** (caméra, célébration, jour, levée, chute, décalage, `--z-sticky`, `--lh-tight`, `--sp-10`, `--sp-12`, `--c-soil`, `--c-lantern`, `--c-ash`, `--c-frost`, `--c-glass`) : à utiliser avec le monde, ou à retirer.
 

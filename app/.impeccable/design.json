@@ -351,7 +351,7 @@
       },
       "lantern-glow": {
         "role": "tertiary",
-        "displayName": "Lueur de lanterne",
+        "displayName": "Éclat de lanterne",
         "canonical": "#ffd98c",
         "tonalRamp": [
           "#180600",
@@ -1007,7 +1007,7 @@
       "**Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.",
       "**Don't** utiliser `ember` (4,2:1) pour du texte.",
       "**Don't** couvrir un bouton avec une annonce ou une notification.",
-      "**Don't** mettre l'airelle (`airelle-ink`, `airelle-wash`) ailleurs que sur le Permis, ni le givre (`frost-*`) ailleurs que sur le hors ligne et les Avis.",
+      "**Don't** mettre l'airelle (`airelle-ink`, `airelle-wash`) ailleurs que sur le Permis, ni le givre (`frost-*`) ailleurs que sur le hors ligne.",
       "**Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.",
       "**Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.",
       "**Don't** montrer l'état seulement par la couleur.",
