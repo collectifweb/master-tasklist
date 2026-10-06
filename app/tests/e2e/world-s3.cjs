@@ -288,6 +288,23 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     await close();
   }
 
+  // ---- téléphone couché (844×390) : la colonne monte jusque sous le bandeau ; « Passer l'animation » ne s'y pose jamais
+  {
+    const { page, errors, close } = await open(nav, 844, 390);
+    await act(page, 'veille');
+    await page.waitForTimeout(450);
+    const m = await page.evaluate(() => {
+      const s = document.querySelector('.ow-skip'), a = s.getBoundingClientRect(), c = document.querySelector('.ow-zoom').getBoundingClientRect();
+      const hit = document.elementFromPoint(a.left + a.width / 2, a.top + a.height / 2);
+      return { hidden: s.hidden, skip: [a.left, a.top, a.right, a.bottom].map(Math.round), col: [c.left, c.top, c.right, c.bottom].map(Math.round), vh: innerHeight, touch: !!hit && s.contains(hit) };
+    });
+    await page.screenshot({ path: `${OUT}/844x390-veille-saut.png` });
+    check('844x390 : « Passer l\'animation » touchable, jamais sur la colonne ; colonne dans l\'écran', !m.hidden && m.touch && !(m.skip[2] > m.col[0] && m.skip[0] < m.col[2] && m.skip[3] > m.col[1] && m.skip[1] < m.col[3]) && m.col[3] <= m.vh, m);
+    await idle(page);
+    check('844x390 : aucune erreur console', !errors.length, errors);
+    await close();
+  }
+
   // ---- mouvement réduit : mêmes états, fondus courts, aucune animation longue
   {
     const { page, errors, close } = await open(nav, 390, 844, { reduced: true });

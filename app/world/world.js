@@ -632,12 +632,18 @@ export function createWorld(container, options = {}) {
   // ---------------------------------------------------------------------------- bouton « Passer l'animation »
   // Il doit rester touchable : sous la zone réservée du haut par défaut ; si l'interface le recouvre (panneau ouvert
   // en compact), il remonte dans la bande libre juste au-dessus, puis tout en haut. Vérifié par un test de toucher.
+  // Il ne se pose jamais sur la colonne des commandes (téléphone couché : elle monte jusque sous le bandeau) : il passe
+  // alors juste au-dessus d'elle.
   function placeSkip() {
     if (skipBtn.hidden || destroyed) return;
     const h = skipBtn.offsetHeight || 44;
-    for (const top of [camera.top + 8, camera.top - h, 8]) {
+    const R = root.getBoundingClientRect();
+    const ctls = [zoom, row].filter((n) => !n.hidden).map((n) => n.getBoundingClientRect());
+    const colTop = Math.min(...ctls.map((c) => c.top)) - R.top;
+    for (const top of [camera.top + 8, colTop - h - 8, camera.top - h, 8]) {
       skipBtn.style.top = f(Math.max(0, top)) + 'px';
       const r = skipBtn.getBoundingClientRect();
+      if (ctls.some((c) => r.right > c.left && r.left < c.right && r.bottom > c.top - 4 && r.top < c.bottom)) continue;
       const x = r.left + r.width / 2;
       const ok = [r.top + 6, r.top + r.height / 2, r.bottom - 6].every((y) => { const hit = doc.elementFromPoint(x, y); return hit && skipBtn.contains(hit); });
       if (ok) return;
