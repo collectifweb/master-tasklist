@@ -6,7 +6,7 @@ import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, 
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
-import { num, shortDate, durationText } from './format.js';
+import { num, numGain, shortDate, durationText } from './format.js';
 import { openSheet, closeSheet, stepperRow, syncStepper, stepValue } from './sheets.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
@@ -124,7 +124,7 @@ export function createStory(app) {
 
   /** Ligne de la semaine tenue (icône des Matériaux + texte) ; rien pour une semaine non tenue ni pour un ancien bilan sans le champ. Le montant est celui qui a été payé (repli : le montant actuel). */
   const tenueHtml = (b, tag) => (b.tenue === true
-    ? `<${tag} class="review-tenue">${icon('materiaux')}<span>${esc(t('review.tenue', { n: num(Number.isFinite(b.tenueMateriaux) ? b.tenueMateriaux : SEMAINE_TENUE.materials) }))}</span></${tag}>` : '');
+    ? `<${tag} class="review-tenue">${icon('materiaux')}<span>${esc(t('review.tenue', { n: numGain(Number.isFinite(b.tenueMateriaux) ? b.tenueMateriaux : SEMAINE_TENUE.materials) }))}</span></${tag}>` : '');
 
   /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), quêtes et heures. */
   function weekHtml(b) {

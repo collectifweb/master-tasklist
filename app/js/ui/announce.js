@@ -1,7 +1,7 @@
 // Annonce de gain (voie réservée, aria-hidden) + texte complet dans la région aria-live séparée.
 import { t, tn } from '../content.js';
 import { $, esc, icon, restart, reducedMotion } from './dom.js';
-import { num } from './format.js';
+import { numGain, entierGain } from './format.js';
 import { topSheet } from './sheets.js';
 
 /** Somme les gains d'une action à partir de ses événements, et les permis tombés (jours travaillés, rang, saison). */
@@ -20,11 +20,14 @@ export function summarize(events) {
   return s;
 }
 
+/** Vrai si l'action a payé quelque chose, même un montant qui s'arrondit à 0 (l'annonce reste, sans chiffre). */
+export const aGagne = (s) => s.energy > 0 || s.materials > 0 || s.food > 0 || s.permis > 0;
+
 export function gainList(s) {
   const out = [];
-  if (s.energy > 0) out.push(t('gain.energy', { n: num(s.energy) }));
-  if (s.materials > 0) out.push(tn('gain.materials', s.materials, { n: num(s.materials) }));
-  if (s.food > 0) out.push(t('gain.food', { n: num(s.food) }));
+  if (entierGain(s.energy) > 0) out.push(t('gain.energy', { n: numGain(s.energy) }));
+  if (entierGain(s.materials) > 0) out.push(tn('gain.materials', entierGain(s.materials), { n: numGain(s.materials) }));
+  if (entierGain(s.food) > 0) out.push(t('gain.food', { n: numGain(s.food) }));
   if (s.permis > 0) out.push(t('gain.permis', { n: s.permis }));
   return out;
 }
@@ -66,9 +69,9 @@ export function createAnnounce(lane, live) {
       } else if (kind === 'undo') {
         items.push(`<span class="announce-item">${esc(t('announce.undo'))}</span>`);
       } else {
-        if (s.energy > 0) items.push(`<span class="announce-item" data-res="energie">+${num(s.energy)} ${icon('energie')}<span class="sr-only">${esc(t('resource.energy'))}</span></span>`);
-        if (s.materials > 0) items.push(`<span class="announce-item" data-res="materiaux">+${num(s.materials)} ${icon('materiaux')}<span class="sr-only">${esc(t('resource.materials.other'))}</span></span>`);
-        if (s.food > 0) items.push(`<span class="announce-item" data-res="nourriture">+${num(s.food)} ${icon('nourriture')}<span class="sr-only">${esc(t('resource.food'))}</span></span>`);
+        if (entierGain(s.energy) > 0) items.push(`<span class="announce-item" data-res="energie">+${numGain(s.energy)} ${icon('energie')}<span class="sr-only">${esc(t('resource.energy'))}</span></span>`);
+        if (entierGain(s.materials) > 0) items.push(`<span class="announce-item" data-res="materiaux">+${numGain(s.materials)} ${icon('materiaux')}<span class="sr-only">${esc(t('resource.materials.other'))}</span></span>`);
+        if (entierGain(s.food) > 0) items.push(`<span class="announce-item" data-res="nourriture">+${numGain(s.food)} ${icon('nourriture')}<span class="sr-only">${esc(t('resource.food'))}</span></span>`);
         // un permis qui tombe : « +1 » et son picto, comme les ressources (le nom est lu aux lecteurs d'écran) ; la tâche compte pour son quartier : « → Champs »
         if (s.permis > 0) items.push(`<span class="announce-item" data-res="permis">+${s.permis} ${icon('permis')}<span class="sr-only">${esc(t('resource.permis'))}</span></span>`);
         // la semaine tenue : ses Matériaux sont dans le chiffre ci-dessus, le mot dit d'où vient le surplus

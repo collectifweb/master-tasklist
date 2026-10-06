@@ -6,11 +6,11 @@ import { maintenant, decalage, enEssai } from './horloge.js';
 import { loadContent, t, tn, content, pickReply, replyVars } from './content.js';
 import { $, $$, esc, reducedMotion, setText, inlineSprite, restart } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
-import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.js';
+import { createAnnounce, createVoice, summarize, gainList, aGagne } from './ui/announce.js';
 import { createSpeech } from './ui/speech.js';
 import { createSync } from './ui/sync.js';
 import { renderFil, renderAlts, renderList } from './ui/quests.js';
-import { num } from './ui/format.js';
+import { numGain, entierGain } from './ui/format.js';
 import {
   wireDialogs, openAdd, refreshAddDefaults, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
@@ -128,12 +128,12 @@ function react(payload) {
   const gains = gainList(s);
   const objectifs = objectifsSay(events);
 
-  if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime', ...BAT_ACTIONS].includes(action) && gains.length) {
+  if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime', ...BAT_ACTIONS].includes(action) && aGagne(s)) { // même sans chiffre à montrer (gains arrondis à 0), l'annonce reste
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
           : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
-    const liveText = `${head}${objectifs ? ' ' + objectifs : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
+    const liveText = `${head}${objectifs ? ' ' + objectifs : ''} ${gains.length ? t('sr.gains', { liste: gains.join(', ') }) : ''}${replyText}`.trim();
     announce.show(s, 'gain', { liveText: action === 'advanceTime' ? after(liveText) : remember(liveText) });
     return;
   }
@@ -144,7 +144,7 @@ function react(payload) {
   if (action === 'remballerQuest') {
     // l'écriture inverse de la quête, et celle de l'éolienne si le jour reste sans quête payée
     const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0) }), { energy: 0, materials: 0 });
-    const list = [e.energy && `${num(e.energy)} ${t('resource.energy')}`, e.materials && `${num(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
+    const list = [entierGain(e.energy) && `${numGain(e.energy)} ${t('resource.energy')}`, entierGain(e.materials) && `${numGain(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
     announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${replyText}` });
     return;
   }
@@ -168,7 +168,7 @@ function objectifsSay(events) {
   for (const e of events) {
     if (e.type === 'premier-pas') out.push(t('sr.pas', { nom: t(`pas.${e.id}.nom`) }));
     else if (e.type === 'objectif-saison') out.push(t(`sr.saison.${e.objectif}`));
-    else if (e.type === 'semaine-tenue') out.push(t('sr.semaine', { n: num(e.materials) }));
+    else if (e.type === 'semaine-tenue') out.push(t('sr.semaine', { n: numGain(e.materials) }));
   }
   if (events.some((e) => e.type === 'premier-pas' && e.id === 'famille')) out.push(t('sr.pas.fin'));
   return out.join(' ');
@@ -181,7 +181,7 @@ function batimentSay(events) {
   for (const e of events) {
     if (e.type === 'construction') out.push(t('bat.sr.construction', { nom: nom(e.id), cout: coutText(e.cout) }));
     else if (e.type === 'semis') out.push(t('bat.sr.semis', { nom: nom(e.id), cout: coutText(e.cout) }));
-    else if (e.type === 'recolte') out.push(t(e.perdu > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: num(e.nourriture), perdu: num(e.perdu) }));
+    else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
     else if (e.type === 'quartier-monte') out.push(monteText(e));

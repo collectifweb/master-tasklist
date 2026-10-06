@@ -11,15 +11,15 @@ import {
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
-import { num, shortDate } from './format.js';
+import { numPossede, numManque, numGain, shortDate } from './format.js';
 
 const typeOf = (id) => String(id ?? '').replace(/-\d+$/, '');
 
 /** « 15 Matériaux », « 4 Énergie et 20 Matériaux » (les mêmes mots et le même ordre que le HUD et les prix des quartiers). */
 export function coutText(cout) {
   const parts = [];
-  if (cout.energy) parts.push(`${num(cout.energy)} ${t('resource.energy')}`);
-  if (cout.materials) parts.push(`${num(cout.materials)} ${t(cout.materials < 2 ? 'resource.materials.one' : 'resource.materials.other')}`);
+  if (cout.energy) parts.push(`${numManque(cout.energy)} ${t('resource.energy')}`);
+  if (cout.materials) parts.push(`${numManque(cout.materials)} ${t(Math.ceil(cout.materials) < 2 ? 'resource.materials.one' : 'resource.materials.other')}`);
   return parts.join(' et ');
 }
 
@@ -63,7 +63,7 @@ export function batimentModel(c, id) {
     if (!st.semee) {
       const cs = coutSemis(id, gameDay(now));
       m.maintenant = cs.chauffage
-        ? t('bat.fiche.semer.chauffage', { semis: num(cs.energy - cs.chauffage), chauffage: num(cs.chauffage) })
+        ? t('bat.fiche.semer.chauffage', { semis: numManque(cs.energy - cs.chauffage), chauffage: numManque(cs.chauffage) })
         : t('bat.fiche.semer.cout', { cout: coutText({ energy: cs.energy }) });
       m.raison = refusSemer(game, ledger, id, now);
       m.geste = { action: 'semer', params: { id }, label: t('bat.fiche.semer') };
@@ -71,7 +71,7 @@ export function batimentModel(c, id) {
       m.maintenant = t(`bat.fiche.pousse.${st.reste === 1 ? 'one' : 'other'}`, { n: st.reste, date: shortDate(st.semeLe) });
       m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter'), attente: true };
     } else {
-      m.maintenant = t('bat.fiche.mure', { n: num(recolteDe(game, def.culture)) });
+      m.maintenant = t('bat.fiche.mure', { n: numGain(recolteDe(game, def.culture)) });
       m.raison = refusRecolter(game, ledger, id, now);
       m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter') };
     }
@@ -83,7 +83,7 @@ export function batimentModel(c, id) {
   } else if (type === 'eolienne') {
     m.maintenant = eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
   } else if (type === 'grenier') {
-    m.maintenant = t('bat.grenier.maintenant', { stock: num(game.resources.food), max: num(stockage(game)) });
+    m.maintenant = t('bat.grenier.maintenant', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) });
   } else {
     m.maintenant = t(`bat.${type}.maintenant`);
   }
