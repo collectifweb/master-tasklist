@@ -24,6 +24,7 @@ export const BONUS_DAILY_ENERGY_CAP = 5;
 export const rewardKey = (taskId, occurrence) => `reward:${taskId}:${occurrence}`;
 export const stepKey = (taskId, occurrence, stepId) => `step:${taskId}:${occurrence}:${stepId}`;
 export const reverseKey = (taskId, occurrence) => `reverse:${taskId}:${occurrence}`;
+export const semaineKey = (lundi) => `semaine:${lundi}`;
 export const bonusKey = (type, day, n) => `bonus:${type}:${day}` + (n === undefined || n === null ? '' : `:${n}`);
 
 /**

@@ -4,19 +4,27 @@
 // Le permis vient des jours travaillés (un tous les 4), de chaque nouveau rang et de l'objectif de saison ; il est
 // inscrit au registre sous une clé unique (permis:{jour}, permis:rang:{palier}, saison:{clé}) et appliqué à l'état au
 // moment de l'inscription (applyEntry), jamais recompté depuis tout le registre. Remballer ne le reprend jamais.
+// La « semaine tenue » (5 jours travaillés dans la semaine du lundi au dimanche) paie des Matériaux de la même façon,
+// sous la clé semaine:{lundi} : aucun compteur de jours de suite, la semaine se relit au registre.
 // Monter un quartier n'écrit rien au registre ni dans les tâches : game.set suffit.
 // Cycle d'import avec quests.js et batiments.js : tout est lu à l'appel, aucune constante de haut niveau n'en dépend.
 import { Ctx } from './quests.js';
-import { gameDay } from './time.js';
+import { gameDay, weekStart, addDays } from './time.js';
 import { round1 } from './reward.js';
-import { hasKey } from './ledger.js';
+import { hasKey, semaineKey } from './ledger.js';
 import { BATIMENTS, CULTURE, ACCUEIL_NOURRITURE, joursTravailles, manque } from './batiments.js';
 import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 
 /** Jours travaillés pour un permis. */
 export const JOURS_PAR_PERMIS = 4;
-/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (3 Énergie + 4 Matériaux). Réglée par la simulation. */
+/** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 100 et n × 75 à 25. */
 export const ECHELLE = 25;
+/**
+ * Semaine tenue : à partir du 5e jour travaillé d'une semaine (lundi au dimanche), un bonus en Matériaux, une seule fois
+ * par semaine. Le montant est réglé par la simulation (tests/core/simulation.test.mjs) : 12 est le plus petit entier à
+ * partir duquel un bonus plus gros ne change plus aucun jour d'achat de niveau. Des Matériaux, jamais de compteur.
+ */
+export const SEMAINE_TENUE = { jours: 5, materials: 12 };
 
 /**
  * Effets des niveaux : le réglage touché, puis sa valeur aux niveaux 1, 2, 3… (le nombre de valeurs est le niveau le
@@ -65,7 +73,7 @@ export const placesParChalet = (game) => valeur(game, 'placesParChalet');
 
 /** Prix du niveau n : { permis, energy, materials }. */
 export function coutNiveau(n) {
-  return { permis: n, energy: n * ECHELLE * 3, materials: n * ECHELLE * 4 };
+  return { permis: n, energy: n * ECHELLE * 4, materials: n * ECHELLE * 3 };
 }
 
 /** Permis de la partie : { dispo, depuis } (depuis abîmé : tout le registre compte, une fois). */
@@ -132,6 +140,29 @@ export function suivrePermis(ctx) {
   if (hasKey(ctx.ledger, key)) return;
   inscrirePermis(ctx, key, 'jours');
   ctx.game = { ...ctx.game, permis: { ...ctx.game.permis, depuis: ctx.day } };
+}
+
+/**
+ * Semaine tenue, appelée par quests.js juste après suivrePermis (donc après une quête payée seulement) : quand la
+ * semaine du jour (lundi au dimanche, en jours de jeu) compte au moins SEMAINE_TENUE.jours jours travaillés (la même
+ * définition que les permis : une quête payée, non remballée) et que semaine:{lundi} n'est pas au registre, inscrit
+ * cette entrée, payée en Matériaux. Événement { type: 'semaine-tenue', semaine, jours, materials }.
+ * Choix, les mêmes que pour le permis des jours :
+ *  - Remballer ne reprend jamais le bonus (aucune écriture inverse ne le porte) et la clé reste au registre : refaire la
+ *    quête le même jour, ou un 6e et un 7e jour, ne le paie pas une seconde fois ;
+ *  - rejouer, ou un second appareil resté sur la partie d'avant : la clé est déjà au registre, rien n'est écrit ; si les
+ *    deux appareils l'écrivent chacun de leur côté, le serveur refuse la deuxième (clé en double) et l'appareil se resynchronise.
+ * Aucun état n'est tenu dans la partie (pas de compteur) : tout se relit au registre.
+ */
+export function suivreSemaine(ctx) {
+  const lundi = weekStart(ctx.day);
+  const jours = joursTravailles(ctx.ledger, addDays(lundi, -1), ctx.day);
+  if (jours < SEMAINE_TENUE.jours) return;
+  const key = semaineKey(lundi);
+  if (hasKey(ctx.ledger, key)) return;
+  const materials = SEMAINE_TENUE.materials;
+  ctx.append({ key, at: ctx.iso, day: ctx.day, type: 'semaine', semaine: lundi, pe: 0, energy: 0, materials }, 'semaine');
+  ctx.events.push({ type: 'semaine-tenue', semaine: lundi, jours, materials });
 }
 
 /** Permis d'un nouveau rang (accueillir, batiments.js) : permis:rang:{palier}, une seule fois par palier. */

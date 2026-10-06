@@ -23,7 +23,7 @@ import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
 import { produireEolienne, reprendreEolienne } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
-import { suivrePermis } from './quartiers.js';
+import { suivrePermis, suivreSemaine } from './quartiers.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -237,6 +237,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   else ctx.events.push({ type: 'sans-gain', taskId: t.id, reason: 'deja-recompensee' });
   if (entry) produireEolienne(ctx); // la première quête payée du jour fait tourner l'éolienne (une fois par jour)
   if (entry) suivrePermis(ctx); // le 4e jour travaillé depuis le dernier permis en donne un (une fois par jour)
+  if (entry) suivreSemaine(ctx); // le 5e jour travaillé de la semaine (lundi au dimanche) paie la semaine tenue, une fois
 
   if (entry && wasTop3) {
     const bonus = buildBonusEntry('bon-fil', ctx.ledger, now, { taskId: t.id });
