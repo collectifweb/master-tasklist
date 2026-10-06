@@ -139,3 +139,14 @@ test('typographie OQLF dans les textes de app/content/fr-CA/', () => {
   for (const f of readdirSync(dir).filter((n) => n.endsWith('.json'))) walk(JSON.parse(readFileSync(join(dir, f), 'utf8')), f);
   assert.deepEqual(fautes, []);
 });
+
+test('typographie OQLF dans les textes écrits en dur dans app/index.html', () => {
+  // textes hors balises (sans scripts ni styles) et attributs lus ou affichés (aria-label, placeholder, title, alt)
+  const html = readFileSync(join(APP, 'index.html'), 'utf8').replace(/<(script|style)\b[\s\S]*?<\/\1>/g, '');
+  const fautes = [];
+  html.split('\n').forEach((ligne, i) => {
+    for (const part of ligne.split(/<[^>]*>/)) if (FAUTE.test(part)) fautes.push(`index.html:${i + 1} ${JSON.stringify(part.trim().slice(0, 90))}`);
+    for (const m of ligne.matchAll(/(?:aria-label|placeholder|title|alt)="([^"]*)"/g)) if (FAUTE.test(m[1])) fautes.push(`index.html:${i + 1} ${JSON.stringify(m[0])}`);
+  });
+  assert.deepEqual(fautes, []);
+});
