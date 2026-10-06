@@ -3,7 +3,7 @@
 //   queue  : actions en attente d'envoi (localStorage), l'état affiché = server + queue appliquée dans l'ordre.
 // Chaque action passe par core/quests.js (fonctions pures), s'affiche tout de suite, puis part à l'API.
 import * as core from '../core/index.js';
-import { api, ApiError, newOpId } from './api-client.js';
+import { api, ApiError, newOpId, CLIENT_VERSION } from './api-client.js';
 import { t, tn } from './content.js';
 import { brancherHorloge, maintenant } from './horloge.js';
 
@@ -37,7 +37,9 @@ const MAX_TRIES = 6;
 function loadQueue() {
   try {
     const q = JSON.parse(localStorage.getItem(QUEUE_KEY));
-    return core.withoutRetiredGestures(q); // « Je m’y mets » n'existe plus : ces gestes en file sont écartés sans message
+    // « Je m’y mets » n'existe plus : ces gestes en file sont écartés sans message ; un calcul fait par une version plus
+    // ancienne (autre prix, autres règles) est effacé et refait par le cœur courant à l'envoi
+    return core.withoutStaleBodies(core.withoutRetiredGestures(q), CLIENT_VERSION);
   } catch { return []; }
 }
 /** Renvoie false si la file n'a pas pu être écrite (stockage plein ou bloqué). */
@@ -267,7 +269,7 @@ export class Store {
             continue;
           }
           if (!r.ops.length) { this.dropHead(e.opId); this.recompute(); this.emit('change', {}); continue; }
-          e = this.patchHead(e.opId, { body: { opId: e.opId, ops: r.ops } });
+          e = this.patchHead(e.opId, { body: { opId: e.opId, ops: r.ops, client: CLIENT_VERSION } });
           if (!e) continue;
         }
 
