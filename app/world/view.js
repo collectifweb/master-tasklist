@@ -38,7 +38,7 @@ export function batimentsView(game, ledger = [], now = new Date()) {
     EMPLACEMENTS[type].forEach((_, i) => {
       const id = `${type}-${i + 1}`;
       const b = { id, type, bati: debout.has(id), etat: 'vide', refus: null, reste: 0, occupants: 0, places };
-      if (!b.bati) b.refus = refusConstruire(g, type);
+      if (!b.bati) b.refus = refusConstruire(g, type, id);
       else if (BATIMENTS[type].culture) {
         const c = etatCulture(g, ledger, id, now);
         b.etat = !c.semee ? 'bati' : c.mure ? 'mure' : c.jours > 0 ? 'pousse' : 'seme';

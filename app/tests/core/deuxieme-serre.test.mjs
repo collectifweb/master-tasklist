@@ -8,6 +8,7 @@ import {
   coutSemis, completeQuest, prochainGeste, rangRequis, compte, PAS_IDS,
 } from '../../core/index.js';
 import { EMPLACEMENTS, LANDMARKS } from '../../world/layout.js';
+import { batimentsView } from '../../world/view.js';
 import { fresh, step, task } from './helpers.mjs';
 
 const at = (day, h = 14) => `${day}T${String(h).padStart(2, '0')}:00:00Z`;
@@ -153,4 +154,15 @@ test('île : les deux emplacements de la serre ne se chevauchent avec aucun autr
     }
     assert.ok(e.r >= 0 && e.c >= 0 && e.r + e.h <= 12 && e.c + e.w <= 12, `${id} sort de l’île`);
   }
+});
+
+test('vue de l’île au campement : serre-2 verrouillée (rang Hameau), serre-1 libre, chacune selon son emplacement', () => {
+  const w = monde(ETE, { batiments: [ATELIER, { id: 'chalet-1', type: 'chalet' }], habitants: 0 });
+  const serres = (g) => batimentsView(g, [], new Date(at(ETE))).filter((b) => b.type === 'serre').map((b) => [b.id, b.refus]);
+  assert.deepEqual(serres(w.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau\u00a0: encore 3 habitants.']]);
+  // serre-1 bâtie : serre-2 reste verrouillée tant qu'on n'a pas 3 habitants, puis s'ouvre
+  const w2 = monde(ETE, { batiments: [ATELIER, SERRE1], habitants: 0 });
+  assert.deepEqual(serres(w2.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau\u00a0: encore 3 habitants.']]);
+  w2.game.habitants = 3;
+  assert.deepEqual(serres(w2.game), [['serre-1', null], ['serre-2', null]]);
 });
