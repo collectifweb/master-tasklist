@@ -409,17 +409,23 @@ Ordre : vague 1 en parallèle, R2a (cœur) et R2b-1 (Réglages, compteur Permis,
 Cible d'équilibrage choisie par moi (à dire à Alex) : au rythme mesuré sur l'essai (1 à 2 quêtes par jour aux valeurs par défaut, 7 points), premier niveau acheté vers le jour 21 ; les cibles (a) à (f) de la simulation tiennent.
 
 ### R2a — Économie (logique seule)
-- [ ] Prix des niveaux inversé dans `core/quartiers.js` (`coutNiveau`) ; tests de `quartiers.test.mjs` mis à jour.
-- [ ] Deuxième serre : `max: 2` pour la serre, la seconde au rang Hameau (règle par exemplaire, raison écrite « Il faut d'abord le rang Hameau ») ; semis, récolte, chauffage et effet de l'Atelier valables pour `serre-2` ; un emplacement de plus sur l'île (`world/layout.js`, le test de correspondance des emplacements suit).
-- [ ] Semaine tenue : au 5e jour travaillé d'une semaine (lundi au dimanche), une entrée au registre `semaine:{lundi}` (unique, rejouable sans doublon), payée en Matériaux ; le bilan de la semaine l'affiche. Montant réglé par la simulation.
-- [ ] `tests/core/simulation.test.mjs` relancée et recalée : premier niveau acheté, permis en main, usage de l'Énergie, au rythme d'Alex (1 à 2 quêtes par jour) et au rythme régulier. Chiffres refaits par moi avant d'être donnés à Alex.
+- [x] Prix des niveaux inversé dans `core/quartiers.js` (`coutNiveau`) ; tests de `quartiers.test.mjs` mis à jour.
+- *Fait : n × ECHELLE × (4 Énergie + 3 Matériaux), puis ECHELLE 20 sur la décision d'Alex (n × 80 Énergie, n × 60 Matériaux). Version d'app 4 (`MIN_CLIENT`, `CLIENT_VERSION`) : un onglet resté en version 3 achèterait au vieux prix et ne paierait pas la semaine tenue ; un calcul gardé dans la file hors ligne par une version plus ancienne est refait à l'envoi (`withoutStaleBodies`, `core/state.js`).*
+- [x] Deuxième serre : `max: 2` pour la serre, la seconde au rang Hameau (règle par exemplaire, raison écrite « Il faut d'abord le rang Hameau ») ; semis, récolte, chauffage et effet de l'Atelier valables pour `serre-2` ; un emplacement de plus sur l'île (`world/layout.js`, le test de correspondance des emplacements suit).
+- [x] Semaine tenue : au 5e jour travaillé d'une semaine (lundi au dimanche), une entrée au registre `semaine:{lundi}` (unique, rejouable sans doublon), payée en Matériaux ; le bilan de la semaine l'affiche. Montant réglé par la simulation.
+- [x] `tests/core/simulation.test.mjs` relancée et recalée : premier niveau acheté, permis en main, usage de l'Énergie, au rythme d'Alex (1 à 2 quêtes par jour) et au rythme régulier. Chiffres refaits par moi avant d'être donnés à Alex.
 
 ### R2b — Interface
-- [ ] Réglages : section « Quête par défaut » (priorité, longueur, difficulté), gardée dans la partie (`game.reglages`, par `game.set`) ; le formulaire d'ajout la lit à la place de `DEFAULTS` (`js/ui/sheets.js:14`). Hermes n'est pas touché.
-- [ ] Compteur « Permis » dans la barre des ressources (/impeccable, tenue vérifiée à 360 px) ; pastille retirée de « Construire », nom du bouton remis à « Construire ».
-- [ ] Fiche de quartier : le bouton d'achat reste à sa place après un achat (tablette).
-- [ ] Répliques de Fanal : quatre ou cinq variantes pour « permis gagné » et « nouveau rang » (`content/fr-CA/repliques.json`, typographie de `app/content/README.md`).
-- [ ] Scénarios navigateur : réglage de la quête par défaut (deux appareils voient la même), compteur des permis, deuxième serre, semaine tenue ; scénarios existants qui lisent la pastille mis à jour.
+- [x] Réglages : section « Quête par défaut » (priorité, longueur, difficulté), gardée dans la partie (`game.reglages`, par `game.set`) ; le formulaire d'ajout la lit à la place de `DEFAULTS` (`js/ui/sheets.js:14`). Hermes n'est pas touché.
+- [x] Compteur « Permis » dans la barre des ressources (/impeccable, tenue vérifiée à 360 px) ; pastille retirée de « Construire », nom du bouton remis à « Construire ».
+- [x] Fiche de quartier : le bouton d'achat reste à sa place après un achat (tablette).
+- [x] Répliques de Fanal : quatre ou cinq variantes pour « permis gagné » et « nouveau rang » (`content/fr-CA/repliques.json`, typographie de `app/content/README.md`).
+- [x] Scénarios navigateur : réglage de la quête par défaut (deux appareils voient la même), compteur des permis, deuxième serre, semaine tenue ; scénarios existants qui lisent la pastille mis à jour.
+
+- *Fait en deux vagues de deux pistes (agents Sonnet dans leur worktree), chaque piste relue par deux agents Opus et contre-vérifiée par un sceptique avant correctifs. Vague 1 : R2a (cœur) et R2b-1 (Réglages, compteur Permis, fiche de quartier), fusions 88f6777 et précédente ; vague 2 : économie et version (prix 80/60, version 4, simulation) et affichage (semaine tenue à l'écran, deuxième serre, répliques, teinte « airelle » du Permis : le givre était réservé au hors ligne et aux Avis), fusions 13eb24a et 0999300. Vérifié par moi sur 0999300 : 408 tests `node --test`, 406 réussis, 0 échec, 2 « à faire » (voir ci-dessous) ; après la vague 1, scénarios ui-33, ui-31, ui-26, ui-32, ui-02 réussis un à un.*
+- *Montant de la semaine tenue : 12 Matériaux (valeur de départ, environ 3 à 4 quêtes à 7 points).*
+- *Simulation, profil (g) « habitudes de l'essai » (ajout le jour même, ouverture, éolienne, grenier et quai, une seule serre, quêtes à 7 points, motif de jours de l'essai), vérifié par moi : premier niveau au jour 22 aux départs d'octobre (cible 18 à 24 tenue) ; aux départs d'été, jour 42 (cible non tenue, test « à faire » : les bâtiments du Hameau passent avant le niveau). Énergie gagnée en 24 jours : 104,5 contre 154,2 sur l'essai (test « à faire » : le joueur part de zéro, l'essai avait déjà un village avancé). Rapporté par l'agent, pas refait : (f) régulier, premier niveau au jour 8.*
+- *Reconstitution sur la vraie partie d'essai (registre réel, faite par moi) : avec 80/60 et la semaine tenue, premier niveau payable au jour 23.*
 
 ### R2c — Vérification, documents, essai
 - [ ] `node --test`, série complète aux trois largeurs (machine au calme), `world-s3` et `world-perf` (l'île change) ; relecture indépendante.
