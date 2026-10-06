@@ -2,7 +2,7 @@
   "version": 1,
   "langue": "fr-CA",
   "voix": {
-    "fanal": {"nom": "Fanal", "role": "Vieux robot de déneigement remis en marche, porte une lanterne ; contremaître du village. Parle court, humour pince-sans-rire, jamais moralisateur.", "registre": "tu", "motsMax": 20}
+    "fanal": {"nom": "Fanal", "role": "Vieux robot de déneigement remis en marche, porte une lanterne; contremaître du village. Parle court, humour pince-sans-rire, jamais moralisateur.", "registre": "tu", "motsMax": 20}
   },
   "situations": {
     "quest.done.short": {

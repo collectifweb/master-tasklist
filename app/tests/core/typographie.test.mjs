@@ -1,5 +1,5 @@
-// Typographie des textes affichés au joueur (lot 5) : en français, l'espace avant « : ; ? ! » » et après « « » est
-// l'insécable U+00A0, comme dans content/fr-CA/. Ce test balaie toutes les chaînes écrites dans app/core/ (les raisons
+// Typographie des textes affichés au joueur (lot 5), règle OQLF de content/README.md : l'insécable U+00A0 avant « : »,
+// après « « » et avant « » » ; aucune espace avant « ; ? ! ». Ce test balaie toutes les chaînes écrites dans app/core/ (les raisons
 // du cœur : refus, erreurs) et dans app/js/ (phrases lues ou affichées), sans toucher au code lui-même (opérateurs
 // ternaires, commentaires, expressions régulières, sélecteurs). Il relance aussi les refus du cœur sur des états variés.
 import test from 'node:test';
@@ -80,10 +80,10 @@ function strings(src) {
   return out;
 }
 
-// une espace ordinaire (ou une fin de gabarit) devant la ponctuation haute, ou après le guillemet ouvrant
-const FAUTE = / [:;?!»]|« /;
+// une espace ordinaire devant « : » ou « » », après « « », ou une espace quelconque devant « ; ? ! »
+const FAUTE = / [:»]|« |[ \u00a0][;?!]/;
 
-test('aucune espace ordinaire devant « : ; ? ! » » ni après « « » dans les textes de app/core/ et app/js/', () => {
+test('typographie OQLF dans les textes de app/core/ et app/js/', () => {
   const fautes = [];
   for (const f of [...files('core'), ...files('js')]) {
     for (const { s, line } of strings(readFileSync(join(APP, f), 'utf8'))) {
@@ -129,7 +129,7 @@ test('les raisons du cœur, relancées sur des états variés : insécable devan
   assert.deepEqual(textes.filter((x) => FAUTE.test(x)), []);
 });
 
-test('aucune espace ordinaire devant « : ; ? ! » » ni après « « » dans les textes de app/content/fr-CA/', () => {
+test('typographie OQLF dans les textes de app/content/fr-CA/', () => {
   const fautes = [];
   const walk = (v, ou) => {
     if (typeof v === 'string') { if (FAUTE.test(v.replace(/<[^>]*>/g, '\u0000'))) fautes.push(`${ou} ${JSON.stringify(v.slice(0, 90))}`); }

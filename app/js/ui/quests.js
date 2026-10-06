@@ -30,7 +30,7 @@ export function renderFil(root, ctx) {
   setAttr(art, 'data-state', m.state);
   setText($('.fil-title', art), m.title);
   setText($('.cote-value', art.querySelector('.cote')), String(m.cote));
-  for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`.replace('?', '\u00a0?'));
+  for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`);
   setHtml($('.meta', art), metaItems(m, { now, withSeance: false }).map(metaLi).join(''));
   setText($('.fil-reason > span', art), reasonText(m, now));
   art.classList.toggle('is-seance', m.seanceMinutes !== null);
