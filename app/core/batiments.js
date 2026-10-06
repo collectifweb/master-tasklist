@@ -54,7 +54,9 @@ export const ACCUEIL_NOURRITURE = 18;
 export const EOLIENNE_ENERGIE = 3;
 
 const own = (o, k) => typeof k === 'string' && Object.hasOwn(o, k);
-const num = (n) => String(round1(n)).replace('.', ',');
+// Nombres entiers dans les phrases (l'état garde ses dixièmes ; on n'arrondit que ce qu'on écrit).
+export const entierBas = (n) => Math.floor(round1(n)); // ce que le joueur possède
+export const entierHaut = (n) => Math.ceil(round1(n)); // ce qu'il manque
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const list = (v) => (Array.isArray(v) ? v.filter(isObj) : []);
 
@@ -142,8 +144,8 @@ export function manque(game, cout) {
   const e = round1((cout.energy || 0) - game.resources.energy);
   const parts = [];
   if (p > 0) parts.push(`${p} permis`);
-  if (e > 0) parts.push(`${num(e)} Énergie`);
-  if (m > 0) parts.push(`${num(m)} ${m < 2 ? 'Matériau' : 'Matériaux'}`);
+  if (e > 0) parts.push(`${entierHaut(e)} Énergie`);
+  if (m > 0) parts.push(`${entierHaut(m)} ${entierHaut(m) < 2 ? 'Matériau' : 'Matériaux'}`);
   if (!parts.length) return null;
   return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
@@ -203,7 +205,7 @@ export function refusRecolter(game, ledger, id, now) {
   if (!st.semee) return 'Rien n’est semé ici.';
   if (!st.mure) return `Pas encore mûr\u00a0: encore ${st.reste} jour${st.reste > 1 ? 's' : ''} travaillé${st.reste > 1 ? 's' : ''}.`;
   const max = stockage(game);
-  if (game.resources.food >= max) return `Le stockage est plein (${num(game.resources.food)} sur ${max}). Accueille une famille, ou bâtis un grenier au hameau.`;
+  if (game.resources.food >= max) return `Le stockage est plein (${entierBas(game.resources.food)} sur ${max}). Accueille une famille, ou bâtis un grenier au hameau.`;
   return null;
 }
 
@@ -213,7 +215,7 @@ export function refusAccueillir(game) {
   if (!l.places) return 'Il faut d’abord un chalet.';
   if (!l.libres) return 'Aucun logement libre\u00a0: rebâtis un chalet.';
   const m = round1(prixFamille(game) - game.resources.food);
-  return m > 0 ? `Il manque ${num(m)} Nourriture.` : null;
+  return m > 0 ? `Il manque ${entierHaut(m)} Nourriture.` : null;
 }
 
 // ───────── Gestes ─────────

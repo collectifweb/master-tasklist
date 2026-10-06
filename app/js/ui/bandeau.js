@@ -6,7 +6,7 @@
 import { bandeau as lireBandeau } from '../../core/index.js';
 import { t, tn } from '../content.js';
 import { $, esc, icon, setAttr, setHtml, setText, restart } from './dom.js';
-import { num } from './format.js';
+import { numPossede } from './format.js';
 
 /** Texte du geste proposé par un premier pas (prochainGeste du cœur). */
 function gesteText(a) {
@@ -31,7 +31,7 @@ function semaineText(s) {
 function saisonText(s) {
   if (s.aVenir) return t('bandeau.saison.avenir', { saison: t(`saison.${s.id}`) });
   if (s.atteint) return t(`bandeau.saison.${s.objectif}.atteint`);
-  return t(`bandeau.saison.${s.objectif}`, { stock: num(s.stock), max: num(s.max) });
+  return t(`bandeau.saison.${s.objectif}`, { stock: numPossede(s.stock), max: numPossede(s.max) });
 }
 
 /** Les cinq premiers pas, en liste (carte dépliée) : coche et « fait » pour un pas atteint, le pas courant en gras. */

@@ -8,6 +8,16 @@ const fTime = new Intl.DateTimeFormat('fr-CA', { hour: 'numeric', minute: '2-dig
 const fNum = new Intl.NumberFormat('fr-CA', { maximumFractionDigits: 1 });
 
 export const num = (n) => fNum.format(Math.round(n * 10) / 10).replace(/−|-/, '−');
+// Ressources à l'écran en nombres entiers (l'état garde ses dixièmes ; on n'arrondit que ce qu'on montre). On part du dixième
+// le plus proche pour que le bruit des flottants ne fasse pas tomber 3 à 2.
+const tenth = (n) => Math.round(n * 10) / 10;
+/** Ce que le joueur possède : vers le bas (59,6 s'affiche 59 : la barre ne promet pas un prix de 60). */
+export const numPossede = (n) => num(Math.floor(tenth(n)));
+/** Ce qu'il manque, ou un prix : vers le haut (0,4 manquant s'affiche 1). */
+export const numManque = (n) => num(Math.ceil(tenth(n)));
+/** Un gain, une perte ou une récolte : au plus proche. 0 si le montant n'est pas montrable (alors on n'affiche rien). */
+export const entierGain = (n) => Math.round(tenth(n));
+export const numGain = (n) => num(entierGain(n));
 export const shortDate = (day) => fDate.format(new Date(day + 'T12:00:00Z'));
 export const timeOf = (iso) => fTime.format(new Date(iso)).replace(/ | /g, ' ');
 

@@ -141,7 +141,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('le focus reste sur le bouton après l’achat (« Monter au niveau 3 », verrouillé)', f.focus === 'qrt-monter' && f.focusNiveau === '3', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
   R.check('réussite du niveau 2 visible en tête de la fiche', f.monte && f.monte.check && f.monte.premier && f.monte.vu && /^Champs : niveau 2\. \d+ Nourriture par récolte du potager\.$/.test(f.monte.text), JSON.stringify(f.monte));
   g = srv.game();
-  const raison = `Il manque 3 permis, ${240 - g.resources.energy} Énergie et ${180 - g.resources.materials} Matériaux.`;
+  const raison = `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`;
   R.check('raison écrite par le cœur, avec le cadenas', f.raison && f.raison.lock && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
   R.check('« Tu n’as aucun permis. »', /^Tu n’as aucun permis\./.test(f.permis), f.permis);
   await L.waitFor(async () => (await badge(page)).text === '0', 4000);
@@ -193,7 +193,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('catalogue : section « Quartiers », six lignes, après les 7 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 7, JSON.stringify(cat.rows.map((r) => r.q)));
   R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 240 Énergie et 180 Matériaux', JSON.stringify(row('champs')));
   R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').suivant === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
-  const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${240 - g.resources.energy} Énergie et ${180 - g.resources.materials} Matériaux.`; })());
+  const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`; })());
   R.check('ligne des Champs : ce qui manque (la phrase de la fiche), avec le cadenas', row('champs').data === 'verrou' && row('champs').lock && row('champs').etat === manque, JSON.stringify({ vu: row('champs'), attendu: manque }));
   R.check('ligne de l’Atelier : « Il manque 1 permis… », cadenas', row('atelier').data === 'verrou' && row('atelier').lock && /^Il manque 1 permis/.test(row('atelier').etat), JSON.stringify(row('atelier')));
   R.check('ligne du Garage : pas de ligne d’état (déjà au plus haut)', row('garage').etat === '' && row('garage').data === '', JSON.stringify(row('garage')));

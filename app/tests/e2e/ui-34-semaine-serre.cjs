@@ -171,7 +171,7 @@ const jourSuivant = async (page, srv, k) => {
         tail: (() => { const m = a.querySelector('.announce-tail[data-semaine]'); return !!m && m.scrollWidth <= m.clientWidth && m.getBoundingClientRect().right <= lr.right + 1; })(),
       };
     });
-    R.check('annonce visible : « Semaine tenue » en toutes lettres (jamais coupé), avec le gain de Matériaux', lane.shown && /Semaine tenue/.test(lane.text) && lane.tail && lane.text.includes(String(gain).replace('.', ',')), JSON.stringify(lane));
+    R.check('annonce visible : « Semaine tenue » en toutes lettres (jamais coupé), avec le gain de Matériaux', lane.shown && /Semaine tenue/.test(lane.text) && lane.tail && lane.text.includes('+' + Math.round(gain) + ' '), JSON.stringify(lane));
     R.check('annonce : rien ne dépasse de la voie', lane.debord.length === 0, JSON.stringify(lane));
     await shot(page, '34-annonce');
     const dits = (await L.said(page)).map((x) => nbsp(x.text));
@@ -181,10 +181,18 @@ const jourSuivant = async (page, srv, k) => {
     R.check('réplique de Fanal : une des variantes de « semaine tenue »', /^Fanal/.test(bulle || '') && SEMAINE_TENUE.includes(fanal), String(bulle));
     R.check('la réplique est lue avec l’annonce', dits.some((t) => t.includes(`Fanal : ${fanal}`)), JSON.stringify(dits));
     const delta = await L.waitFor(() => page.evaluate(() => { const d = document.querySelector('.res[data-res="materiaux"] .res-delta'); return d && /\d/.test(d.textContent) ? d.textContent : null; }), 4000);
-    R.check('barre : +gain sur Matériaux (la quête et les 12 de la semaine)', delta && Number(delta.replace('+', '').replace(',', '.')) === gain, `${delta} ≠ +${gain}`);
+    R.check('barre : +gain sur Matériaux (la quête et les 12 de la semaine)', delta && Number(delta.replace('+', '').replace(',', '.')) === Math.round(gain), `${delta} ≠ +${Math.round(gain)} (gain réel ${gain}, montré en nombre entier)`);
     const apres = srv.game();
     R.check('serveur : Matériaux = avant + quête + 12', Math.round((apres.resources.materials - g0.resources.materials) * 10) / 10 === gain, `${g0.resources.materials} → ${apres.resources.materials} (+${gain})`);
-    R.check('barre : le chiffre affiché est celui du serveur', await L.waitFor(async () => (await L.resValue(page, 'materiaux')) === Math.round(apres.resources.materials * 10) / 10, 3000), String(await L.resValue(page, 'materiaux')));
+    R.check('barre : le chiffre affiché est celui du serveur, arrondi vers le bas', await L.waitFor(async () => (await L.resValue(page, 'materiaux')) === Math.floor(Math.round(apres.resources.materials * 10) / 10), 3000), String(await L.resValue(page, 'materiaux')));
+    // nombres entiers à l'écran : ni la puce, ni son écart, ni l'annonce, ni le texte lu ne portent de virgule décimale (le serveur garde ses dixièmes)
+    const sansVirgule = await page.evaluate(() => ({
+      chips: [...document.querySelectorAll('.hud .res-value, .hud .res-delta')].map((e) => e.textContent.trim()),
+      labels: [...document.querySelectorAll('.hud .res')].map((e) => e.getAttribute('aria-label')),
+      annonce: document.getElementById('announce').textContent,
+    }));
+    const dec = /\d,\d/;
+    R.check('nombres entiers : barre (chiffres, écart, noms lus), annonce affichée et annonce lue sans virgule décimale', ![...sansVirgule.chips, ...sansVirgule.labels, sansVirgule.annonce, ...dits].some((x) => dec.test(String(x))), JSON.stringify({ ...sansVirgule, dits, energieServeur: apres.resources.energy }));
     R.check('aucun permis ce jour-là (le 4e jour était jeudi) : le compteur n’a pas bougé', (await L.resValue(page, 'permis')) === (apres.permis?.dispo ?? 0) && apres.permis.dispo === g0.permis.dispo, JSON.stringify([g0.permis, apres.permis]));
 
     // ───── une 2e quête le même jour : pas de second bonus, pas de mot « Semaine tenue »
