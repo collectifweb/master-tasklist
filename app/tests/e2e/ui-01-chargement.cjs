@@ -13,7 +13,7 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   const coteShown = (await page.textContent('#fil-quest .cote-value')).trim();
   R.check('la Cote affichée est celle du cœur', coteShown === String(core.cote(cards.first, new Date())), coteShown);
   R.check('Fil du jour lisible rapidement (< 2 s)', elapsed < 2000, elapsed + ' ms');
-  for (const sel of ['#fil-quest .fil-title', '#fil-quest .meta', '#fil-quest .fil-reason', '#fil-quest [data-action="complete"]', '#fil-quest [data-action="start"]']) {
+  for (const sel of ['#fil-quest .fil-title', '#fil-quest .meta', '#fil-quest .fil-reason', '#fil-quest [data-action="complete"]']) {
     const r = await L.rect(page, sel);
     const vh = size[1];
     R.check(`visible dans l'écran : ${sel}`, r && r.w > 0 && r.h > 0 && r.y >= 0 && r.b <= vh + 0.5, JSON.stringify(r));

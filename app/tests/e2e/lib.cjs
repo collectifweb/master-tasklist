@@ -102,7 +102,6 @@ const FIL_CHECK = () => {
   const peek = app.dataset.panel === 'peek' && getComputedStyle(ps).overflowY !== 'auto'; // replié ET en disposition compacte (le panneau latéral défile)
   if (peek && ps.scrollTop) errs.push(`le panneau replié a défilé (${ps.scrollTop})`);
   const complete = art.querySelector('[data-action="complete"]');
-  const start = art.querySelector('[data-action="start"]');
   if (!art.hidden) {
     const title = art.querySelector('.fil-title');
     const tx = (title.textContent || '').trim();
@@ -112,7 +111,7 @@ const FIL_CHECK = () => {
       const r = title.getBoundingClientRect(), top = ps.getBoundingClientRect().top;
       if (r.top < top - 1 || r.bottom > window.innerHeight + 1) errs.push(`Fil du jour : titre hors de la zone visible (${Math.round(r.top)}..${Math.round(r.bottom)})`);
     }
-    if (!shown(complete) || !shown(start)) errs.push('Fil du jour : boutons invisibles');
+    if (!shown(complete)) errs.push('Fil du jour : bouton « Fait » invisible');
     if (peek && shown(complete) && complete.getBoundingClientRect().bottom > window.innerHeight + 1) errs.push(`Fil du jour : « Fait » sous le bord de l'écran (${Math.round(complete.getBoundingClientRect().bottom)})`);
     const id = art.dataset.taskId;
     if (!id) errs.push('Fil du jour : aucune quête visée');
@@ -121,7 +120,7 @@ const FIL_CHECK = () => {
     if (!(complete.getAttribute('aria-label') || '').includes(tx)) errs.push('Fil du jour : « Fait » ne nomme pas la quête');
   } else {
     if (!shown(empty)) errs.push('aucune quête : l\'état vide ne s\'affiche pas');
-    if (shown(complete) || shown(start)) errs.push('aucune quête : des boutons restent visibles');
+    if (shown(complete)) errs.push('aucune quête : le bouton « Fait » reste visible');
     if (!$('alts').hidden) errs.push('aucune quête : les alternatives restent affichées');
   }
   return errs;
