@@ -19,7 +19,7 @@ export function effetText(quartier, n) {
   return t(`quartier.effet.${e.reglage}`, { n: num(v) });
 }
 
-/** « 2 permis, 150 Énergie et 200 Matériaux » (les mêmes mots que le HUD). */
+/** « 2 permis, 160 Énergie et 120 Matériaux » (les mêmes mots que le HUD). */
 export function prixText(cout) {
   const parts = [];
   if (cout.permis) parts.push(t('quartier.cout.permis', { n: num(cout.permis) }));
