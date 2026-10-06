@@ -111,6 +111,10 @@ L.runScenario('17. premiers pas : cinq gestes depuis « Aujourd’hui », payés
   R.check('après les cinq : la semaine compte les vraies quêtes, rang « encore 2 habitants »', b && b.semaine === '1 quête faite sur 1 jour' && b.rang === 'encore 2 habitants', JSON.stringify(b || await bandeau(page)));
   R.check('après les cinq : rien d’ouvert, « Aujourd’hui » propose d’ajouter une vraie tâche, sans texte coupé', b && b.today === 'Ajoute une vraie tâche' && !b.coupe, JSON.stringify(b));
   await shot(page, '17-premiers-pas');
+  // le compteur rattrape le serveur quand l'animation de la famille est passée
+  const hud = async () => Promise.all(['energie', 'materiaux', 'nourriture', 'habitants'].map((n) => L.resValue(page, n)));
+  const serveur = () => { const g = srv.game(); return [g.resources.energy, g.resources.materials, g.resources.food, g.habitants]; };
+  R.check('les compteurs rattrapent le serveur (Énergie, Matériaux, Nourriture, Habitants)', await L.waitFor(async () => JSON.stringify(await hud()) === JSON.stringify(serveur()), 8000), JSON.stringify([await hud(), serveur()]));
 
   // ───── une seule fois chacun, jamais dans tasks.json, rien de repayé au rechargement
   const keys = pasKeys(srv);
