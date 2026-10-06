@@ -386,6 +386,7 @@ Alex a joué sur l'essai après l'envoi du lot R, jusqu'au jour de jeu 42 (déca
 
 **Réponses d'Alex (6 octobre, matin)** : d'accord avec les onze recommandations.
 1. Prix des niveaux inversé : n × 100 Énergie, n × 75 Matériaux ; les permis ne changent pas.
+   **Ajusté par Alex le 6 octobre, en cours de lot : n × 80 Énergie, n × 60 Matériaux (ECHELLE 20).** Raison : reconstitution jour par jour de sa partie d'essai (registre réel, conversion du 23 octobre, semis répartis, grenier et quai posés le 28 octobre dans le pire cas) : premier niveau payable au jour 25 à 34 avec 100/75, au jour 23 avec 80/60 ; jamais avant le jour 42 avec les anciennes règles et les bâtiments qu'il a faits. Simulation à ECHELLE 20 (copie de travail) : cibles (a) à (f) tenues, premier niveau au jour 8 au rythme régulier.
 2. « Quête par défaut » dans Réglages, la même sur tous les appareils (gardée avec la partie).
 3. Compteur « Permis » dans la barre des ressources ; plus de pastille sur « Construire » ; les icônes seules restent.
 4. Deuxième serre, débloquée au rang Hameau.
