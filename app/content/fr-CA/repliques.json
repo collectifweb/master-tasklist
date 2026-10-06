@@ -2,7 +2,7 @@
   "version": 1,
   "langue": "fr-CA",
   "voix": {
-    "fanal": {"nom": "Fanal", "role": "Vieux robot de déneigement remis en marche, porte une lanterne ; contremaître du village. Parle court, humour pince-sans-rire, jamais moralisateur.", "registre": "tu", "motsMax": 20}
+    "fanal": {"nom": "Fanal", "role": "Vieux robot de déneigement remis en marche, porte une lanterne ; contremaître du village. Parle court, humour pince-sans-rire, jamais moralisateur.", "registre": "tu", "motsMax": 20}
   },
   "situations": {
     "quest.done.short": {
@@ -44,7 +44,7 @@
       "frequence": 1,
       "variantes": [
         {"id": "quest.done.big.01", "voix": "fanal", "texte": "Grosse affaire, réglée. J’ai sorti ma lanterne des grandes occasions. C’est la même."},
-        {"id": "quest.done.big.02", "voix": "fanal", "texte": "« {quete} » : terminé. Je l’inscris en gros."},
+        {"id": "quest.done.big.02", "voix": "fanal", "texte": "« {quete} » : terminé. Je l’inscris en gros."},
         {"id": "quest.done.big.03", "voix": "fanal", "texte": "Ça, c’est un chantier. Le village va en parler au souper."},
         {"id": "quest.done.big.04", "voix": "fanal", "texte": "Celle-là pesait lourd. Elle pèse plus rien."},
         {"id": "quest.done.big.05", "voix": "fanal", "texte": "Gros morceau. J’ai déneigé moins que ça en un hiver."},
@@ -54,7 +54,7 @@
       ]
     },
     "quest.already_done": {
-      "quand": "Quête ajoutée déjà faite. Ne jamais promettre le plein tarif : elle rapporte la moitié.",
+      "quand": "Quête ajoutée déjà faite. Ne jamais promettre le plein tarif : elle rapporte la moitié.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.already_done.01", "voix": "fanal", "texte": "Déjà faite? Elle compte. Bien vu de l’avoir notée."},
@@ -71,7 +71,7 @@
       "variantes": [
         {"id": "quartier.niveau.01", "voix": "fanal", "texte": "Niveau suivant {au_quartier}. Je l’ai écrit sur le mur."},
         {"id": "quartier.niveau.02", "voix": "fanal", "texte": "Ça monte {au_quartier}. Je l’annonce, c’est mon travail."},
-        {"id": "quartier.niveau.03", "voix": "fanal", "texte": "Un niveau de plus {au_quartier}. Pas de discours. Bon, un petit : bravo."},
+        {"id": "quartier.niveau.03", "voix": "fanal", "texte": "Un niveau de plus {au_quartier}. Pas de discours. Bon, un petit : bravo."},
         {"id": "quartier.niveau.04", "voix": "fanal", "texte": "Le compteur {du_quartier} a changé de chiffre. J’aime quand ça arrive."},
         {"id": "quartier.niveau.05", "voix": "fanal", "texte": "Nouveau niveau {au_quartier}. On garde le rythme, sans courir."},
         {"id": "quartier.niveau.06", "voix": "fanal", "quartier": "champs", "texte": "Les Champs montent d’un cran. Les clôtures font semblant de rien."},
@@ -96,7 +96,7 @@
       ]
     },
     "quest.start": {
-      "quand": "« Je m’y mets » : la quête passe en cours. Fanal fait une petite corvée du même genre, dans le quartier de la quête.",
+      "quand": "« Je m’y mets » : la quête passe en cours. Fanal fait une petite corvée du même genre, dans le quartier de la quête.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.start.01", "voix": "fanal", "texte": "Parfait. Je travaille à côté. Fais-moi signe quand c’est fini."},
@@ -113,7 +113,7 @@
       ]
     },
     "quest.undo": {
-      "quand": "« Remballer » dans les 24 h : la quête revient dans la liste et ses gains sont repris.",
+      "quand": "« Remballer » dans les 24 h : la quête revient dans la liste et ses gains sont repris.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.undo.01", "voix": "fanal", "texte": "Remballée. Elle reprend sa place dans la liste."},
@@ -134,7 +134,7 @@
       ]
     },
     "famille.arrive": {
-      "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
+      "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,
       "variantes": [
         {"id": "famille.arrive.01", "voix": "fanal", "texte": "Du monde nouveau! J’ai déneigé l’entrée, par habitude."},
@@ -155,10 +155,10 @@
       ]
     },
     "deadline.passed": {
-      "quand": "Une fois par quête, à la première visite après la date. Rien n’est perdu : la Cote monte, la récompense ne baisse pas. Jamais de rouge.",
+      "quand": "Une fois par quête, à la première visite après la date. Rien n’est perdu : la Cote monte, la récompense ne baisse pas. Jamais de rouge.",
       "frequence": 1,
       "variantes": [
-        {"id": "deadline.passed.01", "voix": "fanal", "texte": "Elle est passée date. C’est correct : je l’ai mise en haut de la pile."},
+        {"id": "deadline.passed.01", "voix": "fanal", "texte": "Elle est passée date. C’est correct : je l’ai mise en haut de la pile."},
         {"id": "deadline.passed.02", "voix": "fanal", "texte": "Cette caisse attend encore. Elle est patiente. Moi aussi."},
         {"id": "deadline.passed.03", "voix": "fanal", "texte": "La date est passée, la quête est encore là. Ça se fait encore très bien."},
         {"id": "deadline.passed.04", "voix": "fanal", "texte": "Une date a passé. Rien n’est perdu. On la fera quand ça adonnera."},
@@ -179,7 +179,7 @@
       ]
     },
     "visit.end": {
-      "quand": "Écran « Tout est enregistré, à demain » qui ferme la visite, avec la prochaine quête en grand.",
+      "quand": "Écran « Tout est enregistré, à demain » qui ferme la visite, avec la prochaine quête en grand.",
       "frequence": 1,
       "variantes": [
         {"id": "visit.end.01", "voix": "fanal", "texte": "C’est assez pour aujourd’hui. Le reste peut attendre ici, avec moi."},

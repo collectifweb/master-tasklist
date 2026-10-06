@@ -128,3 +128,14 @@ test('les raisons du cœur, relancées sur des états variés : insécable devan
   assert.ok(textes.some((x) => x.includes(':')), 'au moins une raison avec deux-points');
   assert.deepEqual(textes.filter((x) => FAUTE.test(x)), []);
 });
+
+test('aucune espace ordinaire devant « : ; ? ! » » ni après « « » dans les textes de app/content/fr-CA/', () => {
+  const fautes = [];
+  const walk = (v, ou) => {
+    if (typeof v === 'string') { if (FAUTE.test(v.replace(/<[^>]*>/g, '\u0000'))) fautes.push(`${ou} ${JSON.stringify(v.slice(0, 90))}`); }
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, `${ou}.${k}`);
+  };
+  const dir = join(APP, 'content', 'fr-CA');
+  for (const f of readdirSync(dir).filter((n) => n.endsWith('.json'))) walk(JSON.parse(readFileSync(join(dir, f), 'utf8')), f);
+  assert.deepEqual(fautes, []);
+});
