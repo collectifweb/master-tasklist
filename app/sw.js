@@ -18,7 +18,7 @@ const SHELL = [
   'js/ui/batiment.js', 'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js', 'js/ui/bandeau.js', 'js/ui/catalogue.js', 'js/ui/quartier.js',
   'core/index.js', 'core/cote.js', 'core/domains.js', 'core/economy.js',
   'core/infer.js', 'core/ledger.js', 'core/letters.js', 'core/migrate.js', 'core/quests.js', 'core/recycling.js',
-  'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js', 'core/batiments.js', 'core/objectifs.js', 'core/quartiers.js',
+  'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js', 'core/batiments.js', 'core/objectifs.js', 'core/quartiers.js', 'core/reglages.js',
   'world/world.js', 'world/view.js', 'world/camera.js', 'world/fx.js', 'world/iso.js', 'world/layout.js', 'world/models.js',
   'world/moments.js', 'world/palette.js', 'world/plan.js', 'world/scene.js', 'world/terrain.js', 'world/texts.js', 'world/ticker.js',
   'content/fr-CA/interface.json', 'content/fr-CA/repliques.json', 'content/fr-CA/ancres.json',
