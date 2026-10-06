@@ -792,8 +792,9 @@
   align-items: center;
   gap: 4px;
 }
-/* Cette semaine, le marchand au quai : sa ligne remplace le compte des quêtes et ouvre son comptoir. Toute la case
-   se touche (le bouton s'étend sous le libellé) ; le compte passe dans la carte dépliée. */
+/* Cette semaine, le marchand au quai : sa ligne prend la place du compte des quêtes et ouvre son comptoir. Toute la
+   case se touche (le bouton s'étend sous le libellé) ; le compte passe dessous, en petit (en compact, dans la carte
+   dépliée ; à partir de 700 px, sur la rangée). */
 #bandeau-semaine[hidden],
 .bandeau-visiteur[hidden] {
   display: none;
@@ -1146,6 +1147,13 @@
   .bandeau .bandeau-saison .bandeau-value,
   .bandeau .bandeau-visiteur:not([hidden]) {
     display: flex;
+  }
+  /* sans carte à déplier, le compte des quêtes reste visible sous la ligne du marchand (deux lignes au plus, sans le couper) */
+  .bandeau .bandeau-semaine-detail:not([hidden]) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
 }
 @media (min-width: 1000px), (min-width: 700px) and (orientation: landscape) {

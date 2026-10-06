@@ -1,12 +1,13 @@
 // Le marchand, premier visiteur du quai (lot V, décisions d'Alex du 6 octobre) : une fois le quai rebâti, il est là
 // chaque semaine, du lundi au dimanche (semaine de jeu). Quatre offres fixes, chacune prise une fois par visite. Aucun
-// aller-retour ne rapporte. Un échange ne passe que par la partie (game.set) : rien au registre, rien dans les tâches.
+// aller-retour ne rapporte. Un échange ne passe que par la partie (game.set), rien dans les tâches ; seul l'objectif
+// d'automne (grenier rempli) peut écrire au registre, comme après tout geste.
 // Titres fictifs génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MARCHAND, visiteurDeLaSemaine, refusEchanger, echanger, construire, migrateState, accueillir, semer, stockage,
-  PAS_IDS, BATIMENTS,
+  PAS_IDS, BATIMENTS, stockageBase,
 } from '../../core/index.js';
 import { fresh, step, task } from './helpers.mjs';
 
@@ -136,12 +137,14 @@ test('Nourriture : refusée si la réserve n’a pas toute la place, sans rien p
   w.game.resources.food = max - o.recoit.food + 1.5; // place pour une partie seulement
   const place = Math.floor(max - w.game.resources.food);
   assert.equal(refusEchanger(w.game, { offre: EN }, at(MARDI)), `La réserve n’a de place que pour ${place} Nourriture (${Math.floor(w.game.resources.food)} sur ${max}).`);
+  w.game.resources.food = max - 0.5; // moins d'une place : pas de « place pour 0 Nourriture »
+  assert.equal(refusEchanger(w.game, { offre: EN }, at(MARDI)), `La réserve est presque pleine (${max - 1} sur ${max}).`);
   w.game.resources.food = max - o.recoit.food; // tout juste la place
   const { world } = step(w, echanger, { offre: EN }, at(MARDI));
   assert.equal(world.game.resources.food, max);
 });
 
-test('ordre des raisons : quai, offre, déjà prise, manque, réserve', () => {
+test('ordre des raisons : quai, semaine passée, offre, déjà prise, manque, réserve', () => {
   const w = village({ resources: { energy: 0, materials: 0, food: 0 } });
   assert.equal(refusEchanger(w.game, { offre: 'constructor' }, at(MARDI)), 'Offre inconnue.');
   assert.equal(refusEchanger(w.game, { offre: undefined }, at(MARDI)), 'Offre inconnue.');
@@ -149,6 +152,34 @@ test('ordre des raisons : quai, offre, déjà prise, manque, réserve', () => {
   w.game.visite = { semaine: LUNDI, prises: [EM] };
   assert.equal(refusEchanger(w.game, { offre: EM }, at(MARDI)), 'Déjà fait cette semaine : le marchand revient lundi.');
   assert.match(refusEchanger(w.game, { offre: EN }, at(MARDI)), /^Il manque/);
+});
+
+test('un échange hors ligne de la semaine passée, rejoué après un échange de la nouvelle semaine, est refusé', () => {
+  // l'appareil A échange le dimanche hors ligne ; B échange le lundi ; A revient en ligne et rejoue son geste du dimanche
+  let { world: w } = step(village(), echanger, { offre: EM }, at(LUNDI_SUIVANT));
+  const raison = 'Le marchand est reparti : cet échange date d’une semaine passée.';
+  assert.equal(refusEchanger(w.game, { offre: EN }, at(DIMANCHE)), raison);
+  assert.throws(() => step(w, echanger, { offre: EN }, at(DIMANCHE)), { message: raison });
+  assert.deepEqual(w.game.visite, { semaine: LUNDI_SUIVANT, prises: [EM] });
+  assert.equal(refusEchanger(w.game, { offre: EM }, at(LUNDI_SUIVANT)), 'Déjà fait cette semaine : le marchand revient lundi.');
+  // sans échange de la nouvelle semaine, le geste du dimanche passe : le marchand était bien là
+  ({ world: w } = step(village({ visite: { semaine: LUNDI, prises: [EM] } }), echanger, { offre: EN }, at(DIMANCHE)));
+  assert.deepEqual(w.game.visite, { semaine: LUNDI, prises: [EM, EN] });
+});
+
+test('objectif d’automne : de la Nourriture achetée qui remplit le grenier le valide, une fois (registre et permis)', () => {
+  const w = village();
+  w.game.resources.food = stockageBase(w.game) - offre(EN).recoit.food;
+  const permis = w.game.permis.dispo;
+  const { world, r } = step(w, echanger, { offre: EN }, at(MARDI)); // octobre : automne
+  assert.deepEqual(r.ops.map((op) => op.type), ['ledger.append', 'game.set']);
+  assert.deepEqual(r.entries.map((e) => [e.type, e.objectif, e.permis]), [['saison', 'grenier', 1]]);
+  assert.equal(world.game.permis.dispo, permis + 1);
+  // plus tard dans le même automne : le grenier vidé puis rempli de nouveau par le marchand ne redonne rien
+  const { world: w2 } = step(world, echanger, { offre: NE }, at(LUNDI_SUIVANT));
+  const { world: w3, r: r2 } = step(w2, echanger, { offre: EN }, at(LUNDI_SUIVANT));
+  assert.equal(w3.game.resources.food, stockageBase(w3.game));
+  assert.deepEqual(r2.entries, []);
 });
 
 test('une visite abîmée dans la partie ne bloque rien', () => {

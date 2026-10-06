@@ -52,7 +52,8 @@ const bulle = (page) => page.evaluate(() => { const e = document.getElementById(
 const bandeauVisiteur = (page) => page.evaluate(() => {
   const b = document.querySelector('.bandeau-visiteur');
   const s = (x) => String(x || '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
-  return { shown: !b.hidden, text: s(b.textContent), detail: s(document.querySelector('.bandeau-semaine-detail').textContent), compte: !document.getElementById('bandeau-semaine').hidden };
+  const d = document.querySelector('.bandeau-semaine-detail');
+  return { shown: !b.hidden, text: s(b.textContent), detail: s(d.textContent), detailVu: d.checkVisibility() && d.getBoundingClientRect().height > 0, compte: !document.getElementById('bandeau-semaine').hidden };
 });
 const comptoir = (page) => page.evaluate(() => {
   const d = document.getElementById('dlg-batiment');
@@ -69,11 +70,11 @@ const comptoir = (page) => page.evaluate(() => {
   };
 });
 const offre = (c, id) => (c && c.offres.find((o) => o.id === id)) || {};
-async function ouvrirParBandeau(page, compact) {
+async function ouvrirParBandeau(page, compact, clavier = false) {
   // panneau ouvert (après « Jour suivant ») : il couvre la carte des objectifs dépliée, on le replie d'abord
   if (compact && await page.evaluate(() => document.getElementById('app').dataset.panel === 'open')) { await page.click('[data-action="toggle-panel"]'); await page.waitForTimeout(450); }
   if (compact && await page.getAttribute('.bandeau-more', 'aria-expanded') !== 'true') { await page.click('.bandeau-more'); await page.waitForTimeout(300); }
-  await page.click('.bandeau-visiteur');
+  if (clavier) { await page.focus('.bandeau-visiteur'); await page.keyboard.press('Enter'); } else await page.click('.bandeau-visiteur');
   const c = await L.waitFor(async () => { const x = await comptoir(page); return x.open && x.offres.length === 4 ? x : null; }, 4000);
   await page.waitForTimeout(700); // un toucher juste après l'ouverture serait le second de celui qui l'a ouverte
   return c;
@@ -131,6 +132,16 @@ const res = (g) => JSON.stringify(g.resources);
       await L.closeWelcome(p0, 1500);
       await p0.waitForTimeout(1500);
       R.check('rechargement : Fanal ne répète pas l’arrivée', !ARRIVEE.includes(await bulle(p0)), String(await bulle(p0)));
+      // toucher le chaland sur la carte (vue de départ) ouvre la fiche du quai et son comptoir
+      const pb = await p0.evaluate(() => {
+        const r = document.querySelector('.ow-ent[data-id="quai-1"] .ow-barge').getBoundingClientRect();
+        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+        return { x, y, quai: !!document.elementFromPoint(x, y)?.closest('.ow-ent[data-id="quai-1"]') };
+      });
+      R.check('chaland : sous le doigt, c’est le quai', pb.quai, JSON.stringify(pb));
+      await p0.mouse.click(pb.x, pb.y);
+      const cb = await L.waitFor(async () => { const x = await comptoir(p0); return x.open && x.offres.length === 4 ? x : null; }, 4000);
+      R.check('chaland : le toucher ouvre le comptoir du quai', !!cb && cb.id === 'quai-1', String(cb && cb.id));
       await p0.close();
     } finally {
       sans.stop();
@@ -147,8 +158,9 @@ const res = (g) => JSON.stringify(g.resources);
     R.check('arrivée : Fanal annonce le marchand à la première visite de sa semaine', ARRIVEE.includes(arrivee), String(arrivee));
     R.check('arrivée : son mot est lu (« Fanal : … »)', (await L.said(page)).some((x) => sp(x.text) === `Fanal : ${sp(arrivee)}`), JSON.stringify(await L.said(page)));
 
+    if (compact) { await page.click('.bandeau-more'); await page.waitForTimeout(300); } // en compact, le compte est dans la carte dépliée
     const b1 = await bandeauVisiteur(page);
-    R.check('« Cette semaine » : « Le marchand est au quai, encore 2 jours », le compte des quêtes dans le détail', b1.shown && b1.text === 'Le marchand est au quai, encore 2 jours' && !b1.compte && /quête/.test(b1.detail), JSON.stringify(b1));
+    R.check('« Cette semaine » : « Le marchand est au quai, encore 2 jours », le compte des quêtes visible dessous', b1.shown && b1.text === 'Le marchand est au quai, encore 2 jours' && !b1.compte && /quête/.test(b1.detail) && b1.detailVu, JSON.stringify(b1));
     let c = await ouvrirParBandeau(page, compact);
     R.check('bandeau : sa ligne ouvre la fiche du quai', c.id === 'quai-1', c.id);
     R.check('fiche : « Maintenant » dit jusqu’à quand', c.now === 'Le marchand est au quai jusqu’à dimanche : encore 2 jours.', c.now);
@@ -175,15 +187,21 @@ const res = (g) => JSON.stringify(g.resources);
     // double toucher : un seul échange
     await L.said(page, true);
     const l0 = srv.ledger().length;
+    // un double toucher dont le second tombe sur une autre offre (une ligne qui se décale sous le doigt) : la garde vaut pour
+    // toute la fiche pendant 800 ms. On note où tombent les touchers, pour que le contrôle prouve quelque chose.
     const pt = await centre(page, btn('energie-materiaux'));
+    const pt2 = await centre(page, btn('nourriture-energie'));
+    await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(`${e.target.closest('.offre')?.dataset.offre}:${!!e.target.closest('.offre-go:not([aria-disabled])')}`), true); });
     await page.touchscreen.tap(pt[0], pt[1]);
-    await page.waitForTimeout(120);
-    await page.touchscreen.tap(pt[0], pt[1]);
+    await page.waitForTimeout(150);
+    await page.touchscreen.tap(pt2[0], pt2[1]);
+    const taps = await page.evaluate(() => window.__taps);
+    R.check('double toucher : les deux touchers tombent sur deux boutons « Échanger » ouverts', JSON.stringify(taps) === JSON.stringify(['energie-materiaux:true', 'nourriture-energie:true']), JSON.stringify(taps));
     const g1 = await L.waitFor(() => { const g = srv.game(); return g.visite ? g : null; }, 5000);
     await page.waitForTimeout(1200);
     const g1b = srv.game();
     const dE = Math.round((g1b.resources.energy - gA.resources.energy) * 10) / 10, dM = Math.round((g1b.resources.materials - gA.resources.materials) * 10) / 10;
-    R.check('double toucher : un seul échange au serveur (−30 Énergie, +15 Matériaux)', g1 && dE === -30 && dM === 15 && g1b.resources.food === gA.resources.food, `${res(gA)} → ${res(g1b)}`);
+    R.check('double toucher : un seul échange au serveur (−30 Énergie, +15 Matériaux, la Nourriture intacte)', g1 && dE === -30 && dM === 15 && g1b.resources.food === gA.resources.food, `${res(gA)} → ${res(g1b)}`);
     R.check('échange : la partie note l’offre prise cette semaine', JSON.stringify(g1b.visite) === JSON.stringify({ semaine: LUNDI, prises: ['energie-materiaux'] }), JSON.stringify(g1b.visite));
     R.check('échange : rien au registre', srv.ledger().length === l0, JSON.stringify(srv.ledger().slice(l0)));
     R.check('échange : les tâches sont intactes', JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])));
@@ -209,8 +227,10 @@ const res = (g) => JSON.stringify(g.resources);
     await L.ready(p2);
     await L.closeWelcome(p2, 1500);
     await p2.waitForTimeout(600);
-    const repos = await p2.evaluate(() => { const b = document.querySelector('.ow-ent[data-id="quai-1"] .ow-barge'); return b ? getComputedStyle(b).animationPlayState : null; });
-    R.check('mouvement réduit : le chaland ne se balance pas', repos === 'paused', String(repos));
+    // l'île réveillée (ambiance allumée) : le chaland tangue sur le premier appareil, pas sur celui en mouvement réduit
+    const tangue = (pg) => pg.evaluate(() => { document.querySelector('.ow').dataset.ambient = 'on'; const b = document.querySelector('.ow-ent[data-id="quai-1"] .ow-barge'); return b ? getComputedStyle(b).animationPlayState : null; });
+    const [complet, reduit] = [await tangue(page), await tangue(p2)];
+    R.check('mouvement : le chaland tangue quand l’île est réveillée, pas en mouvement réduit', complet === 'running' && reduit === 'paused', `${complet} / ${reduit}`);
     const c2 = await ouvrirParBandeau(p2, compact);
     R.check('second appareil : les offres déjà prises sont faites', offre(c2, 'energie-materiaux').etat === 'fait' && offre(c2, 'nourriture-energie').etat === 'fait', JSON.stringify(c2.offres.map((o) => [o.id, o.etat])));
     await p2.click(btn('materiaux-energie'));
@@ -245,9 +265,13 @@ const res = (g) => JSON.stringify(g.resources);
     await jourSuivant(page, srv, 1);
     const b2 = await bandeauVisiteur(page);
     R.check('dimanche : « Le marchand est au quai, dernier jour »', b2.text === 'Le marchand est au quai, dernier jour', JSON.stringify(b2));
-    c = await ouvrirParBandeau(page, compact);
+    c = await ouvrirParBandeau(page, compact, true);
     R.check('dimanche : « Dernier jour : le marchand repart cette nuit. », les offres prises le restent', c.now === 'Dernier jour : le marchand repart cette nuit.' && offre(c, 'energie-materiaux').etat === 'fait', JSON.stringify([c.now, c.offres.map((o) => o.etat)]));
-    await fermer(page);
+    await page.keyboard.press('Escape');
+    await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
+    const retourFocus = await page.evaluate(() => { const a = document.activeElement; return { cls: a?.className || a?.tagName, vu: !!a && a !== document.body && a.checkVisibility() }; });
+    R.check(`clavier : à la fermeture, le focus revient sur ${compact ? 'le bouton qui déplie la carte' : 'la ligne du marchand'}`,
+      retourFocus.vu && String(retourFocus.cls).includes(compact ? 'bandeau-more' : 'bandeau-visiteur'), JSON.stringify(retourFocus));
     await L.said(page, true);
     await jourSuivant(page, srv, 2);
     const retour = await L.waitFor(async () => { const m = await bulle(page); return ARRIVEE.includes(m) ? m : null; }, 9000);

@@ -160,7 +160,7 @@ Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
 - règle simple : il vend Matériaux et Nourriture 2 Énergie pièce et les rachète 1 Énergie pièce. Un aller-retour rend la moitié : le comptoir ne fabrique aucune ressource ;
 - une offre impossible reste visible avec sa raison (il manque N Énergie, la réserve est pleine, déjà fait cette semaine). La Nourriture reçue ne dépasse jamais la réserve ;
-- il ne donne aucun permis et ne touche à aucune tâche. Un échange ne fait que convertir ce qui a déjà été gagné.
+- il ne vend aucun permis et ne touche à aucune tâche. Un échange ne fait que convertir ce qui a déjà été gagné. Seule conséquence indirecte : de la Nourriture achetée qui remplit le grenier valide l'objectif d'automne, comme le ferait une récolte (une fois par saison, avec son permis).
 
 Taux validés par Alex le 6 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (h), départs d'octobre) : au rythme de l'essai, un joueur qui n'échange que ce qu'il a en trop achète autant de niveaux en 16 semaines et remplit le village vers la fin décembre, au lieu d'après la 16e semaine ; au rythme régulier, il gagne un niveau. Échanger de l'Énergie contre des Matériaux chaque semaine sans compter ne paie pas : 2 niveaux au lieu de 6 au rythme de l'essai.
 

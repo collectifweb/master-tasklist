@@ -3,9 +3,11 @@
 // est rebâti en milieu de semaine. Le visiteur se déduit de la date et du quai : rien n'est enregistré pour qu'il
 // vienne, et tous les appareils voient le même, même hors ligne.
 // Quatre offres fixes, chacune prise une fois par visite. Un échange ne fait que convertir ce qui a déjà été gagné :
-// game.set suffit (comme construire), rien au registre ni dans les tâches. La partie garde les offres prises de la
-// semaine dans game.visite = { semaine: lundi, prises: [id] } ; une visite d'une autre semaine ne compte plus.
-// Aucun aller-retour ne rapporte (un test le vérifie), et le marchand ne donne aucun permis.
+// un game.set, rien dans les tâches. Comme après construire, les objectifs sont suivis : de la Nourriture reçue qui
+// remplit le grenier valide l'objectif d'automne (une ligne au registre et son permis, une fois par saison) ; c'est la
+// seule écriture au registre possible. La partie garde les offres prises de la semaine dans
+// game.visite = { semaine: lundi, prises: [id] } ; une visite d'une autre semaine ne compte plus.
+// Aucun aller-retour ne rapporte (un test le vérifie), et le marchand ne vend aucun permis.
 // Même forme que quests.js : (tasks, game, ledger, params, now) → { tasks, game, ops, entries, events }.
 import { Ctx } from './quests.js';
 import { gameDay, weekStart, weekEnd, daysBetween } from './time.js';
@@ -58,10 +60,15 @@ export function visiteurDeLaSemaine(game, now) {
   };
 }
 
-/** Pourquoi on ne peut pas prendre cette offre maintenant (ou null). Ordre : quai, offre, déjà prise, manque, réserve. */
+/**
+ * Pourquoi on ne peut pas prendre cette offre maintenant (ou null). Ordre : quai, semaine passée, offre, déjà prise,
+ * manque, réserve. Semaine passée : un échange fait hors ligne la semaine d'avant, rejoué après qu'un autre appareil a
+ * déjà échangé cette semaine, effacerait la visite de la semaine (game.visite n'en garde qu'une).
+ */
 export function refusEchanger(game, params, now) {
   const v = visiteurDeLaSemaine(game, now);
   if (!v) return 'Il faut d’abord rebâtir le quai.';
+  if (isObj(game.visite) && typeof game.visite.semaine === 'string' && game.visite.semaine > v.semaine) return 'Le marchand est reparti : cet échange date d’une semaine passée.';
   const o = offreDe(params?.offre);
   if (!o) return 'Offre inconnue.';
   if (v.offres.find((x) => x.id === o.id).prise) return 'Déjà fait cette semaine : le marchand revient lundi.';
@@ -77,6 +84,7 @@ export function refusEchanger(game, params, now) {
     const stock = `${entierBas(game.resources.food)} sur ${max}`;
     const place = round1(max - game.resources.food);
     if (place <= 0) return `La réserve est pleine (${stock}).`;
+    if (place < 1) return `La réserve est presque pleine (${stock}).`;
     if (place < o.recoit.food) return `La réserve n’a de place que pour ${entierBas(place)} Nourriture (${stock}).`;
   }
   return null;

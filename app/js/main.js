@@ -450,6 +450,8 @@ document.addEventListener('click', (e) => {
     case 'bandeau-go': return goToday();
     case 'visiteur-go': {
       bandeau.toggle(false);
+      // en compact, la carte repliée cache la ligne touchée : la fiche rendra le focus au bouton qui la déplie
+      if (target.checkVisibility?.() === false) $('.bandeau-more')?.focus();
       const quai = store.view && batimentsDuVillage(store.view.game).find((b) => b.type === 'quai');
       return quai && openBatimentSheet(quai.id);
     }
