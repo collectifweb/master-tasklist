@@ -21,8 +21,10 @@ export const JOURS_PAR_PERMIS = 4;
 export const ECHELLE = 25;
 /**
  * Semaine tenue : à partir du 5e jour travaillé d'une semaine (lundi au dimanche), un bonus en Matériaux, une seule fois
- * par semaine. Le montant est réglé par la simulation (tests/core/simulation.test.mjs) : 12 est le plus petit entier à
- * partir duquel un bonus plus gros ne change plus aucun jour d'achat de niveau. Des Matériaux, jamais de compteur.
+ * par semaine. 12 est une valeur de départ à valider, pas un réglage mesuré : c'est le plus petit entier à partir duquel
+ * un bonus plus gros ne change plus aucun jour d'achat de niveau dans la simulation (tests/core/simulation.test.mjs). Ce
+ * critère ne dit pas que le bonus aide : la simulation ne lui fait avancer aucun premier niveau, et en retarde un. Des
+ * Matériaux, jamais de compteur.
  */
 export const SEMAINE_TENUE = { jours: 5, materials: 12 };
 

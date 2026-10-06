@@ -166,3 +166,16 @@ test('l’entrée du registre s’applique à l’état comme un gain : Matéria
   assert.deepEqual(r.game.quartiers, g.quartiers); // ni tâche ni quartier
   assert.deepEqual(r.game.permis, g.permis);
 });
+
+test('frontière de 4 h : une quête du lundi à 3 h (Montréal) compte pour la semaine qui finit, à 4 h pour celle qui commence', () => {
+  const lundiSuivant = addDays(LUNDI, 7); // le lundi 12 octobre
+  // quatre jours travaillés, du mercredi au samedi ; le dimanche passe en jour de jeu jusqu'à 3 h 59 le lundi
+  const w0 = jouer(fresh(quetes(10), at(addDays(LUNDI, 2), 12)), jours(addDays(LUNDI, 2), 4)).w;
+  assert.deepEqual(semaines(w0.ledger), []);
+  const tard = faire(w0, lundiSuivant, 7); // 07:00Z = 3 h 00 à Montréal (heure d'été), encore le dimanche de jeu
+  assert.deepEqual(semaines(tard.r.entries).map((e) => [e.key, e.day]), [['semaine:2026-10-05', '2026-10-11']]);
+  assert.deepEqual(evenements(tard.r), [{ type: 'semaine-tenue', semaine: LUNDI, jours: 5, materials: X }]);
+  // la même quête à 4 h 00 (08:00Z) tombe dans la semaine du 12 : un seul jour, aucun bonus
+  const tot = faire(w0, lundiSuivant, 8);
+  assert.deepEqual(semaines(tot.r.entries), []);
+});
