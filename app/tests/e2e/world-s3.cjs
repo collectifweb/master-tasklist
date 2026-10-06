@@ -1,6 +1,7 @@
 // Monde v2 (app/world/demo.html, état fictif) aux trois largeurs : six quartiers ouverts avec leur niveau, plus rien de
 // la v1 (cendre, brume, braseros, givre, germes, personnages autres que Fanal), front de givre en sommeil, quête qui
-// fait avancer un quartier, niveau suivant joué, sélections typées (onSelect), cibles de 44 px, plaques entières à côté
+// compte sans monter de niveau, niveau acheté joué (quartier-monte), pastille des permis sur « Construire »,
+// sélections typées (onSelect), cibles de 44 px, plaques « Champs · niv. 1 » entières à côté
 // de la colonne des commandes (Construire, Quêtes, Vue, et la rangée « Vue » dépliée), « Quêtes » qui cache le panneau,
 // focusEntity (quai hors grille, parcelle du départ), bouton « Passer l'animation » touchable panneau ouvert et jamais
 // sur la colonne, mouvement réduit, aucune image demandée au repos, aucune erreur console.
@@ -109,7 +110,7 @@ async function plaques(page) {
   });
 }
 
-/** Plaque d'un quartier : étiquette et niveau affiché. */
+/** Plaque d'un quartier : étiquette (espaces normalisées), niveau acheté et ligne « niv. n ». */
 const plaque = (page, s) => page.evaluate((s) => { const b = document.querySelector(`.ow-plaque[data-sector="${s}"]`); return { label: b.getAttribute('aria-label').replace(/\s+/g, ' '), niveau: b.dataset.niveau, line: b.querySelector('.ow-plaque-val').textContent }; }, s);
 const lastSel = (page) => page.evaluate(() => window.__selections.at(-1) || null);
 async function tap(page, id) { const p = await hitPoint(page, id); if (p) { await page.mouse.click(p[0], p[1]); await page.waitForTimeout(150); } return p; }
@@ -136,7 +137,9 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     check(`${tag} Fanal seul personnage`, r.start.chars.join() === 'fanal', r.start.chars);
     check(`${tag} front de givre en sommeil (caché)`, r.start.front, r.start.front);
     r.champs = await plaque(page, 'champs');
-    check(`${tag} plaque des Champs : niveau et ce qui manque`, r.champs.line === 'Niveau 1' && /Champs : niveau 1, encore 3 tâches Terrain pour le niveau 2\./.test(r.champs.label), r.champs);
+    check(`${tag} plaque des Champs : « niv. 1 », lue « Champs : niveau 1. »`, r.champs.line === 'niv.\u00a01' && r.champs.label === 'Champs : niveau 1.', r.champs);
+    r.badge = await page.evaluate(() => { const b = document.querySelector('[data-ow="build"]'); const p = b.querySelector('.ow-badge'); return { text: p.textContent, hidden: p.hidden, label: b.getAttribute('aria-label') }; });
+    check(`${tag} pastille « 2 » sur « Construire », dite par son nom`, r.badge.text === '2' && !r.badge.hidden && r.badge.label === 'Construire, 2 permis à placer', r.badge);
 
     // ---- sélections typées : plaque, repère, caisse, Fanal ; retoucher rappelle onSelect ; clearSelection()
     await page.click('.ow-plaque[data-sector="mairie"]');
@@ -171,18 +174,20 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     check(`${tag} toucher une caisse d'échéance → onSelect object avec sa quête`, crate && r.selCrate && r.selCrate.type === 'object' && r.selCrate.id === crate.id && /^demo-/.test(r.selCrate.taskId || ''), { crate, point: pCrate, sel: r.selCrate });
     await page.evaluate(() => window.__world.clearSelection());
 
-    // ---- une quête à l'Atelier : sa plaque avance ; puis le niveau suivant se joue
+    // ---- une quête à la Mairie : le quartier ne monte pas tout seul ; puis le niveau de l'Atelier s'achète et se joue
     const a0 = await plaque(page, 'atelier');
     await run(page, 'q-mairie');
     r.mairie = await plaque(page, 'mairie');
-    check(`${tag} quête à la Mairie : la plaque compte une tâche de plus`, /encore 3 tâches Administratif/.test(r.mairie.label), r.mairie);
+    r.mairieEvents = await page.evaluate(() => (window.__lastEvents || []).map((e) => e.type));
+    check(`${tag} quête à la Mairie : la plaque ne bouge pas (les niveaux s'achètent)`, r.mairie.niveau === '0' && r.mairie.label === 'Mairie : niveau 0.' && !r.mairieEvents.some((x) => /^quartier-/.test(x)), { plaque: r.mairie, ev: r.mairieEvents });
     await act(page, 'niveau');
     await page.waitForTimeout(900);
     await page.screenshot({ path: `${OUT}/${tag}-02-niveau.png` });
     await idle(page);
     r.atelier = await plaque(page, 'atelier');
     r.niveauEvents = await page.evaluate(() => (window.__lastEvents || []).map((e) => e.type));
-    check(`${tag} niveau suivant de l'Atelier : événement du cœur et plaque à jour`, r.niveauEvents.includes('quartier-niveau') && a0.niveau === '0' && r.atelier.niveau === '1' && r.atelier.line === 'Niveau 1' && /encore 10 tâches Maison pour le niveau 2/.test(r.atelier.label), { a0, a1: r.atelier, ev: r.niveauEvents });
+    r.badgeApres = await page.evaluate(() => document.querySelector('[data-ow="build"] .ow-badge').textContent);
+    check(`${tag} niveau acheté à l'Atelier : événement du cœur, plaque et pastille à jour`, r.niveauEvents.includes('quartier-monte') && a0.niveau === '0' && r.atelier.niveau === '1' && r.atelier.line === 'niv.\u00a01' && r.atelier.label === 'Atelier : niveau 1.' && r.badgeApres === '1', { a0, a1: r.atelier, ev: r.niveauEvents, badge: r.badgeApres });
 
     // ---- événements sans dessin et type inconnu : ignorés sans erreur
     await run(page, 'muets');

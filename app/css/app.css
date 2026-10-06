@@ -346,6 +346,65 @@
   .cat-row .ow-plan-bat-text { flex-basis: calc(100% - 52px - var(--sp-3)); }
   .cat-go { margin-left: calc(52px + var(--sp-3)); }
 }
+/* permis en main, en tête du catalogue (le même texte que sur la fiche d'un quartier) */
+.cat-permis {
+  margin: 0 0 var(--sp-2);
+  font-weight: var(--w-semibold);
+}
+/* section « Quartiers » : toute la ligne est un bouton qui ouvre la fiche, picto du quartier à gauche, chevron à droite */
+.cat-qrt { padding: 0; }
+.cat-qrt-go {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: calc(var(--target) + 2 * var(--sp-2));
+  padding: var(--sp-2) 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cat-qrt-go .ow-plan-bat-text > span { display: block; }
+.cat-qrt-picto .icon { width: 28px; height: 28px; color: var(--c-sage-deep); }
+.cat-qrt-chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transform: rotate(-90deg);
+}
+@media (hover: hover) {
+  .cat-qrt-go:hover .cat-nom { text-decoration: underline; text-underline-offset: 3px; }
+}
+.cat-qrt-go:focus { outline: none; }
+.cat-qrt-go:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* Fiche d'un quartier : le gabarit de la fiche d'un bâtiment, picto du quartier dans la vignette */
+.qrt-head {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.qrt-head-text { min-width: 0; }
+.qrt-picto .icon { width: 36px; height: 36px; color: var(--c-sage-deep); }
+.qrt-ligne {
+  margin: 2px 0 0;
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.qrt-body .help-line dd p.qrt-permis { margin-top: var(--sp-1); color: var(--text-soft); }
+.qrt-max {
+  flex: 1 1 100%;
+  margin: 0;
+  padding: var(--sp-2) 0;
+  font-weight: var(--w-semibold);
+  text-align: center;
+}
 
 /* ───────── Lettre du matin ───────── */
 .letter-title {

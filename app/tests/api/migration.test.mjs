@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { startServer } from './helpers.mjs';
+import { migrateState, hydrateLedger } from '../../core/index.js';
 
 const sha1 = (s) => createHash('sha1').update(s).digest('hex');
 const OUTDATED = 'L’app a été mise à jour : recharge la page.';
@@ -47,14 +48,14 @@ async function withV1(fn, { copy } = {}) {
   }
 }
 
-test('ancienne app : écriture sans version de client (ou < 2) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
+test('ancienne app : écriture sans version de client (ou < 3) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
   const before = snapshot(s);
   const listing = readdirSync(s.dataDir).sort();
   const ops = [
     { type: 'task.upsert', task: { id: 'a2', status: 'done' } },
     { type: 'game.set', game: { version: 1, resources: { energy: 99 } }, baseGameRevision: sha1(V1_GAME) },
   ];
-  for (const extra of [{}, { client: 1 }, { client: '2' }, { client: null }]) {
+  for (const extra of [{}, { client: 1 }, { client: 2 }, { client: '3' }, { client: null }]) {
     const r = await s.post({ opId: 'vieil-onglet', ops, ...extra });
     assert.equal(r.status, 409, JSON.stringify(extra));
     const j = await r.json();
@@ -132,12 +133,12 @@ test('opId de la v1 rejoué : sans effet, par l’ancienne app comme par la v2',
   assert.equal(r.status, 409);
   assert.equal((await r.json()).code, 'client_outdated');
   // la v2 la rejoue telle quelle : déjà appliquée, rien n'est refait
-  r = await s.post({ client: 2, opId: 'v1-op', ops: V1_OPS });
+  r = await s.post({ client: 3, opId: 'v1-op', ops: V1_OPS });
   let j = await r.json();
   assert.equal(r.status, 200);
   assert.equal(j.replay, true);
   // la v2 la rejoue recalculée (autre corps) : refusée
-  r = await s.post({ client: 2, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
+  r = await s.post({ client: 3, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
   j = await r.json();
   assert.equal(r.status, 409);
   assert.equal(j.code, 'op_id_reused');
@@ -151,3 +152,55 @@ test('quête payée en v1 : la v2 ne peut pas l’inscrire une seconde fois', ()
   assert.equal((await r.json()).code, 'duplicate_key');
   assert.deepEqual(snapshot(s), before);
 }));
+
+test('version 2 refusée (409 client_outdated) : un onglet resté sur la règle d’avant les permis n’écrit plus', async () => {
+  const s = await startServer();
+  try {
+    const before = s.readTasksRaw();
+    const ops = [{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }];
+    const r = await s.post({ client: 2, opId: 'onglet-v2', ops });
+    assert.equal(r.status, 409);
+    const j = await r.json();
+    assert.equal(j.code, 'client_outdated');
+    assert.equal(j.error, OUTDATED);
+    assert.equal(s.readTasksRaw(), before);
+    // la version 3 passe, et l'opId refusé n'a pas été retenu
+    const ok = await s.post({ client: 3, opId: 'onglet-v2', ops });
+    assert.equal(ok.status, 200);
+    assert.equal((await ok.json()).replay, undefined);
+  } finally {
+    s.stop();
+  }
+});
+
+test('permis : une partie v2 sans niveaux, convertie par le cœur, s’enregistre ; tasks.json et registre identiques à l’octet', async () => {
+  const s = await startServer();
+  try {
+    mkdirSync(join(s.dataDir, 'backups'), { recursive: true });
+    const game0 = JSON.stringify({
+      version: 2, createdAt: '2026-10-01T14:00:00.000Z', startDay: '2026-10-01', resources: { energy: 77.4, materials: 88, food: 9 },
+      habitants: 2, quartiers: { champs: 16, atelier: 5, mairie: 0, ecole: 0, garage: 0, place: 0 }, // niveaux 2 et 1
+    }, null, 4) + '\n';
+    const reward = { key: 'reward:a1:1', at: '2026-10-20T15:00:00.000Z', day: '2026-10-20', type: 'reward', taskId: 'a1', occurrence: 1, pe: 7, energy: 2.1, materials: 3.5, quartier: 'atelier' };
+    writeFileSync(file(s, 'game-state.json'), game0);
+    writeFileSync(file(s, 'ledger.jsonl'), JSON.stringify(reward) + '\n');
+    const before = snapshot(s);
+    const now = '2026-10-21T14:00:00Z';
+    const j = await (await s.get()).json();
+    const ctx = { tasks: j.tasks, ledger: hydrateLedger(j.ledger, j.ledgerKeys) };
+    const game = migrateState(j.game, now, ctx);
+    assert.deepEqual(game.permis, { dispo: 3, depuis: '2026-10-20', cadeau: 3 });
+    const r = await s.op([{ type: 'game.set', game, baseGameRevision: j.gameRevision }]);
+    assert.equal(r.status, 200, await r.clone().text());
+    const after = snapshot(s);
+    assert.equal(after.tasks, before.tasks);
+    assert.equal(after.ledger, before.ledger);
+    const saved = (await (await s.get()).json()).game;
+    assert.deepEqual(saved.permis, game.permis);
+    assert.deepEqual(saved.resources, { energy: 77.4, materials: 88, food: 9 });
+    assert.deepEqual(saved.quartiers, JSON.parse(game0).quartiers);
+    assert.deepEqual(migrateState(saved, '2026-10-25T14:00:00Z', ctx), saved); // relue plus tard : rien ne bouge
+  } finally {
+    s.stop();
+  }
+});

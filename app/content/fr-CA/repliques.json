@@ -65,21 +65,30 @@
         {"id": "quest.already_done.06", "voix": "fanal", "texte": "Pas de témoin, mais je te crois. Je l’inscris."}
       ]
     },
-    "quartier.niveau": {
-      "quand": "Un quartier atteint un nouveau niveau (5, 15, 30, 60, 100 tâches, puis toutes les 50). Remplace la réplique de quête terminée. Les variables {quartier}, {du_quartier} et {au_quartier} désignent ce quartier.",
+    "permis.gagne": {
+      "quand": "Un permis tombe après quatre jours travaillés (avec la quête payée qui le donne). Remplace la réplique de quête terminée.",
       "frequence": 1,
       "variantes": [
-        {"id": "quartier.niveau.01", "voix": "fanal", "texte": "Niveau suivant {au_quartier}. Je l’ai écrit sur le mur."},
-        {"id": "quartier.niveau.02", "voix": "fanal", "texte": "Ça monte {au_quartier}. Je l’annonce, c’est mon travail."},
-        {"id": "quartier.niveau.03", "voix": "fanal", "texte": "Un niveau de plus {au_quartier}. Pas de discours. Bon, un petit : bravo."},
-        {"id": "quartier.niveau.04", "voix": "fanal", "texte": "Le compteur {du_quartier} a changé de chiffre. J’aime quand ça arrive."},
-        {"id": "quartier.niveau.05", "voix": "fanal", "texte": "Nouveau niveau {au_quartier}. On garde le rythme, sans courir."},
-        {"id": "quartier.niveau.06", "voix": "fanal", "quartier": "champs", "texte": "Les Champs montent d’un cran. Les clôtures font semblant de rien."},
-        {"id": "quartier.niveau.07", "voix": "fanal", "quartier": "atelier", "texte": "L’Atelier monte d’un niveau. J’ai huilé la porte pour l’occasion."},
-        {"id": "quartier.niveau.08", "voix": "fanal", "quartier": "mairie", "texte": "La Mairie monte d’un niveau. Elle a acheté un deuxième tampon."},
-        {"id": "quartier.niveau.09", "voix": "fanal", "quartier": "ecole", "texte": "L’École monte d’un niveau. La cloche a sonné toute seule. Presque."},
-        {"id": "quartier.niveau.10", "voix": "fanal", "quartier": "garage", "texte": "Le Garage monte d’un niveau. Ma pelle est jalouse."},
-        {"id": "quartier.niveau.11", "voix": "fanal", "quartier": "place", "texte": "La Place monte d’un niveau. Les bancs se tiennent plus droits."}
+        {"id": "permis.gagne.01", "voix": "fanal", "texte": "Quatre jours de travail. La Mairie a tamponné un permis."}
+      ]
+    },
+    "permis.rang": {
+      "quand": "Une famille fait passer le village à un nouveau rang, qui donne un permis. Remplace la réplique de famille accueillie. La variable {rang} est le nom du nouveau rang.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "permis.rang.01", "voix": "fanal", "texte": "{rang}. Ça vaut un permis. Et un tampon."}
+      ]
+    },
+    "quartier.monte": {
+      "quand": "Un quartier monte au niveau 1 (permis placés et travaux payés). Une réplique par quartier, rien aux niveaux suivants.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "quartier.monte.champs", "voix": "fanal", "quartier": "champs", "texte": "Du compost. Ça sent fort et ça pousse fort."},
+        {"id": "quartier.monte.atelier", "voix": "fanal", "quartier": "atelier", "texte": "Des tablettes dans la serre. Les laitues ont pris de l’altitude."},
+        {"id": "quartier.monte.garage", "voix": "fanal", "quartier": "garage", "texte": "Le motoculteur repart. Les semis n’ont plus d’excuse."},
+        {"id": "quartier.monte.ecole", "voix": "fanal", "quartier": "ecole", "texte": "Une classe de plus. Les familles avec enfants lisent nos annonces."},
+        {"id": "quartier.monte.mairie", "voix": "fanal", "quartier": "mairie", "texte": "Le formulaire d’accueil tient sur une page. Recto."},
+        {"id": "quartier.monte.place", "voix": "fanal", "quartier": "place", "texte": "Un caveau sous la Place. Les patates approuvent."}
       ]
     },
     "step.done": {

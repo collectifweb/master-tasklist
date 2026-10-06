@@ -268,11 +268,13 @@ test('aucun plafond de stock : tout le gain entre, même avec de grosses réserv
   assert.equal(s.r.events.some((e) => e.type === 'surplus'), false);
 });
 
-test('niveau de quartier : l’événement quartier-niveau sort à la 5e tâche', () => {
+test('5e tâche d’un quartier : elle compte, mais le quartier ne monte plus tout seul (niveaux achetés par permis)', () => {
   const w = fresh([task({ domain: 'Jardin' })]);
   w.game.quartiers.champs = 4;
   const s = step(w, completeQuest, { id: 't1' });
-  assert.deepEqual(s.r.events.filter((e) => e.type === 'quartier-niveau'), [{ type: 'quartier-niveau', quartier: 'champs', niveau: 1 }]);
+  assert.equal(s.world.game.quartiers.champs, 5);
+  assert.equal(s.world.game.niveaux.champs, 0);
+  assert.equal(s.r.events.some((e) => e.type === 'quartier-niveau' || e.type === 'quartier-monte'), false);
 });
 
 test('quête longue : plaque datée à la fin', () => {

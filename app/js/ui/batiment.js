@@ -1,10 +1,13 @@
 // Fiche d'un bâtiment (bible §5) : trois lignes, « Ce que c'est », « Ce que ça fait », « Maintenant », puis le seul
 // geste possible ici (bâtir, semer, récolter, accueillir une famille). Un geste impossible reste visible, à plat, avec
 // sa raison écrite par le cœur (« Hameau : encore 2 habitants. ») et un cadenas : le joueur sait toujours pourquoi.
-// Rien n'est calculé ici qui ne vienne de core/batiments.js ; le geste passe par data-action="bat-geste".
+// Rien n'est calculé ici qui ne vienne de core/batiments.js ; les valeurs que les niveaux de quartier changent (récolte
+// selon le lieu, jours de pousse, places par chalet, prix d'une famille, stockage) sont lues au cœur, jamais des
+// constantes de départ. Le geste passe par data-action="bat-geste".
 import {
-  BATIMENTS, CULTURE, CHAUFFAGE, GRENIER_STOCKAGE, ACCUEIL_NOURRITURE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
+  BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
+  recolteDe, prixFamille, placesParChalet, valeur,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -23,10 +26,11 @@ export function coutText(cout) {
 // habitants logés dans chaque chalet debout, dans l'ordre des chalets (comme la carte)
 function occupantsDe(game, id) {
   let reste = logements(game).habitants;
+  const places = placesParChalet(game);
   for (let k = 1; k <= BATIMENTS.chalet.max; k++) {
     const cid = `chalet-${k}`;
     if (!aBati(game, cid)) continue;
-    const n = Math.min(BATIMENTS.chalet.loge, reste);
+    const n = Math.min(places, reste);
     if (cid === id) return n;
     reste -= n;
   }
@@ -45,7 +49,7 @@ export function batimentModel(c, id) {
     nom: t(`bat.${type}.${bati ? 'nom' : 'vide'}`),
     quoi: t(`bat.${type}.${bati ? 'quoi' : 'quoiVide'}`),
     fait: t(`bat.${type}.fait`, {
-      loge: def.loge, recolte: CULTURE.recolte, jours: CULTURE.jours, chauffage: CHAUFFAGE,
+      loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
       n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
     }),
     maintenant: '', raison: null, geste: null,
@@ -67,13 +71,13 @@ export function batimentModel(c, id) {
       m.maintenant = t(`bat.fiche.pousse.${st.reste === 1 ? 'one' : 'other'}`, { n: st.reste, date: shortDate(st.semeLe) });
       m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter'), attente: true };
     } else {
-      m.maintenant = t('bat.fiche.mure', { n: num(CULTURE.recolte) });
+      m.maintenant = t('bat.fiche.mure', { n: num(recolteDe(game, def.culture)) });
       m.raison = refusRecolter(game, ledger, id, now);
       m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter') };
     }
   } else if (type === 'chalet') {
     const occupants = occupantsDe(game, id);
-    m.maintenant = t(`bat.fiche.chalet.${occupants === 0 ? 'zero' : occupants === 1 ? 'one' : 'other'}`, { occupants, loge: def.loge, n: ACCUEIL_NOURRITURE });
+    m.maintenant = t(`bat.fiche.chalet.${occupants === 0 ? 'zero' : occupants === 1 ? 'one' : 'other'}`, { occupants, loge: placesParChalet(game), n: prixFamille(game) });
     m.raison = refusAccueillir(game);
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {

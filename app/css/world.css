@@ -320,6 +320,7 @@
 .ow-star path { fill: var(--c-paper-raised); }
 
 /* ---------------------------------------------------------------- plaques de quartier (boutons, socle de 3 px) */
+/* « Champs · niv. 2 » : picto, nom, niveau acheté ; sans barre (le lecteur d'écran lit l'aria-label du bouton) */
 .ow-plaques { position: absolute; left: 0; top: 0; z-index: 4; } /* au-dessus du fil de lumière (.ow-fxv) */
 .ow-plaque {
   position: absolute;
@@ -330,7 +331,7 @@
   gap: 7px;
   min-width: var(--target, 44px);
   min-height: var(--target, 44px);
-  padding: 5px 11px 8px 6px;
+  padding: 6px 12px 6px 6px;
   border: 1px solid var(--c-line-strong);
   border-radius: var(--r-md);
   background: var(--c-paper);
@@ -353,7 +354,7 @@
   color: var(--c-sage-deep);
 }
 .ow-glyph { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.ow-plaque-text { display: grid; gap: 2px; }
+.ow-plaque-text { display: flex; align-items: baseline; gap: 5px; }
 .ow-plaque-name {
   font-family: var(--font-display);
   font-weight: var(--w-heavy, 800);
@@ -363,36 +364,20 @@
 }
 .ow-plaque-line {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 5px;
   font-size: var(--text-12);
   font-weight: var(--w-semibold);
   line-height: 1.2;
   color: var(--text-soft);
 }
+.ow-plaque-sep { color: var(--text-muted); }
 .ow-plaque-val { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
-.ow-plaque-bar {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 3px;
-  height: 3px;
-  border-radius: var(--r-pill);
-  background: var(--c-line);
-  overflow: hidden;
-}
-.ow-plaque-bar i {
-  display: block;
-  height: 100%;
-  background: var(--c-sage-deep); /* le quartier grandit : sauge (le verre solaire reste à l'Énergie) */
-  transform-origin: 0 50%;
-  transition: transform var(--t-medium) var(--ease-out);
-}
 /* plaque repliée (autre quartier que l'actif sur petit écran, ou vue d'ensemble) : son picto seul, 44 × 44 */
 .ow-plaque[data-court],
 .ow[data-lod="loin"] .ow-plaque { padding: 6px; gap: 0; border-radius: 50%; }
-.ow-plaque[data-court] :is(.ow-plaque-text, .ow-plaque-bar),
-.ow[data-lod="loin"] :is(.ow-plaque-text, .ow-plaque-bar) { display: none; }
+.ow-plaque[data-court] .ow-plaque-text,
+.ow[data-lod="loin"] .ow-plaque-text { display: none; }
 .ow[data-lod="loin"] .ow-ent.is-btn .ow-hit { pointer-events: none; }
 
 .ow-tag {
@@ -463,6 +448,28 @@
 .ow-zbtn[aria-disabled="true"] { cursor: default; border-style: dashed; color: var(--text-muted); background: var(--c-sunken); box-shadow: none; }
 .ow-zbtn:focus { outline: none; }
 .ow-zbtn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+/* pastille des permis sur « Construire » : un chiffre sobre, sauge pleine, cerclée de papier ; jamais animée */
+.ow-zbtn[data-ow="build"] { position: relative; }
+.ow-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  box-shadow: 0 0 0 2px var(--c-paper);
+  font-family: var(--font-num);
+  font-size: var(--text-12);
+  font-weight: var(--w-heavy, 800);
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-align: center;
+  pointer-events: none;
+}
+.ow-badge[hidden] { display: none; }
 
 .ow-skip {
   position: absolute;
@@ -511,8 +518,7 @@
 .ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor) {
   animation-play-state: running;
 }
-.ow[data-mouvement="reduit"] .ow-halo,
-.ow[data-mouvement="reduit"] .ow-plaque-bar i { transition-duration: 0s; }
+.ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }
 
 /* ---------------------------------------------------------------- carte en liste */
 .ow-plan {

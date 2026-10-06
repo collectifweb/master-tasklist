@@ -8,13 +8,18 @@
 //      première famille arrive vers le 6e jour, au départ du 25 octobre comme du 15 décembre.
 // (e) (lot R) mesure, sans cible, un joueur qui ne fait que des quêtes longues et difficiles (L et D de 6 à 9) : le
 //     plafond quotidien des points d'effort et ce que « l'effort paie » change au rythme du village.
+// (f) (lot R) les permis et les niveaux de quartier (docs/conception-niveaux-quartiers.md §11) : une fois ses premiers
+//     pas et ses bâtiments faits, le joueur simulé achète le niveau le moins cher qu'il peut payer. Un permis tous les
+//     4 jours travaillés, le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
+//     nettement plus bas qu'une partie sans niveaux. ECHELLE (quartiers.js) se règle ici. (a) se mesure sans niveaux ;
+//     (a′) mesure la même chose avec niveaux, cible élargie à 15-25 (voir plus bas).
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
-  prochainGeste, PAS_IDS, cappedPe,
+  prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -36,14 +41,15 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * profil(n) : les n quêtes du monde (quêtes ordinaires par défaut).
  * bandeau : tant que les premiers pas durent, le joueur fait le geste que le bandeau propose (prochainGeste) dès qu'il
  * le peut, et rien d'autre ; au pas « famille », il fait tout ce qui aide à nourrir. Sinon, il fait tout ce qui est
- * possible, dans l'ordre ci-dessous.
- * Renvoie le journal : { hameau (jour d'arrivée, ou null), familles: [jours], recoltes: [jours], plein (jour où tous les
- * logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour), monde }.
+ * possible, dans l'ordre ci-dessous ; en dernier, il monte le quartier le moins cher qu'il peut payer (niveau le plus
+ * bas, puis l'ordre des quartiers), sauf avec `niveaux: false`.
+ * Renvoie le journal : { hameau (jour d'arrivée, ou null), familles: [jours], recoltes: [jours], plein (premier jour où tous
+ * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
+ * niveaux: [n° du jour de chaque niveau acheté], monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true } = {}) {
   let w = fresh(profil(jours * 3 + 10), heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, monde: null };
-  const logementsMax = BATIMENTS.chalet.max * BATIMENTS.chalet.loge;
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], monde: null };
   let n = 0;
   let i = 0;
   const geste = (fn, params, now) => {
@@ -76,7 +82,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
         log.familles.push(day);
         log.premiereFamille ??= i + 1;
         if (!log.hameau && rangDuVillage(w.game.habitants).id === 'hameau') log.hameau = i + 1;
-        if (w.game.habitants >= logementsMax) log.plein = day;
+        if (w.game.habitants >= BATIMENTS.chalet.max * placesParChalet(w.game)) log.plein ??= day; // la 1re fois : l'École rouvre des places ensuite
         continue;
       }
       if (!logements(w.game).libres && !refusConstruire(w.game, 'chalet')) { geste(construire, { type: 'chalet' }, soir); continue; }
@@ -84,6 +90,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       if (libre) { geste(semer, { id: libre }, soir); continue; }
       const bat = ['parcelle', 'atelier', 'serre'].find((t) => !refusConstruire(w.game, t));
       if (bat) { geste(construire, { type: bat }, soir); continue; }
+      const q = niveaux && moinsCher(w.game, w.ledger);
+      if (q) { geste(monterQuartier, { quartier: q, niveau: niveauDe(w.game, q) + 1 }, soir); log.niveaux.push(i + 1); continue; }
       break;
     }
     if (jusquAuHameau && log.hameau) break;
@@ -92,12 +100,28 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   return log;
 }
 
+// Quartier que le joueur simulé monte : le niveau le moins cher qu'il peut payer (le plus bas), dans l'ordre des quartiers.
+function moinsCher(game, ledger) {
+  const possibles = QUARTIER_IDS.filter((q) => !refusMonter(game, ledger, { quartier: q }));
+  return possibles.sort((a, b) => niveauDe(game, a) - niveauDe(game, b))[0] ?? null;
+}
+
 const regulier = (i) => (i % 2 ? 3 : 2); // 2 ou 3 quêtes par jour, 2,5 en moyenne
 
 test('(a) à rythme régulier, le Hameau arrive en 21 jours environ, en été comme à l’automne', () => {
   for (const debut of ['2026-06-01', '2026-08-15', '2026-10-06']) {
-    const { hameau } = simuler(debut, 40, regulier, { jusquAuHameau: true });
+    const { hameau } = simuler(debut, 40, regulier, { jusquAuHameau: true, niveaux: false }); // avec les niveaux : (a′)
     assert.ok(hameau >= 17 && hameau <= 25, `départ ${debut} : Hameau au jour ${hameau}`);
+  }
+});
+
+// (a′) (lot R) avec les niveaux : le Hameau passe du jour 18 au jour 16 aux trois départs dès qu'un niveau de Champs
+//      est acheté avant lui (une récolte de 5 au lieu de 4 avance la 3e famille de 2 jours), quelle que soit ECHELLE de
+//      10 à 40. Accepté (arbitrage 10 du lot R) : c'est l'effet voulu d'un niveau. Cible avec niveaux : 15 à 25.
+test('(a′) avec les niveaux de quartier, le Hameau arrive entre les jours 15 et 25', () => {
+  for (const debut of ['2026-06-01', '2026-08-15', '2026-10-06']) {
+    const { hameau } = simuler(debut, 40, regulier, { jusquAuHameau: true });
+    assert.ok(hameau >= 15 && hameau <= 25, `départ ${debut} : Hameau au jour ${hameau} avec les niveaux`);
   }
 });
 
@@ -120,7 +144,7 @@ test('(b) départ le 25 octobre, campement seul : jamais bloqué l’hiver, la s
 test('(c) une année entière à trois quêtes par jour : aucun stock négatif, jamais plus de Nourriture que le stockage', () => {
   // les vérifications sont faites après chaque geste, dans simuler()
   const log = simuler('2026-10-06', 365, () => 3);
-  assert.equal(log.monde.game.habitants, BATIMENTS.chalet.max * BATIMENTS.chalet.loge);
+  assert.equal(log.monde.game.habitants, BATIMENTS.chalet.max * placesParChalet(log.monde.game)); // l'École ajoute des places
 });
 
 test('(d) en suivant le bandeau : les cinq premiers pas sans impasse, la première famille vers le 6e jour', () => {
@@ -156,7 +180,7 @@ test('(e) mesure sans cible : quêtes ordinaires contre quêtes longues et diffi
   for (const [nomProfil, profil] of [['ordinaires', quetes], ['longues', longues]]) {
     for (const debut of ['2026-06-01', '2026-10-25']) {
       for (const [nomRythme, rythme] of [['2 à 3 par jour', regulier], ['1 par jour', () => 1]]) {
-        const log = simuler(debut, 112, rythme, { profil });
+        const log = simuler(debut, 112, rythme, { profil, niveaux: false }); // les gains seuls, sans achat de niveaux
         const pe = pesParJour(log.monde.ledger);
         const { energy, materials } = log.monde.game.resources;
         t.diagnostic(`${nomProfil}, ${debut}, ${nomRythme} : 1re famille j${log.premiereFamille}, Hameau j${log.hameau}, `
@@ -165,4 +189,41 @@ test('(e) mesure sans cible : quêtes ordinaires contre quêtes longues et diffi
       }
     }
   }
+});
+
+test('(f) permis et niveaux : un permis tous les 4 jours travaillés, le premier niveau vers la 2e semaine, pas tout avant la semaine 16', (t) => {
+  const SEMAINES = 16;
+  const f = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
+  const permisDesJours = (ledger) => ledger.filter((e) => /^permis:\d/.test(e.key)).length;
+  const permisTous = (ledger) => ledger.filter((e) => e.type === 'permis' || e.permis > 0).length;
+  // rythme des permis : environ 1,5 à 1,75 par semaine à 6 ou 7 jours travaillés, environ 0,9 à un jour sur deux
+  const sixSurSept = (i) => (i % 7 === 6 ? 0 : regulier(i));
+  for (const [nom, rythme, min, max] of [['7 jours sur 7', regulier, 1.4, 1.8], ['6 jours sur 7', sixSurSept, 1.4, 1.8], ['un jour sur deux', (i) => (i % 2 ? 0 : 1), 0.8, 1]]) {
+    const log = simuler('2026-10-25', SEMAINES * 7, rythme);
+    const parSemaine = permisDesJours(log.monde.ledger) / SEMAINES;
+    t.diagnostic(`permis, ${nom} : ${f(parSemaine)} par semaine des jours travaillés, ${f(permisTous(log.monde.ledger) / SEMAINES)} toutes sources`);
+    assert.ok(parSemaine >= min && parSemaine <= max, `${nom} : ${parSemaine} permis par semaine`);
+  }
+  for (const debut of ['2026-06-01', '2026-10-25']) {
+    // premier niveau entre les jours 7 et 14 au rythme régulier, avant le jour 30 à une quête par jour
+    const reg = simuler(debut, SEMAINES * 7, regulier);
+    const lent = simuler(debut, SEMAINES * 7, () => 1);
+    const sans = simuler(debut, SEMAINES * 7, regulier, { niveaux: false });
+    const m = reg.monde.game.resources.materials;
+    const mSans = sans.monde.game.resources.materials;
+    t.diagnostic(`${debut}, régulier : 1er niveau j${reg.niveaux[0]}, ${reg.niveaux.length} niveaux en ${SEMAINES} semaines `
+      + `(${QUARTIER_IDS.map((q) => `${q} ${niveauDe(reg.monde.game, q)}`).join(', ')}), permis en main ${reg.monde.game.permis.dispo} ; `
+      + `semaine ${SEMAINES} : ${f(reg.monde.game.resources.energy)} Énergie et ${f(m)} Matériaux, contre ${f(sans.monde.game.resources.energy)} et ${f(mSans)} sans niveaux ; `
+      + `Hameau j${reg.hameau}, plein ${reg.plein ?? '—'} (sans niveaux : ${sans.plein ?? '—'})`);
+    t.diagnostic(`${debut}, une quête par jour : 1er niveau j${lent.niveaux[0]}, ${lent.niveaux.length} niveaux en ${SEMAINES} semaines, `
+      + `semaine ${SEMAINES} : ${f(lent.monde.game.resources.energy)} Énergie et ${f(lent.monde.game.resources.materials)} Matériaux`);
+    assert.ok(reg.niveaux[0] >= 7 && reg.niveaux[0] <= 14, `${debut} : premier niveau au jour ${reg.niveaux[0]}`);
+    assert.ok(lent.niveaux[0] < 30, `${debut}, une quête par jour : premier niveau au jour ${lent.niveaux[0]}`);
+    assert.ok(reg.niveaux.length < 17, `${debut} : ${reg.niveaux.length} niveaux avant la semaine ${SEMAINES}`);
+    assert.ok(m <= 0.75 * mSans, `${debut} : ${m} Matériaux contre ${mSans} sans niveaux`);
+  }
+  // mesure sans cible : quêtes longues et difficiles
+  const long = simuler('2026-10-25', SEMAINES * 7, regulier, { profil: longues });
+  t.diagnostic(`longues, 2026-10-25, régulier : 1er niveau j${long.niveaux[0]}, ${long.niveaux.length} niveaux en ${SEMAINES} semaines, `
+    + `semaine ${SEMAINES} : ${f(long.monde.game.resources.energy)} Énergie et ${f(long.monde.game.resources.materials)} Matériaux`);
 });

@@ -10,9 +10,10 @@ import { findEntry, hasKey, reverseKey } from './ledger.js';
 import { orderByCote } from './cote.js';
 import { rangDuVillage } from './village.js';
 import {
-  batimentsDuVillage, compte, logements, stockage, potagerOuvert, refusConstruire, refusSemer, refusAccueillir,
+  batimentsDuVillage, compte, logements, stockage, stockageBase, potagerOuvert, refusConstruire, refusSemer, refusAccueillir,
 } from './batiments.js';
 import { Ctx } from './quests.js';
+import { annoncerPermisDeSaison } from './quartiers.js';
 
 /**
  * Les cinq premiers pas, dans l'ordre de la bible. recompense : { energy?, materials?, food? }, réglée par la
@@ -29,9 +30,9 @@ export const PREMIERS_PAS = [
 ];
 export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
 
-/** Objectif de chaque saison. Seul l'automne en a un pour l'instant : les autres s'affichent « à venir ». */
+/** Objectif de chaque saison (récompense : { energy?, materials?, permis? }). Seul l'automne en a un pour l'instant : les autres s'affichent « à venir ». */
 export const OBJECTIFS_SAISON = {
-  automne: { id: 'grenier', recompense: { energy: 3, materials: 10 } },
+  automne: { id: 'grenier', recompense: { energy: 3, materials: 10, permis: 1 } },
 };
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -49,9 +50,10 @@ const CONSTATS = {
   famille: (tasks, game) => logements(game).habitants > 0,
 };
 
-// Condition de chaque objectif de saison.
+// Condition de chaque objectif de saison. Le grenier se mesure au stockage de base (départ et greniers) : monter la
+// Place ne rend pas l'objectif plus dur.
 const ATTEINT = {
-  grenier: (game) => game.resources.food >= stockage(game),
+  grenier: (game) => game.resources.food >= stockageBase(game),
 };
 
 /** Saison du vrai calendrier pour un jour de jeu : { id, cle }. L'hiver de décembre 2026 à février 2027 est hiver-2026. */
@@ -108,14 +110,14 @@ export function prochainGeste(tasks, game, ledger, now) {
 }
 
 /**
- * Objectif de la saison en cours : { id, cle, objectif, atteint, stock, max } (automne), ou
+ * Objectif de la saison en cours : { id, cle, objectif, atteint, stock, max } (automne ; max : le stockage de base), ou
  * { id, cle, objectif: null, atteint: false, aVenir: true } pour une saison qui n'en a pas encore.
  */
 export function objectifSaison(game, ledger, now) {
   const s = saisonDe(gameDay(now));
   const obj = OBJECTIFS_SAISON[s.id];
   if (!obj) return { id: s.id, cle: s.cle, objectif: null, atteint: false, aVenir: true };
-  return { id: s.id, cle: s.cle, objectif: obj.id, atteint: hasKey(ledger, saisonKey(s.cle)), stock: round1(game.resources.food), max: stockage(game) };
+  return { id: s.id, cle: s.cle, objectif: obj.id, atteint: hasKey(ledger, saisonKey(s.cle)), stock: round1(game.resources.food), max: stockageBase(game) };
 }
 
 // Quêtes payées cette semaine (lundi à aujourd'hui, remballées exclues) et jours où il y en a eu au moins une.
@@ -179,8 +181,9 @@ function suivreSaison(ctx) {
   const obj = OBJECTIFS_SAISON[s.id];
   if (!obj || hasKey(ctx.ledger, saisonKey(s.cle)) || !ATTEINT[obj.id](ctx.game)) return;
   const r = obj.recompense;
-  ctx.append({ key: saisonKey(s.cle), at: ctx.iso, day: ctx.day, type: 'saison', saison: s.cle, objectif: obj.id, pe: 0, energy: r.energy || 0, materials: r.materials || 0, food: 0 }, 'saison', { objectif: obj.id });
-  ctx.events.push({ type: 'objectif-saison', saison: s.id, cle: s.cle, objectif: obj.id, energy: r.energy || 0, materials: r.materials || 0 });
+  ctx.append({ key: saisonKey(s.cle), at: ctx.iso, day: ctx.day, type: 'saison', saison: s.cle, objectif: obj.id, pe: 0, energy: r.energy || 0, materials: r.materials || 0, food: 0, permis: r.permis || 0 }, 'saison', { objectif: obj.id });
+  ctx.events.push({ type: 'objectif-saison', saison: s.id, cle: s.cle, objectif: obj.id, energy: r.energy || 0, materials: r.materials || 0, permis: r.permis || 0 });
+  if (r.permis) annoncerPermisDeSaison(ctx);
 }
 
 /** Valide ce qui est devenu vrai : les premiers pas dans l'ordre, puis l'objectif de la saison. */

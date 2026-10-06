@@ -18,6 +18,7 @@ import {
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
+import { openQuartier, refreshQuartier, monteText } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -85,6 +86,7 @@ function renderAll({ deferHud = false } = {}) {
   else { clearTimeout(hudTimer); hud.render(c.game, { animate: true }); }
   if (world) world.render(c.game, c.tasks, c.ledger);
   refreshBatiment(c); // après le monde : la fiche reprend son dessin dans le nouvel état
+  refreshQuartier(c);
   if (world) refreshCatalogue(c, { slots: () => world.batiments(c.game, c.ledger) });
   if (worldPlan && $('#dlg-plan').open) worldPlan.render(c.game, c.tasks, c.ledger);
 }
@@ -156,7 +158,7 @@ function react(payload) {
   if (bat) announce.say(remember(bat + replyText));
 }
 
-const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir'];
+const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier'];
 
 /** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison. */
 function objectifsSay(events) {
@@ -169,7 +171,7 @@ function objectifsSay(events) {
   return out.join(' ');
 }
 
-/** Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang. */
+/** Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang, quartier monté. */
 function batimentSay(events) {
   const out = [];
   const nom = (id) => t(`bat.${String(id).replace(/-\d+$/, '')}.nom`);
@@ -179,6 +181,7 @@ function batimentSay(events) {
     else if (e.type === 'recolte') out.push(t(e.perdu > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: num(e.nourriture), perdu: num(e.perdu) }));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
+    else if (e.type === 'quartier-monte') out.push(monteText(e));
   }
   return out.join(' ');
 }
@@ -311,26 +314,31 @@ document.addEventListener('focusin', (e) => {
 });
 
 // ───────── Monde : sélection d'un quartier, carte en liste ─────────
-/** Toucher un quartier de la carte : la liste ne montre que les quêtes de ce quartier, et le panneau s'ouvre. */
+/** « Voir les quêtes » (fiche d'un quartier) : la liste ne montre que les quêtes de ce quartier, et le panneau s'ouvre. */
 function filterByQuartier(id) {
   ui.quartier = id;
   for (const c of $$('.chip[data-quartier]')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
   renderAll();
   setPanel(true);
 }
-/** Toucher la carte : une caisse ouvre sa quête ; un quartier ou l'un de ses repères filtre la liste sur lui. */
+/** Toucher la carte : une caisse ouvre sa quête ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
 function onWorldSelect(info) {
   if (!info) return;
   if (info.type === 'batiment') { openBatimentSheet(info.id); return; }
   if (info.taskId) { if (findTask(info.taskId)) openFiche(ctx(), info.taskId); return; }
-  if (info.sector) filterByQuartier(info.sector);
+  if (info.sector) openQuartierSheet(info.sector);
 }
 // La fiche ouverte par un toucher sur la carte se ferme : l'objet n'est plus sélectionné (le toucher suivant la rouvre)
 $('#dlg-fiche').addEventListener('close', () => { if (world) world.clearSelection(); });
 $('#dlg-batiment').addEventListener('close', () => { if (world) world.clearSelection(); });
+$('#dlg-quartier').addEventListener('close', () => { if (world) world.clearSelection(); });
 /** Fiche d'un bâtiment (carte, ou carte en liste) : trois lignes et le geste possible, avec le dessin de la carte. */
 function openBatimentSheet(id) {
   openBatiment(ctx(), id, { thumb: world ? (bid) => world.thumb(bid) : null, open: openSheet });
+}
+/** Fiche d'un quartier (carte, catalogue, carte en liste) : ce qu'il fait, le niveau suivant et son prix. */
+function openQuartierSheet(id) {
+  if (store.view) openQuartier(ctx(), id, { open: openSheet });
 }
 
 /** Fin de visite : « Tout est enregistré, à demain ». Fermée, elle laisse le monde allumer ses lanternes. */
@@ -355,6 +363,7 @@ function openPlan() {
 }
 /** Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi. */
 let catalogueAt = 0;
+let quartierAt = 0; // dernier achat d'un niveau : un double toucher n'achète pas le suivant
 function openConstruire() {
   if (!world || !store.view) return;
   const c = ctx();
@@ -463,6 +472,19 @@ document.addEventListener('click', (e) => {
       if (!run('construire', { type: target.dataset.type, id: bid })) return;
       closeSheet($('#dlg-construire'));
       return world && world.focusEntity(bid); // la carte montre le bâtiment neuf (mouvement réduit respecté)
+    }
+    case 'qrt-ouvrir': return openQuartierSheet(target.dataset.quartier);
+    case 'qrt-monter': {
+      if (Date.now() - quartierAt < 800) return;
+      // achat impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
+      if (disabled(target)) return announce.say(($('#qrt-raison') || target).textContent.trim());
+      quartierAt = Date.now();
+      return run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
+    }
+    case 'qrt-quetes': {
+      // le panneau s'ouvre derrière : toutes les feuilles se ferment (fiche, catalogue, carte en liste)
+      for (const d of $$('dialog.sheet[open]')) closeSheet(d);
+      return filterByQuartier(target.dataset.quartier);
     }
     case 'bat-geste': {
       // geste impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
@@ -602,7 +624,7 @@ async function start() {
     host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('plan.close'))}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
     worldPlan = world.plan($('#plan-host'), {
       onFocusSector: (id) => { closeSheet(host); if (app.dataset.panel === 'open') setPanel(false); world.focusSector(id); },
-      onFilter: (id) => { closeSheet(host); filterByQuartier(id); },
+      onQuartier: (id) => openQuartierSheet(id),
       onBatiment: (id) => openBatimentSheet(id),
     });
     host.setAttribute('aria-labelledby', $('#plan-host .ow-plan-title').id);
