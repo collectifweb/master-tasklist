@@ -15,3 +15,4 @@ export * from './batiments.js';
 export * from './objectifs.js';
 export * from './quartiers.js';
 export * from './reglages.js';
+export * from './visiteurs.js';

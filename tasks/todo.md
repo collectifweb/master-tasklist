@@ -477,7 +477,7 @@ Non inclus (défauts connus du topo du lot R, laissés pour plus tard) : panneau
 
 ## Lot V — Visiteurs au quai : le marchand d'abord
 
-Référence : bible §7 (visiteurs), §10 (bandeau « Cette semaine »), §14 (semaines 3 et 4), §15 (décisions 16, 17 et 21). **Statut : à valider par Alex.** Rien n'est codé avant sa réponse.
+Référence : bible §7 (visiteurs), §10 (bandeau « Cette semaine »), §14 (semaines 3 et 4), §15 (décisions 16, 17 et 21). **Statut : validé par Alex le 6 octobre 2026, après-midi** (réponses en fin de section).
 
 Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille du Sud, scientifique ; le colporteur quand les décors existeront) viendront au lot suivant, sur la même base du « visiteur de la semaine ». Hors du lot : imprévus, alertes météo, allure du village (la taille des offres ne la suit pas encore), chronique d'Hermes.
 
@@ -506,9 +506,12 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 - Un onglet resté ouvert sur la version 4 garde, en réécrivant la partie, ce qu'elle contient de nouveau (lu dans `merge`, `core/state.js` ; à prouver par un test). La version minimale ne devrait donc pas monter ; si elle monte, Alex recharge d'abord ses onglets (leçon du lot R2).
 
 ### V1 — Cœur (logique seule, tests écrits d'abord et vus en échec)
-- [ ] `core/visiteurs.js` : visiteur de la semaine, offres, raisons de refus, geste `echanger`. Tests : présent du lundi au dimanche ; quai bâti en milieu de semaine ; une fois par offre et par semaine ; offres de nouveau disponibles le lundi suivant ; manque ; réserve pleine ; aucun aller-retour gagnant ; rien au registre ni dans `tasks.json`.
-- [ ] Taux réglés par la simulation et la reconstitution ; **tableau des taux montré à Alex avant V2**.
-- [ ] Test d'API : une partie qui porte la nouvelle clé, réécrite par un client version 4, la garde.
+- [x] `core/visiteurs.js` : visiteur de la semaine, offres, raisons de refus, geste `echanger`. Tests : présent du lundi au dimanche ; quai bâti en milieu de semaine ; une fois par offre et par semaine ; offres de nouveau disponibles le lundi suivant ; manque ; réserve pleine ; aucun aller-retour gagnant ; rien au registre ni dans `tasks.json`.
+- [x] Taux réglés par la simulation ; **tableau des taux montré à Alex avant V2**.
+- [x] Une partie qui porte la nouvelle clé la garde à travers la relecture et les gestes d'avant le marchand (test du cœur : l'API, elle, enregistre la partie telle qu'elle la reçoit).
+- *Fait (6 octobre, après-midi) : `core/visiteurs.js` et `tests/core/marchand.test.mjs` (13 tests, vus en échec avant le module), joueur (h) dans `simulation.test.mjs`. Suite complète : 434 tests, 432 réussis, 0 échec, 2 « à faire » connus. Un premier passage avait eu un échec de connexion au serveur de test (« ajout puis suppression », `ECONNREFUSED` pendant que tous les fichiers tournaient ensemble) ; le fichier seul a réussi 3 fois sur 3, et la suite complète relancée n'a plus d'échec.*
+- *Reconstitution de la partie d'essai non refaite : le script du lot R2 n'a pas été gardé, et la sauvegarde ne date pas les constructions. Les taux sont réglés sur la simulation seule ; le joueur (g) y donnait le premier niveau au jour 22, contre 23 pour la reconstitution.*
+- *Constat de la simulation : aux prix du lot R2, un joueur qui prend Énergie → Matériaux chaque semaine achète 2 niveaux en 16 semaines au lieu de 6 (rythme de l'essai) ; le joueur avisé prend surtout Matériaux → Énergie et Énergie → Nourriture. Taux proposés : 30 É → 15 M, 20 É → 10 N, 15 M → 15 É, 10 N → 10 É.*
 
 ### V2 — Écran [impeccable]
 - [ ] Barque du marchand au quai : touchable, cible de 44 px au moins, mouvement réduit respecté.
@@ -529,3 +532,5 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 2. **Fréquence** : chaque semaine, tant qu'il est le seul visiteur (recommandé) ? Son tour sera revu quand les autres visiteurs arriveront.
 3. **Quai au rang Hameau**, comme dans la bible ? D'après le code de conversion (`core/state.js`), la partie de production est repartie du village de départ le 6 octobre ; la production n'a pas été regardée. Si le quai n'y est pas, le marchand n'y paraîtra qu'après le Hameau (3 habitants) et le quai (25 Matériaux, 4 Énergie).
 4. **Envoi** : directement en production (rien ne change avant le quai), après la série complète et des captures envoyées à Alex ? Ou d'abord un essai sur un sous-domaine qu'Alex crée (stockage séparé d'office), avec une partie déjà au quai et « Jour suivant » ? Recommandé : l'essai si la production n'a pas de quai, l'envoi direct sinon.
+
+**Réponses d'Alex (6 octobre, après-midi)** : 1. quatre offres fixes, une fois chacune par visite ; 2. chaque semaine ; 3. le quai reste au Hameau, et le quai est déjà bâti dans sa partie de production (dit par Alex, production non regardée) ; 4. envoi direct en production. Pas de second avis (/confront-codex) : « go ».

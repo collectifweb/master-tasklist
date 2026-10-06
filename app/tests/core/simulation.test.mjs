@@ -26,6 +26,11 @@
 //     l'essai), il gagne en 24 jours 104,5 Énergie et 97,5 Matériaux sans la semaine tenue (133,5 avec ; l'essai n'en avait pas),
 //     contre 154,2 et 122 mesurés sur l'essai : les Matériaux sont à 25 % près (-20,1 %), l'Énergie non (-32,2 %, test marqué
 //     « todo » : l'essai a posé l'éolienne pendant ces 24 jours, voir plus bas).
+// (h) (lot V) le marchand du quai (core/visiteurs.js) : le joueur « avisé » n'échange que ce qui est en trop par rapport
+//     au prix d'un niveau (80 Énergie pour 60 Matériaux), achète la Nourriture qui complète une famille et vend celle qui
+//     ne tient plus dans la réserve ; le joueur qui échange « toujours » prend Énergie → Matériaux chaque semaine. Le joueur
+//     (f) bâtit alors aussi le quai. Le marchand ne doit ni retarder le Hameau, ni faire acheter plus de deux niveaux de
+//     plus en 16 semaines.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -33,7 +38,7 @@ import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
   prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
-  SEMAINE_TENUE, createQuest,
+  SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -61,12 +66,14 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
+  // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
+  // avec l'une des trois, le joueur bâtit aussi le quai.
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, monde: null };
   let n = 0;
   let i = 0;
   const geste = (fn, params, now) => {
@@ -112,9 +119,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       const libre = cultures.find((id) => !refusSemer(w.game, w.ledger, id, soir));
       if (libre) { geste(semer, { id: libre }, soir); continue; }
       // habitudes : une seule serre, comme l'essai (la seconde serre est venue après lui, au lot R2a)
-      const bat = (habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : ['parcelle', 'atelier', 'serre'])
+      const bat = (habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : marchand ? ['parcelle', 'atelier', 'serre', 'quai'] : ['parcelle', 'atelier', 'serre'])
         .find((t) => !(habitudes && t === 'serre' && batimentsDuVillage(w.game).some((b) => b.type === 'serre')) && !refusConstruire(w.game, t));
       if (bat) { geste(construire, { type: bat }, soir); continue; }
+      const offre = marchand && marchand !== 'sans' && offreDuMarchand(w.game, soir, marchand);
+      if (offre) { geste(echanger, { offre }, soir); log.echanges[offre] = (log.echanges[offre] || 0) + 1; continue; }
       const q = niveaux && moinsCher(w.game, w.ledger);
       if (q) { geste(monterQuartier, { quartier: q, niveau: niveauDe(w.game, q) + 1 }, soir); log.niveaux.push(i + 1); continue; }
       break;
@@ -129,6 +138,20 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
 function moinsCher(game, ledger) {
   const possibles = QUARTIER_IDS.filter((q) => !refusMonter(game, ledger, { quartier: q }));
   return possibles.sort((a, b) => niveauDe(game, a) - niveauDe(game, b))[0] ?? null;
+}
+
+// Offre du marchand que prend le joueur simulé (h), ou null.
+function offreDuMarchand(game, now, politique) {
+  const ok = (id) => !refusEchanger(game, { offre: id }, now);
+  if (politique === 'toujours') return ok('energie-materiaux') ? 'energie-materiaux' : null;
+  const o = Object.fromEntries(MARCHAND.offres.map((x) => [x.id, x]));
+  const { energy: e, materials: m, food: n } = game.resources;
+  if (3 * e > 4 * m + 3 * o['energie-materiaux'].donne.energy && ok('energie-materiaux')) return 'energie-materiaux';
+  if (4 * m > 3 * e + 4 * o['materiaux-energie'].donne.materials && ok('materiaux-energie')) return 'materiaux-energie';
+  const famille = prixFamille(game);
+  if (logements(game).libres && n < famille && n + o['energie-nourriture'].recoit.food >= famille && ok('energie-nourriture')) return 'energie-nourriture';
+  if (n >= stockage(game) - 2 && ok('nourriture-energie')) return 'nourriture-energie';
+  return null;
 }
 
 const regulier = (i) => (i % 2 ? 3 : 2); // 2 ou 3 quêtes par jour, 2,5 en moyenne
@@ -372,5 +395,35 @@ test('(g) cible : premier niveau vers le jour 21 (entre les jours 18 et 24), aux
     const log = simuler(debut, 16 * 7, rythmeEssai, { profil: parDefaut, habitudes: true });
     t.diagnostic(`(g) ${debut} : premier niveau au jour ${log.niveaux[0]}`);
     assert.ok(log.niveaux[0] >= 18 && log.niveaux[0] <= 24, `${debut} : premier niveau au jour ${log.niveaux[0]}`);
+  }
+});
+
+// ───────── (h) le marchand du quai ─────────
+
+test('(h) le marchand : ni Hameau retardé, ni plus de deux niveaux de plus en 16 semaines ; échanger sans compter ne paie pas', (t) => {
+  // Mesuré le 6 octobre (offres 30 É → 15 M, 20 É → 10 N, 15 M → 15 É, 10 N → 10 É), joueur avisé contre joueur sans marchand :
+  // (g) 23 et 25 octobre : 6 niveaux dans les deux cas, village plein le 29 décembre et le 1er janvier au lieu d'après la
+  // 16e semaine ; (g) 15 août et 1er juin : 6 niveaux, plein 6 jours plus tôt ; (f) 25 octobre et 1er juin : 11 et 12 niveaux
+  // au lieu de 10 et 11. Le joueur qui prend Énergie → Matériaux chaque semaine n'achète que 2 niveaux en (g) : l'Énergie
+  // manque ensuite pour les niveaux.
+  const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+  for (const [nom, rythme, profil, habitudes, departs] of [
+    ['(g)', rythmeEssai, parDefaut, true, ['2026-10-23', '2026-10-25', '2026-08-15', '2026-06-01']],
+    ['(f)', regulier, quetes, false, ['2026-10-25', '2026-06-01']],
+  ]) {
+    for (const debut of departs) {
+      const sans = simuler(debut, 16 * 7, rythme, { profil, habitudes, marchand: 'sans' });
+      const avise = simuler(debut, 16 * 7, rythme, { profil, habitudes, marchand: 'avise' });
+      const toujours = simuler(debut, 16 * 7, rythme, { profil, habitudes, marchand: 'toujours' });
+      const r = avise.monde.game.resources;
+      t.diagnostic(`${nom} ${debut} : niveaux ${sans.niveaux.length} sans, ${avise.niveaux.length} avisé, ${toujours.niveaux.length} toujours ; `
+        + `1er niveau j${sans.niveaux[0]} / j${avise.niveaux[0]} ; plein ${sans.plein ?? '—'} / ${avise.plein ?? '—'} ; `
+        + `échanges ${JSON.stringify(avise.echanges)} ; fin ${f(r.energy)} Énergie, ${f(r.materials)} Matériaux`);
+      assert.equal(avise.hameau, sans.hameau, `${nom} ${debut} : Hameau au jour ${avise.hameau} contre ${sans.hameau}`);
+      assert.ok(avise.niveaux.length >= sans.niveaux.length && avise.niveaux.length <= sans.niveaux.length + 2,
+        `${nom} ${debut} : ${avise.niveaux.length} niveaux avec le marchand, ${sans.niveaux.length} sans`);
+      assert.ok(Object.keys(avise.echanges).length > 0, `${nom} ${debut} : le marchand n'a servi à rien`);
+      assert.ok(toujours.niveaux.length <= avise.niveaux.length, `${nom} ${debut} : échanger sans compter rapporte plus qu'échanger avec soin`);
+    }
   }
 });
