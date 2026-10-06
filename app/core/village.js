@@ -1,6 +1,6 @@
-// Les deux progressions du village (bible §4) : le rang selon les Habitants, le niveau de chaque quartier selon ses
-// tâches terminées. Lectures pures pour l'affichage : « Hameau : encore 2 habitants. »,
-// « Champs : niveau 2, encore 7 tâches pour le niveau 3. »
+// Les deux progressions du village (bible §4) : le rang selon les Habitants, et l'ancien niveau de chaque quartier selon
+// ses tâches terminées. Lectures pures : « Hameau : encore 2 habitants. ». Le niveau au nombre de tâches ne s'affiche
+// plus (les quartiers montent par permis, quartiers.js) : il ne sert qu'à la conversion des anciennes parties (state.js).
 
 /** Rangs nommés, avec le premier nombre d'habitants de chacun. Au-delà de la Ville : « Ville +n » tous les 15 habitants. */
 export const RANGS = [

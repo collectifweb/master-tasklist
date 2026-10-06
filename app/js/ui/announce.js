@@ -4,15 +4,15 @@ import { $, esc, icon, restart, reducedMotion } from './dom.js';
 import { num } from './format.js';
 import { topSheet } from './sheets.js';
 
-/** Somme les gains d'une action à partir de ses événements, et le niveau de quartier atteint s'il y en a un. */
+/** Somme les gains d'une action à partir de ses événements, et les permis tombés (jours travaillés, rang, saison). */
 export function summarize(events) {
-  const s = { energy: 0, materials: 0, food: 0, quartier: null, niveau: null, noGain: false, rewards: 0 };
+  const s = { energy: 0, materials: 0, food: 0, permis: 0, quartier: null, noGain: false, rewards: 0 };
   for (const e of events || []) {
     if (e.type === 'reward') {
       s.energy += e.energy || 0; s.materials += e.materials || 0; s.food += e.food || 0; // Nourriture : premiers pas
       if (e.quartier && !s.quartier) s.quartier = e.quartier;
       s.rewards++;
-    } else if (e.type === 'quartier-niveau') s.niveau = { quartier: e.quartier, niveau: e.niveau };
+    } else if (e.type === 'permis') s.permis++;
     else if (e.type === 'sans-gain') s.noGain = true;
   }
   s.energy = Math.round(s.energy * 10) / 10; s.materials = Math.round(s.materials * 10) / 10; s.food = Math.round(s.food * 10) / 10;
@@ -24,7 +24,7 @@ export function gainList(s) {
   if (s.energy > 0) out.push(t('gain.energy', { n: num(s.energy) }));
   if (s.materials > 0) out.push(tn('gain.materials', s.materials, { n: num(s.materials) }));
   if (s.food > 0) out.push(t('gain.food', { n: num(s.food) }));
-  if (s.niveau) out.push(t('gain.niveau', { quartier: t(`quartier.${s.niveau.quartier}.name`), n: s.niveau.niveau }));
+  if (s.permis > 0) out.push(t('gain.permis', { n: s.permis }));
   return out;
 }
 
@@ -68,9 +68,9 @@ export function createAnnounce(lane, live) {
         if (s.energy > 0) items.push(`<span class="announce-item" data-res="energie">+${num(s.energy)} ${icon('energie')}<span class="sr-only">${esc(t('resource.energy'))}</span></span>`);
         if (s.materials > 0) items.push(`<span class="announce-item" data-res="materiaux">+${num(s.materials)} ${icon('materiaux')}<span class="sr-only">${esc(t('resource.materials.other'))}</span></span>`);
         if (s.food > 0) items.push(`<span class="announce-item" data-res="nourriture">+${num(s.food)} ${icon('nourriture')}<span class="sr-only">${esc(t('resource.food'))}</span></span>`);
-        // la tâche compte pour son quartier : « → Champs », ou « Champs · niveau 2 » quand il monte
-        if (s.niveau) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.niveau.quartier)}">${icon(s.niveau.quartier)}${esc(t('announce.niveau', { quartier: t(`quartier.${s.niveau.quartier}.name`), n: s.niveau.niveau }))}</span>`);
-        else if (s.quartier) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
+        // un permis qui tombe : « +1 permis » (le mot double le chiffre) ; la tâche compte pour son quartier : « → Champs »
+        if (s.permis > 0) items.push(`<span class="announce-item" data-res="permis">${esc(t('gain.permis', { n: s.permis }))}</span>`);
+        if (s.quartier) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
         if (!items.length) return say(liveText);
       }
       el.innerHTML = `<span class="announce-done">${icon('check')}</span>` + items.join('<span class="announce-sep">·</span>');

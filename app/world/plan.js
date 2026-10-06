@@ -1,12 +1,12 @@
 // Carte en liste : la même île, en liste. Mêmes données que la carte (view.js), lisible au lecteur d'écran
-// et au clavier. Les boutons « Voir sur la carte », « Ses quêtes » et « Ouvrir la fiche » (bâtiments) forment un
-// seul arrêt de tabulation (↑ ↓ Début Fin).
+// et au clavier. Chaque quartier dit son niveau acheté et ses quêtes à faire. Les boutons « Voir sur la carte » et
+// « Ouvrir la fiche » (quartiers et bâtiments) forment un seul arrêt de tabulation (↑ ↓ Début Fin).
 //
-//   const plan = createWorldPlan(conteneur, { texts, anchors, now, onFocusSector, onFilter, onBatiment });
+//   const plan = createWorldPlan(conteneur, { texts, anchors, now, onFocusSector, onQuartier, onBatiment });
 //   plan.render(game, tasks, ledger); plan.focus(); plan.destroy();
 import { SECTOR_ORDER } from './layout.js';
 import { deriveView } from './view.js';
-import { makeTexts, tachesText, batimentNom, batimentEtat } from './texts.js';
+import { makeTexts, quetesText, batimentNom, batimentEtat } from './texts.js';
 import { QUARTIERS } from '../core/domains.js';
 
 let uid = 0;
@@ -43,10 +43,10 @@ export function createWorldPlan(container, options = {}) {
   function sectorLines(v, s) {
     const sv = v.sectors[s];
     const name = t(`quartier.${s}.name`);
-    const nx = sv.suivant;
+    const q = quetesText(t, sv.quetes, QUARTIERS[s]?.domain);
     return {
       title: `${name} · ${t('monde.niveau', { n: sv.niveau })}`,
-      lines: [t('monde.progres', { Quartier: name, taches: tachesText(t, nx.encore, QUARTIERS[s]?.domain), suivant: nx.niveau })],
+      lines: [`${q.charAt(0).toUpperCase()}${q.slice(1)}.`],
     };
   }
 
@@ -61,16 +61,15 @@ export function createWorldPlan(container, options = {}) {
     btn.dataset.sector = s;
     btn.tabIndex = -1;
     btn.setAttribute('aria-label', t('monde.plan.show.label', { secteur: t(`quartier.${s}.the`) }));
-    const quests = el('button', 'ow-plan-show ow-plan-quests', t('monde.plan.quests'));
-    quests.type = 'button';
-    quests.dataset.sector = s;
-    quests.dataset.filter = '';
-    quests.tabIndex = -1;
-    quests.setAttribute('aria-label', t('monde.plan.quests.label', { du_secteur: t(`quartier.${s}.of`) }));
-    acts.append(btn, quests);
+    const fiche = el('button', 'ow-plan-show ow-plan-open', t('monde.plan.open'));
+    fiche.type = 'button';
+    fiche.dataset.quartier = s;
+    fiche.tabIndex = -1;
+    fiche.setAttribute('aria-label', t('monde.plan.open.label', { du_secteur: t(`quartier.${s}.of`) }));
+    acts.append(fiche, btn);
     li.append(h3, body, acts);
     list.appendChild(li);
-    items[s] = { li, h3, body, btn, quests };
+    items[s] = { li, h3, body, btn, fiche };
     return items[s];
   }
 
@@ -92,7 +91,7 @@ export function createWorldPlan(container, options = {}) {
   }
 
   function roving() {
-    const btns = SECTOR_ORDER.flatMap((s) => (items[s] ? [items[s].btn, items[s].quests] : []))
+    const btns = SECTOR_ORDER.flatMap((s) => (items[s] ? [items[s].fiche, items[s].btn] : []))
       .concat(Object.values(bats).map((b) => b.btn));
     if (!btns.some((b) => b.tabIndex === 0) && btns[0]) btns[0].tabIndex = 0;
     return btns;
@@ -139,7 +138,7 @@ export function createWorldPlan(container, options = {}) {
     if (!b) return;
     for (const x of roving()) x.tabIndex = x === b ? 0 : -1;
     if (b.dataset.bat) options.onBatiment?.(b.dataset.bat);
-    else if ('filter' in b.dataset) options.onFilter?.(b.dataset.sector);
+    else if (b.dataset.quartier) options.onQuartier?.(b.dataset.quartier);
     else options.onFocusSector?.(b.dataset.sector);
   }
   function onKey(ev) {

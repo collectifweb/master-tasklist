@@ -9,7 +9,7 @@ export function situationFor(action, params, events, task) {
   const lengthOf = task ? (task.frozen ? task.frozen.length : task.length) : 0;
   const doneFlow = () => {
     if (has('sans-gain')) return null;
-    if (has('quartier-niveau')) return 'quartier.niveau';
+    if (events.some((e) => e.type === 'permis' && e.source === 'jours')) return 'permis.gagne';
     if (lengthOf >= 6) return 'quest.done.big';
     if (events.some((e) => e.type === 'reward' && e.source === 'deja-faite')) return 'quest.already_done';
     return lengthOf >= 4 ? 'quest.done.medium' : 'quest.done.short';
@@ -21,7 +21,9 @@ export function situationFor(action, params, events, task) {
     case 'remballerQuest': return 'quest.undo';
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
     case 'construire': return 'batiment.construit';
-    case 'accueillir': return 'famille.arrive';
+    case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
+    // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
+    case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;
     default: return null;
   }
 }
@@ -43,11 +45,13 @@ export function createSpeech(root) {
     react({ action, params, events, task, now }) {
       const sit = situationFor(action, params || {}, events || [], task);
       if (!sit) return null;
-      const quartier = task ? quartierOfTask(task) : 'place';
+      const monte = (events || []).find((e) => e.type === 'quartier-monte');
+      const quartier = task ? quartierOfTask(task) : monte ? monte.quartier : 'place';
+      const rang = (events || []).find((e) => e.type === 'rang');
       const reply = pickReply(sit, {
         now, quartier,
         length: task ? (task.frozen ? task.frozen.length : task.length) : 0,
-        vars: replyVars(task, quartier),
+        vars: { ...replyVars(task, quartier), rang: rang ? rang.name : null },
       });
       if (reply) show(reply);
       return reply;

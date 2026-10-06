@@ -194,26 +194,25 @@ test('Remballer : −1 tâche au quartier, et une écriture inverse ne fait jama
   assert.deepEqual([vide.resources.energy, vide.resources.materials, vide.quartiers.atelier], [0, 0, 0]);
 });
 
-test('niveau de quartier gagné : événement quartier-niveau, une seule fois par niveau', () => {
+test('5e tâche d’un quartier : le compte monte et redescend au Remballer, sans événement ni niveau (niveaux achetés)', () => {
   let g = createInitialState(T0);
   g.quartiers.champs = 4;
   const r = applyEntry(g, entry({ quartier: 'champs' }));
-  assert.deepEqual(r.events, [{ type: 'quartier-niveau', quartier: 'champs', niveau: 1 }]);
-  assert.deepEqual(applyEntry(r.game, entry({ key: 'reward:t2:1', quartier: 'champs' })).events, []);
-  // Remballer redescend sans événement ; la quête suivante regagne le niveau et l'annonce de nouveau
+  assert.deepEqual(r.events, []);
+  assert.equal(r.game.quartiers.champs, 5);
+  assert.equal(r.game.niveaux.champs, 0);
   const bas = applyEntry(r.game, entry({ key: 'reverse:t1:1', type: 'reverse', quartier: 'champs', energy: -3, materials: -5 }));
   assert.deepEqual(bas.events, []);
   assert.equal(bas.game.quartiers.champs, 4);
-  assert.deepEqual(applyEntry(bas.game, entry({ key: 'reward:t3:1', quartier: 'champs' })).events, [{ type: 'quartier-niveau', quartier: 'champs', niveau: 1 }]);
 });
 
-test('applyEntries enchaîne les entrées et cumule les événements', () => {
+test('applyEntries enchaîne les entrées (aucun événement de niveau au nombre de tâches)', () => {
   const g = createInitialState(T0);
   g.quartiers.garage = 3;
   const r = applyEntries(g, [entry({ key: 'a', quartier: 'garage' }), entry({ key: 'b', quartier: 'garage' })]);
   assert.equal(r.game.quartiers.garage, 5);
   assert.equal(r.game.resources.energy, 16);
-  assert.deepEqual(r.events.map((e) => e.type), ['quartier-niveau']);
+  assert.deepEqual(r.events, []);
 });
 
 // ---- état ----

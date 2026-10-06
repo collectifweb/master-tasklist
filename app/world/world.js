@@ -26,7 +26,7 @@
 //   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
-// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-niveau, reflet, veille, etape.
+// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape.
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
@@ -39,9 +39,8 @@ import { artFor } from './models.js';
 import { createTicker, createBus } from './ticker.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, tachesText, batimentNom, batimentEtat } from './texts.js';
+import { makeTexts, batimentNom, batimentEtat } from './texts.js';
 import { playEvents, cloneView } from './moments.js';
-import { QUARTIERS } from '../core/domains.js';
 
 export { createWorldPlan } from './plan.js';
 
@@ -215,6 +214,20 @@ export function createWorld(container, options = {}) {
   };
   const rowId = `ow-vue-${id}`;
   const bBuild = zbtn({ 'data-ow': 'build', 'aria-haspopup': 'dialog' }, t('monde.ctl.construire'), CTL_GLYPH.construire);
+  // pastille des permis en main : un chiffre, sans animation ni rappel ; le nom du bouton le dit (« Construire, 2 permis
+  // à placer »). Aucune pastille à 0.
+  const badge = el('span', 'ow-badge num', { 'aria-hidden': 'true' });
+  badge.hidden = true;
+  bBuild.append(badge);
+  let permisShown = 0;
+  function applyPermis(g) {
+    const n = Math.max(0, Math.floor(Number(g?.permis?.dispo) || 0));
+    if (n === permisShown) return;
+    permisShown = n;
+    badge.textContent = String(n);
+    badge.hidden = !n;
+    bBuild.setAttribute('aria-label', n ? t(`monde.ctl.construire.permis.${n === 1 ? 'one' : 'other'}`, { n }) : t('monde.ctl.construire'));
+  }
   const bQuests = zbtn({ 'data-ow': 'quetes', 'aria-expanded': 'true', ...(options.panelId ? { 'aria-controls': options.panelId } : {}) }, t('monde.ctl.quetes'), CTL_GLYPH.quetes);
   const bView = zbtn({ 'data-ow': 'vue', 'aria-expanded': 'false', 'aria-controls': rowId }, t('monde.ctl.vue'), CTL_GLYPH.vue);
   const row = el('div', 'ow-zrow', { id: rowId, role: 'group', 'aria-label': t('monde.zoom.group') });
@@ -307,21 +320,19 @@ export function createWorld(container, options = {}) {
     if (frontMove.style.transform !== tr) frontMove.style.transform = tr;
   }
 
-  // ---- plaques de quartier : nom, niveau, barre vers le niveau suivant
+  // ---- plaques de quartier : « Champs · niv. 2 » (niveau acheté, game.niveaux)
   function plaqueModel(sv) {
     const name = sectorName(sv.id);
-    const s = sv.suivant;
     return {
       name,
-      line: t('monde.niveau', { n: sv.niveau }),
+      line: t('monde.niveau.court', { n: sv.niveau }),
       niveau: sv.niveau,
-      progress: sv.progres,
-      label: t('monde.plaque.label', { quartier: name, n: sv.niveau, taches: tachesText(t, s.encore, QUARTIERS[sv.id]?.domain), suivant: s.niveau }),
+      label: t('monde.plaque.label', { quartier: name, n: sv.niveau }),
     };
   }
   function makePlaque(s) {
     const b = el('button', 'ow-plaque', { type: 'button', 'data-sector': s, tabindex: '-1' });
-    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true">${glyph(s)}</span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-plaque-val num"></span></span></span><span class="ow-plaque-bar" aria-hidden="true"><i></i></span>`;
+    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true">${glyph(s)}</span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-plaque-sep">·</span><span class="ow-plaque-val num"></span></span></span>`;
     plaques.appendChild(b);
     plaqueEls[s] = b;
     return b;
@@ -337,7 +348,6 @@ export function createWorld(container, options = {}) {
     b.setAttribute('aria-label', m.label);
     b.querySelector('.ow-plaque-name').textContent = m.name;
     b.querySelector('.ow-plaque-val').textContent = m.line;
-    b.querySelector('.ow-plaque-bar i').style.transform = `scaleX(${m.progress.toFixed(3)})`;
     // le texte change de longueur : la plaque se remesure et se replace (sinon elle déborde sous la colonne de zoom)
     if (!first && prev && (prev.line !== m.line || prev.name !== m.name)) {
       plaqueSize[sv.id] = [b.offsetWidth, b.offsetHeight];
@@ -930,6 +940,7 @@ export function createWorld(container, options = {}) {
     /** Mémorise le nouvel état ; l'applique au prochain micro-temps, ou à la fin des animations en cours. */
     render(game, taskList = [], ledger = []) {
       if (destroyed) return;
+      applyPermis(game); // la pastille n'attend pas la fin des animations
       pending = { game, tasks: Array.isArray(taskList) ? taskList : [], ledger: Array.isArray(ledger) ? ledger : [] };
       if (scheduled) return;
       scheduled = true;

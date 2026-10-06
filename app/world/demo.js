@@ -1,10 +1,11 @@
 // Démo autonome du monde : état FICTIF construit avec core/, aucun appel réseau sauf les textes locaux
-// de content/fr-CA/. Chaque bouton passe par les vraies fonctions du cœur (completeQuest, remballerQuest)
-// et joue leurs événements.
+// de content/fr-CA/. Chaque bouton passe par les vraies fonctions du cœur (completeQuest, remballerQuest,
+// monterQuartier) et joue leurs événements.
 import { createWorld, createWorldPlan } from './world.js';
 import { createInitialState } from '../core/state.js';
 import { completeQuest, remballerQuest } from '../core/quests.js';
-import { niveauQuartier } from '../core/village.js';
+import { monterQuartier, niveauDe, coutNiveau } from '../core/quartiers.js';
+import { PAS_IDS } from '../core/objectifs.js';
 import { gameDay } from '../core/time.js';
 
 const $ = (s) => document.querySelector(s);
@@ -48,9 +49,12 @@ function fictiveTasks(now) {
 function fictiveGame(now) {
   const g = createInitialState(new Date(now));
   g.quartiers = { place: 3, champs: 12, atelier: 4, mairie: 1, ecole: 0, garage: 0 };
+  g.niveaux = { place: 0, champs: 1, atelier: 0, mairie: 0, ecole: 0, garage: 0 };
+  g.permis = { ...g.permis, dispo: 2 }; // pastille « 2 » sur « Construire »
   g.resources = { energy: 40, materials: 25, food: 6 };
   g.habitants = 3;
   g.lastSeenDay = gameDay(new Date(now));
+  g.premiersPas = Object.fromEntries(PAS_IDS.map((id) => [id, g.lastSeenDay])); // un niveau s'achète après eux
   return g;
 }
 
@@ -111,7 +115,7 @@ window.__filters = [];
 const plan = createWorldPlan($('#plan'), {
   texts, anchors, now: () => new Date(now),
   onFocusSector: (s) => world.focusSector(s),
-  onFilter: (s) => { window.__filters.push(s); announce(`Filtre : ${s}`); },
+  onQuartier: (s) => { window.__filters.push(s); announce(`Fiche du quartier\u00a0: ${s}`); },
 });
 
 function show(result, extra = []) {
@@ -147,12 +151,18 @@ const actions = {
   'q-atelier': () => complete(todoOf('Maison') ?? 'demo-1'),
   'q-mairie': () => complete(todoOf('Administratif') ?? 'demo-3'),
   'q-garage': () => complete(todoOf('Véhicule') ?? 'demo-8'),
-  // amène l'Atelier à une tâche de son niveau suivant, puis termine une quête Maison : le cœur annonce le niveau
+  // donne de quoi payer le niveau suivant de l'Atelier (permis, Énergie, Matériaux), puis l'achète : quartier-monte
   niveau: () => {
     const g = structuredClone(game);
-    g.quartiers.atelier = niveauQuartier(g.quartiers.atelier).suivant.seuil - 1;
-    game = g;
-    return actions['q-atelier']();
+    const n = niveauDe(g, 'atelier') + 1;
+    const cout = coutNiveau(n);
+    g.permis = { ...g.permis, dispo: Math.max(g.permis.dispo, cout.permis) };
+    g.resources.energy = Math.max(g.resources.energy, cout.energy);
+    g.resources.materials = Math.max(g.resources.materials, cout.materials);
+    now += 60 * 1000;
+    try {
+      return show(monterQuartier(tasks, g, ledger, { quartier: 'atelier', niveau: n, gameRevision: 0 }, new Date(now)));
+    } catch (err) { announce(err.message); }
   },
   reflet: () => {
     // une quête fictive « frigo » terminée aujourd'hui : l'ancre « glaciere » fait reluire la glacière

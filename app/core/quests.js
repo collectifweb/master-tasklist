@@ -4,7 +4,7 @@
 //   game    : l'état du jeu après l'opération
 //   ops     : opérations à envoyer telles quelles à l'API (task.upsert, task.delete, ledger.append, game.set)
 //   entries : nouvelles entrées du registre (déjà dans ops)
-//   events  : événements pour l'interface (reward, quartier-niveau, permis, etape, plaque…)
+//   events  : événements pour l'interface (reward, permis, quartier-monte, etape, plaque…)
 // `params.gameRevision` (facultatif) est repris dans game.set comme `baseGameRevision`.
 // Un champ qu'on vide est écrit `null` (l'API conserve les champs absents).
 // Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant

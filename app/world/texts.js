@@ -22,16 +22,18 @@ const DEFAULTS = {
   'monde.zoom.fit': 'Toute l’île',
   'monde.ctl.group': 'Commandes de la carte',
   'monde.ctl.construire': 'Construire',
+  'monde.ctl.construire.permis.one': 'Construire, 1 permis à placer',
+  'monde.ctl.construire.permis.other': 'Construire, {n} permis à placer',
   'monde.ctl.quetes': 'Quêtes',
   'monde.ctl.vue': 'Vue',
   'monde.ctl.plan': 'Carte en liste',
   'monde.niveau': 'Niveau {n}',
-  'monde.taches.one': '{n} tâche {domaine}',
-  'monde.taches.other': '{n} tâches {domaine}',
-  'monde.taches.place.one': '{n} autre tâche',
-  'monde.taches.place.other': '{n} autres tâches',
-  'monde.plaque.label': '{quartier} : niveau {n}, encore {taches} pour le niveau {suivant}.',
-  'monde.progres': '{Quartier} : encore {taches} pour le niveau {suivant}.',
+  'monde.niveau.court': 'niv. {n}',
+  'monde.quetes.one': '{n} quête {domaine} à faire',
+  'monde.quetes.other': '{n} quêtes {domaine} à faire',
+  'monde.quetes.place.one': '{n} autre quête à faire',
+  'monde.quetes.place.other': '{n} autres quêtes à faire',
+  'monde.plaque.label': '{quartier} : niveau {n}.',
   'monde.veille': 'Tout est enregistré. Les lanternes s’allument une à une.',
   'monde.reflet': '{objet} reluit {au_secteur}.',
   'monde.select.object': '{objet}, {au_secteur}.',
@@ -44,13 +46,13 @@ const DEFAULTS = {
 
   // carte en liste
   'monde.plan.title': 'Carte en liste',
-  'monde.plan.intro': 'La même carte, en liste : chaque quartier, son niveau et ce qui manque pour le suivant.',
+  'monde.plan.intro': 'La même carte, en liste : chaque quartier avec son niveau et ses quêtes à faire, puis les bâtiments.',
   'monde.plan.crates.one': '1 caisse au bord du chemin (échéance dans 7 jours ou moins).',
   'monde.plan.crates.other': '{n} caisses au bord du chemin (échéances dans 7 jours ou moins).',
   'monde.plan.show': 'Voir sur la carte',
   'monde.plan.show.label': 'Voir {secteur} sur la carte',
-  'monde.plan.quests': 'Ses quêtes',
-  'monde.plan.quests.label': 'Voir les quêtes {du_secteur}',
+  'monde.plan.open': 'Ouvrir la fiche',
+  'monde.plan.open.label': 'Ouvrir la fiche {du_secteur}',
 };
 
 function flatten(obj, prefix = '', out = {}) {
@@ -83,20 +85,21 @@ export function batimentNom(t, b) {
 /**
  * Où en est un bâtiment (vue de view.js), en quelques mots : « à rebâtir », « verrouillé : Hameau : encore 2
  * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 »… Le même texte sur la carte et dans la liste.
+ * Un chalet compte ses places dans b.places (École), 2 au départ.
  */
-export function batimentEtat(t, b, { loge = 2 } = {}) {
+export function batimentEtat(t, b) {
   if (!b.bati) return b.refus ? t('bat.etat.verrou', { raison: b.refus }) : t('bat.etat.libre', { geste: t(`bat.${b.type}.geste`).toLowerCase() });
   if (b.etat === 'mure') return t('bat.etat.mure');
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
-  if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: loge });
+  if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
   return t('bat.etat.debout');
 }
 
-/** « 7 tâches Terrain », « 1 tâche Maison », « 3 autres tâches » (Place du village, sans domaine). */
-export function tachesText(t, n, domaine) {
-  const form = n === 1 ? 'one' : 'other';
-  return domaine ? t(`monde.taches.${form}`, { n, domaine }) : t(`monde.taches.place.${form}`, { n });
+/** « 7 quêtes Terrain à faire », « 0 quête Maison à faire », « 3 autres quêtes à faire » (Place du village, sans domaine). */
+export function quetesText(t, n, domaine) {
+  const form = n < 2 ? 'one' : 'other';
+  return domaine ? t(`monde.quetes.${form}`, { n, domaine }) : t(`monde.quetes.place.${form}`, { n });
 }
 export const fmt = (n) => {
   const v = Math.round(Number(n) * 10) / 10;

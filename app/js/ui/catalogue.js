@@ -2,11 +2,14 @@
 // « Disponible » ou la raison écrite par le cœur (la même que dans la fiche et la carte en liste). Le bouton bâtit sur
 // le premier emplacement libre de ce type, dans l'ordre du cœur (world/view.js, batimentsView) : data-id le fixe, pour
 // qu'un double toucher ne bâtisse pas deux fois. Le geste passe par data-action="cat-construire" (main.js).
+// En tête, les permis en main ; en bas, la section « Quartiers » : une ligne par quartier (niveau, effet du suivant,
+// prix) qui ouvre sa fiche par-dessus le catalogue (data-action="qrt-ouvrir").
 // La feuille est construite une fois, puis mise à jour sur place : le focus ne saute pas pendant une synchronisation.
-import { BATIMENTS, BATIMENT_IDS, refusConstruire } from '../../core/index.js';
+import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, niveauDe, niveauMax, coutNiveau } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setText, setAttr, setHtml } from './dom.js';
 import { coutText } from './batiment.js';
+import { effetText, prixText, permisText } from './quartier.js';
 
 /** Lignes du catalogue. slots : emplacements de batimentsView ({ id, type, bati }), dans l'ordre du cœur. */
 function rows(c, slots) {
@@ -38,13 +41,45 @@ function build(dlg, thumb) {
     <header class="sheet-head"><h2 class="sheet-title" id="construire-t">${esc(t('bat.catalogue.titre'))}</h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('bat.catalogue.fermer'))}">${icon('x')}</button></header>
     <div class="sheet-body cat-body">
+      <p class="cat-permis" id="cat-permis"></p>
       <p class="cat-intro">${esc(t('bat.catalogue.intro'))}</p>
       <section aria-labelledby="cat-bats-t">
         <h3 class="ow-plan-subtitle cat-section" id="cat-bats-t">${esc(t('bat.catalogue.section'))}</h3>
         <ul class="ow-plan-bats" role="list">${BATIMENT_IDS.map(row).join('')}</ul>
       </section>
+      <section aria-labelledby="cat-qrts-t">
+        <h3 class="ow-plan-subtitle cat-section" id="cat-qrts-t">${esc(t('quartier.catalogue.section'))}</h3>
+        <ul class="ow-plan-bats" role="list">${QUARTIER_IDS.map(quartierRow).join('')}</ul>
+      </section>
     </div>`;
   dlg.dataset.built = '1';
+}
+
+// Une ligne par quartier : tout le rang est un bouton (44 px au moins) qui ouvre la fiche du quartier.
+const quartierRow = (q) => `<li class="ow-plan-bat cat-qrt" data-quartier="${q}">
+      <button class="cat-qrt-go" type="button" data-action="qrt-ouvrir" data-quartier="${q}">
+        <span class="cat-thumb cat-qrt-picto" aria-hidden="true">${icon(q)}</span>
+        <span class="ow-plan-bat-text">
+          <span class="ow-plan-bat-name cat-nom"></span>
+          <span class="ow-plan-bat-etat cat-suivant"></span>
+          <span class="ow-plan-bat-etat cat-prix"></span>
+        </span>
+        ${icon('chevron-down', 'cat-qrt-chev')}
+      </button>
+    </li>`;
+
+function fillQuartiers(dlg, c) {
+  setText($('#cat-permis', dlg), permisText(c));
+  for (const q of QUARTIER_IDS) {
+    const li = $(`.cat-qrt[data-quartier="${q}"]`, dlg);
+    const n = niveauDe(c.game, q);
+    const haut = n >= niveauMax(q);
+    li.dataset.niveau = String(n);
+    setText($('.cat-nom', li), t('quartier.catalogue.nom', { quartier: t(`quartier.${q}.name`), n }));
+    setText($('.cat-suivant', li), haut ? t('quartier.catalogue.max') : t('quartier.catalogue.suivant', { n: n + 1, effet: effetText(q, n + 1) }));
+    setText($('.cat-prix', li), haut ? '' : prixText(coutNiveau(n + 1)));
+    $('.cat-prix', li).hidden = haut;
+  }
 }
 
 function fill(dlg, list) {
@@ -73,6 +108,7 @@ export function openCatalogue(c, { slots, thumb, open }) {
   const dlg = $('#dlg-construire');
   if (!dlg.dataset.built) build(dlg, thumb);
   fill(dlg, rows(c, slots()));
+  fillQuartiers(dlg, c);
   open(dlg);
 }
 
@@ -81,4 +117,5 @@ export function refreshCatalogue(c, { slots }) {
   const dlg = $('#dlg-construire');
   if (!dlg || !dlg.open || !dlg.dataset.built) return;
   fill(dlg, rows(c, slots()));
+  fillQuartiers(dlg, c);
 }

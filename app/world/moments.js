@@ -3,12 +3,11 @@
 // pas à pas et finit dans le même état qu'apply(). En mouvement réduit, chaque moment est un fondu court.
 // Pendant un saut, l'étape en cours se termine en 150 ms et les suivantes s'appliquent sans animation.
 //
-//   fil de lumière vers le quartier de la tâche (reward)   un quartier monte de niveau (quartier-niveau)
+//   fil de lumière vers le quartier de la tâche (reward)   un quartier monte de niveau (quartier-monte, acheté)
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
 import { P, f } from './iso.js';
 import { SECTOR_CENTER } from './layout.js';
-import { quartierOfTask, QUARTIERS } from '../core/domains.js';
-import { tachesText } from './texts.js';
+import { quartierOfTask } from '../core/domains.js';
 
 export function cloneView(v) {
   return {
@@ -55,21 +54,13 @@ function sectorPx(s) { const [u, v] = SECTOR_CENTER[s]; return P(u, v); }
 // ----------------------------------------------------------------------------- fil de lumière
 /**
  * Le gain part du bouton « Fait » vers le quartier de la tâche ; à l'impact, les compteurs montent (onImpact) et la
- * plaque du quartier prend son nouveau compte. Un bonus sans quartier va au cœur de la Place.
+ * plaque du quartier se met à jour. Un bonus sans quartier va au cœur de la Place. Le monde ne dit rien : l'interface
+ * annonce le gain.
  */
 function rewardStep(ctx, ev) {
   const S = ev.quartier && ctx.shown.sectors[ev.quartier] ? ev.quartier : null;
   let impacted = false;
   const impact = () => { if (!impacted) { impacted = true; ctx.onImpact(ev); } };
-  const textOf = () => {
-    const sv = S && ctx.target.sectors[S];
-    if (!sv || !sv.suivant) return '';
-    return ctx.t('monde.progres', {
-      Quartier: ctx.t(`quartier.${S}.name`),
-      taches: tachesText(ctx.t, sv.suivant.encore, QUARTIERS[S].domain),
-      suivant: sv.suivant.niveau,
-    });
-  };
   const sync = () => { if (S) { ctx.shown.sectors[S] = { ...ctx.target.sectors[S] }; ctx.updatePlaque(ctx.shown.sectors[S]); } };
   const apply = () => {
     sync();
@@ -86,7 +77,6 @@ function rewardStep(ctx, ev) {
       apply();
       const b = S && ctx.plaqueEls[S];
       if (b) await fade(ctx, b, 0.35, 1);
-      ctx.say(textOf());
       return;
     }
     await fx.thread({ from: ctx.threadFrom(), to: () => camera.toView(tx, ty) });
@@ -95,13 +85,12 @@ function rewardStep(ctx, ev) {
     if (S) plaquePop(ctx, S);
     fx.ring(tx, ty, 30, { dur: 520 });
     ctx.apply({ enter: false });
-    ctx.say(textOf());
     await fx.wait(300);
   };
-  return { apply, run, text: textOf };
+  return { apply, run, text: () => '' };
 }
 
-// ----------------------------------------------------------------------------- un quartier monte de niveau
+// ----------------------------------------------------------------------------- un quartier monte de niveau (acheté)
 function niveauStep(ctx, ev) {
   const S = ctx.shown.sectors[ev.quartier] ? ev.quartier : null;
   const apply = () => { if (S) { ctx.shown.sectors[S] = { ...ctx.target.sectors[S] }; ctx.updatePlaque(ctx.shown.sectors[S]); } ctx.apply({ enter: false }); };
@@ -187,7 +176,7 @@ function etapeStep(ctx, ev) {
 function stepsFor(ctx, ev) {
   switch (ev.type) {
     case 'reward': return [rewardStep(ctx, ev)];
-    case 'quartier-niveau': return [niveauStep(ctx, ev)];
+    case 'quartier-monte': return [niveauStep(ctx, ev)];
     case 'reflet': return [refletStep(ctx, ev.objectId ?? ev.object ?? ev.anchor)];
     case 'veille': return [veilleStep(ctx)];
     case 'etape': return [etapeStep(ctx, ev)];
@@ -202,8 +191,8 @@ function extraSteps(ctx) {
   return out.slice(0, 4);
 }
 
-/** Une seule voix par événement : le niveau de quartier est annoncé par l'interface ; le monde le dessine. */
-const SAID_BY_UI = new Set(['quartier-niveau']);
+/** Une seule voix par événement : le niveau acheté est annoncé par l'interface ; le monde le dessine. */
+const SAID_BY_UI = new Set(['quartier-monte']);
 
 export async function playEvents(ctx, events) {
   const missed = [];

@@ -104,7 +104,7 @@ async function idleFrames(page, ms = 2000) {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     await page.waitForTimeout(500);
-    // i/s pendant le fil de lumière et le passage de niveau (l'Atelier, amené au seuil par l'action « niveau »)
+    // i/s pendant le passage de niveau (l'Atelier, acheté par l'action « niveau » : quartier-monte)
     const fps = await page.evaluate(async () => {
       const times = [];
       let maxAnims = 0, maxRunning = 0;

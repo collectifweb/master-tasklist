@@ -2,7 +2,7 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, passageLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
+import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
@@ -242,7 +242,8 @@ export function createStory(app) {
   /**
    * Montre ce qui attend, une feuille à la fois : les écrans d'accueil (une seule fois, partie neuve ou convertie ;
    * pendant cette visite, rien d'autre ne suit : pas de mur d'écrans), sinon la lettre de passage à la v2 (une seule
-   * fois, partie convertie), sinon la lettre du matin (pas le premier jour ; la lettre de passage en tient lieu le jour
+   * fois, partie convertie), puis la lettre de conversion des niveaux en permis (une seule fois, partie v2 d'avant les
+   * permis), sinon la lettre du matin (pas le premier jour ; la lettre de passage ou de conversion en tient lieu le jour
    * où elle est montrée), puis le bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend
    * sa fermeture.
    */
@@ -266,7 +267,10 @@ export function createStory(app) {
     const today = gameDay(c.now);
     const passage = content.lettres ? passageLetter(content.lettres, c.game, { prenom: prenom() || null }) : null;
     if (passage) { welcoming = true; openLetter(passage, next); return; }
-    const passageToday = (content.lettres?.passage ?? []).some((l) => (c.game.letters ?? {})[l.id] === today);
+    const conversion = content.lettres ? conversionLetter(content.lettres, c.game, { prenom: prenom() || null }) : null;
+    if (conversion) { welcoming = true; openLetter(conversion, next); return; }
+    const passageToday = [...(content.lettres?.passage ?? []), ...(content.lettres?.conversion ?? [])]
+      .some((l) => (c.game.letters ?? {})[l.id] === today);
     if (content.lettres && c.game.startDay !== today && !passageToday) {
       const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null });
       if (letter && !letter.seen) { welcoming = true; openLetter(letter, next); return; }

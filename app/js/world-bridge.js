@@ -10,7 +10,7 @@
 //   w.thumb(id) → dessin SVG d'un bâtiment pour sa fiche ; w.thumbType(type) → dessin d'un type debout (catalogue)
 //   w.batiments(game, ledger) → emplacements de l'île dans l'ordre du cœur ; w.focusEntity(id) cadre l'un d'eux
 //   w.setQuestsShown(bool) → état du bouton « Quêtes »
-//   w.plan(conteneur, { onFocusSector, onFilter, onBatiment }) → { render, focus, destroy }
+//   w.plan(conteneur, { onFocusSector, onQuartier, onBatiment }) → { render, focus, destroy }
 export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion, controls, panelId }) {
   let mod, view;
   try {
@@ -53,8 +53,8 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
         const before = reflets(game, tasksBefore);
         return [...reflets(game, tasksAfter)].filter((id) => !before.has(id)).map((objectId) => ({ type: 'reflet', objectId }));
       },
-      plan(host, { onFocusSector, onFilter, onBatiment } = {}) {
-        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector, onFilter, onBatiment });
+      plan(host, { onFocusSector, onQuartier, onBatiment } = {}) {
+        const p = mod.createWorldPlan(host, { texts, anchors, now, onFocusSector, onQuartier, onBatiment });
         return { render: safe(p.render), focus: safe(p.focus), destroy: safe(p.destroy) };
       },
       destroy: safe(world.destroy),

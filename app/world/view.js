@@ -1,50 +1,43 @@
 // Ce que le monde doit montrer, dérivé de l'état du jeu et des quêtes. Fonction pure (aucun DOM) :
 // le monde et la carte en liste lisent la même vue, donc ils disent toujours la même chose.
 import { QUARTIER_IDS, quartierOfTask } from '../core/domains.js';
-import { niveauQuartier, NIVEAUX_QUARTIER, QUARTIER_PALIER } from '../core/village.js';
+import { niveauDe, niveauMax } from '../core/quartiers.js';
 import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
 import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
+import { placesParChalet } from '../core/quartiers.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
 export const REFLET_DAYS = 14;
 export const CRATE_DAYS = 7;
 
-const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
-
-// Tâches qu'il a fallu pour atteindre le niveau v (0 pour le niveau 0), comme dans core/village.js.
-const depuis = (v) => (v <= 0 ? 0 : v <= NIVEAUX_QUARTIER.length
-  ? NIVEAUX_QUARTIER[v - 1]
-  : NIVEAUX_QUARTIER[NIVEAUX_QUARTIER.length - 1] + QUARTIER_PALIER * (v - NIVEAUX_QUARTIER.length));
-
 /**
- * Un quartier : tâches comptées, niveau ({ niveau, taches, suivant }) et progres (0 à 1) vers le niveau suivant.
- * Tous les quartiers sont ouverts.
+ * Un quartier : son niveau acheté (game.niveaux, core/quartiers.js), le plus haut possible, et ses quêtes à faire
+ * (quetes : celles que « Voir les quêtes » montre). Tous les quartiers sont ouverts.
  */
-export function sectorView(id, game) {
-  const taches = Math.max(0, Math.floor(num(game.quartiers && game.quartiers[id])));
-  const lv = niveauQuartier(taches);
-  const from = depuis(lv.niveau);
-  const progres = Math.max(0, Math.min(1, (taches - from) / Math.max(1, lv.suivant.seuil - from)));
-  return { id, ...lv, progres };
+export function sectorView(id, game, tasks = []) {
+  const quetes = tasks.filter((t) => t && t.status === 'todo' && quartierOfTask(t) === id).length;
+  return { id, niveau: niveauDe(game, id), max: niveauMax(id), quetes };
 }
 
 /**
  * Bâtiments de l'île, un par emplacement (EMPLACEMENTS), dans l'ordre du catalogue :
  * { id, type, bati, etat, refus, reste, occupants }. etat : 'vide' (pas encore bâti), 'bati', et pour une culture
  * 'seme' | 'pousse' | 'mure' ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
- * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets).
+ * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets) ;
+ * places : places par chalet (École).
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
   const g = { ...game, resources: { energy: 0, materials: 0, food: 0, ...(game.resources || {}) } };
   const debout = new Set(batimentsDuVillage(g).map((b) => b.id));
   let loges = logements(g).habitants;
+  const places = placesParChalet(g);
   const out = [];
   for (const type of BATIMENT_IDS) {
     EMPLACEMENTS[type].forEach((_, i) => {
       const id = `${type}-${i + 1}`;
-      const b = { id, type, bati: debout.has(id), etat: 'vide', refus: null, reste: 0, occupants: 0 };
+      const b = { id, type, bati: debout.has(id), etat: 'vide', refus: null, reste: 0, occupants: 0, places };
       if (!b.bati) b.refus = refusConstruire(g, type);
       else if (BATIMENTS[type].culture) {
         const c = etatCulture(g, ledger, id, now);
@@ -52,7 +45,7 @@ export function batimentsView(game, ledger = [], now = new Date()) {
         b.reste = c.reste;
       } else {
         b.etat = 'bati';
-        if (type === 'chalet') { b.occupants = Math.min(BATIMENTS.chalet.loge, loges); loges -= b.occupants; }
+        if (type === 'chalet') { b.occupants = Math.min(places, loges); loges -= b.occupants; }
       }
       out.push(b);
     });
@@ -68,9 +61,9 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const g = game || {};
   const today = gameDay(now ?? new Date());
   const sectors = {};
-  for (const id of QUARTIER_IDS) sectors[id] = sectorView(id, g);
-
   const list = Array.isArray(tasks) ? tasks : [];
+  for (const id of QUARTIER_IDS) sectors[id] = sectorView(id, g, list);
+
   const crates = [];
   for (const t of list) {
     if (!t || t.status !== 'todo' || !t.deadline) continue;
