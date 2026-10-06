@@ -790,7 +790,7 @@ button.cote:active {
 .fil-actions {
   grid-area: actions;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); /* un bouton : toute la largeur ; deux : moitié-moitié */
   gap: var(--sp-2);
   margin-top: 2px;
 }

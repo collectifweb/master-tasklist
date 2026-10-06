@@ -49,9 +49,11 @@ const ALT_KIND = {
 };
 
 function altMarkup(kind) {
+  const done = `<button class="btn btn--primary" type="button" data-action="complete">${t('quest.done').replace(' ✓', '')} ${icon('check')}</button>`;
   const actions = kind === 'quick'
-    ? `<button class="btn btn--primary" type="button" data-action="complete">${t('quest.done').replace(' ✓', '')} ${icon('check')}</button>`
-    : `<button class="btn btn--secondary" type="button" data-action="split">${icon('split')}${esc(t('quest.split'))}</button>`;
+    ? done
+    : `${done}
+       <button class="btn btn--secondary" type="button" data-action="split">${icon('split')}${esc(t('quest.split'))}</button>`;
   return `
     <button class="alt-row" type="button" aria-expanded="false" aria-controls="alt-${kind}">
       <span class="alt-text"><span class="alt-title"></span><span class="alt-kind"></span></span>
