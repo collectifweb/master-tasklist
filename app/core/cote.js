@@ -57,11 +57,6 @@ export function durationLabel(length) {
   return `${m / 60} h`;
 }
 
-/** Quête épinglée : « Je m'y mets » posé, encore à faire. */
-export function isPinned(task) {
-  return task.status === 'todo' && !!task.startedAt;
-}
-
 // ---- Tris --------------------------------------------------------------
 
 export const SORTS = [
@@ -76,17 +71,11 @@ export const SORTS = [
 
 const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-function pinnedFirst(list, now) {
-  const pinned = list.filter(isPinned).sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : byId(a, b)));
-  return pinned;
-}
-
 /**
- * Tri par Cote : les quêtes épinglées (en cours) restent en tête, puis les autres par Cote décroissante.
- * Une quête de priorité ≥ 8 est toujours dans les 3 premières des quêtes non épinglées.
+ * Tri par Cote décroissante. Une quête de priorité ≥ 8 est toujours dans les 3 premières.
  */
 export function orderByCote(tasks, now) {
-  const scored = tasks.filter((t) => !isPinned(t)).map((t) => ({ t, c: cote(t, now) }));
+  const scored = tasks.map((t) => ({ t, c: cote(t, now) }));
   scored.sort((a, b) => b.c - a.c || b.t.priority - a.t.priority || byId(a.t, b.t));
   const rest = scored.map((s) => s.t);
   if (!rest.slice(0, 3).some((t) => t.priority >= 8)) {
@@ -96,7 +85,7 @@ export function orderByCote(tasks, now) {
       rest.splice(Math.min(2, rest.length), 0, t);
     }
   }
-  return [...pinnedFirst(tasks, now), ...rest];
+  return rest;
 }
 
 export function sortTasks(tasks, sortId, now) {

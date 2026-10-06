@@ -95,23 +95,6 @@
         {"id": "step.done.07", "voix": "fanal", "longueurMin": 6, "texte": "L’échafaudage monte d’un cran. Je l’ai vu bouger."}
       ]
     },
-    "quest.start": {
-      "quand": "« Je m’y mets » : la quête passe en cours. Fanal fait une petite corvée du même genre, dans le quartier de la quête.",
-      "frequence": 1,
-      "variantes": [
-        {"id": "quest.start.01", "voix": "fanal", "texte": "Parfait. Je travaille à côté. Fais-moi signe quand c’est fini."},
-        {"id": "quest.start.02", "voix": "fanal", "texte": "D’accord. Je m’y mets aussi, à ma manière."},
-        {"id": "quest.start.03", "voix": "fanal", "texte": "Je reste là. Pas de presse."},
-        {"id": "quest.start.04", "voix": "fanal", "texte": "Commencer, c’est souvent le plus dur. Ça, c’est fait."},
-        {"id": "quest.start.05", "voix": "fanal", "texte": "Je fais la même chose de mon bord, en plus petit."},
-        {"id": "quest.start.06", "voix": "fanal", "quartier": "place", "texte": "J’époussette ma lanterne pendant ce temps-là. Elle en avait besoin."},
-        {"id": "quest.start.07", "voix": "fanal", "quartier": "champs", "texte": "Je m’occupe des pots pendant que tu fais le terrain. On se rejoint après."},
-        {"id": "quest.start.08", "voix": "fanal", "quartier": "atelier", "texte": "Je balaie l’Atelier pendant que tu fais la maison. Chacun son plancher."},
-        {"id": "quest.start.09", "voix": "fanal", "quartier": "mairie", "texte": "Je trie des fiches pendant que tu fais les papiers. Les miennes sont moins importantes."},
-        {"id": "quest.start.10", "voix": "fanal", "quartier": "ecole", "texte": "Je taille des crayons pendant ce temps. J’en ai déjà trop."},
-        {"id": "quest.start.11", "voix": "fanal", "quartier": "garage", "texte": "Je graisse ma pelle pendant que tu t’occupes du véhicule."}
-      ]
-    },
     "quest.undo": {
       "quand": "« Remballer » dans les 24 h : la quête revient dans la liste et ses gains sont repris.",
       "frequence": 1,

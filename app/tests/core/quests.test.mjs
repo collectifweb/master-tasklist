@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createQuest, updateQuest, startQuest, pauseQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
+  createQuest, updateQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
   remballerQuest, archiveQuest, unarchiveQuest, deleteQuest, claimBonus, openApp, newTaskId,
   questPe, normalizeTask, rewardKey, hydrateLedger,
 } from '../../core/index.js';
@@ -91,20 +91,6 @@ test('updateQuest : modifie, borne, repose deadlineSetAt seulement si l’éché
   assert.equal(s.world.tasks[0].occurrence, 1);
   assert.equal(s.world.tasks[0].domain, 'Jardin');
   assert.throws(() => updateQuest(w.tasks, w.game, w.ledger, { id: 'nulle' }, T0), /introuvable/);
-});
-
-test('startQuest fige P/L/D, épingle la quête ; pauseQuest la libère', () => {
-  const w = fresh([task({ priority: 8, length: 4, difficulty: 6 })]);
-  let s = step(w, startQuest, { id: 't1' });
-  const t = s.world.tasks[0];
-  assert.equal(t.startedAt, '2026-10-06T14:00:00.000Z');
-  assert.deepEqual({ ...t.frozen, at: 0 }, { priority: 8, length: 4, difficulty: 6, at: 0 });
-  s = step(s.world, startQuest, { id: 't1' }, plusHours(T0, 2)); // déjà commencée : l'heure ne bouge pas
-  assert.equal(s.world.tasks[0].startedAt, '2026-10-06T14:00:00.000Z');
-  s = step(s.world, pauseQuest, { id: 't1' });
-  assert.equal(s.world.tasks[0].startedAt, null);
-  assert.ok(s.world.tasks[0].frozen);
-  assert.throws(() => startQuest([task({ status: 'done' })], w.game, [], { id: 't1' }, T0));
 });
 
 test('addStep, removeStep : au plus 12 étapes', () => {
@@ -412,7 +398,6 @@ test('game.set n’est émis que si l’état a changé, et seules task.upsert/d
 test('une opération n’efface jamais un champ inconnu de la tâche', () => {
   const t = task({ champInconnu: { x: 1 }, notes: 'garde-moi', deadline: '2026-11-01' });
   let w = fresh([t]);
-  w = step(w, startQuest, { id: 't1' }).world;
   w = step(w, completeQuest, { id: 't1' }).world;
   assert.deepEqual(w.tasks[0].champInconnu, { x: 1 });
   assert.equal(w.tasks[0].notes, 'garde-moi');
@@ -430,13 +415,13 @@ test('jour de jeu : terminer à 3 h 59 compte pour la veille, à 4 h 00 pour le 
 
 const upsert = (r) => r.ops.filter((o) => o.type === 'task.upsert').map((o) => o.task);
 
-test('« Je m’y mets » n’envoie que les champs modifiés', () => {
+test('updateQuest n’envoie que les champs modifiés', () => {
   const w = fresh([task({ notes: 'garde', champInconnu: { a: 1 } })]);
-  const r = startQuest(w.tasks, w.game, w.ledger, { id: 't1', gameRevision: 0 }, T0); // la séance s'écrit dans l'état du jeu
+  const r = updateQuest(w.tasks, w.game, w.ledger, { id: 't1', patch: { domain: 'Jardin' }, gameRevision: 0 }, T0);
   const [op] = upsert(r);
-  assert.deepEqual(Object.keys(op).sort(), ['frozen', 'id', 'startedAt', 'updatedAt']);
+  assert.deepEqual(Object.keys(op).sort(), ['domain', 'id', 'updatedAt']);
   assert.equal(op.id, 't1');
-  assert.equal(op.startedAt, '2026-10-06T14:00:00.000Z');
+  assert.equal(op.domain, 'Jardin');
   assert.equal('task' in op, false);
   assert.equal('notes' in op, false);
   // la liste affichée, elle, reste complète
@@ -463,9 +448,6 @@ test('un champ effacé est envoyé à null', () => {
   assert.equal(op.deadline, null);
   assert.equal(op.deadlineSetAt, null);
   assert.equal('priority' in op, false);
-  const w2 = fresh([task({ startedAt: T0 })]);
-  const [p] = upsert(pauseQuest(w2.tasks, w2.game, w2.ledger, { id: 't1' }, T0));
-  assert.equal(p.startedAt, null);
 });
 
 test('comparaison profonde : des étapes inchangées ne sont pas renvoyées', () => {

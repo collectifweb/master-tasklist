@@ -33,7 +33,6 @@ export function createInitialState(now) {
     lastReturnDay: null,
     letters: {}, // { idLettre: dernier jour montré }
     lastSeenDay: null, // dernier jour de jeu où advanceTime a tourné ; ne recule jamais
-    coteACote: { current: null, totals: [] }, // séance « Je m'y mets » en cours et temps relevé (cote-a-cote.js)
   };
 }
 

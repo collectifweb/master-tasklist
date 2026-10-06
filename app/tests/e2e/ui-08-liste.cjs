@@ -86,9 +86,13 @@ L.runScenario('8. étapes, tris, filtres, recherche, archivage, suppression', as
   const id2 = 'example-009';
   await page.locator(`#quest-list > li[data-task-id="${id2}"] [data-action="open"]`).click();
   await page.waitForSelector('#dlg-fiche[open]');
+  R.check('« Archivées » est caché tant qu’aucune quête n’est archivée', !(await page.locator('#seg-archived').isVisible()));
+  const hint = (await page.locator('#fiche-archive-why').textContent()).trim();
+  R.check('la fiche dit ce qu’archiver veut dire', /sans rien effacer/.test(hint) && await page.locator('#fiche-archive-why').isVisible(), hint);
   await page.click('#dlg-fiche [data-action="archive"]');
   await L.waitFor(() => srv.readTasks().find((t) => t.id === id2).status === 'archived');
   await page.waitForTimeout(600);
+  R.check('« Archivées » apparaît dès qu’une quête est archivée', await page.locator('#seg-archived').isVisible());
   R.check('archivée : sortie de la liste « À faire »', await page.locator(`#quest-list > li[data-task-id="${id2}"]`).count() === 0);
   await page.locator('label.seg-option', { hasText: 'Archivées' }).click();
   R.check('archivée : présente dans « Archivées »', await page.locator(`#quest-list > li[data-task-id="${id2}"][data-state="archived"]`).count() === 1);
@@ -96,6 +100,9 @@ L.runScenario('8. étapes, tris, filtres, recherche, archivage, suppression', as
   await page.locator(`#quest-list > li[data-task-id="${id2}"] [data-action="unarchive"]`).click();
   await L.waitFor(() => srv.readTasks().find((t) => t.id === id2).status === 'todo');
   R.check('désarchivée : retour à « todo »', srv.readTasks().find((t) => t.id === id2).status === 'todo');
+  await L.waitFor(async () => !(await page.locator('#seg-archived').isVisible()), 3000);
+  R.check('la dernière désarchivée : « Archivées » se cache et le filtre revient à « À faire »', !(await page.locator('#seg-archived').isVisible()) && await page.locator('input[name="statut"][value="todo"]').isChecked());
+  R.check('la liste « À faire » n’est pas vide après le retour', await page.locator(`#quest-list > li[data-task-id="${id2}"]`).count() === 1);
   await page.locator('label.seg-option', { hasText: 'À faire' }).click();
 
   // ───── supprimer avec confirmation

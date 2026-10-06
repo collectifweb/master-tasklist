@@ -164,7 +164,6 @@
     <div class="panel-status">
       <div class="sync" id="sync" data-sync="saved" role="status" hidden></div>
       <div class="sync" id="notice" data-sync="saved" role="status" hidden></div>
-      <div class="sync" id="offer" data-sync="saved" hidden></div>
     </div>
 
     <div class="panel-scroll" id="panel-scroll">
@@ -197,9 +196,6 @@
         <p class="btn-reason" id="fil-readonly" hidden><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-lock"/></svg>Cette quête n’a pas d’identifiant fiable (absent ou en double dans la liste) : elle est en lecture seule.</p>
         <div class="fil-actions">
           <button class="btn btn--primary" type="button" data-action="complete">Fait <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg></button>
-          <button class="btn btn--secondary" type="button" data-action="start" aria-pressed="false">
-            <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-start"/></svg><span class="start-label">Je m’y mets</span>
-          </button>
         </div>
       </article>
 
@@ -221,7 +217,7 @@
                 <legend class="sr-only">Statut</legend>
                 <label class="seg-option"><input type="radio" name="statut" value="todo" checked><span>À faire <b data-count="todo">0</b></span></label>
                 <label class="seg-option"><input type="radio" name="statut" value="done"><span>Faites <b data-count="done">0</b></span></label>
-                <label class="seg-option"><input type="radio" name="statut" value="archived"><span>Archivées <b data-count="archived">0</b></span></label>
+                <label class="seg-option" id="seg-archived" hidden><input type="radio" name="statut" value="archived"><span>Archivées <b data-count="archived">0</b></span></label>
               </fieldset>
               <label class="sort">
                 <span class="sort-label"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-sort"/></svg>Trier</span>

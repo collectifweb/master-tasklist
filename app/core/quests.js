@@ -4,7 +4,7 @@
 //   game    : l'état du jeu après l'opération
 //   ops     : opérations à envoyer telles quelles à l'API (task.upsert, task.delete, ledger.append, game.set)
 //   entries : nouvelles entrées du registre (déjà dans ops)
-//   events  : événements pour l'interface (reward, quartier-niveau, etape, plaque, seance-fin…)
+//   events  : événements pour l'interface (reward, quartier-niveau, etape, plaque…)
 // `params.gameRevision` (facultatif) est repris dans game.set comme `baseGameRevision`.
 // Un champ qu'on vide est écrit `null` (l'API conserve les champs absents).
 // Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant
@@ -19,7 +19,6 @@ import {
   canReverse, stepsPaid, unknownStepsCount, hasKey, rewardKey, reverseKey, findEntry,
 } from './ledger.js';
 import { applyEntry } from './economy.js';
-import { startSeance, stopSeance, tidySeances } from './cote-a-cote.js';
 import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
 import { produireEolienne, reprendreEolienne } from './batiments.js';
@@ -35,7 +34,7 @@ function deepEqual(a, b) {
   return ka.length === kb.length && ka.every((k) => k in b && deepEqual(a[k], b[k]));
 }
 
-/** Contexte d'une opération (partagé avec letters.js et cote-a-cote.js) : voir `result()`. */
+/** Contexte d'une opération (partagé avec letters.js) : voir `result()`. */
 export class Ctx {
   constructor(tasks, game, ledger, params, now) {
     this.now = now;
@@ -338,25 +337,6 @@ export function updateQuest(tasks, game, ledger, params, now) {
   return ctx.result();
 }
 
-/** « Je m'y mets » : épingle la quête, fige P/L/D et lance la séance côte à côte (relevé du temps, voir cote-a-cote.js). */
-export function startQuest(tasks, game, ledger, params, now) {
-  const ctx = new Ctx(tasks, game, ledger, params, now);
-  let t = ctx.get(params.id);
-  if (t.status !== 'todo') throw new Error('Seule une quête à faire peut être commencée.');
-  if (!t.startedAt) t = { ...t, startedAt: ctx.iso };
-  ctx.put(applyFreeze(t, now));
-  startSeance(ctx, t);
-  return ctx.result();
-}
-
-/** Retire l'épingle (« Pause ») et arrête la séance. Les valeurs figées restent. */
-export function pauseQuest(tasks, game, ledger, params, now) {
-  const ctx = new Ctx(tasks, game, ledger, params, now);
-  const t = ctx.put({ ...ctx.get(params.id), startedAt: null });
-  stopSeance(ctx, t.id, 'pause', { task: t });
-  return ctx.result();
-}
-
 export function addStep(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const t = ctx.get(params.id);
@@ -412,8 +392,7 @@ export function completeQuest(tasks, game, ledger, params, now) {
   const t = ctx.get(params.id);
   if (t.status === 'done') throw new Error('Cette quête est déjà terminée.');
   if (t.status === 'archived') throw new Error('Une quête archivée ne se termine pas\u00a0: il faut d’abord la sortir des archives.');
-  const after = complete(ctx, t);
-  stopSeance(ctx, t.id, 'fait', { task: after, occurrence: t.occurrence ?? 1, terminee: true });
+  complete(ctx, t);
   suivreObjectifs(ctx);
   return ctx.result();
 }
@@ -448,7 +427,6 @@ export function remballerQuest(tasks, game, ledger, params, now) {
     ctx.put({ ...t, status: 'todo', doneAt: null });
   }
   ctx.events.push({ type: 'remballe', taskId: t.id });
-  stopSeance(ctx, t.id, 'remballer', { occurrence: occ, terminee: false });
   return ctx.result();
 }
 
@@ -456,7 +434,6 @@ export function archiveQuest(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const t = ctx.get(params.id);
   ctx.put({ ...t, status: 'archived', archivedAt: ctx.iso, startedAt: null });
-  stopSeance(ctx, t.id, 'archive', { occurrence: t.occurrence ?? 1, terminee: true });
   return ctx.result();
 }
 
@@ -475,7 +452,6 @@ export function deleteQuest(tasks, game, ledger, params, now) {
   const refund = buildAjoutRefund(ctx.ledger, params.id, now);
   if (refund) ctx.append(refund, 'bonus', { bonus: 'ajout-reprise' });
   ctx.remove(params.id);
-  stopSeance(ctx, t.id, 'suppression', { occurrence: t.occurrence ?? 1, terminee: true });
   return ctx.result();
 }
 
@@ -522,10 +498,9 @@ export function openApp(tasks, game, ledger, params, now) {
 /**
  * Passage du temps, à appeler à l'ouverture (après openApp), au changement de jour de jeu et après les gestes du jeu.
  * Au premier passage d'une nouvelle semaine, fige le bilan des semaines finies (figerBilans, recycling.js). Note le
- * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis ferme une séance côte
- * à côte oubliée et efface les vieux relevés (tidySeances, cote-a-cote.js), et valide les objectifs devenus vrais
- * (premiers pas, saison : objectifs.js). Idempotente : rejouée avec le même instant, elle ne fait rien. Événements :
- * 'seance-fin' (raison 'oubliee'), 'premier-pas', 'objectif-saison'.
+ * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis valide les objectifs
+ * devenus vrais (premiers pas, saison : objectifs.js). Idempotente : rejouée avec le même instant, elle ne fait rien.
+ * Événements : 'premier-pas', 'objectif-saison'.
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -535,7 +510,6 @@ export function advanceTime(tasks, game, ledger, params, now) {
     if (bilans !== ctx.game.bilans) ctx.game = { ...ctx.game, bilans };
   }
   if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
-  tidySeances(ctx);
   suivreObjectifs(ctx);
   return ctx.result();
 }

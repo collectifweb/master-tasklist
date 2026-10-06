@@ -4,7 +4,6 @@ import { QUARTIER_IDS, quartierOfTask } from '../core/domains.js';
 import { niveauQuartier, NIVEAUX_QUARTIER, QUARTIER_PALIER } from '../core/village.js';
 import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
-import { currentSeance } from '../core/cote-a-cote.js';
 import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS } from './layout.js';
 
@@ -99,11 +98,6 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
     }
   }
 
-  // Côte à côte : pendant une séance, Fanal travaille au bord de la Place, tourné vers le quartier de la quête
-  const seance = currentSeance(g, now ?? new Date());
-  const seanceTask = seance && !seance.oubliee ? list.find((t) => t && String(t.id) === seance.taskId && t.status === 'todo') : null;
-  const fanal = seanceTask ? { taskId: seance.taskId, sector: quartierOfTask(seanceTask) } : null;
-
   const batiments = batimentsView(g, Array.isArray(ledger) ? ledger : [], now ?? new Date());
-  return { today, sectors, crates, reflets, refletAnchors, fanal, batiments };
+  return { today, sectors, crates, reflets, refletAnchors, batiments };
 }

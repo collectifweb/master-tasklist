@@ -5,7 +5,6 @@
 //
 //   fil de lumière vers le quartier de la tâche (reward)   un quartier monte de niveau (quartier-niveau)
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
-//   étape cochée (etape)                                    Côte à côte : Fanal va travailler avec toi (seance-*)
 import { P, f } from './iso.js';
 import { SECTOR_CENTER } from './layout.js';
 import { quartierOfTask, QUARTIERS } from '../core/domains.js';
@@ -18,7 +17,6 @@ export function cloneView(v) {
     crates: v.crates.map((c) => ({ ...c })),
     reflets: new Set(v.reflets),
     refletAnchors: new Set(v.refletAnchors || []),
-    fanal: v.fanal ? { ...v.fanal } : null,
     batiments: (v.batiments || []).map((b) => ({ ...b })),
   };
 }
@@ -185,30 +183,6 @@ function etapeStep(ctx, ev) {
   return { apply: () => {}, run, text: () => '' };
 }
 
-// ----------------------------------------------------------------------------- Côte à côte
-/**
- * Fanal rejoint sa place de la vue cible (travail ou retour) en une seule marche, puis s'arrête : aucune boucle.
- * La marche glisse l'élément de son ancienne place vers la nouvelle (WAAPI) ; en mouvement réduit, un fondu court.
- */
-function fanalStep(ctx) {
-  const apply = () => { ctx.shown.fanal = ctx.target.fanal ? { ...ctx.target.fanal } : null; ctx.apply({ enter: false }); };
-  const run = async () => {
-    const n = ctx.scene.get('fanal');
-    const from = n ? [n.X, n.Y] : null;
-    apply();
-    const m = ctx.scene.get('fanal');
-    if (!m || !from) return;
-    const dx = from[0] - m.X, dy = from[1] - m.Y;
-    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
-    if (ctx.reduced) { await fade(ctx, m.el, 0, 1); return; }
-    const dur = Math.round(Math.min(1400, 450 + Math.hypot(dx, dy) * 5));
-    const opts = { duration: dur, easing: 'cubic-bezier(.45,0,.25,1)' };
-    if (m.halo) ctx.fx.anim(m.halo, [{ translate: `${f(dx)}px ${f(dy)}px` }, { translate: '0px 0px' }], opts);
-    await ctx.fx.anim(m.el, [{ translate: `${f(dx)}px ${f(dy)}px` }, { translate: '0px 0px' }], opts).finished.catch(() => {});
-  };
-  return { apply, run, text: () => '' };
-}
-
 // ----------------------------------------------------------------------------- chef d'orchestre
 function stepsFor(ctx, ev) {
   switch (ev.type) {
@@ -217,7 +191,6 @@ function stepsFor(ctx, ev) {
     case 'reflet': return [refletStep(ctx, ev.objectId ?? ev.object ?? ev.anchor)];
     case 'veille': return [veilleStep(ctx)];
     case 'etape': return [etapeStep(ctx, ev)];
-    case 'seance-debut': case 'seance-fin': return [fanalStep(ctx)];
     default: return [];
   }
 }
@@ -229,8 +202,8 @@ function extraSteps(ctx) {
   return out.slice(0, 4);
 }
 
-/** Une seule voix par événement : le niveau de quartier et la séance sont annoncés par l'interface ; le monde les dessine. */
-const SAID_BY_UI = new Set(['quartier-niveau', 'seance-debut', 'seance-fin']);
+/** Une seule voix par événement : le niveau de quartier est annoncé par l'interface ; le monde le dessine. */
+const SAID_BY_UI = new Set(['quartier-niveau']);
 
 export async function playEvents(ctx, events) {
   const missed = [];

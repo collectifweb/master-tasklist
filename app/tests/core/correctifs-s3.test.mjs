@@ -24,7 +24,6 @@ test('état abîmé : un type inattendu reprend la valeur par défaut, plus de p
     'parcelles: "x"': (g) => { g.parcelles = 'x'; },
     'premiersPas: []': (g) => { g.premiersPas = []; },
     'bilans: {}': (g) => { g.bilans = {}; },
-    'coteACote: null': (g) => { g.coteACote = null; },
   };
   for (const [label, abime] of Object.entries(cas)) {
     const raw = createInitialState(now);

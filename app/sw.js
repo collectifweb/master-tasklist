@@ -16,7 +16,7 @@ const SHELL = [
   'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js', 'js/horloge.js',
   'js/ui/announce.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/glyphs.js',
   'js/ui/batiment.js', 'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js', 'js/ui/bandeau.js',
-  'core/index.js', 'core/cote.js', 'core/cote-a-cote.js', 'core/domains.js', 'core/economy.js',
+  'core/index.js', 'core/cote.js', 'core/domains.js', 'core/economy.js',
   'core/infer.js', 'core/ledger.js', 'core/letters.js', 'core/migrate.js', 'core/quests.js', 'core/recycling.js',
   'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js', 'core/batiments.js', 'core/objectifs.js',
   'world/world.js', 'world/view.js', 'world/camera.js', 'world/fx.js', 'world/iso.js', 'world/layout.js', 'world/models.js',

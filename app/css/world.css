@@ -184,10 +184,6 @@
   animation-play-state: paused;
 }
 .ow-ent.m-fanal .ow-char-bob { animation-name: ow-hover; animation-duration: 2.8s; }
-/* Côte à côte : Fanal au travail, penché vers la quête et immobile (aucune boucle tant que dure la séance) */
-.ow-ent[data-pose] .ow-char-bob { animation: none; }
-.ow-ent[data-pose="gauche"] .ow-char-bob { transform: rotate(-8deg); }
-.ow-ent[data-pose="droite"] .ow-char-bob { transform: rotate(8deg); }
 .ow-hitbox { position: absolute; left: 0; top: 0; }
 @keyframes ow-bob {
   0%, 100% { transform: scaleY(1); }

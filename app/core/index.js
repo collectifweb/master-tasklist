@@ -10,7 +10,6 @@ export * from './infer.js';
 export * from './state.js';
 export * from './letters.js';
 export * from './recycling.js';
-export * from './cote-a-cote.js';
 export * from './village.js';
 export * from './batiments.js';
 export * from './objectifs.js';
