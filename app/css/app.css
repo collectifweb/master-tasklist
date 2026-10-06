@@ -755,6 +755,17 @@
   border-color: var(--c-sage-deep);
 }
 
+/* « Aujourd'hui » mène au Fil du jour quand la quête y est : la carte s'éclaire un instant, « Fait » a le focus.
+   Rien ne bouge (un halo qui s'éteint) : rien à réduire en mouvement réduit. */
+.fil-quest.is-pointed {
+  border-radius: var(--r-md);
+  animation: fil-pointe 1600ms var(--ease-out) both;
+}
+@keyframes fil-pointe {
+  0%, 40% { box-shadow: 0 0 0 2px var(--c-lantern), 0 0 0 8px rgb(255 217 140 / 0.5); }
+  100% { box-shadow: 0 0 0 2px rgb(243 200 121 / 0), 0 0 0 8px rgb(255 217 140 / 0); }
+}
+
 /* Le 3e écran d'accueil allume le bandeau : un passage de lumière de lanterne, une seule fois.
    Mouvement réduit : la lumière ne se déplace pas, elle apparaît et s'éteint. */
 .bandeau.is-lighting::after {

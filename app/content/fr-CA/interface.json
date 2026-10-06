@@ -460,7 +460,7 @@
   "bandeau.rang": "Prochain rang :",
   "bandeau.plus": "Voir tous les objectifs",
   "bandeau.aria": "Aujourd’hui : {texte}",
-  "bandeau.rien": "Rien d’ouvert. Ajoute une vraie tâche.",
+  "bandeau.rien": "Ajoute une vraie tâche",
   "bandeau.semaine.pas": "Premiers pas : {n} sur {total}",
   "bandeau.semaine.rien": "Aucune quête faite encore",
   "bandeau.semaine.quetes.one": "{n} quête faite",

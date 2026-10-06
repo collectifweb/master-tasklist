@@ -4,7 +4,7 @@ import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
 import { loadContent, t, tn, content, pickReply, replyVars } from './content.js';
-import { $, $$, esc, reducedMotion, setText, inlineSprite } from './ui/dom.js';
+import { $, $$, esc, reducedMotion, setText, inlineSprite, restart } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
 import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.js';
 import { createSpeech } from './ui/speech.js';
@@ -448,8 +448,15 @@ function goToday() {
   if (!a) return;
   if (a.kind === 'pas' && ['construire', 'semer', 'accueillir'].includes(a.geste) && a.cible) return openBatimentSheet(a.cible);
   const id = a.kind === 'quete' ? a.taskId : a.kind === 'pas' && a.geste === 'terminer' ? a.cible : null;
-  if (id && findTask(id)) return openFiche(ctx(), id);
-  return openAdd();
+  if (!id || !findTask(id)) return openAdd();
+  // la quête est au Fil du jour : son « Fait » est là, la carte s'éclaire un instant et « Fait » prend le focus
+  const fil = $('#fil-quest:not([hidden])');
+  if (fil && fil.dataset.taskId === id) {
+    $('[data-action="complete"]', fil).focus();
+    restart(fil, 'is-pointed');
+    return;
+  }
+  return openFiche(ctx(), id);
 }
 
 function addStepFromInput(id) {
