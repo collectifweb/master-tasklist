@@ -1,6 +1,6 @@
 # L'Orée — bible du jeu
 
-*Version 2, validée par Alex le 5 octobre 2026 (ses décisions sont au §15). Elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et sert de guide à Hermes pour écrire la suite.*
+*Version 2, validée par Alex le 5 octobre 2026, complétée le 6 octobre après son essai (ses décisions sont au §15). Elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et sert de guide à Hermes pour écrire la suite.*
 
 Les nombres de ce document sont des exemples de départ, à équilibrer à l'usage.
 
@@ -32,12 +32,14 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Ressource | D'où elle vient | À quoi elle sert |
 |---|---|---|
-| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé | Construire, semer, chauffer la serre l'hiver, réparer après un imprévu |
-| **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie | Construire et réparer |
-| **Nourriture** | Les récoltes : potager de mai à octobre, serre toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, faire des réserves pour l'hiver |
+| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
+| **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie ; et une fois par semaine, la semaine tenue (§4) | Construire et réparer |
+| **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, faire des réserves pour l'hiver |
 | **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
 
-**Ce qui disparaît** : Lueur, Fil libre, Souffler, cendre, voile et Confiance. Leur rôle passe aux Habitants (la progression) et aux quartiers (des réglages du jeu que tu fais monter, au choix, avec des permis).
+**Les permis ne sont pas une ressource.** Un compteur « Permis » à part, à droite des quatre ressources dans la barre du haut, dit combien il en reste à placer. Il ne sert qu'à monter un quartier (§4).
+
+**Ce qui disparaît** : Lueur, Fil libre, Souffler, cendre, voile et Confiance. Leur rôle passe aux Habitants (la progression) et aux quartiers (des réglages du jeu que tu fais monter, au choix, avec des permis).
 
 **Règle d'or** : la Nourriture n'est jamais consommée en cachette. On la dépense pour un geste choisi (accueillir, échanger, mettre en réserve). Personne ne meurt de faim, personne ne part.
 
@@ -77,14 +79,16 @@ Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne c
 
 Il n'y a pas de date limite : un jour sans quête ne fait rien perdre, le compte attend. Remballer une quête ne reprend jamais un permis.
 
-Monter un quartier au niveau n coûte n permis, plus des travaux en Énergie et en Matériaux qui croissent avec le niveau (les chiffres sont réglés par simulation). Tu touches un quartier, sa fiche dit ce qu'il fait, ce que le prochain niveau change et ce qu'il coûte.
+**La semaine tenue.** Dès le 5e jour travaillé d'une semaine (du lundi au dimanche, en jours de jeu), le village reçoit 12 Matériaux, une seule fois par semaine. C'est un bonus de retour régulier, plafonné : un 6e ou un 7e jour ne paie pas davantage, et remballer une quête ne le reprend pas. Il n'y a ni série ni compteur de jours de suite : une semaine manquée ne coûte rien, la suivante repart à neuf, sans reproche. Le jour où il tombe, l'annonce de gain dit « Semaine tenue », Fanal glisse un mot (jamais un nombre de jours) et le bilan de la semaine affiche « Semaine tenue : +12 Matériaux ». Le montant de 12 est une valeur de départ, à ajuster à l'usage.
+
+Monter un quartier au niveau n coûte n permis, n × 80 Énergie et n × 60 Matériaux : le niveau 1 coûte 1 permis, 80 Énergie et 60 Matériaux ; le niveau 2, 2 permis, 160 Énergie et 120 Matériaux. Les Matériaux n'ont que les quêtes pour source régulière (avec la semaine tenue), alors que l'Énergie s'accumulait sans usage : le prix suit cette réalité (§15, décision 10). Les permis, eux, ne changent pas. Tu touches un quartier, sa fiche dit ce qu'il fait, ce que le prochain niveau change et ce qu'il coûte.
 
 **Chaque niveau change un seul réglage du jeu**, écrit sur la fiche du quartier. Un niveau ne change jamais ce que rapporte une tâche.
 
 | Quartier | Réglage | Niveau 1 | Niveau 2 | Niveau 3 |
 |---|---|---|---|---|
 | Les Champs | Nourriture par récolte du potager | 5 « Compost » | 6 « Rangs serrés » | 7 « Terre noire » |
-| L'Atelier | Nourriture par récolte de la petite serre | 5 « Tablettes de culture » | 6 « Double paroi » | 7 « Lampes de culture » |
+| L'Atelier | Nourriture par récolte de chaque petite serre | 5 « Tablettes de culture » | 6 « Double paroi » | 7 « Lampes de culture » |
 | Le Garage | Jours de pousse d'une culture | 4 « Motoculteur » | 3 « Tracteur » | (reporté : la « tournée d'hiver ») |
 | L'École | Places par chalet | 3 « Classe ouverte » | 4 « Cantine » | 5 « Terrain de jeu » |
 | La Mairie | Nourriture pour accueillir une famille | 15 « Formulaire d'une page » | 12 « Comité d'accueil » | 9 « Annonce dans les journaux du Sud » |
@@ -105,7 +109,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Chalet | Campement | Loge 2 habitants |
 | Potager (parcelle) | Campement | Produit de la Nourriture de mai à octobre |
 | Atelier | Campement | Permet de construire et de réparer |
-| Petite serre | Campement | Produit de la Nourriture toute l'année ; l'hiver, elle consomme de l'Énergie |
+| Petite serre | Campement ; la 2e, Hameau | Produit de la Nourriture toute l'année ; l'hiver, elle consomme de l'Énergie. On peut en avoir deux (la seconde exige le rang Hameau) : plus de Nourriture l'hiver, et un usage pour l'Énergie |
 | Éolienne | Hameau | Donne de l'Énergie en plus les jours où tu as travaillé |
 | Grenier | Hameau | Garde plus de Nourriture en réserve |
 | Quai | Hameau | Les visiteurs arrivent par le lac : débloque les commandes |
@@ -141,7 +145,9 @@ Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : pa
 
 Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
-**Catalogue de départ** : le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
+**Le premier visiteur sera le marchand** (idée d'Alex, 6 octobre). Il échange de l'Énergie contre des Matériaux ou de la Nourriture, et l'inverse. C'est ce que le Marché du rang Bourg fera sans attendre personne ; le marchand donne le goût de l'échange bien avant. Prévu aux semaines 3 et 4 (§14), avec les autres visiteurs. Les taux d'échange restent à régler à la construction.
+
+**Catalogue de départ** : le marchand (échange de ressources), le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
 
 ## 8. Les imprévus, bons et mauvais
 
@@ -154,6 +160,8 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 | Trouvaille en forêt : Matériaux en plus | Panne d'éolienne : à réparer (Matériaux) |
 | Un orignal traverse le village : rien, c'est juste beau | Un ours au potager : la prochaine récolte est réduite |
 | Visiteur surprise : une commande en plus | Mouches noires : les chantiers prennent un jour de plus |
+
+**Pas de taxe pour l'instant** (décision d'Alex, 6 octobre) : aucun visiteur ni imprévu ne prélève de ressources. Laisser passer une commande continue de ne rien faire perdre.
 
 **Les alertes météo** reprennent les « Avis » de la v1, comme les menaces qu'on voit venir dans Dune 2. Une tempête est annoncée quelques jours d'avance, avec une barre de préparation. Certains bâtiments aident à s'y préparer : la tour de guet prévient plus tôt, le garage à chasse-neige protège. Si l'alerte est tenue, on gagne une récompense ; sinon, un bâtiment est à réparer.
 
@@ -289,12 +297,12 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | Semaines | Construction | Ce qui se passe dans le jeu |
 |---|---|---|
 | 1 et 2 | Nouveau vocabulaire, quatre ressources, rang et habitants, bâtiments du campement et du hameau, fiches à trois lignes, quêtes d'initiation, bandeau d'objectifs, bilans passés, « Jour suivant » au bac à sable, rappel quotidien | Automne : premier gel, remplir le grenier |
-| 3 et 4 | Visiteurs et commandes, catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
+| 3 et 4 | Visiteurs et commandes (le marchand d'abord), catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
 | 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée | Prêt avant le 1er décembre |
 | 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex du 5 octobre 2026
+## 15. Décisions d'Alex des 5 et 6 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -305,3 +313,18 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 7. **L'effort paie** (5 octobre 2026, au soir) : une quête longue et difficile rapporte beaucoup plus que plusieurs courtes et faciles. L'ordre des quêtes, le plafond quotidien et les bonus ne changent pas (§4).
 8. **« Je m'y mets » est retiré** (5 octobre 2026, au soir) : plus de bouton, d'épingle, de relevé du temps ni de temps au bilan.
 9. **« Carte en liste » est rangée dans le bouton « Vue »** de la carte, avec Rapprocher, Éloigner et Toute l'île (5 octobre 2026, au soir).
+
+Décisions du 6 octobre 2026 (matin), après son essai jusqu'au jour de jeu 42 : « Jeu splendissime ! Ça va dans le bon sens. »
+
+10. **Prix des niveaux de quartier inversés** : les Matériaux manquaient pendant que l'Énergie dormait. Décidé d'abord à n × 100 Énergie et n × 75 Matériaux, puis **ajusté par Alex en cours de lot à n × 80 Énergie et n × 60 Matériaux**. Raison : la reconstitution jour par jour de sa partie d'essai donne un premier niveau payable au jour 23 avec 80 et 60, contre le jour 25 à 34 avec 100 et 75. Les permis ne changent pas (§4).
+11. **« Quête par défaut » dans les Réglages** (priorité, longueur, difficulté), gardée avec la partie : la même sur tous les appareils.
+12. **Compteur « Permis » dans la barre des ressources**, à la place de la pastille sur « Construire » : la pastille faisait croire à un nombre de constructions possibles (§3).
+13. **Deuxième petite serre, débloquée au rang Hameau** (§5).
+14. **Quatre ou cinq répliques de plus** pour « permis gagné » et « nouveau rang ».
+15. **Fiche de quartier sur tablette** : le bouton d'achat ne doit plus descendre après un achat.
+16. **Le marchand devient le premier visiteur**, aux semaines 3 et 4 (§7).
+17. **Pas de taxe pour l'instant** (§8).
+18. **Plafond du jour inchangé** (§4).
+19. **Rabat à 360 × 640 accepté** tel quel.
+20. **« Semaine tenue »** : bonus dès le 5e jour travaillé sur 7, payé en Matériaux, sans compteur de jours de suite, en accord avec la revue d'octobre (un compteur cumulatif, jamais de série). Montant de départ : 12 Matériaux (§4).
+21. **Ordre des travaux** : lot R2 (équilibrage, réglages, semaine tenue), essai, puis lot 8 (bascule), puis visiteurs et imprévus.
