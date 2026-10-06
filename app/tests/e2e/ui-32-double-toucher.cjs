@@ -47,6 +47,12 @@ L.runScenario('32. Double toucher : un geste qui dépense ne se fait qu’une fo
   await page.touchscreen.tap(...await center(page, '[data-ow="build"]'));
   await L.waitFor(() => isOpen(page, 'dlg-construire'), 2000);
   await page.waitForTimeout(800);
+  const dispo = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire .cat-qrt')].map((li) => {
+    const e = li.querySelector('.cat-etat');
+    return { q: li.dataset.quartier, data: li.dataset.etat || '', etat: e.hidden ? '' : e.textContent.trim(), check: !!e.querySelector('use[href$="#i-check"]') };
+  }));
+  const peut = dispo;
+  R.check('section Quartiers : « Disponible » avec la coche quand le niveau suivant s’achète (comme les bâtiments)', peut.length === 6 && peut.every((r) => r.data === 'libre' && r.check && r.etat === 'Disponible'), JSON.stringify(dispo));
   const q = compact ? 'place' : 'ecole';
   await page.evaluate((q) => document.querySelector(`#dlg-construire .cat-qrt-go[data-quartier="${q}"]`).scrollIntoView({ block: 'center' }), q);
   await page.waitForTimeout(400);

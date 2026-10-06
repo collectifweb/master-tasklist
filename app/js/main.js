@@ -18,7 +18,7 @@ import {
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
-import { openQuartier, refreshQuartier, monteText } from './ui/quartier.js';
+import { openQuartier, refreshQuartier, monteText, showMonte } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -494,7 +494,9 @@ document.addEventListener('click', (e) => {
       // achat impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($('#qrt-raison') || target).textContent.trim());
       markSpent(action, target);
-      return run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
+      const r = run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
+      const monte = r && r.events.find((x) => x.type === 'quartier-monte');
+      return monte && showMonte(ctx(), monte); // la réussite se voit dans la fiche, pas seulement sur la carte derrière
     }
     case 'qrt-quetes': {
       // le panneau s'ouvre derrière : toutes les feuilles se ferment (fiche, catalogue, carte en liste)
