@@ -78,7 +78,8 @@ Alex peut donner les critères explicitement ou me laisser évaluer seul. Dans l
 
 | Fichier | Rôle |
 |---|---|
-| `tasks/index.html` | Frontend — page web consultable via `https://todo.example.com` |
+| `app/` | Frontend — la nouvelle app, consultable via `https://todo.example.com` (l'accueil du site renvoie vers elle depuis le 5 octobre 2026). Elle lit et écrit `tasks.json` par `app/api/api.php`. |
+| `tasks/index.html` | Ancien frontend, plus servi depuis la bascule du 5 octobre 2026 (accès web direct à la liste et à l'ancienne API bloqué, d'après `tasks/todo.md`) |
 | `tasks/tasks.json` | **Données des tâches** — c'est ici que je lis/écris les tâches |
 | `tasks/tasks-server.py` | Serveur HTTP local sur port 8767 |
 | `tasks/TASKS_WORKFLOW.md` | Ce fichier — documentation du workflow |
@@ -93,9 +94,9 @@ Alex peut donner les critères explicitement ou me laisser évaluer seul. Dans l
                        HTTPS / LiteSpeed
                               │
                    ┌──────────▼──────────┐
-                   │ index.html          │
+                   │ app/ (nouvelle app) │
+                   │ app/api/api.php     │
                    │ tasks.json          │
-                   │ tasks-api.php       │
                    └──────────▲──────────┘
                               │
                   SSH/SCP sync toutes les minutes
