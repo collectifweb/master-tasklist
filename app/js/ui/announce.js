@@ -72,7 +72,7 @@ export function createAnnounce(lane, live) {
         // un permis qui tombe : « +1 permis » (le mot double le chiffre) ; la tâche compte pour son quartier : « → Champs »
         if (s.permis > 0) items.push(`<span class="announce-item" data-res="permis">${esc(t('gain.permis', { n: s.permis }))}</span>`);
         // la semaine tenue : ses Matériaux sont dans le chiffre ci-dessus, le mot dit d'où vient le surplus
-        if (s.tenue) items.push(`<span class="announce-item announce-tail" data-semaine>${icon('calendar')}${esc(t('announce.semaine'))}</span>`);
+        if (s.tenue) items.push(`<span class="announce-item announce-tail" data-semaine>${esc(t('announce.semaine'))}</span>`);
         if (s.quartier) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
         if (!items.length) return say(liveText);
       }
