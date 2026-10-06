@@ -443,10 +443,10 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 `.announce` dans `.announce-lane` : pastille de coche, gains avec picto, « Lueur → Atelier ». Visible avec `.is-shown` pendant 4 s ; `.announce--static` pour la référence. Décorative : le texte complet part dans `#live`.
 
 ### Cote, étiquettes, métadonnées (6)
-`.cote` : plaque de 48 px avec valeur et mot « Cote » ; `.cote--sm` (42×40) à l'intérieur d'une ligne cliquable (la cible de 44 px est celle de la ligne). `button.cote` ouvre le « Pourquoi ? ». `.tag` (`--doing`, `--done`, `--prio`, `--late`, `--archived`, `--guess`) : pastille de 24 px avec picto. `.meta` : ligne de métadonnées avec pictos ; `.meta-item--late` (terre) et `.meta-item--doing` (sauge).
+`.cote` : plaque de 48 px avec valeur et mot « Cote » ; `.cote--sm` (42×40) à l'intérieur d'une ligne cliquable (la cible de 44 px est celle de la ligne). `button.cote` ouvre le « Pourquoi ? ». `.tag` (`--done`, `--prio`, `--late`, `--archived`, `--guess`) : pastille de 24 px avec picto. `.meta` : ligne de métadonnées avec pictos ; `.meta-item--late` (terre).
 
 ### Fil du jour et alternatives (7)
-`.fil-quest[data-state]` : titre sur 2 lignes et Cote, méta, raison, deux boutons (« Fait », « Je m'y mets » qui devient « Pause »). `.alts` / `.alt` / `.alt-row[aria-expanded]` : alternatives repliées, dépliage sans saut dans `.alt-panel`.
+`.fil-quest[data-state]` : titre sur 2 lignes et Cote, méta, raison, un bouton (« Fait »). `.alts` / `.alt` / `.alt-row[aria-expanded]` : alternatives repliées, dépliage sans saut dans `.alt-panel`.
 
 ### Trois cartes (8)
 `.reco-wrap` (conteneur) > `.reco-list` > `.reco` : À faire d'abord (`.reco--first`, lavis sauge), Victoire rapide, Grand chantier. La catégorie est le premier élément de la ligne de méta (`.reco-kind`), jamais une étiquette au-dessus du titre.
@@ -455,7 +455,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 `.search` (champ de 48 px, picto, bouton d'effacement de 44 px), `.seg` (statut, boutons radio), `.sort` + `.select` (liste native), `.chips` / `.chip[aria-pressed]` (la puce active se remplit de sauge et ajoute une coche dessinée `.chip-check`), `.chips--scroll` (défilement horizontal interne avec fondu aux bords).
 
 ### Liste de quêtes (10)
-`.quest[data-state="todo|doing|done|archived"]` : case de 44 px (`.quest-check`, anneau de 26 px), zone principale de 64 px (`.quest-main`), action à droite (`.quest-aside`). En cours : épinglée, lavis sauge, pictogramme d'épingle et texte « En cours ». Faite : case pleine avec coche, titre en encre mousse. Archivée : picto de boîte d'archives, encre de cendre.
+`.quest[data-state="todo|done|archived"]` : case de 44 px (`.quest-check`, anneau de 26 px), zone principale de 64 px (`.quest-main`), action à droite (`.quest-aside`). Faite : case pleine avec coche, titre en encre mousse. Archivée : picto de boîte d'archives, encre de cendre.
 
 ### Feuilles et champs (11)
 `dialog.sheet` : feuille du bas en compact, fenêtre centrée de 560 px à partir de 700 px (`.sheet--small` 440 px). `.sheet--inline` la pose dans la page. Parties : `.sheet-head`, `.sheet-body`, `.sheet-foot`. Champs : `.field`, `.input` (48 px), `.input--lg` (56 px), `.textarea`, `.field-hint`, `.field-error`. Autres : `.sector-picker` (radios), `.stepper` (pas à pas de 1 à 10, boutons de 44 px), `.check-row`, `.disclosure`, `.fiche-summary`.
@@ -540,22 +540,19 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 |---|---|---|
 | `data-panel` | `.app` | `peek`, `open` ou `cache` (avec `inert` sur `.panel`) |
 | `aria-expanded` | `.panel-toggle` (et `.panel-toggle-label` : « Tout voir » ou « Replier ») | `true` ou `false` |
-| `data-state` | `.fil-quest`, `li.quest` | `todo`, `doing`, `done`, `archived` |
+| `data-state` | `.fil-quest`, `li.quest` | `todo`, `done`, `archived` |
 | `data-late="true"` | `li.quest` | crochet de données seulement ; la présentation passe par `.meta-item--late` ou `.tag--late` (aucune règle CSS ne lit `data-late`) |
 | `data-res` | `.res` | `energie`, `materiaux`, `confiance`, `lueur` |
 | `data-full` | `.res` | `true` quand le plafond est atteint |
 | `.is-shown` | `.res-delta`, `.announce` | relancer l'animation : retirer la classe, lire `offsetWidth`, la remettre |
 | `.is-hit` | `.res` | même méthode |
 | `aria-expanded` | `.alt-row` | avec `.is-open` sur `.alt` |
-| `aria-pressed` | `.chip`, bouton « Je m'y mets » | `true` ou `false` |
+| `aria-pressed` | `.chip` | `true` ou `false` |
 | `aria-disabled="true"` | `.btn` | avec `.btn-reason` et `aria-describedby` |
 | `aria-busy="true"` | `.btn`, `.skeleton` | picto `.spin` dans le bouton |
 | `aria-invalid="true"` | `.input`, `.textarea` | avec `.field-error` lié |
 | `data-sync` | `.sync` | `offline`, `error`, `saving`, `saved` |
 | `data-motion` | `<html>` | `reduce` ou `full` |
-| `hidden` | `[data-doing-only]` (méta « En cours ») | levé quand la quête est en cours |
-
-Quand la quête n° 1 passe en cours : `data-state="doing"` sur `.fil-quest`, `aria-pressed="true"` sur le bouton, libellé « Pause », picto `i-pause`.
 
 ### Actions de la démo (`data-action`)
 
