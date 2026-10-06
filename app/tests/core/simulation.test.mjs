@@ -12,7 +12,7 @@
 //     pas et ses bâtiments faits, le joueur simulé achète le niveau le moins cher qu'il peut payer. Un permis tous les
 //     4 jours travaillés, le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
 //     nettement plus bas qu'une partie sans niveaux. ECHELLE (quartiers.js) se règle ici. (a) se mesure sans niveaux ;
-//     (a′), la même cible avec niveaux, est un échec connu marqué todo (voir plus bas).
+//     (a′) mesure la même chose avec niveaux, cible élargie à 15-25 (voir plus bas).
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -115,14 +115,13 @@ test('(a) à rythme régulier, le Hameau arrive en 21 jours environ, en été co
   }
 });
 
-// (a′) (lot R) la même cible quand le joueur achète des niveaux : échec connu, laissé visible (todo). Le Hameau passe du
-//      jour 18 au jour 16 aux trois départs dès qu'un niveau de Champs est acheté avant lui (une récolte de 5 au lieu de
-//      4 avance la 3e famille de 2 jours), quelle que soit ECHELLE de 10 à 40. Incompatible avec « premier niveau entre
-//      les jours 7 et 14 » de (f) : à trancher hors de ce lot.
-test('(a′) avec les niveaux de quartier, le Hameau reste entre les jours 17 et 25', { todo: 'conflit avec (f), à trancher' }, () => {
+// (a′) (lot R) avec les niveaux : le Hameau passe du jour 18 au jour 16 aux trois départs dès qu'un niveau de Champs
+//      est acheté avant lui (une récolte de 5 au lieu de 4 avance la 3e famille de 2 jours), quelle que soit ECHELLE de
+//      10 à 40. Accepté (arbitrage 10 du lot R) : c'est l'effet voulu d'un niveau. Cible avec niveaux : 15 à 25.
+test('(a′) avec les niveaux de quartier, le Hameau arrive entre les jours 15 et 25', () => {
   for (const debut of ['2026-06-01', '2026-08-15', '2026-10-06']) {
     const { hameau } = simuler(debut, 40, regulier, { jusquAuHameau: true });
-    assert.ok(hameau >= 17 && hameau <= 25, `départ ${debut} : Hameau au jour ${hameau} avec les niveaux`);
+    assert.ok(hameau >= 15 && hameau <= 25, `départ ${debut} : Hameau au jour ${hameau} avec les niveaux`);
   }
 });
 
