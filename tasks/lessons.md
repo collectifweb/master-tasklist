@@ -35,3 +35,10 @@
 
 - **L'écran se met à jour avant la fin de l'envoi.** Le scénario 1 lisait le registre du serveur dès que l'Énergie s'affichait : il a échoué une fois à 1280 (lot 2), alors que l'agent l'avait vu au vert. Règle : tout contrôle qui lit le serveur après un geste dans l'interface attend l'écriture (`L.waitFor`), au lieu de la supposer faite.
 - **`setsid` peut rendre la main tout de suite.** Lancé depuis un chef de groupe de processus, il se dédouble et revient aussitôt : un marqueur « FIN » écrit juste après arrive avant la fin de la série (lot 6). Règle : `setsid --wait`, ou écrire le marqueur dans le même sous-shell que la commande, et vérifier qu'aucun `node ui-…` ne tourne encore avant de lire le résultat.
+- **Le bonus d'ouverture aussi arrive après l'écran.** Le scénario 22 comptait le registre juste après l'ouverture : le bonus d'ouverture est arrivé pendant la séance et trois contrôles ont échoué à 1280 (lot 5), alors que la même série avait réussi chez l'agent. Règle : un scénario qui prend une photo du registre au départ attend d'abord le bonus d'ouverture (`L.waitFor(… e.bonus === 'ouverture' …)`), comme le scénario 1.
+- **`pgrep -f "node ui-"` se trouve lui-même.** La boucle d'attente contient ce motif dans sa propre ligne de commande : elle ne s'arrête jamais (lot 5). Règle : ancrer le motif, `pgrep -f "^node ui-"`.
+- **Pas de relance automatique dans le lanceur.** « Relance-le seul trois fois » (diagnostic d'une instabilité, à la main) a été compris comme « le lanceur relance tout seul » : une instabilité serait passée au vert sans qu'on la voie (lot 5). Règle : `run-ui.sh` fait un seul essai par défaut ; `ESSAIS=3` seulement pour diagnostiquer. Dans une consigne d'agent, écrire « à la main, pour diagnostiquer ».
+
+## Consignes aux agents
+
+- **Compter les fautes, pas seulement les bons exemples.** J'ai écrit à l'agent du lot 5 que les textes de `content/fr-CA/` avaient déjà l'espace insécable, sur la foi de 53 bonnes occurrences ; il en restait 92 ordinaires (lot 5). Règle : avant d'écrire « comme dans X » dans une consigne, mesurer aussi les écarts dans X.

@@ -173,11 +173,14 @@ Pour le joueur : il rebâtit des chalets, sème, récolte, accueille des famille
 
 ### Lot 5 — Premiers pas, bandeau d'objectifs, accueil
 Pour le joueur : trois écrans d'accueil, cinq premiers pas guidés, et un bandeau toujours visible : aujourd'hui, cette semaine, cette saison, prochain rang.
-- [ ] Les cinq quêtes d'initiation (bible §11), atteintes une seule fois, jamais écrites dans `tasks.json`.
-- [ ] Saison du vrai calendrier ; objectif d'automne « Remplir le grenier », sans perte s'il est manqué.
-- [ ] Bandeau d'objectifs (remplace le carnet) ; « cette semaine » affiche les premiers pas en attendant les visiteurs.
-- [ ] [impeccable] bandeau aux trois largeurs, écrans d'accueil.
-- [ ] Tests écrits d'abord ; scénarios de l'accueil et des premiers pas réécrits ; nouveau scénario « bandeau ».
+- [x] Les cinq quêtes d'initiation (bible §11), atteintes une seule fois, jamais écrites dans `tasks.json`.
+- [x] Saison du vrai calendrier ; objectif d'automne « Remplir le grenier », sans perte s'il est manqué.
+- [x] Bandeau d'objectifs (remplace le carnet) ; « cette semaine » affiche les premiers pas en attendant les visiteurs.
+- [x] [impeccable] bandeau aux trois largeurs, écrans d'accueil.
+- [x] Tests écrits d'abord ; scénarios de l'accueil et des premiers pas réécrits ; nouveau scénario « bandeau ».
+- *Fait le 5 octobre (commits b8276bb, 3d419fd, c4e2a25, c2dceb6, c58485a de l'agent ; puis par moi : espaces insécables dans tous les textes du jeu avec un test, scénario 22 corrigé, lanceur ramené à un seul essai ; cache v7). Vérifié par moi : 339 tests `node --test` ; série navigateur complète « TOUT REUSSI », 26 scénarios aux trois largeurs, un seul essai chacun (17 : 81 vérifications, 18 : 69, 27 : 65). Une première série avait échoué au scénario 22 à 1280 : le bonus d'ouverture arrivait au registre après la photo du départ (même piège qu'au scénario 1, voir `tasks/lessons.md`).*
+- *Choix de l'agent, relus : pas dans l'ordre, chacun constaté sur l'état (une partie migrée qui a déjà des tâches passe les pas 2 et 3 d'elle-même) ; coups de pouce : chalet +5 Matériaux, tâche +2 Énergie, terminer +5 Matériaux, semer +6 Nourriture (+9 quand le potager dort), famille +3 Énergie. Simulation de l'agent (relue, pas relancée) : première famille au jour 6 (départ le 25 octobre) et au jour 7 (départ le 15 décembre), au lieu des jours 8 et 24 ; Hameau au jour 18 au lieu de 21. Saisons découpées net (automne septembre-novembre, hiver décembre-février…) ; seul l'automne a un objectif : Nourriture au plafond du stockage une fois, +3 Énergie et +10 Matériaux. Accueil à la première visite, aussi pour une partie migrée ; pendant cette visite, rien d'autre ne s'ouvre (la lettre de passage attend la visite suivante).*
+- *Essai en ligne, vérifié vers 21 h 35 : photo (`backups/avant-lot5-20261005-213319`), envoi, ouverture dans un navigateur sans affichage qui bloquait toute écriture (pour laisser à Alex ses premiers pas) : cache v7, accueil ouvert sur sa partie, bandeau présent, 0 erreur hors l'écriture bloquée ; partie, registre et liste identiques à la photo.*
 
 ### Lot 6 — Bilans passés et « Jour suivant »
 Pour le joueur : le bilan garde l'historique des semaines. Dans la version d'essai seulement, un bouton fait passer au jour suivant.
