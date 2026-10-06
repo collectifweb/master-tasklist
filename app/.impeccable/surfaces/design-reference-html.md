@@ -17,7 +17,7 @@ Contraintes : aucune police ni bibliothèque chargée depuis Internet (un fichie
 
 THESIS : l'interface est le papier de lanterne posé sur l'Orée ; le monde reste dessous et visible. Refuse le tableau de bord de tâches plein écran et la liste qui écrase la carte.
 
-OWN-WORLD : papier récolte et crème sur un ciel-lac ; sauge profonde pour agir, verre solaire pour l'information, terre pour les Matériaux et les caisses d'échéance, lumière de lanterne pour la Lueur, cendre chaude pour l'archivé, braise seulement pour la casse. Tout ce qui s'enfonce a un socle plein (face latérale du bloc, comme les strates de l'île) ; tout ce qui flotte a une ombre douce.
+OWN-WORLD : papier récolte et crème sur un ciel-lac ; sauge profonde pour agir, verre solaire pour l'information, terre pour les Matériaux et les caisses d'échéance, lumière de lanterne pour les Habitants, airelle réservée au Permis, givre réservé au hors ligne et aux Avis, cendre chaude pour l'archivé, braise seulement pour la casse. Tout ce qui s'enfonce a un socle plein (face latérale du bloc, comme les strates de l'île) ; tout ce qui flotte a une ombre douce.
 
 STORY : en deux secondes, Alex lit la quête n° 1, sa durée et sa Cote, et touche « Fait ». Le gain s'annonce dans une voie réservée sous les ressources, jamais par-dessus un bouton.
 

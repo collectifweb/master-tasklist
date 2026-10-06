@@ -34,6 +34,8 @@ colors:
   frost: "#9cc0cc"
   frost-ink: "#3d6577"
   frost-wash: "#e2edf1"
+  airelle-ink: "#6f3f62"
+  airelle-wash: "#f5e6ee"
   ember: "#bf5a38"
   ember-ink: "#a3462a"
   ember-face: "#7c3320"
@@ -191,9 +193,6 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.body}"
     height: "64px"
-  quest-row-doing:
-    backgroundColor: "{colors.sage-wash}"
-    rounded: "{rounded.lg}"
   confirm:
     backgroundColor: "{colors.ember-wash}"
     textColor: "{colors.ink-soft}"
@@ -245,10 +244,10 @@ Le monde d'origine (006, « La lisière réparée ») est étendu, pas remplacé
 
 ## Colors
 
-Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour agir, verre pour informer, terre pour les Matériaux et les attentes, lanterne pour la Lueur. Valeurs dans le YAML ; contrastes calculés par la formule WCAG 2.x sur les jetons (`contrastes.txt`).
+Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour agir, verre pour informer, terre pour les Matériaux et les attentes. Chaque puce de la barre a sa matière : verre pour l'Énergie, terre pour les Matériaux, sauge pour la Nourriture, lanterne pour les Habitants, airelle pour le Permis (`--res-*`, `css/tokens.css`). Valeurs dans le YAML ; contrastes calculés par la formule WCAG 2.x sur les jetons (`contrastes.txt`).
 
 ### Primary
-- **Sauge d'autonomie** (`sage-deep`) : action principale (fond du bouton, de la puce active, de la case faite), Confiance, texte d'accent. Papier dessus : 6,7:1.
+- **Sauge d'autonomie** (`sage-deep`) : action principale (fond du bouton, de la puce active, de la case faite), Nourriture, texte d'accent. Papier dessus : 6,7:1.
 - **Sauge de survol** (`sage-hover`) : survol et appui du bouton principal. Papier dessus : 5,8:1.
 - **Socle sauge** (`sage-face`) : face latérale du bouton principal.
 - **Lavis sauge** (`sage-wash`) : fond « en cours », « faite », carte n° 1, secteur choisi.
@@ -256,11 +255,12 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 ### Secondary
 - **Verre profond** (`glass-deep`) : liens, information, Énergie. **Encre de verre** (`glass-ink`) : texte sur lavis de verre (étiquette « estimée »). **Lavis de verre** (`glass-wash`).
 - **Terre profonde** (`soil-deep`) : Matériaux, caisses d'échéance, erreur de champ. **Lavis de terre** (`soil-wash`).
-- **Encre de lanterne** (`lantern-ink`) : Lueur, « Prioritaire ». **Lavis de lanterne** (`lantern-wash`). **Lueur de lanterne** (`lantern-glow`) : sélection de texte et halo du picto de Lueur.
+- **Encre de lanterne** (`lantern-ink`) : Habitants, « Prioritaire ». **Lavis de lanterne** (`lantern-wash`). **Lueur de lanterne** (`lantern-glow`) : sélection de texte, cœur de la lanterne de Fanal et anneau du cristal sur la carte.
 
 ### Tertiary
 - **Encre de cendre** (`ash-ink`) sur **lavis de cendre** (`ash-wash`) : quête archivée, fond des squelettes de chargement.
-- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne et Avis.
+- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne et Avis, rien d'autre. Le Permis n'en emprunte pas : il a sa propre famille, l'airelle.
+- **Encre d'airelle** (`airelle-ink`, `#6f3f62`) sur **lavis d'airelle** (`airelle-wash`, `#f5e6ee`) : réservée au Permis, comme le papier timbré de la Mairie. Elle teinte le compteur de la barre, la feuille d'aide du Permis et le « +1 » de l'annonce, jamais autre chose. Papier dessus : 7,7:1 ; lavis dessus : 6,8:1 (chiffres du commentaire de `tokens.css`, non recalculés ici).
 - **Braise** : `ember-ink` (texte et fond du bouton danger), `ember-face` (socle), `ember-wash` (fond de confirmation et d'erreur de synchronisation). `ember` seul n'est utilisé qu'en pictos et filets (`rgb(191 90 56 / .4–.45)`).
 
 ### Neutral
@@ -285,16 +285,18 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 | `paper` | `#fff8e8` | texte du bouton principal | 6,7:1 | `sage-deep` |
 | `paper` | `#fff8e8` | texte du bouton principal, survol | 5,8:1 | `sage-hover` |
 | `paper` | `#fff8e8` | texte du bouton danger | 5,7:1 | `ember-ink` |
-| `sage-deep` | `#3f6047` | action, Confiance | 6,7:1 | `paper` |
+| `sage-deep` | `#3f6047` | action, Nourriture | 6,7:1 | `paper` |
 | `sage-deep` | `#3f6047` | « en cours », « faite » | 5,9:1 | `sage-wash` |
 | `glass-deep` | `#2d7473` | liens, Énergie | 5,1:1 | `paper` |
 | `glass-ink` | `#245f5e` | étiquette de verre | 6,1:1 | `glass-wash` |
 | `soil-deep` | `#75472f` | Matériaux, caisses, erreur de champ | 7,4:1 | `paper` |
 | `soil-deep` | `#75472f` | étiquette « en retard » | 6,2:1 | `soil-wash` |
-| `lantern-ink` | `#7a5200` | Lueur, « Prioritaire » | 6,5:1 | `paper` |
-| `lantern-ink` | `#7a5200` | étiquette de Lueur | 5,7:1 | `lantern-wash` |
+| `lantern-ink` | `#7a5200` | Habitants, « Prioritaire » | 6,5:1 | `paper` |
+| `lantern-ink` | `#7a5200` | texte sur lavis de lanterne | 5,7:1 | `lantern-wash` |
 | `ash-ink` | `#625c52` | archivé | 5,3:1 | `ash-wash` |
 | `frost-ink` | `#3d6577` | hors ligne, Avis | 5,3:1 | `frost-wash` |
+| `airelle-ink` | `#6f3f62` | Permis | 7,7:1 | `paper` |
+| `airelle-ink` | `#6f3f62` | Permis, sur son lavis | 6,8:1 | `airelle-wash` |
 | `ember-ink` | `#a3462a` | texte et picto de braise | 5,7:1 | `paper` |
 | `ember-ink` | `#a3462a` | idem, sur lavis | 4,8:1 | `ember-wash` |
 | `ember` | `#bf5a38` | picto ou fond seulement | 4,2:1 | `paper` |
@@ -355,6 +357,9 @@ Points de rupture réels (recopiés dans chaque `@media`, les variables CSS n'y 
 - **Moyen** : `(min-width: 700px)`.
 - **Large** : `(min-width: 1000px), (min-width: 700px) and (orientation: landscape)`.
 - **Très étroit** : `(max-width: 339px)` cache visuellement les libellés du HUD (ils restent lus par les lecteurs d'écran).
+- **HUD étroit** : la barre compte cinq puces (Énergie, Matériaux, Nourriture, Habitants, Permis). Sous `(max-width: 479px)`, l'écart passe à 4 px ; dans le conteneur `hud`, sous 480 px de large, les puces se serrent (chiffre à 16 px, icône de 17 px) et le chiffre de gain (`.res-delta`) quitte le haut de la puce pour se poser sur la ligne du libellé, avec le fond de la barre, au lieu de recouvrir la valeur ; sous 350 px, le chiffre passe à 15 px et le texte se serre encore. La puce du Permis garde 44 px au moins, même sans libellé (sous 340 px).
+- **Annonce serrée** : `(max-width: 379px)`. Une annonce de 4 gains ou plus (classe `.is-dense`) perd ses points médians, passe à 14 px et se resserre, pour tenir à 320 px sans rien rogner ; le picto se colle à son nombre et l'écart entre deux gains reste plus grand que celui d'un gain, pour que le regroupement se lise sans les points. Au-delà de 379 px, la place suffit : points médians comme d'habitude.
+- **Fiche de quartier** : `(min-width: 700px)`. La feuille est centrée, donc une feuille qui grandit après un achat faisait descendre son bouton ; elle a une hauteur fixe (`min(620px, 100dvh − 48px)`), le corps défile et le pied ne bouge plus. Sur téléphone, la feuille est posée en bas : elle monte en grandissant et le pied reste en place.
 - **Requêtes de conteneur** : HUD à 560 px (tuile teintée de 34 px et plafond visibles ; sous 560 px, « Plein » remplace « Matériaux · plein ») ; liste de quêtes à 420 px (le bouton secondaire passe sous le titre) ; trois cartes à 620 px (grille `1.25fr 1fr 1fr`).
 
 | Taille | Disposition | Mesure Playwright |
@@ -423,7 +428,7 @@ Tout vit dans `app/css/components.css`, 16 sections numérotées. Chaque composa
 
 Commandes de la carte (`.ow-zoom`, dans `world.css`) : une colonne de boutons `.ow-zbtn` de 44 px, « Construire », « Quêtes », « Vue », posée 12 px au-dessus du haut réel du panneau (`--world-ctl-bottom`). « Vue » (`aria-expanded`, enfoncé et lavé de sauge quand ouvert) déplie vers la gauche la rangée `.ow-zrow` : Rapprocher, Éloigner, Toute l'île, Carte en liste. « Quêtes » prend le même aspect enfoncé quand le panneau est caché (la carte seule est alors le mode en cours). Aux limites du zoom, `aria-disabled` (tirets, comme le désactivé lisible). Le catalogue « Construire » (`#dlg-construire`, `.cat-*` dans `app.css`) reprend les lignes de la carte en liste (`.ow-plan-bat`) avec le dessin du bâtiment, son coût, « Disponible » (coche, sauge) ou la raison du cœur (cadenas), et un bouton secondaire.
 
-Permis et quartiers. Les permis en main s'affichent en pastille sur « Construire » (`.ow-badge`) : disque sauge profonde de 20 px, chiffre papier, cerclé de 2 px de papier, jamais animé, absent à 0 ; le nombre est aussi dans le nom du bouton (« Construire, 2 permis à placer »). Les plaques de quartier (`.ow-plaque`) lisent « Champs · niv. 2 » : picto, nom, point médian gris, niveau acheté en chiffres tabulaires, sans barre de progression ; le lecteur d'écran lit « Champs : niveau 2. ». Toucher une plaque ouvre la fiche du quartier (`#dlg-quartier`, `.qrt-*` dans `app.css`), même gabarit que la fiche d'un bâtiment : picto du quartier sur lavis sauge, nom, ligne « Quartier · quêtes Terrain · niveau n », puis les lignes « Ce qu'il fait », « Niveau n+1 », « Prix » (avec les permis en texte doux), un bouton principal « Monter au niveau n+1 » ou, s'il manque quelque chose, le même bouton à plat avec cadenas et la raison du cœur ; au niveau le plus haut, une phrase à la place du bouton. Le catalogue « Construire » ouvre sur la ligne des permis et finit par une section « Quartiers » : une ligne-bouton par quartier (picto, niveau, effet suivant, prix, chevron), qui pose la fiche par-dessus le catalogue.
+Permis et quartiers. Les permis en main s'affichent dans la barre des ressources, en cinquième puce (voir « Ressources, HUD ») ; « Construire » n'a plus de pastille ni de chiffre dans son nom (la pastille faisait croire à un nombre de constructions possibles). Les plaques de quartier (`.ow-plaque`) lisent « Champs · niv. 2 » : picto, nom, point médian gris, niveau acheté en chiffres tabulaires, sans barre de progression ; le lecteur d'écran lit « Champs : niveau 2. ». Toucher une plaque ouvre la fiche du quartier (`#dlg-quartier`, `.qrt-*` dans `app.css`), même gabarit que la fiche d'un bâtiment : picto du quartier sur lavis sauge, nom, ligne « Quartier · quêtes Terrain · niveau n », puis les lignes « Ce qu'il fait », « Niveau n+1 », « Prix » (avec les permis en texte doux), un bouton principal « Monter au niveau n+1 » ou, s'il manque quelque chose, le même bouton à plat avec cadenas et la raison du cœur ; au niveau le plus haut, une phrase à la place du bouton. Dès 700 px, la feuille a une hauteur fixe (voir « Mise en page aux trois largeurs »). Le catalogue « Construire » ouvre sur la ligne des permis et finit par une section « Quartiers » : une ligne-bouton par quartier (picto, niveau, effet suivant, prix, chevron), qui pose la fiche par-dessus le catalogue.
 
 ### Boutons (3)
 Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), picto de 20 px, socle de 3 px.
@@ -437,10 +442,10 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - **Bouton texte** `.link-btn` (« Pourquoi ? ») : allure de lien, cible de 44 px.
 
 ### Ressources, HUD (4)
-`.res[data-res="energie|materiaux|confiance|lueur"]` : tuile de 52 px, picto, valeur (`.res-value`, avec `.res-cap` pour le plafond), libellé. `data-full="true"` ajoute « · plein » (ou « Plein » sous 560 px). Variation `.res-delta` (+ `.res-delta--spend` pour une dépense), coup `.res.is-hit`. Matières : Énergie en verre, Matériaux en terre, Confiance en sauge, Lueur en lanterne (avec halo).
+`.res[data-res="energie|materiaux|nourriture|habitants|permis"]` : tuile de 52 px, picto, valeur (`.res-value`, sans plafond), libellé. Cinq puces : les quatre ressources de même largeur, puis le Permis, qui prend la place de son contenu (44 px au moins, `grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(44px, auto)`). Chaque puce est un bouton qui ouvre sa feuille d'aide. Variation `.res-delta` (+ `.res-delta--spend` pour une dépense), coup `.res.is-hit`. À partir de 1 000, la valeur passe en forme courte (« 1,2 k ») ; la valeur entière reste dans le nom lu. Matières : Énergie en verre, Matériaux en terre, Nourriture en sauge, Habitants en lanterne, Permis en **airelle** (`--res-permis` : `#6f3f62` sur `#f5e6ee`), une famille réservée au Permis. Le pictogramme du Permis (`i-permis`) est une feuille au coin plié avec une coche ; le chiffre et le mot « Permis » le doublent. Largeurs étroites : voir « Mise en page aux trois largeurs ».
 
 ### Annonce de gain (5)
-`.announce` dans `.announce-lane` : pastille de coche, gains avec picto, « Lueur → Atelier ». Visible avec `.is-shown` pendant 4 s ; `.announce--static` pour la référence. Décorative : le texte complet part dans `#live`.
+`.announce` dans `.announce-lane` : pastille de coche, gains avec picto (le Permis : « +1 » et son pictogramme en airelle ; le mot n'est lu qu'aux lecteurs d'écran), puis « → Champs » ou, le jour où la semaine est tenue, « Semaine tenue » (en terre, comme les Matériaux ; le mot remplace le quartier et ne se coupe jamais). Serrée sous 380 px de large quand elle porte 4 gains ou plus (voir « Mise en page »). Visible avec `.is-shown` pendant 4 s ; `.announce--static` pour la référence. Décorative : le texte complet part dans `#live`.
 
 ### Cote, étiquettes, métadonnées (6)
 `.cote` : plaque de 48 px avec valeur et mot « Cote » ; `.cote--sm` (42×40) à l'intérieur d'une ligne cliquable (la cible de 44 px est celle de la ligne). `button.cote` ouvre le « Pourquoi ? ». `.tag` (`--done`, `--prio`, `--late`, `--archived`, `--guess`) : pastille de 24 px avec picto. `.meta` : ligne de métadonnées avec pictos ; `.meta-item--late` (terre).
@@ -459,6 +464,8 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 
 ### Feuilles et champs (11)
 `dialog.sheet` : feuille du bas en compact, fenêtre centrée de 560 px à partir de 700 px (`.sheet--small` 440 px). `.sheet--inline` la pose dans la page. Parties : `.sheet-head`, `.sheet-body`, `.sheet-foot`. Champs : `.field`, `.input` (48 px), `.input--lg` (56 px), `.textarea`, `.field-hint`, `.field-error`. Autres : `.sector-picker` (radios), `.stepper` (pas à pas de 1 à 10, boutons de 44 px), `.check-row`, `.disclosure`, `.fiche-summary`.
+- **Réglages** (`#dlg-settings`) : le prénom, puis la section « Quête par défaut » (`.set-quete`), un `fieldset` détaché du prénom par un filet (`--c-line`) et un espace de 16 px. Sa `legend` est un titre de section à 18 px, un cran au-dessus de ses trois rangées (priorité, durée, effort : les `.stepper-row` du formulaire d'ajout, à 16 px, boutons de 44 px). Les trois rangées sont fermées tant que la partie n'est pas lue, avec une phrase qui le dit ; un refus d'enregistrer s'écrit dans la feuille (`.field-error`, `role="alert"`), car la page derrière est inerte. À l'ouverture, le focus va sur « Fermer » plutôt que sur le prénom, pour que le clavier virtuel ne cache pas les trois rangées (il va sur le prénom quand on vient l'écrire depuis la lettre).
+- **Ligne de la semaine tenue** (`.review-tenue`) : au bilan, picto des Matériaux et texte « Semaine tenue : +12 Matériaux » en terre profonde, graisse 600 ; rien pour une semaine non tenue.
 - Focus d'un champ : bord sauge profonde en plus de l'anneau.
 - Erreur : `[aria-invalid="true"]`, bord et filet intérieur terre, `.field-error` avec picto.
 
@@ -501,7 +508,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - **Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.
 - **Don't** utiliser `ember` (4,2:1) pour du texte.
 - **Don't** couvrir un bouton avec une annonce ou une notification.
-- **Don't** appeler la ressource « Réputation » ; elle s'appelle « Confiance ».
+- **Don't** mettre l'airelle ailleurs que sur le Permis, ni le givre ailleurs que sur le hors ligne et les Avis.
 - **Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.
 - **Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.
 - **Don't** montrer l'état seulement par la couleur.
@@ -542,8 +549,7 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 | `aria-expanded` | `.panel-toggle` (et `.panel-toggle-label` : « Tout voir » ou « Replier ») | `true` ou `false` |
 | `data-state` | `.fil-quest`, `li.quest` | `todo`, `done`, `archived` |
 | `data-late="true"` | `li.quest` | crochet de données seulement ; la présentation passe par `.meta-item--late` ou `.tag--late` (aucune règle CSS ne lit `data-late`) |
-| `data-res` | `.res` | `energie`, `materiaux`, `confiance`, `lueur` |
-| `data-full` | `.res` | `true` quand le plafond est atteint |
+| `data-res` | `.res` | `energie`, `materiaux`, `nourriture`, `habitants`, `permis` |
 | `.is-shown` | `.res-delta`, `.announce` | relancer l'animation : retirer la classe, lire `offsetWidth`, la remettre |
 | `.is-hit` | `.res` | même méthode |
 | `aria-expanded` | `.alt-row` | avec `.is-open` sur `.alt` |
@@ -568,7 +574,7 @@ La voie d'annonce est cachée aux lecteurs d'écran (`aria-hidden="true"`) ; la 
 <svg class="icon" aria-hidden="true"><use href="icons.svg#i-check"/></svg>
 ```
 
-Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages ne sont plus dans ce dossier. Pictos disponibles : `i-energie`, `i-materiaux`, `i-confiance`, `i-lueur`, `i-check`, `i-start`, `i-pause`, `i-plus`, `i-minus`, `i-x`, `i-edit`, `i-archive`, `i-unarchive`, `i-trash`, `i-undo`, `i-split`, `i-search`, `i-sort`, `i-chevron-down`, `i-chevron-up`, `i-why`, `i-lock`, `i-sliders`, `i-refresh`, `i-clock`, `i-calendar`, `i-crate`, `i-steps`, `i-repeat`, `i-note`, `i-pin`, `i-flag`, `i-target`, `i-quick`, `i-chantier`, `i-offline`, `i-cloud-alert`, `i-cloud-ok`, `i-spinner`, `i-champs`, `i-atelier`, `i-archives`, `i-maison-commune`, `i-relais`, `i-bastion`.
+Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages ne sont plus dans ce dossier. Pictos disponibles : `i-energie`, `i-materiaux`, `i-nourriture`, `i-habitants`, `i-permis`, `i-check`, `i-start`, `i-pause`, `i-plus`, `i-minus`, `i-x`, `i-edit`, `i-archive`, `i-unarchive`, `i-trash`, `i-undo`, `i-split`, `i-search`, `i-sort`, `i-chevron-down`, `i-chevron-up`, `i-why`, `i-lock`, `i-sliders`, `i-refresh`, `i-clock`, `i-calendar`, `i-crate`, `i-steps`, `i-repeat`, `i-note`, `i-pin`, `i-flag`, `i-target`, `i-quick`, `i-chantier`, `i-offline`, `i-cloud-alert`, `i-cloud-ok`, `i-spinner`, `i-champs`, `i-atelier`, `i-mairie`, `i-ecole`, `i-garage`, `i-place`. Le sprite garde aussi des restes de la v1, que l'app d'aujourd'hui n'emploie plus : `i-confiance`, `i-lueur`, `i-archives`, `i-maison-commune`, `i-relais`, `i-bastion`.
 
 ### Ce que la logique doit faire elle-même
 
@@ -576,7 +582,7 @@ Le chemin `icons.svg#…` est relatif à `app/design/` : à reloger si les pages
 - Garder les entités du monde sous `--world-safe-top` en semaine 2 (HUD et voie d'annonce sont posés sur le monde).
 - Remplir `#live` : vider, puis écrire le texte après une courte pause, pour que le lecteur d'écran le relise.
 - Remonter la page en haut avant l'annonce (la démo le fait si `scrollY > 0`) et changer les chiffres à « l'impact », 320 ms après l'apparition de l'annonce (0 en mouvement réduit).
-- Mettre à jour `aria-label` des `.res` (« Énergie : 30 sur 40 »).
+- Mettre à jour `aria-label` des `.res` (« Énergie : 30 », « Permis : 2 » : aucune ressource n'a de plafond).
 - Fermer le panneau ouvert avec Échap et rendre le focus à la bascule, sauf si une feuille modale est ouverte.
 
 ## Ce qui reste ouvert

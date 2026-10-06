@@ -484,6 +484,36 @@
           "#eaf0f2"
         ]
       },
+      "airelle-ink": {
+        "role": "tertiary",
+        "displayName": "Encre d'airelle",
+        "canonical": "#6f3f62",
+        "tonalRamp": [
+          "#1f0319",
+          "#431e3a",
+          "#6b3e5f",
+          "#936285",
+          "#b688a8",
+          "#daafcc",
+          "#f8d0eb",
+          "#ffe5ff"
+        ]
+      },
+      "airelle-wash": {
+        "role": "tertiary",
+        "displayName": "Lavis d'airelle",
+        "canonical": "#f5e6ee",
+        "tonalRamp": [
+          "#140d11",
+          "#342b30",
+          "#574c52",
+          "#7d7077",
+          "#a0949b",
+          "#c5bac0",
+          "#e5dbe0",
+          "#f8eff4"
+        ]
+      },
       "ember": {
         "role": "tertiary",
         "displayName": "Braise",
@@ -782,6 +812,18 @@
         "value": "560px"
       },
       {
+        "name": "hud-etroit",
+        "value": "(max-width: 479px) et conteneur hud (max-width: 479px), puis conteneur hud (max-width: 349px)"
+      },
+      {
+        "name": "annonce-serree",
+        "value": "(max-width: 379px)"
+      },
+      {
+        "name": "fiche-quartier-fixe",
+        "value": "(min-width: 700px)"
+      },
+      {
         "name": "conteneur-liste",
         "value": "420px"
       },
@@ -805,7 +847,7 @@
       "kind": "button",
       "refersTo": "button-secondary",
       "description": "Action de second rang, crème avec socle crème foncé.",
-      "html": "<button class=\"ds-btn ds-btn-secondary\" type=\"button\">Je m'y mets</button>",
+      "html": "<button class=\"ds-btn ds-btn-secondary\" type=\"button\">Voir les quêtes</button>",
       "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid transparent;border-radius:var(--r-md);font:700 1rem/1.15 var(--font-ui);white-space:nowrap;cursor:pointer;transition:transform var(--t-press) var(--ease-out),box-shadow var(--t-press) var(--ease-out),background-color var(--t-micro) var(--ease-out)}.ds-btn:active{transform:translateY(calc(var(--motion) * var(--face-h)));box-shadow:0 calc((1 - var(--motion)) * var(--face-h)) 0 var(--ds-face)}.ds-btn:focus-visible{outline:3px solid var(--c-focus);outline-offset:3px}.ds-btn-secondary{--ds-face:var(--c-cream-face);background:var(--c-cream);color:var(--c-ink);box-shadow:0 var(--face-h) 0 var(--ds-face)}.ds-btn-secondary:hover{background:#f8ecce}"
     },
     {
@@ -965,7 +1007,7 @@
       "**Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.",
       "**Don't** utiliser `ember` (4,2:1) pour du texte.",
       "**Don't** couvrir un bouton avec une annonce ou une notification.",
-      "**Don't** appeler la ressource « Réputation » ; elle s'appelle « Confiance ».",
+      "**Don't** mettre l'airelle (`airelle-ink`, `airelle-wash`) ailleurs que sur le Permis, ni le givre (`frost-*`) ailleurs que sur le hors ligne et les Avis.",
       "**Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.",
       "**Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.",
       "**Don't** montrer l'état seulement par la couleur.",
