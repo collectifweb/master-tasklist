@@ -362,3 +362,26 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 ### Après le lot R (noté pour plus tard)
 - Niveaux 4 et suivants : à prévoir avant que les 17 niveaux soient achetés, soit environ 19 à 22 semaines au rythme régulier (calcul de la relecture).
 - Reportés : niveau 3 du Garage (tournée d'hiver), signal « niveau possible » sur les plaques, fichiers retirés à effacer à la main sur l'essai et en production (lot 8), essai et production qui partagent probablement la même origine dans le navigateur (risque connu, non traité).
+
+## Retours d'essai d'Alex — 6 octobre 2026, matin (à trancher)
+
+Alex a joué sur l'essai après l'envoi du lot R, jusqu'au jour de jeu 42 (décalage de 40 jours). « Jeu splendissime ! Ça va dans le bon sens. » Chiffres mesurés sur une copie en lecture seule de la partie d'essai (6 octobre, 7 h 51), puis recalculés par un vérificateur indépendant.
+
+**Ce que la partie montre** (depuis la conversion, jours de jeu du 23 octobre au 15 novembre)
+- 25 quêtes payées : 17 jours à une quête, 4 jours à deux, 3 jours sans.
+- 21 de ces 25 quêtes gardent les valeurs par défaut du formulaire (priorité 5, longueur 2, difficulté 3 ; `js/ui/sheets.js:14`) : 7 points, soit 3,5 Matériaux chacune.
+- En main : 11 permis, 205,1 Énergie, 70,9 Matériaux, 12 Nourriture, 4 habitants. Aucun niveau acheté. Le niveau 1 coûte 1 permis, 75 Énergie et 100 Matériaux.
+- Gagné : 122 Matériaux (112 par les quêtes, 10 par l'objectif de saison) et 154,2 Énergie, dont 87 hors quêtes (ouverture, ajout, bon fil, éolienne, objectif de saison). Les Matériaux n'ont aucune source régulière hors des quêtes.
+- Dépensé : 85 Matériaux pour le quai, l'éolienne et le grenier (33,9 + 122 − 85 = 70,9, le compte tombe juste).
+- Le plafond du jour n'a jamais mordu : au plus 37 points dans une journée (le plafond commence à 45).
+
+| # | Retour d'Alex | Constat | Proposition |
+|---|---|---|---|
+| 1 | Les Matériaux sont plus durs à obtenir que l'Énergie ; jamais pu monter un quartier, même au jour 40 | Voir ci-dessus : l'Énergie s'accumule sans usage, les Matériaux manquent | Inverser le prix des niveaux (n × 100 Énergie, n × 75 Matériaux) ; plus tard, un marchand au quai qui échange Énergie contre Matériaux. Garder les permis tels quels |
+| 2 | Le chiffre sur « Construire » fait croire à un nombre de constructions possibles | La pastille ne montre qu'un chiffre ; le mot « permis » n'est lu que par les lecteurs d'écran (`world/world.js:216-229`). Un permis ne sert qu'aux niveaux de quartier | Un compteur « Permis » dans la barre des ressources, à la place de la pastille (à valider à 360 px avec /impeccable) |
+| 3 | La serre produit peu en hiver ; une deuxième serre ? | 4 Nourriture tous les 5 jours travaillés ; l'hiver, 5 Énergie par semis ; une famille coûte 18 Nourriture ; une seule serre permise (`core/batiments.js:29,43-46`) ; l'Atelier niveau 1 passe la récolte à 5 | Permettre une deuxième serre au Hameau : plus de Nourriture l'hiver, et un usage pour l'Énergie qui dort |
+| 4 | Hâte que le quai amène des visiteurs : marchands (échange Énergie contre Matériaux ou Nourriture), dons, taxes | Le quai ne fait encore rien ; sa fiche le dit. Visiteurs, commandes et imprévus sont prévus aux semaines 3 et 4 (bible §7, §8, §14). Le Marché (rang Bourg) échange sans visiteur. Aucune taxe dans la bible : laisser passer une commande ne fait rien perdre, les mauvais imprévus se réparent | Ajouter le marchand au catalogue des visiteurs. Taxe : à trancher |
+| 5 | Aucun imprévu en 40 jours : normal ? Côté Hermes ? | Normal : pas encore construits. C'est l'app qui les tire de son catalogue (semaines 3 et 4) ; Hermes ne fera qu'enrichir, aux semaines 7 et 8 (bible §11, §12) | Inchangé |
+| 6 | Réglages : définir la quête par défaut | Réglages ne contient que le prénom ; valeurs par défaut fixes dans `sheets.js:14`. Hermes évalue ses quêtes lui-même (`TASKS_WORKFLOW.md`) : il n'est pas touché | « Quête par défaut » (priorité, longueur, difficulté) dans Réglages |
+
+**Questions pour Alex** : voir la réponse du 6 octobre au matin (décisions du topo du lot R et de ces retours).
