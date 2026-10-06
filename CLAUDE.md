@@ -8,9 +8,9 @@ Liste de tâches familiales réelles (une seule personne, Alex, surtout sur mobi
 
 Trois applications cohabitent :
 
-- **`app/` — la nouvelle app « La lisière rallumée »**, en cours de développement sur la branche `feat/lisiere-rallumee`. C'est elle qui doit remplacer l'app historique. Modules ES sans outil de construction : `core/` (logique pure testée), `js/` (interface), `world/` (île isométrique DOM/SVG), `content/fr-CA/` (tous les textes), `api/api.php` (opérations avec verrou, révisions et sauvegardes). Contrat technique : `app/ARCHITECTURE.md` ; design : `app/DESIGN.md` ; plan et bilan : `tasks/todo.md` ; leçons : `tasks/lessons.md`.
+- **`app/` — la nouvelle app « La lisière rallumée »**, en production depuis le 5 octobre 2026 (étiquette Git `v1`). Sa version 2, le village du Nord, se construit sur la branche `feat/village-v2` : lots dans `tasks/todo.md`, niveaux de quartier dans `docs/conception-niveaux-quartiers.md`. Modules ES sans outil de construction : `core/` (logique pure testée), `js/` (interface), `world/` (île isométrique DOM/SVG), `content/fr-CA/` (tous les textes), `api/api.php` (opérations avec verrou, révisions et sauvegardes). Contrat technique : `app/ARCHITECTURE.md` ; design : `app/DESIGN.md` ; plan et bilan : `tasks/todo.md` ; leçons : `tasks/lessons.md`.
 
-- **`index.html` (racine)** — application historique en production. Un seul fichier HTML/JS inline, sans module. Elle lit `tasks.json` par `fetch`, écrit par `POST tasks.json` (corps = tableau complet de tâches), avec repli `localStorage['familytasks']`. En production, l’écriture passe par `tasks-api.php` sur l’hébergement LiteSpeed/PHP ; ce fichier n’est **pas** dans le dépôt.
+- **`index.html` (racine)** — application historique, plus servie depuis la bascule du 5 octobre 2026 (la racine du site renvoie vers `app/`). Un seul fichier HTML/JS inline, sans module. Elle lit `tasks.json` par `fetch`, écrit par `POST tasks.json` (corps = tableau complet de tâches), avec repli `localStorage['familytasks']`. En production, l’écriture passe par `tasks-api.php` sur l’hébergement LiteSpeed/PHP ; ce fichier n’est **pas** dans le dépôt.
 - **`sketches/006-oree-vivante/`** — itération active du jeu (« Orée vivante »). Sandbox local : aucun appel réseau. Les tâches de départ sont une copie statique dans `js/data.js` (`SOURCE_TASKS`) et l’état vit seulement dans `localStorage`.
 
 `sketches/007-spikes-rendu/` contient trois prototypes techniques jetables de la même scène (DOM/SVG sans dépendance, PixiJS et three.js copiés dans `vendor/`), et `docs/revue-2026-10/` la revue complète d’octobre 2026 (diagnostic, glitches, directions de jeu, recommandation). La direction recommandée y est « La lisière rallumée » avec un rendu DOM/SVG.
@@ -35,7 +35,8 @@ TASKS_WRITE_TOKEN=dev python3 tasks-server.py
 
 # Nouvelle app : tests de la logique et de l'API (Node 24 : motifs entre guillemets, pas un dossier)
 node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
-# Nouvelle app : 23 scénarios navigateur aux 3 largeurs (plus de 10 minutes ; Playwright est une bibliothèque)
+# Nouvelle app : 26 scénarios navigateur aux 3 largeurs (environ 16 minutes, mesuré le 5 octobre 2026 ; Playwright est une bibliothèque).
+# Un seul essai par scénario ; ESSAIS=3 seulement pour diagnostiquer une instabilité.
 PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
 
 # Vérifications attendues avant commit (README / CONTRIBUTING)
@@ -74,7 +75,7 @@ Schéma `tasks.json` (tableau) : `{ id, task, domain, difficulty 1-10, length 1-
 ## Règles du dépôt
 
 - **Confidentialité** : le dépôt est public et son historique a été réécrit le 5 octobre 2026 pour retirer des données réelles. Ne jamais committer `tasks.json`, `PUBLIC_URL.txt`, un fichier `.env`, les fichiers d’état de synchronisation ni des captures (les dossiers `review/` sont ignorés). Aucune donnée réelle dans le code, les exemples, les tests ou les captures : ni titre de tâche, ni prénom de proche, ni fournisseur, ni domaine, IP, compte ou chemin `/home` de production. Utiliser uniquement `tasks.example.json` et des titres fictifs génériques. Ne jamais réécrire l’historique ni forcer un push sans demande explicite.
-- **Design** : `sketches/006-oree-vivante/DESIGN.md` (et `.impeccable/design.json`) est le contrat visuel. Palette chaude terre/sauge/verre solaire, sans fond sombre ni cyan néon. L’orange braise (`#bf5a38`) est réservé aux menaces. La carte doit dominer l’écran mobile. Dans l’interface, la ressource s’appelle « Confiance », jamais « Réputation ».
+- **Design** : `sketches/006-oree-vivante/DESIGN.md` (et `.impeccable/design.json`) est le contrat visuel. Palette chaude terre/sauge/verre solaire, sans fond sombre ni cyan néon. L’orange braise (`#bf5a38`) est réservé aux menaces. La carte doit dominer l’écran mobile. Dans 006, la ressource s’appelle « Confiance », jamais « Réputation » ; `app/` v2 n’a plus de Confiance (Énergie, Matériaux, Nourriture, Habitants).
 - **Accessibilité (exigée par PRODUCT.md)** : cibles d’au moins 44 px ; toute couleur doublée par du texte, une icône ou un motif ; chaque geste a un bouton équivalent ; respect de `prefers-reduced-motion` ; aucun son automatique. En mode construction, une seule tuile est tabulable (`tabindex="0"`) ; hors construction, toutes les tuiles sont à `-1`.
 - **Aléas de jeu** : leurs conséquences restent virtuelles et réparables. Ils ne modifient jamais une tâche réelle.
 - `.hermes/skills/impeccable/` est un outil de design hérité de l’ancien agent (référencé par les fichiers `.impeccable/`). Ce n’est pas du code applicatif.

@@ -6,7 +6,8 @@ Orée vivante transforme une liste de tâches en jeu de gestion agricole. Les t�
 
 Le dépôt contient actuellement :
 
-- l’application historique dans `index.html`;
+- la nouvelle app « La lisière rallumée » dans `app/`, en ligne depuis le 5 octobre 2026 ; sa version 2, le village du Nord, se construit sur la branche `feat/village-v2` (récit et économie : `docs/BIBLE-JEU.md`) ;
+- l’application historique dans `index.html`, qui n’est plus servie en ligne ;
 - le cahier des charges dans `PRODUCT.md`;
 - plusieurs explorations interactives dans `sketches/`;
 - l’itération principale dans `sketches/006-oree-vivante/`.
