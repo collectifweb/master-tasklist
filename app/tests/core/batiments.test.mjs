@@ -100,7 +100,10 @@ test('refus : maximum atteint, avec sa raison', () => {
   w = { ...w, game: bati(w, 'atelier') };
   assert.equal(refusConstruire(w.game, 'atelier'), 'Il y a déjà un atelier au village.');
   w = { ...w, game: bati(w, 'serre') };
-  assert.equal(refusConstruire(w.game, 'serre'), 'Il y a déjà une petite serre au village.');
+  assert.equal(refusConstruire(w.game, 'serre'), null); // une 2e petite serre vient au Hameau (habitants: 3)
+  w = { ...w, game: bati(w, 'serre') };
+  assert.deepEqual(w.game.batiments.filter((b) => b.type === 'serre').map((b) => b.id), ['serre-1', 'serre-2']);
+  assert.equal(refusConstruire(w.game, 'serre'), 'Plus d’emplacement libre pour une petite serre.');
 });
 
 test('refus : le maximum passe avant le rang, le rang avant le prérequis, le prérequis avant le coût', () => {

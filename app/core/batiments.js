@@ -19,14 +19,15 @@ import { valeur, placesParChalet, permisDeRang } from './quartiers.js';
 
 /**
  * Catalogue, dans l'ordre d'affichage. cout : { energy, materials } ; rang : identifiant de RANGS ; max : emplacements
- * sur l'île (world/layout.js, EMPLACEMENTS : un test vérifie qu'ils correspondent) ; prerequis : un autre bâtiment ;
- * un : le nom avec son article, pour les raisons écrites ; loge : places par chalet ; culture : où l'on sème.
+ * sur l'île (world/layout.js, EMPLACEMENTS : un test vérifie qu'ils correspondent) ; rangParExemplaire : { n: rang }, le
+ * rang qu'exige le n-ième exemplaire quand il diffère de `rang` (la 2e petite serre vient au Hameau) ; prerequis : un
+ * autre bâtiment ; un : le nom avec son article, pour les raisons écrites ; loge : places par chalet ; culture : où l'on sème.
  */
 export const BATIMENTS = {
   chalet: { rang: 'campement', cout: { energy: 0, materials: 15 }, max: 3, un: 'un chalet', loge: 2 },
   parcelle: { rang: 'campement', cout: { energy: 0, materials: 8 }, max: 3, un: 'une parcelle', culture: 'potager' },
   atelier: { rang: 'campement', cout: { energy: 4, materials: 20 }, max: 1, un: 'un atelier' },
-  serre: { rang: 'campement', cout: { energy: 6, materials: 25 }, max: 1, un: 'une petite serre', prerequis: 'atelier', culture: 'serre' },
+  serre: { rang: 'campement', cout: { energy: 6, materials: 25 }, max: 2, un: 'une petite serre', prerequis: 'atelier', culture: 'serre', rangParExemplaire: { 2: 'hameau' } },
   eolienne: { rang: 'hameau', cout: { energy: 5, materials: 30 }, max: 1, un: 'une éolienne', prerequis: 'atelier' },
   grenier: { rang: 'hameau', cout: { energy: 0, materials: 30 }, max: 1, un: 'un grenier' },
   quai: { rang: 'hameau', cout: { energy: 4, materials: 25 }, max: 1, un: 'un quai' },
@@ -147,14 +148,38 @@ export function manque(game, cout) {
   return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
 
-/** Pourquoi on ne peut pas construire ce bâtiment maintenant (ou null). Ordre : maximum, rang, prérequis, coût. */
-export function refusConstruire(game, type) {
+// Numéro (à partir de 1) d'un emplacement d'après son identifiant (serre-2 → 2), ou 0 s'il n'est pas de ce type.
+const numeroDe = (type, id) => {
+  const m = typeof id === 'string' && id.startsWith(`${type}-`) && /^\d+$/.test(id.slice(type.length + 1)) ? Number(id.slice(type.length + 1)) : 0;
+  return id === `${type}-${m}` ? m : 0;
+};
+
+// Premier emplacement libre d'un type (numéro à partir de 1).
+function premierLibre(game, type) {
+  const pris = new Set(batimentsDuVillage(game).map((b) => b.id));
+  let k = 1;
+  while (pris.has(`${type}-${k}`)) k++;
+  return k;
+}
+
+/** Rang qu'exige le n-ième exemplaire d'un bâtiment (identifiant de RANGS) : celui du catalogue, sauf règle propre à cet exemplaire. */
+export const rangRequis = (type, n) => BATIMENTS[type].rangParExemplaire?.[n] ?? BATIMENTS[type].rang;
+
+/**
+ * Pourquoi on ne peut pas construire ce bâtiment maintenant (ou null). Ordre : maximum, rang, prérequis, coût. `id`
+ * (facultatif) : l'emplacement visé (serre-2) ; sans lui, le premier libre. Le rang est celui de cet exemplaire.
+ */
+export function refusConstruire(game, type, id) {
   if (!own(BATIMENTS, type)) return 'Bâtiment inconnu.';
   const def = BATIMENTS[type];
   if (compte(game, type) >= def.max) return def.max === 1 ? `Il y a déjà ${def.un} au village.` : `Plus d’emplacement libre pour ${def.un}.`;
-  const besoin = RANGS.find((r) => r.id === def.rang);
+  const n = numeroDe(type, id) || premierLibre(game, type);
+  const besoin = RANGS.find((r) => r.id === rangRequis(type, n));
   const h = logements(game).habitants;
-  if (besoin && h < besoin.min) return `${besoin.name}\u00a0: encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}.`;
+  if (besoin && h < besoin.min) {
+    const encore = `encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}`;
+    return def.rangParExemplaire?.[n] ? `Il faut d’abord le rang ${besoin.name}\u00a0: ${encore}.` : `${besoin.name}\u00a0: ${encore}.`;
+  }
   if (def.prerequis && !compte(game, def.prerequis)) return `Il faut d’abord ${BATIMENTS[def.prerequis].un}.`;
   return manque(game, def.cout);
 }
@@ -203,7 +228,7 @@ function pay(g, cout) {
 export function construire(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const type = params.type;
-  const refus = refusConstruire(ctx.game, type);
+  const refus = refusConstruire(ctx.game, type, params.id);
   if (refus) throw new Error(refus);
   const taken = new Set(batimentsDuVillage(ctx.game).map((b) => b.id));
   let id = params.id;
@@ -226,7 +251,7 @@ export function construire(tasks, game, ledger, params, now) {
   return ctx.result();
 }
 
-/** Sème. params : { id } (parcelle-n ou serre-1). Événement { type: 'semis', id, lieu, cout, chauffage }. */
+/** Sème. params : { id } (parcelle-n ou serre-n). Événement { type: 'semis', id, lieu, cout, chauffage }. */
 export function semer(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const refus = refusSemer(ctx.game, ctx.ledger, params.id, now);
