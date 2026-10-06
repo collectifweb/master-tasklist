@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BATIMENTS, BATIMENT_IDS, DEPART, construire, refusConstruire, compte, batimentsDuVillage, createInitialState, PAS_IDS,
+  BATIMENTS, BATIMENT_IDS, DEPART, construire, refusConstruire, refusAccueillir, refusRecolter, prixFamille, stockage, compte, batimentsDuVillage, createInitialState, PAS_IDS,
 } from '../../core/index.js';
 import { EMPLACEMENTS } from '../../world/layout.js';
 import { fresh, step } from './helpers.mjs';
@@ -66,9 +66,26 @@ test('refus : il manque des ressources, avec le nombre exact (« Il manque 4 Mat
   assert.throws(() => step(w, construire, { type: 'chalet' }, NOW), { message: 'Il manque 4 Matériaux.' });
   w.game.resources = { energy: 0, materials: 0.5, food: 5 };
   const a = BATIMENTS.atelier.cout;
-  assert.equal(refusConstruire(w.game, 'atelier'), `Il manque ${a.energy} Énergie et ${String(a.materials - 0.5).replace('.', ',')} Matériaux.`);
+  assert.equal(refusConstruire(w.game, 'atelier'), `Il manque ${a.energy} Énergie et ${a.materials} Matériaux.`); // 19,5 manquants : arrondi vers le haut
   w.game.resources = { energy: 0, materials: BATIMENTS.chalet.cout.materials - 1, food: 5 };
   assert.equal(refusConstruire(w.game, 'chalet'), 'Il manque 1 Matériau.');
+  // 0,4 manquant s'écrit 1 ; l'état garde ses dixièmes
+  w.game.resources = { energy: 0, materials: BATIMENTS.chalet.cout.materials - 0.4, food: 5 };
+  assert.equal(refusConstruire(w.game, 'chalet'), 'Il manque 1 Matériau.');
+  assert.equal(w.game.resources.materials, BATIMENTS.chalet.cout.materials - 0.4);
+});
+
+test('refus : la Nourriture manquante pour une famille s’écrit vers le haut, le stock plein vers le bas', () => {
+  const w = riche({ habitants: 0, batiments: [{ id: 'chalet-1', type: 'chalet' }] });
+  w.game.resources = { energy: 0, materials: 0, food: 0.4 };
+  const prix = prixFamille(w.game);
+  assert.equal(refusAccueillir(w.game), `Il manque ${prix} Nourriture.`);
+  w.game.resources.food = prix - 0.4;
+  assert.equal(refusAccueillir(w.game), 'Il manque 1 Nourriture.');
+  const max = stockage(w.game);
+  w.game.resources.food = max;
+  w.game.parcelles = [{ id: 'parcelle-1', semeLe: '2026-06-01' }];
+  assert.match(refusRecolter(w.game, [], 'parcelle-1', '2026-11-02T14:00:00Z'), new RegExp(`\\(${max} sur ${max}\\)`));
 });
 
 test('refus : rang requis (« Hameau : encore 2 habitants. »), puis « encore 1 habitant »', () => {
