@@ -288,12 +288,14 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 **Sous-lots**
 
 ### R1 — Retrait de « Je m'y mets » et filtre « Archivées »
-- [ ] D'abord le contrôle commun des scénarios (`FIL_CHECK` de `tests/e2e/lib.cjs`) et `ui-01`, sinon toute la série échoue.
-- [ ] Écran : bouton (trois cartes), proposition de découper, état « en cours », temps au bilan, textes.
-- [ ] La carte « Grand chantier » reçoit le bouton « Fait » de la carte rapide (sans lui, elle n'aurait plus d'action principale) ; « Découper » reste en second. Un geste « Je m'y mets » resté en file hors ligne est écarté sans message.
-- [ ] Cœur : `startQuest`, `pauseQuest`, épingle, séance, gel par `startedAt`, relevé du recyclage ; `core/cote-a-cote.js` retiré de `sw.js`.
-- [ ] Tests : `cote-a-cote.test.mjs` et `ui-22` retirés, les autres adaptés.
-- [ ] Filtre « Archivées » caché tant qu'aucune quête n'est archivée ; retour à « À faire » si la dernière est désarchivée ; une phrase à côté du bouton « Archiver » de la fiche dit ce qu'archiver veut dire (rangée sans rien effacer, on peut la ressortir). Hermes : le flux décrit dans `TASKS_WORKFLOW.md` ne lit que `todo` et `done` (lu, non vérifié chez Hermes).
+- [x] D'abord le contrôle commun des scénarios (`FIL_CHECK` de `tests/e2e/lib.cjs`) et `ui-01`, sinon toute la série échoue.
+- [x] Écran : bouton (trois cartes), proposition de découper, état « en cours », temps au bilan, textes.
+- [x] La carte « Grand chantier » reçoit le bouton « Fait » de la carte rapide (sans lui, elle n'aurait plus d'action principale) ; « Découper » reste en second. Un geste « Je m'y mets » resté en file hors ligne est écarté sans message.
+- [x] Cœur : `startQuest`, `pauseQuest`, épingle, séance, gel par `startedAt`, relevé du recyclage ; `core/cote-a-cote.js` retiré de `sw.js`.
+- [x] Tests : `cote-a-cote.test.mjs` et `ui-22` retirés, les autres adaptés.
+- [x] Filtre « Archivées » caché tant qu'aucune quête n'est archivée ; retour à « À faire » si la dernière est désarchivée ; une phrase à côté du bouton « Archiver » de la fiche dit ce qu'archiver veut dire (rangée sans rien effacer, on peut la ressortir). Hermes : le flux décrit dans `TASKS_WORKFLOW.md` ne lit que `todo` et `done` (lu, non vérifié chez Hermes).
+- *Fait le 6 octobre vers 0 h 30 (agent dans sa copie de travail, 5 commits, fusion 97948d7). Vérifié par moi après la fusion : 328 tests `node --test` sur 328. D'après le rapport de l'agent (relu, pas relancé) : série navigateur complète « TOUT REUSSI » (le scénario 22, côte à côte, est supprimé), `world-s3` 71 contrôles sans échec. Captures regardées par moi : carte « Grand chantier » (« Fait » et « Découper ») et phrase d'archivage dans la fiche, à 390. Aucun scénario de la série ne couvre la carte « Grand chantier » : les données d'exemple n'en produisent pas.*
+- *Retiré aussi : la pose de Fanal qui suivait la séance (il reste à sa place d'origine), 22 clés de texte et la réplique « quest.start ». Gardé : `game.coteACote` des parties existantes et les minutes des bilans figés, inertes. Clés de texte déjà mortes avant le lot, laissées : `card.pinned`, `step.split.suggest`, `list.archived.one/other`, `quest.reward.frozen`.*
 
 ### R2 — En parallèle, chacun dans sa copie de travail
 **R2a — Cœur : gains et permis** (logique et tests seulement)
