@@ -18,7 +18,7 @@ import {
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
-import { openQuartier, refreshQuartier, monteText } from './ui/quartier.js';
+import { openQuartier, refreshQuartier, monteText, showMonte } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -314,12 +314,25 @@ document.addEventListener('focusin', (e) => {
 });
 
 // ───────── Monde : sélection d'un quartier, carte en liste ─────────
-/** « Voir les quêtes » (fiche d'un quartier) : la liste ne montre que les quêtes de ce quartier, et le panneau s'ouvre. */
+/**
+ * « Voir les quêtes » (fiche d'un quartier) : la liste montre exactement les quêtes à faire de ce quartier, celles que
+ * le bouton compte (statut « À faire », sans recherche ni filtre rapide), et le panneau s'ouvre.
+ */
 function filterByQuartier(id) {
-  ui.quartier = id;
-  for (const c of $$('.chip[data-quartier]')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
+  Object.assign(ui, { status: 'todo', quick: false, lowEnergy: false, thisWeek: false, search: '', quartier: id });
+  $('input[name="statut"][value="todo"]').checked = true;
+  for (const c of $$('.chips .chip')) c.setAttribute('aria-pressed', String(c.dataset.quartier === id));
+  $('#search').value = ''; $('.search-clear').hidden = true;
   renderAll();
   setPanel(true);
+}
+/** Le clavier arrive sur la première quête de la liste filtrée (sur le titre de la liste si elle est vide). */
+function focusQuestList() {
+  const first = $('#quest-list:not([hidden]) .quest-main');
+  if (first) return first.focus();
+  const h = $('#list-h');
+  h.tabIndex = -1;
+  h.focus();
 }
 /** Toucher la carte : une caisse ouvre sa quête ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
 function onWorldSelect(info) {
@@ -362,8 +375,6 @@ function openPlan() {
   worldPlan.focus();
 }
 /** Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi. */
-let catalogueAt = 0;
-let quartierAt = 0; // dernier achat d'un niveau : un double toucher n'achète pas le suivant
 function openConstruire() {
   if (!world || !store.view) return;
   const c = ctx();
@@ -373,6 +384,23 @@ function openConstruire() {
 // ───────── Clics ─────────
 const idOf = (el) => (el.closest('[data-task-id]') || {}).dataset?.taskId || null;
 const disabled = (el) => el.getAttribute('aria-disabled') === 'true';
+
+// Gestes qui dépensent (bâtir, monter un niveau, geste d'un bâtiment) : un double toucher ne dépense qu'une fois.
+// Moins de 600 ms après l'ouverture de sa feuille, un geste touché au doigt (ou par le second clic d'un double clic)
+// est le second toucher de celui qui l'a ouverte (« Construire », une ligne du catalogue, une plaque) : ignoré. Le
+// clavier (detail 0) et un simple clic de souris passent. Puis le même geste n'est pas refait dans les 800 ms, et la
+// raison d'un bouton déjà mis à jour n'est pas relue.
+const SPEND_OPEN_MS = 600;
+const SPEND_AGAIN_MS = 800;
+let spent = { key: '', at: 0 };
+const spendKey = (action, target) => (action === 'bat-geste' ? `${action}:${target.closest('dialog')?.dataset.batId}` : action);
+function spendBlocked(e, target, action) {
+  const dlg = target.closest('dialog');
+  const ghost = e.detail > 0 && (e.pointerType !== 'mouse' || e.detail > 1);
+  if (ghost && dlg && Date.now() - (dlg._openedAt || 0) < SPEND_OPEN_MS) return true;
+  return spent.key === spendKey(action, target) && Date.now() - spent.at < SPEND_AGAIN_MS;
+}
+const markSpent = (action, target) => { spent = { key: spendKey(action, target), at: Date.now() }; };
 
 document.addEventListener('click', (e) => {
   const target = e.target.closest('button, [data-action], [data-close], input[data-action]');
@@ -465,9 +493,9 @@ document.addEventListener('click', (e) => {
     case 'jour-suivant': return jourSuivant();
     case 'cat-construire': {
       // un double toucher ne bâtit pas deux fois, et ne lit pas le refus de la ligne déjà mise à jour
-      if (Date.now() - catalogueAt < 800) return;
+      if (spendBlocked(e, target, action)) return;
       if (disabled(target)) return announce.say($(`#cat-${target.dataset.type}-etat`).textContent.trim());
-      catalogueAt = Date.now();
+      markSpent(action, target);
       const bid = target.dataset.id;
       if (!run('construire', { type: target.dataset.type, id: bid })) return;
       closeSheet($('#dlg-construire'));
@@ -475,22 +503,32 @@ document.addEventListener('click', (e) => {
     }
     case 'qrt-ouvrir': return openQuartierSheet(target.dataset.quartier);
     case 'qrt-monter': {
-      if (Date.now() - quartierAt < 800) return;
+      if (spendBlocked(e, target, action)) return;
       // achat impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($('#qrt-raison') || target).textContent.trim());
-      quartierAt = Date.now();
-      return run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
+      markSpent(action, target);
+      const r = run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
+      const monte = r && r.events.find((x) => x.type === 'quartier-monte');
+      return monte && showMonte(ctx(), monte); // la réussite se voit dans la fiche, pas seulement sur la carte derrière
     }
     case 'qrt-quetes': {
       // le panneau s'ouvre derrière : toutes les feuilles se ferment (fiche, catalogue, carte en liste)
-      for (const d of $$('dialog.sheet[open]')) closeSheet(d);
-      return filterByQuartier(target.dataset.quartier);
+      const sheets = $$('dialog.sheet[open]');
+      for (const d of sheets) closeSheet(d);
+      filterByQuartier(target.dataset.quartier);
+      // chaque feuille rend le focus en se fermant (événement close, après l'animation) : la dernière l'envoie à la liste
+      const toList = () => { if (!document.querySelector('dialog.sheet[open]')) focusQuestList(); };
+      for (const d of sheets) d.addEventListener('close', toList, { once: true });
+      if (!sheets.length) focusQuestList();
+      return;
     }
     case 'bat-geste': {
+      if (spendBlocked(e, target, action)) return;
       // geste impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($(`#${target.getAttribute('aria-describedby')}`) || target).textContent.trim());
       let params = {};
       try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
+      markSpent(action, target);
       return run(target.dataset.geste, params);
     }
   }

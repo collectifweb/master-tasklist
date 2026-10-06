@@ -36,6 +36,7 @@ const fiche = (page) => page.evaluate(() => {
     monter: b ? { text: sp(b.textContent), niveau: b.dataset.niveau, off: b.getAttribute('aria-disabled') === 'true', primaire: b.classList.contains('btn--primary'), desc: b.getAttribute('aria-describedby'), lock: !!b.querySelector('use[href$="#i-lock"]') } : null,
     raison: raison ? { text: sp(raison.textContent), lock: !!raison.querySelector('use[href$="#i-lock"]') } : null,
     max: sp(d.querySelector('.qrt-max')?.textContent),
+    monte: (() => { const p = d.querySelector('.qrt-monte'); if (!p) return null; const r = p.getBoundingClientRect(); return { text: sp(p.textContent), check: !!p.querySelector('use[href$="#i-check"]'), premier: p === d.querySelector('.qrt-body').firstElementChild, vu: r.height > 0 && r.top >= 0 && r.bottom <= innerHeight }; })(),
     quetes: sp(d.querySelector('[data-action="qrt-quetes"]')?.textContent),
     focus: document.activeElement && d.contains(document.activeElement) ? (document.activeElement.dataset.action || document.activeElement.className) : null,
     focusNiveau: document.activeElement?.dataset?.niveau || null,
@@ -120,8 +121,11 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('pastille à jour : « 2 »', bd.text === '2' && bd.label === 'Construire, 2 permis à placer', JSON.stringify(bd));
   f = await fiche(page);
   R.check('fiche à jour sur place : niveau 1, ce qu’il fait, niveau 2 à 2 permis', f.open && f.ligne.endsWith('niveau 1') && /Ce qu’il fait 5 Nourriture par récolte du potager \(\d+ au départ\)\./.test(f.corps) && /Prix 2 permis, 150 Énergie et 200 Matériaux\./.test(f.corps) && /^Tu as 2 permis\./.test(f.permis), JSON.stringify(f));
-  R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
+  // le focus après un achat se contrôle au niveau 2 (clic) : en fenêtre centrée (834, 1280), la ligne de réussite
+  // agrandit la fiche et le second toucher tombe à côté du bouton, sur la feuille (sans rien acheter)
+  if (tag < 834) R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
   R.check('niveau 2 achetable : bouton actif', f.monter && !f.monter.off && f.monter.niveau === '2', JSON.stringify(f.monter));
+  R.check('réussite visible dans la fiche : coche et « Champs : niveau 1. 5 Nourriture par récolte du potager. », en tête, à l’écran', f.monte && f.monte.check && f.monte.premier && f.monte.vu && f.monte.text === 'Champs : niveau 1. 5 Nourriture par récolte du potager.', JSON.stringify(f.monte));
   await shot(page, '31-achat');
 
   // ───── niveau 2, puis le 3 trop cher : cadenas et raison du cœur
@@ -131,6 +135,8 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForTimeout(900);
   f = await fiche(page);
   R.check('niveau 3 trop cher : bouton à plat, aria-disabled, cadenas, décrit par la raison', f.monter && f.monter.off && !f.monter.primaire && f.monter.lock && f.monter.desc === 'qrt-raison' && f.monter.text === 'Monter au niveau 3', JSON.stringify(f.monter));
+  R.check('le focus reste sur le bouton après l’achat (« Monter au niveau 3 », verrouillé)', f.focus === 'qrt-monter' && f.focusNiveau === '3', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
+  R.check('réussite du niveau 2 visible en tête de la fiche', f.monte && f.monte.check && f.monte.premier && f.monte.vu && /^Champs : niveau 2\. \d+ Nourriture par récolte du potager\.$/.test(f.monte.text), JSON.stringify(f.monte));
   g = srv.game();
   const raison = `Il manque 3 permis, ${300 - g.resources.materials} Matériaux et ${225 - g.resources.energy} Énergie.`;
   R.check('raison écrite par le cœur, avec le cadenas', f.raison && f.raison.lock && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
@@ -148,6 +154,14 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.keyboard.press('Escape');
   R.check('Échap ferme la fiche', await closed(page, 'dlg-quartier'));
 
+  // ───── filtres déjà posés dans la liste (« Faites », une recherche, « 15 min ») : « Voir les quêtes » les retire plus bas
+  await page.waitForTimeout(400);
+  await L.openPanel(page);
+  await page.click('.seg-option:has(input[value="done"])');
+  await page.fill('#search', 'zz');
+  await page.click('.chip[data-filter="quick"]');
+  if (compact) { await page.click('.panel-toggle'); await page.waitForTimeout(450); }
+
   // ───── clavier : « Construire » → Quartiers ; la fiche s'empile sur le catalogue
   await page.waitForTimeout(400);
   await page.focus('[data-ow="build"]');
@@ -162,7 +176,9 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
       titre: sp(d.querySelector('#cat-qrts-t')?.textContent),
       rows: [...d.querySelectorAll('.cat-qrt')].map((li) => {
         const b = li.querySelector('.cat-qrt-go'), r = b.getBoundingClientRect();
-        return { q: li.dataset.quartier, nom: sp(li.querySelector('.cat-nom').textContent), suivant: sp(li.querySelector('.cat-suivant').textContent), prix: li.querySelector('.cat-prix').hidden ? '' : sp(li.querySelector('.cat-prix').textContent), w: r.width, h: r.height };
+        const e = li.querySelector('.cat-etat');
+        return { q: li.dataset.quartier, nom: sp(li.querySelector('.cat-nom').textContent), suivant: sp(li.querySelector('.cat-suivant').textContent), prix: li.querySelector('.cat-prix').hidden ? '' : sp(li.querySelector('.cat-prix').textContent), w: r.width, h: r.height,
+          etat: e && !e.hidden ? sp(e.textContent) : '', data: li.dataset.etat || '', lock: !!e?.querySelector('use[href$="#i-lock"]') };
       }),
       wide: [...d.querySelectorAll('*')].some((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.right > innerWidth + 1); }),
       bats: d.querySelectorAll('.cat-row').length,
@@ -173,6 +189,10 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('catalogue : section « Quartiers », six lignes, après les 7 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 7, JSON.stringify(cat.rows.map((r) => r.q)));
   R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 225 Énergie et 300 Matériaux', JSON.stringify(row('champs')));
   R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').suivant === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
+  const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${300 - g.resources.materials} Matériaux et ${225 - g.resources.energy} Énergie.`; })());
+  R.check('ligne des Champs : ce qui manque (la phrase de la fiche), avec le cadenas', row('champs').data === 'verrou' && row('champs').lock && row('champs').etat === manque, JSON.stringify({ vu: row('champs'), attendu: manque }));
+  R.check('ligne de l’Atelier : « Il manque 1 permis… », cadenas', row('atelier').data === 'verrou' && row('atelier').lock && /^Il manque 1 permis/.test(row('atelier').etat), JSON.stringify(row('atelier')));
+  R.check('ligne du Garage : pas de ligne d’état (déjà au plus haut)', row('garage').etat === '' && row('garage').data === '', JSON.stringify(row('garage')));
   R.check('lignes des quartiers : cibles de 44 px, aucun débordement', cat.rows.every((r) => r.h >= 43.99 && r.w >= 43.99) && !cat.wide, JSON.stringify({ h: cat.rows.map((r) => Math.round(r.h)), wide: cat.wide }));
   await page.evaluate(() => document.getElementById('cat-qrts-t').scrollIntoView({ block: 'start' }));
   await shot(page, '31-catalogue');
@@ -184,6 +204,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('Entrée sur la ligne du Garage : sa fiche, posée sur le catalogue', f.open && f.quartier === 'garage' && f.pile.join() === 'dlg-construire,dlg-quartier', JSON.stringify({ q: f.quartier, pile: f.pile }));
   R.check('Garage au plus haut : pas de bouton d’achat, « Niveau 2 : le plus haut pour l’instant. »', !f.monter && f.max === 'Niveau 2 : le plus haut pour l’instant.' && /^Ce qu’il fait 3 jours travaillés pour qu’une culture mûrisse \(\d+ au départ\)\./.test(f.corps), JSON.stringify({ max: f.max, corps: f.corps }));
   R.check('le focus est dans la fiche', await page.evaluate(() => document.getElementById('dlg-quartier').contains(document.activeElement)));
+  R.check('une autre fiche ouverte : plus de ligne de réussite', f.monte === null, JSON.stringify(f.monte));
   await shot(page, '31-pile');
   await page.keyboard.press('Escape');
   await closed(page, 'dlg-quartier');
@@ -202,6 +223,16 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
     && document.getElementById('app').dataset.panel === 'open'
     && document.querySelector('.chip[data-quartier="atelier"]').getAttribute('aria-pressed') === 'true'
     && [...document.querySelectorAll('#quest-list .quest-title')].map((e) => e.textContent.trim()).join('|') === 'Changer une ampoule'), 2500), f.quetes);
+  const filtres = await page.evaluate(() => ({ statut: document.querySelector('input[name="statut"]:checked')?.value, search: document.getElementById('search').value, quick: document.querySelector('.chip[data-filter="quick"]').getAttribute('aria-pressed'), liste: [...document.querySelectorAll('#quest-list:not([hidden]) .quest-title')].map((e) => e.textContent.trim()) }));
+  R.check('« Voir les quêtes » remet « À faire », vide la recherche et retire « 15 min » : la liste montre la quête comptée', filtres.statut === 'todo' && filtres.search === '' && filtres.quick === 'false' && filtres.liste.join('|') === 'Changer une ampoule', JSON.stringify(filtres));
+  const foc = await L.waitFor(() => page.evaluate(() => {
+    const a = document.activeElement;
+    if (!a || !a.matches('#quest-list .quest-main')) return null;
+    const r = a.getBoundingClientRect();
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return { titre: a.querySelector('.quest-title')?.textContent.trim(), vu: !!top && a.contains(top) };
+  }), 2000);
+  R.check('au clavier, le focus arrive sur la quête de la liste filtrée, visible', foc && foc.titre === 'Changer une ampoule' && foc.vu, JSON.stringify(foc || await page.evaluate(() => document.activeElement?.outerHTML?.slice(0, 80))));
   await page.locator('.chip[data-quartier="atelier"]').click(); // retire le filtre
 
   // ───── clavier : « Vue » → Carte en liste → « Ouvrir la fiche »

@@ -17,6 +17,7 @@ const DEFAULTS = { priority: 5, length: 2, difficulty: 3 };
 let stacked = 0; // ordre d'ouverture : la dernière feuille ouverte est au-dessus des autres
 export function openSheet(dlg) {
   if (dlg._cancelClose) dlg._cancelClose(); // rouverte pendant sa fermeture : on annule la fermeture
+  dlg._openedAt = Date.now(); // un geste qui dépense, touché juste après, est le second toucher d'un double (main.js)
   if (!dlg.open) { dlg.showModal(); dlg._z = ++stacked; }
 }
 /** Feuille modale du dessus, ou null : quand une feuille est ouverte, le reste de la page est inerte. */

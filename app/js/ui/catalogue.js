@@ -3,9 +3,10 @@
 // le premier emplacement libre de ce type, dans l'ordre du cœur (world/view.js, batimentsView) : data-id le fixe, pour
 // qu'un double toucher ne bâtisse pas deux fois. Le geste passe par data-action="cat-construire" (main.js).
 // En tête, les permis en main ; en bas, la section « Quartiers » : une ligne par quartier (niveau, effet du suivant,
-// prix) qui ouvre sa fiche par-dessus le catalogue (data-action="qrt-ouvrir").
+// prix, « Disponible » ou la raison du cœur, comme les bâtiments) qui ouvre sa fiche par-dessus le catalogue
+// (data-action="qrt-ouvrir").
 // La feuille est construite une fois, puis mise à jour sur place : le focus ne saute pas pendant une synchronisation.
-import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, niveauDe, niveauMax, coutNiveau } from '../../core/index.js';
+import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, niveauDe, niveauMax, coutNiveau, refusMonter } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setText, setAttr, setHtml } from './dom.js';
 import { coutText } from './batiment.js';
@@ -63,6 +64,7 @@ const quartierRow = (q) => `<li class="ow-plan-bat cat-qrt" data-quartier="${q}"
           <span class="ow-plan-bat-name cat-nom"></span>
           <span class="ow-plan-bat-etat cat-suivant"></span>
           <span class="ow-plan-bat-etat cat-prix"></span>
+          <span class="cat-etat"></span>
         </span>
         ${icon('chevron-down', 'cat-qrt-chev')}
       </button>
@@ -79,6 +81,13 @@ function fillQuartiers(dlg, c) {
     setText($('.cat-suivant', li), haut ? t('quartier.catalogue.max') : t('quartier.catalogue.suivant', { n: n + 1, effet: effetText(q, n + 1) }));
     setText($('.cat-prix', li), haut ? '' : prixText(coutNiveau(n + 1)));
     $('.cat-prix', li).hidden = haut;
+    // « Disponible » ou ce qui manque (la phrase de la fiche) ; au plus haut, la ligne du suivant le dit déjà
+    const raison = haut ? null : refusMonter(c.game, c.ledger, { quartier: q });
+    setAttr(li, 'data-etat', haut ? null : raison ? 'verrou' : 'libre');
+    setHtml($('.cat-etat', li), haut ? '' : raison
+      ? `${icon('lock')}<span>${esc(raison)}</span>`
+      : `${icon('check')}<span>${esc(t('bat.catalogue.dispo'))}</span>`);
+    $('.cat-etat', li).hidden = haut;
   }
 }
 

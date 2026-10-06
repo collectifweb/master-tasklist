@@ -71,8 +71,14 @@ export function quartierModel(c, quartier) {
   };
 }
 
+// Dernier achat réussi : sa phrase reste en tête de la fiche (coche, sauge) tant qu'elle montre ce niveau ; une
+// nouvelle ouverture l’efface. Hors région lue : le lecteur d’écran l’a déjà entendue par l’annonce de la feuille.
+let monte = null;
+
 function bodyHtml(m) {
   const line = (dt, html) => `<div class="help-line"><dt>${esc(dt)}</dt><dd>${html}</dd></div>`;
+  const ok = monte && monte.quartier === m.id && monte.niveau === m.niveau
+    ? `<p class="qrt-monte">${icon('check')}<span>${esc(monte.text)}</span></p>` : '';
   const permis = `<p class="qrt-permis" id="qrt-permis">${esc(m.permis)}</p>`;
   const rows = [line(t('quartier.fiche.fait'), `<p>${esc(m.fait)}</p>`)];
   if (m.maintenant) rows.push(line(t('quartier.fiche.maintenant'), `<p>${esc(m.maintenant)}</p>`));
@@ -83,7 +89,7 @@ function bodyHtml(m) {
   } else {
     rows.push(line(t('quartier.fiche.permis'), permis));
   }
-  return `<dl class="help-lines">${rows.join('')}</dl>`;
+  return `${ok}<dl class="help-lines">${rows.join('')}</dl>`;
 }
 
 function footHtml(m) {
@@ -98,6 +104,7 @@ function footHtml(m) {
 export function openQuartier(c, quartier, { open } = {}) {
   const m = quartierModel(c, quartier);
   if (!m) return false;
+  monte = null;
   const dlg = $('#dlg-quartier');
   dlg.dataset.quartier = quartier;
   dlg.innerHTML = `
@@ -129,6 +136,12 @@ export function refreshQuartier(c) {
   if (!dlg || !dlg.open || !dlg.dataset.quartier) return;
   const m = quartierModel(c, dlg.dataset.quartier);
   if (m) fill(dlg, m);
+}
+
+/** Achat réussi (événement quartier-monte) : la fiche ouverte le montre en tête, avec la phrase lue. */
+export function showMonte(c, e) {
+  monte = { quartier: e.quartier, niveau: e.niveau, text: monteText(e) };
+  refreshQuartier(c);
 }
 
 /** Phrase lue après l'achat : « Champs : niveau 2. 6 Nourriture par récolte du potager. » */

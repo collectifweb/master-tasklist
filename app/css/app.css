@@ -317,7 +317,8 @@
   background: var(--c-sage-wash);
 }
 .cat-thumb svg { width: 44px; height: 44px; overflow: visible; }
-.cat-row[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
+.cat-row[data-etat="verrou"] .cat-thumb,
+.cat-qrt[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
 .cat-etat {
   display: flex;
   align-items: flex-start;
@@ -334,11 +335,13 @@
   margin-top: 1px;
   color: var(--text-muted);
 }
-.cat-row[data-etat="libre"] .cat-etat {
+.cat-row[data-etat="libre"] .cat-etat,
+.cat-qrt[data-etat="libre"] .cat-etat {
   font-weight: var(--w-semibold);
   color: var(--c-sage-deep);
 }
-.cat-row[data-etat="libre"] .cat-etat .icon { color: currentColor; }
+.cat-row[data-etat="libre"] .cat-etat .icon,
+.cat-qrt[data-etat="libre"] .cat-etat .icon { color: currentColor; }
 .cat-go { flex: none; }
 /* très étroit (360 px) : le bouton passe sous le texte plutôt que d'écraser le nom */
 @media (max-width: 380px) {
@@ -368,6 +371,7 @@
   cursor: pointer;
 }
 .cat-qrt-go .ow-plan-bat-text > span { display: block; }
+.cat-qrt-go .ow-plan-bat-text > .cat-etat { display: flex; }
 .cat-qrt-picto .icon { width: 28px; height: 28px; color: var(--c-sage-deep); }
 .cat-qrt-chev {
   flex: none;
@@ -398,6 +402,21 @@
   color: var(--text-soft);
 }
 .qrt-body .help-line dd p.qrt-permis { margin-top: var(--sp-1); color: var(--text-soft); }
+/* achat réussi, en tête de la fiche : la coche et le sauge de « Disponible » (catalogue), jusqu'à la prochaine ouverture */
+.qrt-monte {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-weight: var(--w-semibold);
+  color: var(--c-sage-deep);
+}
+.qrt-monte .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
 .qrt-max {
   flex: 1 1 100%;
   margin: 0;

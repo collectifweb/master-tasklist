@@ -137,7 +137,7 @@
   "state.empty.search": "Rien trouvé pour « {recherche} ».",
   "state.empty.done": "Aucune quête terminée pour l’instant.",
   "state.empty.archived": "Aucune quête archivée.",
-  "state.offline": "Hors ligne. Tes changements restent sur l’appareil et partiront au retour du réseau.",
+  "state.offline": "Tes changements restent sur l’appareil et partiront au retour du réseau.",
   "state.offline.pending.one": "{n} changement en attente d’envoi.",
   "state.offline.pending.other": "{n} changements en attente d’envoi.",
   "state.online": "De retour en ligne. Envoi des changements…",
