@@ -70,5 +70,6 @@ L.runScenario('2. ajout rapide', async ({ R, srv, newPage, shot }) => {
   await L.waitFor(() => srv.readTasks().some((t) => t.task === 'Sortir le bac de recyclage' && t.status === 'done'));
   const t3 = srv.readTasks().find((t) => t.task === 'Sortir le bac de recyclage');
   R.check('« Déjà faite » : quête terminée, alreadyDone et doneAt écrits', t3 && t3.status === 'done' && t3.alreadyDone === true && !!t3.doneAt, JSON.stringify(t3));
-  R.check('« Déjà faite » : gain au registre', srv.ledger().some((e) => e.type === 'reward' && e.alreadyDone));
+  // le serveur écrit tasks.json avant le registre (environ 10 ms plus tôt au calme, davantage sous charge) : attendre le registre
+  R.check('« Déjà faite » : gain au registre', await L.waitFor(() => srv.ledger().some((e) => e.type === 'reward' && e.alreadyDone), 5000));
 });
