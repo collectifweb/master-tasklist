@@ -454,3 +454,504 @@
 .review-older .disclosure-body .why-line:last-child {
   border-bottom: 0;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Bandeau d'objectifs (lot 5, bible §10) : Aujourd'hui, Cette semaine, Cette saison, Prochain rang.
+   Une rangée qui flotte sur le monde sous la voie d'annonce (ombre douce, pas de socle), toujours visible.
+   Compact : Aujourd'hui et le prochain rang ; « Voir tous les objectifs » déplie une carte posée sur le monde.
+   À partir de 700 px : les quatre côte à côte. Éteint (terne) tant que l'accueil n'a pas été vu.
+   ════════════════════════════════════════════════════════════════════ */
+.bandeau {
+  position: absolute;
+  z-index: var(--z-lane);
+  top: var(--bandeau-top);
+  left: calc(var(--sp-2) + var(--safe-left));
+  right: calc(var(--sp-2) + var(--safe-right) + var(--world-cover-right));
+  min-height: var(--bandeau-h);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto var(--target);
+  border-radius: var(--r-lg);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+  overflow: clip;
+  transition: opacity var(--t-long) var(--ease-out), filter var(--t-long) var(--ease-out);
+}
+.bandeau[data-lit="false"] {
+  opacity: 0.66;
+  filter: saturate(0.2);
+}
+.bandeau-item {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  padding: 5px var(--sp-3);
+}
+.bandeau-item + .bandeau-item,
+.bandeau-more {
+  border-left: 1px solid var(--c-line);
+}
+.bandeau-semaine,
+.bandeau-saison {
+  display: none;
+}
+.bandeau-label {
+  overflow: hidden;
+  font-size: var(--text-12);
+  font-weight: var(--w-semibold);
+  line-height: 1.25;
+  color: var(--text-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bandeau-value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-14);
+  font-weight: var(--w-heavy);
+  line-height: 1.3;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bandeau-saison .bandeau-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bandeau-saison .bandeau-value > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Aujourd'hui : le geste à faire, touchable (ouvre la fiche où il se fait) */
+.bandeau-today {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--sp-2);
+  min-height: var(--target);
+  padding-left: var(--sp-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--t-micro);
+}
+.bandeau-today:focus-visible,
+.bandeau-more:focus-visible {
+  outline-offset: -3px;
+  border-radius: var(--r-lg);
+}
+@media (hover: hover) {
+  .bandeau-today:hover,
+  .bandeau-more:hover {
+    background: var(--c-paper-raised);
+  }
+}
+.bandeau-today:active .bandeau-text {
+  transform: translateY(calc(var(--motion) * 1px));
+}
+.bandeau-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+}
+.bandeau-mark .icon {
+  width: 18px;
+  height: 18px;
+}
+.bandeau-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+/* Compact : le geste peut tenir sur deux lignes ; « Aujourd'hui » reste dans le nom lu du bouton et dans la carte */
+.bandeau:not([data-open="true"]) .bandeau-today .bandeau-label {
+  display: none;
+}
+.bandeau:not([data-open="true"]) #bandeau-today {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  line-height: 1.22;
+}
+.bandeau:not([data-open="true"]) .bandeau-rang-pre {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.bandeau-raison {
+  display: none;
+  font-size: var(--text-12);
+  font-weight: var(--w-medium);
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+
+/* Prochain rang : la barre (au pied de la case) est doublée du texte « encore N habitants » */
+.bandeau-rang {
+  padding-bottom: 9px;
+}
+.bandeau-rang .bandeau-label b {
+  font-weight: var(--w-heavy);
+  color: var(--text);
+}
+.bandeau-rang .bandeau-value {
+  font-size: var(--text-12);
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+}
+.bandeau-bar {
+  position: absolute;
+  left: var(--sp-3);
+  right: var(--sp-3);
+  bottom: 5px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--c-sunken);
+  box-shadow: inset 0 0 0 1px var(--c-line-strong);
+  overflow: hidden;
+}
+.bandeau-bar > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--res-habitants);
+  transform: scaleX(max(var(--part, 0), 0.04));
+  transform-origin: left center;
+  transition: transform var(--t-long) var(--ease-out);
+}
+
+/* Cette saison : objectif atteint = coche + « Grenier rempli » */
+.bandeau-ok {
+  display: none;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--c-sage-deep);
+}
+.bandeau-saison[data-atteint] .bandeau-ok {
+  display: block;
+}
+.bandeau-saison-detail {
+  display: none;
+}
+
+/* Déplier (compact seulement) */
+.bandeau-more {
+  display: grid;
+  place-items: center;
+  min-height: var(--target);
+  padding: 0;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: none;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.bandeau-more .icon {
+  transition: transform var(--t-short) var(--ease-out);
+}
+.bandeau-more[aria-expanded="true"] .icon {
+  transform: rotate(180deg);
+}
+
+/* Carte dépliée (compact) : les quatre objectifs l'un sous l'autre, posés sur le monde */
+.bandeau[data-open="true"] {
+  grid-template-columns: minmax(0, 1fr) var(--target);
+  align-items: start;
+  box-shadow: var(--shadow-float);
+}
+.bandeau[data-open="true"] .bandeau-today { grid-column: 1; grid-row: 1; }
+.bandeau[data-open="true"] .bandeau-more { grid-column: 2; grid-row: 1; align-self: stretch; }
+.bandeau[data-open="true"] .bandeau-semaine,
+.bandeau[data-open="true"] .bandeau-saison,
+.bandeau[data-open="true"] .bandeau-rang {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) calc(var(--sp-2) + 30px + var(--sp-2));
+  border-left: 0;
+  border-top: 1px solid var(--c-line);
+}
+.bandeau[data-open="true"] .bandeau-rang {
+  padding-bottom: var(--sp-3);
+}
+.bandeau[data-open="true"] .bandeau-value,
+.bandeau[data-open="true"] .bandeau-label {
+  white-space: normal;
+}
+.bandeau[data-open="true"] .bandeau-raison:not([hidden]),
+.bandeau[data-open="true"] .bandeau-saison-detail:not([hidden]) {
+  display: block;
+}
+.bandeau-saison-detail {
+  font-size: var(--text-12);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.bandeau[data-open="true"] .bandeau-bar {
+  position: static;
+  width: min(100%, 220px);
+  height: 6px;
+  margin-top: var(--sp-1);
+}
+.bandeau-pas-liste {
+  display: none;
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bandeau[data-open="true"] .bandeau-pas-liste:not([hidden]) {
+  display: grid;
+  gap: 2px;
+}
+.bandeau-pas {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-14);
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+.bandeau-pas-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--c-line-strong);
+}
+.bandeau-pas.is-done .bandeau-pas-mark {
+  border: 0;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+}
+.bandeau-pas-mark .icon {
+  width: 12px;
+  height: 12px;
+}
+.bandeau-pas.is-now {
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+.bandeau-pas.is-now .bandeau-pas-mark {
+  border-style: solid;
+  border-color: var(--c-sage-deep);
+}
+
+/* Le 3e écran d'accueil allume le bandeau : un passage de lumière de lanterne, une seule fois.
+   Mouvement réduit : la lumière ne se déplace pas, elle apparaît et s'éteint. */
+.bandeau.is-lighting::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 217 140 / 0.7) 50%, transparent 80%);
+  pointer-events: none;
+  animation: bandeau-light var(--t-celebrate) var(--ease-out) both;
+}
+@keyframes bandeau-light {
+  0% { opacity: 0; transform: translateX(calc(var(--motion) * -70%)); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(var(--motion) * 70%)); }
+}
+
+/* À partir de 700 px : les quatre objectifs sur la rangée, sans carte à déplier */
+@media (min-width: 700px) {
+  .bandeau {
+    left: 0;
+    right: 0;
+    width: min(800px, calc(100% - 2 * var(--gutter)));
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
+  }
+  .bandeau-semaine,
+  .bandeau-saison {
+    display: grid;
+  }
+  .bandeau-more {
+    display: none;
+  }
+  .bandeau:not([data-open="true"]) .bandeau-today .bandeau-label {
+    display: block;
+  }
+  .bandeau:not([data-open="true"]) .bandeau-rang-pre {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+  .bandeau .bandeau-value {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    line-height: 1.22;
+  }
+  .bandeau .bandeau-saison .bandeau-value {
+    display: flex;
+  }
+}
+@media (min-width: 1000px), (min-width: 700px) and (orientation: landscape) {
+  .bandeau {
+    left: calc(var(--gutter) + var(--safe-left));
+    right: calc(var(--gutter) + var(--world-cover-right));
+    width: auto;
+    margin-inline: 0;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Écrans d'accueil (lot 5, bible §2) : trois écrans courts dans une feuille, le monde reste visible derrière.
+   ════════════════════════════════════════════════════════════════════ */
+#dlg-accueil::backdrop {
+  background: rgb(39 48 38 / 0.14);
+}
+.accueil-head {
+  flex-wrap: wrap;
+  padding-right: var(--gutter);
+}
+.accueil-etape {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-12);
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.accueil-pips {
+  display: flex;
+  gap: 4px;
+}
+.accueil-pips > i {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--c-line-strong);
+  transition: background-color var(--t-short);
+}
+.accueil-pips > i.is-past {
+  background: var(--c-sage);
+}
+.accueil-pips > i.is-on {
+  width: 20px;
+  background: var(--c-sage-deep);
+}
+.accueil-body {
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-6);
+}
+.accueil-texte {
+  max-width: 34ch;
+  font-family: var(--font-display);
+  font-size: var(--text-20);
+  font-weight: var(--w-display);
+  line-height: var(--lh-snug);
+  text-wrap: balance;
+}
+.accueil-scene {
+  min-height: 96px;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--c-glass-wash), var(--c-sage-wash));
+  overflow: hidden;
+}
+.accueil-scene .ow-thumb {
+  width: auto;
+  height: 64px;
+  max-width: 25%;
+}
+.accueil-thumbs,
+.accueil-objectif {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+.accueil-objectif .ow-thumb {
+  max-width: none;
+  height: 72px;
+}
+.accueil-cible {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--sp-5);
+  border-radius: 50%;
+  background: var(--c-lantern-wash);
+  color: var(--c-lantern-ink);
+  box-shadow: var(--shadow-hud);
+}
+.accueil-envol {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-2);
+}
+.accueil-tache {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--c-paper-raised);
+  box-shadow: var(--shadow-card);
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+}
+.accueil-coche {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+}
+.accueil-coche .icon {
+  width: 14px;
+  height: 14px;
+}
+.accueil-gains {
+  display: flex;
+  gap: var(--sp-1);
+  margin-left: var(--sp-2);
+}
+.accueil-gain {
+  width: 22px;
+  height: 22px;
+}
+.accueil-gain--e { color: var(--res-energie); }
+.accueil-gain--m { color: var(--res-materiaux); }
+/* écran 2 : la tâche cochée s'envole vers le village (vers le haut, là où est le monde) */
+#dlg-accueil[data-ecran="2"] .accueil-gains {
+  animation: accueil-envol 1600ms var(--ease-out) 300ms both;
+}
+#dlg-accueil[data-ecran="2"] .accueil-coche {
+  animation: accueil-coche var(--t-medium) var(--ease-back) both;
+}
+@keyframes accueil-envol {
+  from { opacity: 0; transform: translateY(calc(var(--motion) * 22px)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes accueil-coche {
+  from { transform: scale(calc(1 - var(--motion) * 0.4)); opacity: 0; }
+}

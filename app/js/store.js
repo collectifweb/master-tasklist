@@ -15,6 +15,7 @@ const ACTIONS = {
   advanceTime: core.advanceTime, markLetterShown: core.markLetterShown, migrateGame: core.migrateGame,
   jourSuivant: core.jourSuivant,
   construire: core.construire, semer: core.semer, recolter: core.recolter, accueillir: core.accueillir,
+  voirAccueil: core.voirAccueil,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
@@ -63,9 +64,9 @@ function convertOldQueue() {
   try { localStorage.removeItem(OLD_QUEUE_KEY); } catch { /* ignoré */ }
   return dropped;
 }
-// Tenue du jeu (ouverture, passage du temps, lettre montrée) : elle part avec la file, mais n'est pas
+// Tenue du jeu (ouverture, passage du temps, lettre ou accueil montrés) : elle part avec la file, mais n'est pas
 // un « changement » du joueur ; l'indicateur hors ligne ne la compte pas (« 1 changement » après une quête faite).
-const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown', 'migrateGame']);
+const BOOKKEEPING = new Set(['openApp', 'advanceTime', 'markLetterShown', 'migrateGame', 'voirAccueil']);
 const pendingCount = (q) => q.filter((e) => !BOOKKEEPING.has(e.name)).length;
 
 function fromResponse(r) {

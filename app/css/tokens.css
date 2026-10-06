@@ -197,21 +197,25 @@
   --lane-h: 40px;          /* voie réservée à l'annonce de gain, sous le HUD */
   --hud-top: calc(var(--safe-top) + var(--sp-2));
   --lane-top: calc(var(--hud-top) + var(--hud-h) + var(--sp-1));
-  /* le panneau ouvert s'arrête sous la voie d'annonce : ressources et annonce restent visibles */
-  --panel-open-top: calc(var(--lane-top) + var(--lane-h) + var(--sp-1));
+  /* bandeau d'objectifs (lot 5) : une rangée sous la voie d'annonce, toujours visible ; déplié, il passe sur le monde */
+  --bandeau-h: 48px;
+  --bandeau-top: calc(var(--lane-top) + var(--lane-h));
+  /* le panneau ouvert s'arrête sous le bandeau : ressources, annonce et objectifs restent visibles */
+  --panel-open-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--sp-2));
   /* feuille repliée : le monde garde ≈ 70 % de la hauteur à 390×844 */
   --panel-peek: clamp(248px, 30dvh, 300px);
   --column-w: clamp(340px, 34vw, 420px);
   /* ce que le monde doit laisser libre en bas (feuille repliée) ou à droite (colonne) */
   --world-cover-bottom: var(--panel-peek);
   --world-cover-right: 0px;
-  --world-safe-top: calc(var(--lane-top) + var(--lane-h));
+  --world-safe-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--sp-2));
 }
 
 @media (min-width: 700px) {
   :root {
     --gutter: 20px;
     --panel-peek: clamp(272px, 26dvh, 340px);
+    --bandeau-h: 60px; /* les quatre objectifs sur la rangée, valeurs sur deux lignes au plus */
   }
 }
 

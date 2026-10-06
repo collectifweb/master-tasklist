@@ -85,8 +85,6 @@
     <div class="world-live" id="world-live" hidden></div>
   </div>
 
-  
-
   <header class="hud" aria-label="Ressources">
     <button class="res" type="button" data-res="energie" data-action="res-help" aria-label="Énergie : 0">
       <span class="res-tile"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-energie"/></svg></span>
@@ -117,6 +115,35 @@
   <div class="announce-lane" aria-hidden="true">
     <p class="announce" id="announce"></p>
   </div>
+  <section class="bandeau" id="bandeau" aria-labelledby="bandeau-t" data-lit="false">
+    <h2 class="sr-only" id="bandeau-t" data-t="bandeau.titre"></h2>
+    <button class="bandeau-item bandeau-today" type="button" data-action="bandeau-go">
+      <span class="bandeau-mark"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-target"/></svg></span>
+      <span class="bandeau-text">
+        <span class="bandeau-label" data-t="bandeau.aujourdhui"></span>
+        <span class="bandeau-value" id="bandeau-today"></span>
+        <span class="bandeau-raison" hidden></span>
+      </span>
+    </button>
+    <div class="bandeau-item bandeau-semaine" id="bandeau-semaine-item">
+      <span class="bandeau-label" data-t="bandeau.semaine"></span>
+      <span class="bandeau-value" id="bandeau-semaine"></span>
+      <ul class="bandeau-pas-liste" hidden></ul>
+    </div>
+    <div class="bandeau-item bandeau-saison" id="bandeau-saison-item">
+      <span class="bandeau-label" data-t="bandeau.saison"></span>
+      <span class="bandeau-value"><svg class="icon bandeau-ok" aria-hidden="true"><use href="design/icons.svg#i-check"/></svg><span id="bandeau-saison"></span></span>
+      <span class="bandeau-saison-detail" hidden></span>
+    </div>
+    <div class="bandeau-item bandeau-rang">
+      <span class="bandeau-label"><span class="bandeau-rang-pre" data-t="bandeau.rang"></span> <b id="bandeau-rang-nom"></b></span>
+      <span class="bandeau-value" id="bandeau-rang"></span>
+      <span class="bandeau-bar" aria-hidden="true"><i></i></span>
+    </div>
+    <button class="bandeau-more" type="button" data-action="bandeau-toggle" aria-expanded="false" aria-controls="bandeau-semaine-item bandeau-saison-item">
+      <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-chevron-down"/></svg>
+    </button>
+  </section>
   <div class="speech" id="speech" hidden aria-hidden="true"></div>
   <p class="sr-only" role="status" aria-live="polite" id="live"></p>
   <p class="sr-only" role="status" aria-live="polite" id="live-world"></p>
@@ -247,6 +274,7 @@
 <dialog class="sheet sheet--small" id="dlg-letter" aria-labelledby="letter-t"></dialog>
 <dialog class="sheet sheet--small" id="dlg-settings" aria-labelledby="settings-t"></dialog>
 <dialog class="sheet" id="dlg-review" aria-labelledby="review-t"></dialog>
+<dialog class="sheet sheet--small accueil" id="dlg-accueil" aria-labelledby="accueil-t" aria-describedby="accueil-texte"></dialog>
 
 <noscript><p style="padding:24px">Cette application a besoin de JavaScript.</p></noscript>
 </body>

@@ -18,6 +18,7 @@ import {
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
 import { createStory } from './ui/story.js';
+import { createBandeau } from './ui/bandeau.js';
 
 const root = document.documentElement;
 const app = $('#app');
@@ -36,6 +37,7 @@ const after = (text) => {
 const remember = (text) => { lastLive = { text, at: Date.now() }; return text; };
 const speech = createSpeech(app);
 const sync = createSync($('.panel-status'), {});
+const bandeau = createBandeau($('#bandeau'));
 let world = null;
 let worldPlan = null;
 let started = false;
@@ -47,6 +49,9 @@ const story = createStory({
   run: (action, params) => run(action, params),
   announce: (text) => announce.say(text),
   focusHome,
+  thumb: (id) => (world ? world.thumb(id) : ''),
+  lightBandeau: () => bandeau.light(),
+  focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -67,6 +72,7 @@ function renderAll({ deferHud = false } = {}) {
   renderList($('#panel-scroll'), c, ui);
   refreshFiche(c);
   setText($('#panel-date'), panelDate(c.now));
+  bandeau.render(c);
   renderEssai();
   // Les compteurs montent à l'impact du fil de lumière (onImpact du monde), pas avant. Sans monde : 320 ms de retard.
   // Filet : si l'impact n'arrive jamais (animation interrompue), les compteurs se mettent à jour au plus tard après 6 s.
@@ -114,13 +120,15 @@ function react(payload) {
   const replyText = reply ? ` ${reply.nom}\u00a0: ${reply.texte}` : '';
   const gains = gainList(s);
   const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
+  const objectifs = objectifsSay(events);
 
-  if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime'].includes(action) && gains.length) {
+  if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime', ...BAT_ACTIONS].includes(action) && gains.length) {
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
-          : action === 'advanceTime' ? timeSay(events) : '';
-    const liveText = `${head}${fanal ? ' ' + fanal : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
+          : action === 'advanceTime' ? timeSay(events)
+            : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
+    const liveText = `${head}${fanal ? ' ' + fanal : ''}${objectifs ? ' ' + objectifs : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
     announce.show(s, 'gain', { liveText: action === 'advanceTime' ? after(liveText) : remember(liveText) });
     return;
   }
@@ -148,6 +156,19 @@ function react(payload) {
   if (action === 'advanceTime') { const text = timeSay(events); if (text) announce.say(after(text)); }
   const bat = batimentSay(events);
   if (bat) announce.say(remember(bat + replyText));
+}
+
+const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir'];
+
+/** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison. */
+function objectifsSay(events) {
+  const out = [];
+  for (const e of events) {
+    if (e.type === 'premier-pas') out.push(t('sr.pas', { nom: t(`pas.${e.id}.nom`) }));
+    else if (e.type === 'objectif-saison') out.push(t(`sr.saison.${e.objectif}`));
+  }
+  if (events.some((e) => e.type === 'premier-pas' && e.id === 'famille')) out.push(t('sr.pas.fin'));
+  return out.join(' ');
 }
 
 /** Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang. */
@@ -251,6 +272,7 @@ function advanceTime() {
 // ───────── Panneau ─────────
 function setPanel(open) {
   app.dataset.panel = open ? 'open' : 'peek';
+  if (open) bandeau.toggle(false); // la carte des objectifs dépliée passerait sous le panneau
   const toggle = $('[data-action="toggle-panel"]');
   toggle.setAttribute('aria-expanded', String(open));
   setText($('.panel-toggle-label', toggle), open ? t('panel.less') : t('panel.more'));
@@ -349,6 +371,9 @@ document.addEventListener('click', (e) => {
 
   switch (action) {
     case 'toggle-panel': return setPanel(app.dataset.panel !== 'open');
+    case 'bandeau-toggle': return bandeau.toggle();
+    case 'bandeau-go': return goToday();
+    case 'accueil-suivant': return story.accueilSuivant();
     case 'add': return openAdd();
     case 'res-help': return openHelp(target.dataset.res);
     case 'why': return openWhy(ctx(), id);
@@ -416,6 +441,17 @@ document.addEventListener('click', (e) => {
   }
 });
 
+/** Toucher « Aujourd'hui » dans le bandeau : la fiche où se fait le geste proposé (bâtiment, quête), ou l'ajout. */
+function goToday() {
+  const a = bandeau.action();
+  bandeau.toggle(false);
+  if (!a) return;
+  if (a.kind === 'pas' && ['construire', 'semer', 'accueillir'].includes(a.geste) && a.cible) return openBatimentSheet(a.cible);
+  const id = a.kind === 'quete' ? a.taskId : a.kind === 'pas' && a.geste === 'terminer' ? a.cible : null;
+  if (id && findTask(id)) return openFiche(ctx(), id);
+  return openAdd();
+}
+
 function addStepFromInput(id) {
   const input = $('#fiche-step-new');
   const label = input.value.trim();
@@ -454,6 +490,11 @@ document.addEventListener('submit', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'fiche-step-new') { e.preventDefault(); addStepFromInput($('#dlg-fiche').dataset.taskId); }
+  if (e.key === 'Escape' && $('#bandeau').dataset.open === 'true' && !document.querySelector('dialog[open]')) {
+    bandeau.toggle(false);
+    $('.bandeau-more').focus();
+    return;
+  }
   if (e.key === 'Escape' && app.dataset.panel === 'open' && !document.querySelector('dialog[open]')) {
     setPanel(false);
     $('[data-action="toggle-panel"]').focus();

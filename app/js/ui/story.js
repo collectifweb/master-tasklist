@@ -1,4 +1,4 @@
-// Rendez-vous : lettre du matin, réglage du prénom, bilan de la semaine.
+// Rendez-vous : écrans d'accueil, lettre du matin, réglage du prénom, bilan de la semaine.
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
@@ -23,11 +23,13 @@ function writeReview(v) {
 const anyOpen = () => document.querySelector('dialog[open]');
 
 /**
- * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte), focusHome() }.
+ * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte), focusHome(),
+ * thumb(id) → dessin d'un bâtiment (ou ''), lightBandeau(), focusBandeau() }.
  */
 export function createStory(app) {
   let welcoming = false;
   let waitFor = null;
+  let accueilIci = false; // l'accueil a été montré pendant cette visite : lettres et bilan attendent la suivante
   const voiceName = (v) => content.repliques?.voix?.[v]?.nom || null;
 
   // ───────── Lettre du matin ─────────
@@ -182,6 +184,56 @@ export function createStory(app) {
     (back || dlg.querySelector('.sheet-foot .btn')).focus();
   }
 
+  // ───────── Écrans d'accueil (bible §2) : trois écrans, passables à tout moment, montrés une seule fois ─────────
+  const ACCUEIL = 3;
+  /** Décor de chaque écran, sans texte (aria-hidden) : le texte de l'écran dit tout. */
+  function sceneHtml(n) {
+    const th = (id) => app.thumb?.(id) || '';
+    if (n === 1) return `<span class="accueil-thumbs">${['chalet-1', 'chalet-2', 'chalet-3', 'parcelle-1'].map(th).join('')}</span>`;
+    if (n === 2) {
+      return `<span class="accueil-envol">
+          <span class="accueil-gains">${icon('energie', 'accueil-gain accueil-gain--e')}${icon('materiaux', 'accueil-gain accueil-gain--m')}</span>
+          <span class="accueil-tache"><span class="accueil-coche">${icon('check')}</span><span>${esc(t('accueil.tache'))}</span></span>
+        </span>`;
+    }
+    return `<span class="accueil-objectif"><span class="accueil-cible">${icon('target')}</span>${th('chalet-1')}</span>`;
+  }
+  function drawAccueil(dlg, n) {
+    dlg.dataset.ecran = String(n);
+    dlg.innerHTML = `
+      <header class="sheet-head accueil-head">
+        <h2 class="sheet-title accueil-titre" id="accueil-t">${esc(t('accueil.titre'))}</h2>
+        <p class="accueil-etape"><span class="accueil-pips" aria-hidden="true">${Array.from({ length: ACCUEIL }, (_, i) => `<i${i + 1 === n ? ' class="is-on"' : i + 1 < n ? ' class="is-past"' : ''}></i>`).join('')}</span><span>${esc(t('accueil.etape', { n, total: ACCUEIL }))}</span></p>
+      </header>
+      <div class="sheet-body accueil-body">
+        <div class="accueil-scene" data-scene="${n}" aria-hidden="true">${sceneHtml(n)}</div>
+        <p class="accueil-texte" id="accueil-texte">${esc(t(`accueil.${n}`))}</p>
+      </div>
+      <footer class="sheet-foot accueil-foot">
+        ${n < ACCUEIL ? `<button class="btn btn--quiet" type="button" data-close>${esc(t('accueil.passer'))}</button>` : ''}
+        <button class="btn btn--primary" type="button" ${n < ACCUEIL ? 'data-action="accueil-suivant"' : 'data-close'}>${esc(t(n < ACCUEIL ? 'accueil.suivant' : 'accueil.commencer'))}</button>
+      </footer>`;
+    if (n === ACCUEIL) app.lightBandeau?.(); // 3e écran : le bandeau d'objectifs s'allume
+    dlg.querySelector('.accueil-foot .btn--primary')?.focus();
+  }
+  function openAccueil(onDone) {
+    const dlg = $('#dlg-accueil');
+    drawAccueil(dlg, 1);
+    openSheet(dlg);
+    dlg.querySelector('.accueil-foot .btn--primary')?.focus();
+    whenClosed(dlg, () => {
+      app.run('voirAccueil', {}); // vu, passé ou fermé : une seule fois
+      app.lightBandeau?.();
+      onDone();
+    });
+  }
+  /** « Suivant » : écran d'après, le focus reste sur le bouton principal. */
+  function accueilSuivant() {
+    const dlg = $('#dlg-accueil');
+    if (!dlg.open) return;
+    drawAccueil(dlg, Math.min(ACCUEIL, Number(dlg.dataset.ecran || 1) + 1));
+  }
+
   // ───────── Accueil : lettre, bilan du dimanche ─────────
   /** Une feuille d'accueil s'ouvre seule : à sa fermeture, le navigateur rend le focus à la page entière. */
   const refocus = () => { if (!document.activeElement || document.activeElement === document.body) app.focusHome?.(); };
@@ -192,9 +244,11 @@ export function createStory(app) {
   }
 
   /**
-   * Montre ce qui attend, une feuille à la fois : lettre de passage à la v2 (une seule fois, partie convertie), sinon
-   * lettre du matin (pas le premier jour ; la lettre de passage en tient lieu le jour où elle est montrée), puis le
-   * bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend sa fermeture.
+   * Montre ce qui attend, une feuille à la fois : les écrans d'accueil (une seule fois, partie neuve ou convertie ;
+   * pendant cette visite, rien d'autre ne suit : pas de mur d'écrans), sinon la lettre de passage à la v2 (une seule
+   * fois, partie convertie), sinon la lettre du matin (pas le premier jour ; la lettre de passage en tient lieu le jour
+   * où elle est montrée), puis le bilan le dimanche (une fois par appareil). Si une autre feuille est ouverte, attend
+   * sa fermeture.
    */
   function welcome() {
     if (welcoming) return;
@@ -206,6 +260,13 @@ export function createStory(app) {
     const c = app.ctx();
     if (!c || !c.game) return;
     const next = () => { welcoming = false; refocus(); setTimeout(welcome, 50); };
+    if (!c.game.accueil && !accueilIci) {
+      accueilIci = true;
+      welcoming = true;
+      openAccueil(() => { welcoming = false; app.focusBandeau?.(); });
+      return;
+    }
+    if (accueilIci) return; // la lettre de passage et le reste attendent la prochaine visite
     const today = gameDay(c.now);
     const passage = content.lettres ? passageLetter(content.lettres, c.game, { prenom: prenom() || null }) : null;
     if (passage) { welcoming = true; openLetter(passage, next); return; }
@@ -222,6 +283,7 @@ export function createStory(app) {
 
   return {
     welcome,
+    accueilSuivant,
     openSettings,
     saveSettings,
     openReview: () => openReview(app.ctx()),
