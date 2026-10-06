@@ -1,6 +1,7 @@
 // 15. Potager et familles (v2) : rebâtir un chalet depuis sa fiche, semer la parcelle du vieux potager, la voir pousser
 // au fil des jours travaillés (« Jour suivant » de la version d'essai), récolter, puis accueillir une famille. Chaque
 // geste attend l'écriture du serveur avant de la vérifier. Date fixe en juin (potager ouvert). Titres fictifs.
+// Les premiers pas sont déjà faits (leurs coups de pouce changeraient les comptes) : le scénario 17 les suit.
 const L = require('./lib.cjs');
 
 // un lundi de juin à venir, 10 h à Montréal : cinq jours suivants restent dans la même semaine et dans la saison
@@ -119,5 +120,8 @@ L.runScenario('15. potager : chalet, semis, jours travaillés, récolte, famille
 }, {
   tasks: TASKS,
   sandbox: true,
-  game: (core) => ({ ...L.quietState(core, MONDAY), resources: { energy: 10, materials: 40, food: 14 } }),
+  game: (core) => ({
+    ...L.quietState(core, MONDAY), resources: { energy: 10, materials: 40, food: 14 },
+    premiersPas: Object.fromEntries(core.PAS_IDS.map((id) => [id, core.addDays(core.gameDay(MONDAY), -1)])),
+  }),
 });

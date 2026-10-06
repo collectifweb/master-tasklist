@@ -27,11 +27,12 @@ function freePort() {
 }
 
 /**
- * État de jeu « calme » pour les scénarios qui ne testent pas l'accueil : lettre du jour déjà montrée.
- * Sans lui, la lettre du matin (feuille modale) s'ouvrirait au premier lancement et masquerait la page.
+ * État de jeu « calme » pour les scénarios qui ne testent pas l'accueil : écrans d'accueil déjà vus, lettre du jour
+ * déjà montrée. Sans lui, l'accueil puis la lettre du matin (feuilles modales) s'ouvriraient au premier lancement.
  */
-function quietState(core, now = new Date(), { letters = true } = {}) {
+function quietState(core, now = new Date(), { letters = true, accueil = true } = {}) {
   const g = core.createInitialState(now);
+  if (accueil) g.accueil = core.gameDay(now);
   if (letters) {
     const lt = JSON.parse(fs.readFileSync(path.join(REPO, 'app', 'content', 'fr-CA', 'lettres.json'), 'utf8'));
     const day = core.gameDay(now);
@@ -217,14 +218,14 @@ async function ready(page) {
 }
 
 /**
- * Ferme ce que l'accueil a pu ouvrir (lettre, bilan), une feuille après l'autre.
- * Renvoie la liste des feuilles fermées (ex. ['dlg-letter']).
+ * Ferme ce que l'accueil a pu ouvrir (écrans d'accueil, lettre, bilan), une feuille après l'autre ; les écrans d'accueil
+ * se ferment par « Passer ». Renvoie la liste des feuilles fermées (ex. ['dlg-letter']).
  */
 async function closeWelcome(page, ms = 2500) {
   const closed = [];
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
-    const id = await page.evaluate(() => { const d = document.querySelector('#dlg-letter[open], #dlg-review[open]'); return d ? d.id : null; });
+    const id = await page.evaluate(() => { const d = document.querySelector('#dlg-accueil[open], #dlg-letter[open], #dlg-review[open]'); return d ? d.id : null; });
     if (!id) { await page.waitForTimeout(150); continue; }
     await page.evaluate((x) => document.querySelector(`#${x} .sheet-foot [data-close]`).click(), id);
     closed.push(id);
@@ -247,7 +248,7 @@ const QUIET_REVIEW = (day) => { try { if (!localStorage.getItem('oree.recycle.v1
 /**
  * Lance fn pour chacune des 3 largeurs, avec un serveur neuf à chaque fois.
  * Options : tasks ; game (objet ou fonction (core) → objet) ; ledger ; fresh: true = premier lancement réel
- * (aucun état posé : intro, lettre et bilan peuvent s'ouvrir). Par défaut, état « calme » (quietState).
+ * (aucun état posé : écrans d'accueil, lettre et bilan peuvent s'ouvrir). Par défaut, état « calme » (quietState).
  * quietReview (vrai sauf avec fresh) : le bilan du dimanche est noté comme déjà vu sur l'appareil.
  * sandbox : serveur en version d'essai (voir startServer).
  */

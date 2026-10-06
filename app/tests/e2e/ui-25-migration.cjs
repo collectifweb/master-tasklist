@@ -1,8 +1,9 @@
 // 25. Passage d'une partie v1 à la v2 (lot 3) : serveur parti d'une partie, d'un registre et d'une file hors ligne de
 // la v1. La v2 se charge, enregistre la partie en version 2 (quartiers recomptés depuis le registre), l'API garde la
 // copie v1, tasks.json reste identique à l'octet, un « Souffler » resté en file est écarté avec un message, le code
-// d'accès et le prénom sont gardés, la lettre de passage de Fanal n'est montrée qu'une fois. Puis un « Fait » laissé
-// par un onglet v1 est recalculé par le cœur v2. Données fictives seulement.
+// d'accès et le prénom sont gardés. Les écrans d'accueil s'ouvrent d'abord (partie convertie comprise), seuls : la
+// lettre de passage de Fanal attend la visite suivante, puis n'est montrée qu'une fois. Puis un « Fait » laissé par un
+// onglet v1 est recalculé par le cœur v2. Données fictives seulement.
 const fs = require('node:fs');
 const path = require('node:path');
 const L = require('./lib.cjs');
@@ -91,8 +92,17 @@ L.runScenario('25. passage de la v1 à la v2', async ({ R, srv, newPage, core, t
   R.check('message : le « Souffler » de l’ancienne version est écarté', /Souffler/.test(notice) && /ancienne version/.test(notice), notice);
   R.check('aucun « Souffler » envoyé au serveur', !srv.ledger().some((e) => /souffl/i.test(JSON.stringify(e))) && !('filLibre' in srv.game()));
 
+  // écrans d'accueil d'abord, une seule fois ; rien d'autre ne s'ouvre pendant cette visite (pas de mur d'écrans)
+  R.check('partie convertie : les écrans d’accueil s’ouvrent, sans lettre par-dessus', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-accueil').open), 6000) && !(await letter(page)).open);
+  await page.click('#dlg-accueil .accueil-foot [data-close]');
+  R.check('« Passer » : accueil noté comme vu dans la partie', await L.waitFor(() => !!srv.game()?.accueil, 4000), JSON.stringify(srv.game()?.accueil));
+  await page.waitForTimeout(1500);
+  R.check('… et la lettre de passage attend la visite suivante', !(await letter(page)).open && !(srv.game()?.letters || {})['passage.v2']);
+  await page.reload();
+  await L.ready(page);
+
   // lettre de passage : prénom gardé sur l'appareil
-  R.check('la lettre de passage de Fanal s’ouvre', await L.waitFor(async () => (await letter(page)).open, 6000));
+  R.check('visite suivante : la lettre de passage de Fanal s’ouvre, plus d’accueil', await L.waitFor(async () => (await letter(page)).open, 6000) && !(await page.evaluate(() => document.getElementById('dlg-accueil').open)));
   const l = await letter(page);
   R.check('… elle dit les quatre ressources et les quartiers, avec le prénom', /Allô, Sam\./.test(l.text) && /Énergie/.test(l.text) && /Habitants/.test(l.text) && /six quartiers/.test(l.text), l.text.slice(0, 200));
   R.check('code d’accès gardé, aucune feuille de code', await page.evaluate(() => localStorage.getItem('oree.token') === 'code-fictif' && !document.getElementById('dlg-token').open));
