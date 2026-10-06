@@ -26,7 +26,8 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   const stateA = await a.evaluate(() => document.querySelectorAll('#quest-list > li').length);
   const stateB = await b.evaluate(() => document.querySelectorAll('#quest-list > li').length);
   R.check('les deux onglets finissent avec la même liste', stateA === stateB && stateA === 8, `${stateA} / ${stateB}`);
-  R.check('Énergie identique dans les deux onglets', (await L.resValue(a, 'energie')) === (await L.resValue(b, 'energie')) && (await L.resValue(a, 'energie')) === g.resources.energy, `${await L.resValue(a, 'energie')} / ${await L.resValue(b, 'energie')} / ${g.resources.energy}`);
+  // la barre montre ce que le joueur possède en nombre entier, vers le bas (le serveur garde ses dixièmes)
+  R.check('Énergie identique dans les deux onglets', (await L.resValue(a, 'energie')) === (await L.resValue(b, 'energie')) && (await L.resValue(a, 'energie')) === Math.floor(Math.round(g.resources.energy * 10) / 10), `${await L.resValue(a, 'energie')} / ${await L.resValue(b, 'energie')} / ${g.resources.energy}`);
 
   // même quête, au même instant, dans les deux onglets du même navigateur
   const id = 'example-002';
