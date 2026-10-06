@@ -251,7 +251,7 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 5. Ordre : ces changements avant la bascule (recommandé : sa vraie partie démarre alors sur les bonnes règles, sans seconde migration), ou après ?
 
 **Réponses d'Alex (5 octobre, soir)**
-1. Quartiers : ni A ni B tels quels. « Si on remplit le même stock, tous les bâtiments vont augmenter au même niveau » (lecture d'Alex ; dans A, c'était déjà lui qui choisissait où investir). Son idée : **une devise ou ressource à part sert à monter un bâtiment, au choix du joueur**. Mis à l'étude par un panel de conception (4 conceptions, 2 juges, une synthèse) : résultat dans `docs/conception-niveaux-quartiers.md`, à valider.
+1. Quartiers : ni A ni B tels quels. « Si on remplit le même stock, tous les bâtiments vont augmenter au même niveau » (lecture d'Alex ; dans A, c'était déjà lui qui choisissait où investir). Son idée : **une devise ou ressource à part sert à monter un bâtiment, au choix du joueur**. Mis à l'étude par un panel de conception (4 conceptions, 2 juges, une synthèse) : résultat dans `docs/conception-niveaux-quartiers.md` : **le permis, validé par Alex** (nom retenu ; essai : niveaux convertis en permis).
 2. Gains : **oui**, l'effort paie.
 3. « Je m'y mets » : **retiré**.
 4. Carte en liste : **rangée dans un menu**.

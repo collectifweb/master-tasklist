@@ -1,10 +1,10 @@
 # Progression des quartiers : le permis (proposition)
 
-**Statut : proposition, pas encore validée par Alex.** Issue d'un panel du 5 octobre 2026 au soir : quatre conceptions indépendantes (ressources existantes, devise dédiée, plans par jalons, remise en question), deux juges (regard du joueur, regard du concepteur et du développeur), puis une synthèse. Les deux juges ont retenu la conception « plans par jalons », la synthèse l'a simplifiée en « permis ». Les chiffres sont à régler par la simulation.
+**Statut : validée par Alex le 5 octobre 2026 au soir** (« Oui parfait le permis » ; essai : conversion des niveaux en permis). Issue d'un panel du 5 octobre 2026 au soir : quatre conceptions indépendantes (ressources existantes, devise dédiée, plans par jalons, remise en question), deux juges (regard du joueur, regard du concepteur et du développeur), puis une synthèse. Les deux juges ont retenu la conception « plans par jalons », la synthèse l'a simplifiée en « permis ». Les chiffres sont à régler par la simulation.
 
 Vérifié ensuite par moi (session principale) : la simulation du dépôt relancée donne les mêmes dates de village plein que la synthèse (§0) ; les réglages actuels cités (culture mûre en 5 jours travaillés, récolte de 4, famille à 18 Nourriture, 3 chalets de 2 places) sont ceux de `app/core/batiments.js` ; le mot « plan » est déjà pris par « Un plan pour aujourd’hui ? » (`app/content/fr-CA/interface.json`). Le reste des citations fichier:ligne vient du panel et n'a pas été repris un par un.
 
-Questions laissées à Alex : le nom « permis » ; sur l'essai, convertir les niveaux actuels en permis à placer, ou repartir de zéro.
+Réponses d'Alex : le nom « permis » est retenu ; sur l'essai, les niveaux actuels sont convertis en permis à placer.
 
 ---
 
