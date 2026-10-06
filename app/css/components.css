@@ -897,6 +897,9 @@ button.cote:active {
   gap: var(--sp-2);
   padding: 0 0 var(--sp-4);
 }
+.alt-body .fil-actions {
+  grid-area: auto;
+}
 
 /* ════════════════════════════════════════════════════════════════════
    8. Trois cartes : À faire d'abord, Victoire rapide, Grand chantier
