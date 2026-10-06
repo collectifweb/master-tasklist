@@ -512,6 +512,7 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 - *Fait (6 octobre, après-midi) : `core/visiteurs.js` et `tests/core/marchand.test.mjs` (13 tests, vus en échec avant le module), joueur (h) dans `simulation.test.mjs`. Suite complète : 434 tests, 432 réussis, 0 échec, 2 « à faire » connus. Un premier passage avait eu un échec de connexion au serveur de test (« ajout puis suppression », `ECONNREFUSED` pendant que tous les fichiers tournaient ensemble) ; le fichier seul a réussi 3 fois sur 3, et la suite complète relancée n'a plus d'échec.*
 - *Reconstitution de la partie d'essai non refaite : le script du lot R2 n'a pas été gardé, et la sauvegarde ne date pas les constructions. Les taux sont réglés sur la simulation seule ; le joueur (g) y donnait le premier niveau au jour 22, contre 23 pour la reconstitution.*
 - *Constat de la simulation : aux prix du lot R2, un joueur qui prend Énergie → Matériaux chaque semaine achète 2 niveaux en 16 semaines au lieu de 6 (rythme de l'essai) ; le joueur avisé prend surtout Matériaux → Énergie et Énergie → Nourriture. Taux proposés : 30 É → 15 M, 20 É → 10 N, 15 M → 15 É, 10 N → 10 É.*
+- *Taux validés par Alex le 6 octobre, après-midi (« Essayons ça ! »).*
 
 ### V2 — Écran [impeccable]
 - [ ] Barque du marchand au quai : touchable, cible de 44 px au moins, mouvement réduit respecté.
