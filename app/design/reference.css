@@ -131,7 +131,7 @@
 /* HUD hors coquille : même grille que dans l'app */
 .hud-demo {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(44px, auto); /* comme .hud dans components.css : le Permis prend la place de son contenu */
   gap: 6px;
   container: hud / inline-size;
 }
