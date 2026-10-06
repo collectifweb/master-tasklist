@@ -678,6 +678,7 @@
 .announce-item[data-res="nourriture"] .icon { color: var(--res-nourriture); }
 /* la tâche compte pour son quartier : « → Champs », ou son picto et « Champs · niveau 2 » quand il monte */
 .announce-tail[data-quartier] { color: var(--c-sage-deep); }
+.announce-tail[data-semaine] { color: var(--res-materiaux); }
 .announce-tail .icon {
   margin-right: 4px;
   vertical-align: -3px;

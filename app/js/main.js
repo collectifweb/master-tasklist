@@ -160,12 +160,13 @@ function react(payload) {
 
 const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier'];
 
-/** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison. */
+/** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine tenue. */
 function objectifsSay(events) {
   const out = [];
   for (const e of events) {
     if (e.type === 'premier-pas') out.push(t('sr.pas', { nom: t(`pas.${e.id}.nom`) }));
     else if (e.type === 'objectif-saison') out.push(t(`sr.saison.${e.objectif}`));
+    else if (e.type === 'semaine-tenue') out.push(t('sr.semaine', { n: num(e.materials) }));
   }
   if (events.some((e) => e.type === 'premier-pas' && e.id === 'famille')) out.push(t('sr.pas.fin'));
   return out.join(' ');

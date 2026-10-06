@@ -69,14 +69,32 @@
       "quand": "Un permis tombe après quatre jours travaillés (avec la quête payée qui le donne). Remplace la réplique de quête terminée.",
       "frequence": 1,
       "variantes": [
-        {"id": "permis.gagne.01", "voix": "fanal", "texte": "Quatre jours de travail. La Mairie a tamponné un permis."}
+        {"id": "permis.gagne.01", "voix": "fanal", "texte": "Quatre jours de travail. La Mairie a tamponné un permis."},
+        {"id": "permis.gagne.02", "voix": "fanal", "texte": "Un permis de plus. La Mairie a sorti son tampon sans qu’on le lui demande."},
+        {"id": "permis.gagne.03", "voix": "fanal", "texte": "Quelques jours de travail, un permis. La Mairie est rarement aussi rapide."},
+        {"id": "permis.gagne.04", "voix": "fanal", "texte": "Un permis tout neuf, encore chaud du tampon. Je le garde au sec pour toi."},
+        {"id": "permis.gagne.05", "voix": "fanal", "texte": "Le permis est arrivé. Pas de formulaire à remplir, pour une fois."}
       ]
     },
     "permis.rang": {
       "quand": "Une famille fait passer le village à un nouveau rang, qui donne un permis. Remplace la réplique de famille accueillie. La variable {rang} est le nom du nouveau rang.",
       "frequence": 1,
       "variantes": [
-        {"id": "permis.rang.01", "voix": "fanal", "texte": "{rang}. Ça vaut un permis. Et un tampon."}
+        {"id": "permis.rang.01", "voix": "fanal", "texte": "{rang}. Ça vaut un permis. Et un tampon."},
+        {"id": "permis.rang.02", "voix": "fanal", "texte": "Le village passe au rang de {rang}. La Mairie t’envoie un permis pour fêter ça."},
+        {"id": "permis.rang.03", "voix": "fanal", "texte": "{rang}, rien de moins. J’ai changé la pancarte et poli la lanterne."},
+        {"id": "permis.rang.04", "voix": "fanal", "texte": "Un nouveau rang, un permis dans la poche. Le village grandit, la pancarte aussi."},
+        {"id": "permis.rang.05", "voix": "fanal", "texte": "Les familles ont fait grandir l’Orée. {rang}, officiellement, avec un permis à la clé."}
+      ]
+    },
+    "semaine.tenue": {
+      "quand": "Le bonus de la semaine tenue tombe, avec la quête payée qui le déclenche (quête terminée ou ajoutée déjà faite). Passe après permis.gagne : un seul mot de Fanal par geste. Ne jamais dire un nombre de jours, ne jamais parler de série.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "semaine.tenue.01", "voix": "fanal", "texte": "Belle semaine de travail. J’ai mis du bois de côté pour toi."},
+        {"id": "semaine.tenue.02", "voix": "fanal", "texte": "Semaine tenue. Le tas de bois a grossi, et je sais qui a fait ça."},
+        {"id": "semaine.tenue.03", "voix": "fanal", "texte": "Une semaine bien remplie. Le village a de quoi bâtir, grâce à toi."},
+        {"id": "semaine.tenue.04", "voix": "fanal", "texte": "Voilà une semaine qui a de la tenue. J’en profite pour ranger les planches."}
       ]
     },
     "quartier.monte": {
