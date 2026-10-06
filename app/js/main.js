@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, topCards } from '../core/index.js';
+import { SORTS, gameDay, topCards, queteDefaut } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
@@ -440,7 +440,7 @@ document.addEventListener('click', (e) => {
     case 'bandeau-toggle': return bandeau.toggle();
     case 'bandeau-go': return goToday();
     case 'accueil-suivant': return story.accueilSuivant();
-    case 'add': return openAdd();
+    case 'add': return openAdd(queteDefaut(store.view.game));
     case 'res-help': return openHelp(target.dataset.res);
     case 'why': return openWhy(ctx(), id);
     case 'open': return openFiche(ctx(), id);
@@ -541,7 +541,7 @@ function goToday() {
   if (!a) return;
   if (a.kind === 'pas' && ['construire', 'semer', 'accueillir'].includes(a.geste) && a.cible) return openBatimentSheet(a.cible);
   const id = a.kind === 'quete' ? a.taskId : a.kind === 'pas' && a.geste === 'terminer' ? a.cible : null;
-  if (!id || !findTask(id)) return openAdd();
+  if (!id || !findTask(id)) return openAdd(queteDefaut(store.view.game));
   // la quête est au Fil du jour : son « Fait » est là, la carte s'éclaire un instant et « Fait » prend le focus
   const fil = $('#fil-quest:not([hidden])');
   if (fil && fil.dataset.taskId === id) {
