@@ -212,6 +212,21 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
 - [ ] Alex joue quelques jours sur l'essai, avec « Jour suivant ».
 - [ ] Bascule (accord d'Alex) : sauvegarde datée, déploiement, retrait à la main des fichiers v1 restés, contrôles en lecture seule (partie v2, copie v1, empreinte de `tasks.json` inchangée, synchro d'Hermes). Retour arrière : étiquette `v1` + copie v1.
 
+### Lot 8 — reprise du 6 octobre, après-midi (Alex : « on peut la débuter, je vais jouer entre temps »)
+
+**Constat avant tout (lu dans le code et la configuration, pas observé dans un navigateur)** : l'essai (`/essai/`) et la production (`/app/`) sont sur le même site, donc le navigateur leur donne le même stockage local et le même cache. La production (v1, étiquette `v1`) et l'essai (v2) utilisent les mêmes clés : `oree.token`, `oree.cache.v1`, `oree.tick.v1` ; l'essai reprend la file `oree.queue.v1` de la production (`convertOldQueue`) ; chaque service worker efface les caches `oree-*` qui ne sont pas les siens (`sw.js:50`, les deux versions).
+- Aujourd'hui (déduit du code) : taper le code de l'essai remplace celui de la production dans ce navigateur ; un geste de la production resté en file hors ligne peut être repris et envoyé à l'essai ; la production peut afficher au démarrage ou hors ligne la partie de l'essai gardée en cache.
+- Après la bascule (les deux en v2, file `oree.queue.v2` commune) : un geste de l'essai resté en file pourrait partir vers la production, par exemple une quête fictive écrite dans la vraie liste.
+
+**Décision demandée à Alex** : A (recommandé) séparer dans le code : la production garde ses noms de clés, l'essai prend les siens, chaque service worker n'efface que ses caches ; B : l'essai sur un sous-domaine à lui (cPanel, certificat), hors du dépôt.
+
+- [ ] Séparer le stockage de l'essai et de la production (selon la décision), avec un scénario qui sert deux copies sous deux dossiers du même serveur local et prouve qu'aucune clé ni aucun cache ne se croise.
+- [ ] Relecture indépendante (lecture seule) : conversion v1 → v2 de la vraie partie, garde-fou du bac à sable en production (`SANDBOX` absent = faux), `deploy-prod.sh` pour la v2.
+- [ ] Preuve de conversion sur une copie locale de la partie de production (lecture seule par SSH, copie dans le dossier temporaire de session, jamais commitée) : conversion rejouée en local, comptes avant et après.
+- [ ] Documents restés en vocabulaire v1 : section « semaine 3 » d'`app/ARCHITECTURE.md`, lignes v1 d'`app/DESIGN.md` (Confiance, Lueur, `quest-row-doing`), `app/design/reference.html` ; `TASKS_WORKFLOW.md` (rien ne change pour Hermes : à vérifier).
+- [ ] Tout relancer (tests, série aux trois largeurs, machine au calme).
+- [ ] Bascule, sur accord d'Alex au moment même : étiquette `v2`, sauvegarde datée, `deploy-prod.sh v2`, retrait à la main des fichiers v1 restés, contrôles en lecture seule.
+
 ### Risques
 - Un onglet v1 resté ouvert à la bascule : son geste suivant est refusé avec un message, rien n'est écrit, il faut le refaire après rechargement.
 - Entre les lots 1 et 2, les scénarios navigateur échouent : aucun déploiement entre les deux.
