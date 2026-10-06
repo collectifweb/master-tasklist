@@ -4,7 +4,7 @@
 //   game    : l'état du jeu après l'opération
 //   ops     : opérations à envoyer telles quelles à l'API (task.upsert, task.delete, ledger.append, game.set)
 //   entries : nouvelles entrées du registre (déjà dans ops)
-//   events  : événements pour l'interface (reward, quartier-niveau, etape, plaque…)
+//   events  : événements pour l'interface (reward, quartier-niveau, permis, etape, plaque…)
 // `params.gameRevision` (facultatif) est repris dans game.set comme `baseGameRevision`.
 // Un champ qu'on vide est écrit `null` (l'API conserve les champs absents).
 // Erreurs (en français, aucune opération produite) : quête introuvable ou en lecture seule (`readonly`, identifiant
@@ -23,6 +23,7 @@ import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
 import { produireEolienne, reprendreEolienne } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
+import { suivrePermis } from './quartiers.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -235,6 +236,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   if (entry) ctx.append(entry, alreadyDone ? 'deja-faite' : 'quete');
   else ctx.events.push({ type: 'sans-gain', taskId: t.id, reason: 'deja-recompensee' });
   if (entry) produireEolienne(ctx); // la première quête payée du jour fait tourner l'éolienne (une fois par jour)
+  if (entry) suivrePermis(ctx); // le 4e jour travaillé depuis le dernier permis en donne un (une fois par jour)
 
   if (entry && wasTop3) {
     const bonus = buildBonusEntry('bon-fil', ctx.ledger, now, { taskId: t.id });

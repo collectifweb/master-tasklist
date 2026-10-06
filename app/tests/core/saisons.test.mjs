@@ -54,7 +54,7 @@ test('Nourriture au plafond pendant l’automne (récolte) : objectif atteint, r
   const rec = OBJECTIFS_SAISON.automne.recompense;
   assert.deepEqual({ ...e[0], at: undefined }, {
     key: 'saison:automne-2026', at: undefined, day: OCT, type: 'saison', saison: 'automne-2026', objectif: 'grenier', pe: 0,
-    energy: rec.energy || 0, materials: rec.materials || 0, food: 0,
+    energy: rec.energy || 0, materials: rec.materials || 0, food: 0, permis: rec.permis || 0,
   });
   assert.ok(r.events.some((x) => x.type === 'objectif-saison' && x.cle === 'automne-2026'));
   assert.equal(objectifSaison(world.game, world.ledger, at(OCT)).atteint, true);

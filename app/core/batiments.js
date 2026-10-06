@@ -3,15 +3,19 @@
 // pour le joueur, et la même raison se lit sans rien faire par refusConstruire, refusSemer, refusRecolter et
 // refusAccueillir (les fiches de l'interface l'écrivent sous le bouton).
 // Construire, semer, récolter et accueillir n'écrivent rien au registre : ils dépensent ou convertissent ce qui a déjà
-// été gagné (game.set suffit). Seule l'éolienne y inscrit sa production, une fois par jour travaillé ; et un geste qui
-// accomplit un premier pas ou l'objectif de la saison y inscrit son coup de pouce (objectifs.js).
-// Les nombres sont des exemples de départ (bible), réglés par la simulation de tests/core/simulation.test.mjs.
+// été gagné (game.set suffit). Seule l'éolienne y inscrit sa production, une fois par jour travaillé ; un geste qui
+// accomplit un premier pas ou l'objectif de la saison y inscrit son coup de pouce (objectifs.js) ; et l'accueil qui
+// fait passer un nouveau rang y inscrit son permis (quartiers.js).
+// Les nombres sont des exemples de départ (bible), réglés par la simulation de tests/core/simulation.test.mjs. Les
+// niveaux de quartier changent cinq d'entre eux (quartiers.js) : récolte du potager et de la serre, jours de pousse,
+// places par chalet, prix d'une famille, stockage ; ils se lisent par valeur(game, réglage), jamais en dur.
 import { Ctx } from './quests.js';
 import { gameDay, toISO } from './time.js';
 import { round1 } from './reward.js';
 import { hasKey, reverseKey } from './ledger.js';
 import { rangDuVillage, RANGS } from './village.js';
 import { suivreObjectifs } from './objectifs.js';
+import { valeur, placesParChalet, permisDeRang } from './quartiers.js';
 
 /**
  * Catalogue, dans l'ordre d'affichage. cout : { energy, materials } ; rang : identifiant de RANGS ; max : emplacements
@@ -32,15 +36,18 @@ export const BATIMENT_IDS = Object.keys(BATIMENTS);
 /** Déjà debout au départ (bible §2) : la parcelle du vieux potager. Les trois chalets vides, eux, sont à rebâtir. */
 export const DEPART = { parcelle: 1 };
 
-/** Une culture mûrit après `jours` jours travaillés (une quête payée) après celui du semis, et rapporte `recolte`. */
+/**
+ * Une culture mûrit après `jours` jours travaillés (une quête payée) après celui du semis, et rapporte `recolte`. Valeurs
+ * de départ : le Garage raccourcit la pousse, les Champs et l'Atelier font monter la récolte du potager et de la serre.
+ */
 export const CULTURE = { jours: 5, recolte: 4 };
 /** Semis, en Énergie ; la petite serre se chauffe de novembre à avril (CHAUFFAGE en plus, choisi et affiché). */
 export const SEMIS = { potager: 2, serre: 2 };
 export const CHAUFFAGE = 3;
-/** Nourriture gardée au plus, et ce que le grenier ajoute. */
+/** Nourriture gardée au plus, et ce que le grenier ajoute (la Place en ajoute encore, par niveau). */
 export const STOCKAGE = 20;
 export const GRENIER_STOCKAGE = 40;
-/** Nourriture dépensée pour accueillir une famille (+1 habitant). */
+/** Nourriture dépensée pour accueillir une famille (+1 habitant), au départ (la Mairie la fait baisser). */
 export const ACCUEIL_NOURRITURE = 18;
 /** Énergie d'une éolienne, par jour travaillé. */
 export const EOLIENNE_ENERGIE = 3;
@@ -65,15 +72,17 @@ export function batimentsDuVillage(game) {
 export const compte = (game, type) => batimentsDuVillage(game).filter((b) => b.type === type).length;
 export const aBati = (game, id) => batimentsDuVillage(game).some((b) => b.id === id);
 
-/** Logements : 2 places par chalet. */
+/** Logements : 2 places par chalet au départ (plus avec l'École, placesParChalet). */
 export function logements(game) {
-  const places = compte(game, 'chalet') * BATIMENTS.chalet.loge;
+  const places = compte(game, 'chalet') * placesParChalet(game);
   const habitants = Math.max(0, Math.floor(Number(game.habitants) || 0));
   return { places, habitants, libres: Math.max(0, places - habitants) };
 }
 
-/** Nourriture gardée au plus. */
-export const stockage = (game) => STOCKAGE + GRENIER_STOCKAGE * compte(game, 'grenier');
+/** Nourriture gardée au plus, sans la Place : le départ et les greniers (l'objectif d'automne se mesure à lui). */
+export const stockageBase = (game) => STOCKAGE + GRENIER_STOCKAGE * compte(game, 'grenier');
+/** Nourriture gardée au plus : le stockage de base, plus la Place. */
+export const stockage = (game) => stockageBase(game) + valeur(game, 'stockagePlace');
 
 const mois = (day) => Number(day.slice(5, 7));
 /** Le potager produit de mai à octobre ; il dort de novembre à avril. */
@@ -83,6 +92,11 @@ const lieuDe = (id) => {
   const type = String(id).replace(/-\d+$/, '');
   return own(BATIMENTS, type) ? BATIMENTS[type].culture ?? null : null;
 };
+
+/** Nourriture d'une récolte selon le lieu : le potager suit les Champs, la petite serre suit l'Atelier. */
+export const recolteDe = (game, lieu) => valeur(game, lieu === 'serre' ? 'recolteSerre' : 'recoltePotager');
+/** Nourriture pour accueillir une famille (Mairie). */
+export const prixFamille = (game) => valeur(game, 'prixFamille');
 
 /** Coût d'un semis à cette date : { energy (total), chauffage (part du chauffage, 0 hors saison froide) }. */
 export function coutSemis(id, day) {
@@ -112,20 +126,25 @@ export function etatCulture(game, ledger, id, now) {
   const c = list(game.parcelles).find((p) => p.id === id);
   if (!c || typeof c.semeLe !== 'string') return { id, lieu, semee: false, semeLe: null, jours: 0, reste: 0, mure: false };
   const jours = joursTravailles(ledger, c.semeLe, today);
+  const pousse = valeur(game, 'joursPousse');
   const gel = lieu === 'potager' && today >= `${c.semeLe.slice(0, 4)}-11-01`;
-  const mure = gel || jours >= CULTURE.jours;
-  return { id, lieu, semee: true, semeLe: c.semeLe, jours, reste: mure ? 0 : CULTURE.jours - jours, mure };
+  const mure = gel || jours >= pousse;
+  return { id, lieu, semee: true, semeLe: c.semeLe, jours, reste: mure ? 0 : pousse - jours, mure };
 }
 
 // ───────── Raisons écrites ─────────
 
-function manque(game, cout) {
+/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials? }), en une phrase, ou null. */
+export function manque(game, cout) {
+  const p = (cout.permis || 0) - Math.max(0, Math.floor(Number(game.permis?.dispo) || 0));
   const m = round1((cout.materials || 0) - game.resources.materials);
   const e = round1((cout.energy || 0) - game.resources.energy);
   const parts = [];
+  if (p > 0) parts.push(`${p} permis`);
   if (m > 0) parts.push(`${num(m)} ${m < 2 ? 'Matériau' : 'Matériaux'}`);
   if (e > 0) parts.push(`${num(e)} Énergie`);
-  return parts.length ? `Il manque ${parts.join(' et ')}.` : null;
+  if (!parts.length) return null;
+  return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
 
 /** Pourquoi on ne peut pas construire ce bâtiment maintenant (ou null). Ordre : maximum, rang, prérequis, coût. */
@@ -166,7 +185,7 @@ export function refusAccueillir(game) {
   const l = logements(game);
   if (!l.places) return 'Il faut d’abord un chalet.';
   if (!l.libres) return 'Aucun logement libre\u00a0: rebâtis un chalet.';
-  const m = round1(ACCUEIL_NOURRITURE - game.resources.food);
+  const m = round1(prixFamille(game) - game.resources.food);
   return m > 0 ? `Il manque ${num(m)} Nourriture.` : null;
 }
 
@@ -233,28 +252,38 @@ export function recolter(tasks, game, ledger, params, now) {
   if (refus) throw new Error(refus);
   const g = structuredClone(ctx.game);
   const max = stockage(g);
-  const nourriture = round1(Math.min(CULTURE.recolte, max - g.resources.food));
+  const lieu = lieuDe(params.id);
+  const recolte = recolteDe(g, lieu);
+  const nourriture = round1(Math.min(recolte, max - g.resources.food));
   g.resources.food = round1(g.resources.food + nourriture);
   g.parcelles = list(g.parcelles).filter((p) => p.id !== params.id);
   ctx.game = g;
-  ctx.events.push({ type: 'recolte', id: params.id, lieu: lieuDe(params.id), nourriture, perdu: round1(CULTURE.recolte - nourriture), stock: g.resources.food, max });
+  ctx.events.push({ type: 'recolte', id: params.id, lieu, nourriture, perdu: round1(recolte - nourriture), stock: g.resources.food, max });
   suivreObjectifs(ctx);
   return ctx.result();
 }
 
-/** Accueille une famille : −Nourriture, +1 habitant. Événements { type: 'famille', habitants, nourriture } et, au changement de rang, { type: 'rang', id, name, habitants }. */
+/**
+ * Accueille une famille : −Nourriture, +1 habitant. Événements { type: 'famille', habitants, nourriture } et, au
+ * changement de rang, { type: 'rang', id, name, habitants } suivi du permis du nouveau rang (permis:rang:{palier},
+ * événement { type: 'permis', source: 'rang', dispo }).
+ */
 export function accueillir(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const refus = refusAccueillir(ctx.game);
   if (refus) throw new Error(refus);
   const g = structuredClone(ctx.game);
   const avant = rangDuVillage(logements(g).habitants);
-  g.resources.food = round1(g.resources.food - ACCUEIL_NOURRITURE);
+  const prix = prixFamille(g);
+  g.resources.food = round1(g.resources.food - prix);
   g.habitants = logements(g).habitants + 1;
   ctx.game = g;
-  ctx.events.push({ type: 'famille', habitants: g.habitants, nourriture: ACCUEIL_NOURRITURE });
+  ctx.events.push({ type: 'famille', habitants: g.habitants, nourriture: prix });
   const apres = rangDuVillage(g.habitants);
-  if (apres.palier > avant.palier) ctx.events.push({ type: 'rang', id: apres.id, name: apres.name, habitants: g.habitants });
+  if (apres.palier > avant.palier) {
+    ctx.events.push({ type: 'rang', id: apres.id, name: apres.name, habitants: g.habitants });
+    permisDeRang(ctx, apres.palier);
+  }
   suivreObjectifs(ctx);
   return ctx.result();
 }

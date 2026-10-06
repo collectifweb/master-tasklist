@@ -78,6 +78,22 @@ export function passageLetter(lettres, game, { prenom } = {}) {
   return { id: l.id, kind: 'passage', lignes, questId: null, seen: false };
 }
 
+/**
+ * Lettre de conversion des niveaux en permis (`lettres.conversion`) : seulement à une partie v2 d'avant les permis, qui
+ * porte `permis.cadeau` (state.js : n anciens niveaux devenus n permis), et une seule fois (markLetterShown). Le texte
+ * dépend de n : `zero`, `one` ou `other` ({n} rempli). options : { prenom }.
+ * Renvoie { id, kind: 'conversion', lignes, questId: null, seen: false } ou null.
+ */
+export function conversionLetter(lettres, game, { prenom } = {}) {
+  const l = lettres?.conversion?.[0];
+  const n = game?.permis?.cadeau;
+  if (!l || !Number.isInteger(n) || n < 0 || (game.letters ?? {})[l.id]) return null;
+  const textes = l[n === 0 ? 'zero' : n === 1 ? 'one' : 'other'] ?? [];
+  const lignes = textes.map((t) => fillText(t, { prenom: prenom || null, n }));
+  if (!lignes.length || lignes.some((x) => x === null)) return null;
+  return { id: l.id, kind: 'conversion', lignes, questId: null, seen: false };
+}
+
 /** Note la lettre montrée aujourd'hui (params.id). */
 export function markLetterShown(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);

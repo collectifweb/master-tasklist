@@ -166,7 +166,25 @@
         "J’ai changé les pancartes pendant la nuit. Au village, on compte maintenant quatre choses : l’Énergie, les Matériaux, la Nourriture et les Habitants.",
         "La Lueur et le Fil libre, c’est fini. Je les ai rangés au hangar. Ils prenaient pas de place.",
         "Tes quêtes se rangent dans six quartiers : les Champs, l’Atelier, la Mairie, l’École, le Garage et la Place du village. Celles que t’as déjà finies y sont comptées.",
+        "Tous les quatre jours de travail, la Mairie tamponne un permis. Avec lui, tu fais monter le quartier de ton choix.",
         "L’Énergie et les Matériaux repartent du stock de départ. Pour le reste, rien de perdu. J’ai recompté."
+      ]
+    }
+  ],
+  "conversion": [
+    {
+      "id": "conversion.permis",
+      "zero": [
+        "Allô, {prenom}.",
+        "Les quartiers ne montent plus tout seuls. Tous les quatre jours de travail, la Mairie tamponne un permis. À toi de choisir où il va."
+      ],
+      "one": [
+        "Allô, {prenom}.",
+        "Les quartiers ne montent plus tout seuls. Ton niveau est devenu un permis. Place-le où tu veux."
+      ],
+      "other": [
+        "Allô, {prenom}.",
+        "Les quartiers ne montent plus tout seuls. Tes {n} niveaux sont devenus {n} permis. Place-les où tu veux."
       ]
     }
   ]
