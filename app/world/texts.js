@@ -22,8 +22,6 @@ const DEFAULTS = {
   'monde.zoom.fit': 'Toute l’île',
   'monde.ctl.group': 'Commandes de la carte',
   'monde.ctl.construire': 'Construire',
-  'monde.ctl.construire.permis.one': 'Construire, 1 permis à placer',
-  'monde.ctl.construire.permis.other': 'Construire, {n} permis à placer',
   'monde.ctl.quetes': 'Quêtes',
   'monde.ctl.vue': 'Vue',
   'monde.ctl.plan': 'Carte en liste',

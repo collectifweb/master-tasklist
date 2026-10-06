@@ -33,7 +33,8 @@
   left: calc(var(--sp-2) + var(--safe-left));
   right: calc(var(--sp-2) + var(--safe-right) + var(--world-cover-right));
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* quatre ressources de même largeur, puis les permis (un petit entier) qui prennent la place de leur contenu */
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   gap: 6px;
   container: hud / inline-size;
   pointer-events: none;
@@ -487,6 +488,7 @@
 .res[data-res="materiaux"], .help-title[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
 .res[data-res="nourriture"], .help-title[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
 .res[data-res="habitants"], .help-title[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
+.res[data-res="permis"], .help-title[data-res="permis"] { --res: var(--res-permis); --res-wash: var(--res-permis-wash); }
 
 .res-tile {
   display: grid;
@@ -569,6 +571,35 @@
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
+  }
+}
+
+/* HUD étroit (téléphone) : cinq puces dans la largeur, le chiffre à 16 px (15 px sous 350 px) pour que « 206,1 » tienne */
+@media (max-width: 479px) {
+  .hud { gap: 4px; }
+}
+@container hud (max-width: 479px) {
+  .res {
+    padding: 6px 5px;
+    column-gap: 3px;
+  }
+  .res-tile .icon {
+    width: 17px;
+    height: 17px;
+  }
+  .res-value {
+    font-size: var(--text-16);
+  }
+}
+@container hud (max-width: 349px) {
+  .res {
+    padding-inline: 4px;
+  }
+  .res-value {
+    font-size: var(--text-15);
+  }
+  .res-label {
+    font-size: 0.6875rem; /* 11 px : « Nourriture » et « Matériaux » tiennent sans points de suspension */
   }
 }
 

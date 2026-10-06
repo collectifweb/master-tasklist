@@ -1,9 +1,9 @@
-// Barre de ressources : Énergie, Matériaux, Nourriture, Habitants (sans plafond). Le chiffre change « à l'impact ».
+// Barre de ressources : Énergie, Matériaux, Nourriture, Habitants et Permis (sans plafond). Le chiffre change « à l'impact ».
 import { t } from '../content.js';
 import { $, restart, setAttr } from './dom.js';
 import { num } from './format.js';
 
-const LABEL = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants' };
+const LABEL = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants', permis: 'resource.permis' };
 
 export function resourcesOf(game) {
   return {
@@ -11,6 +11,7 @@ export function resourcesOf(game) {
     materiaux: game.resources.materials,
     nourriture: game.resources.food,
     habitants: game.habitants,
+    permis: Math.max(0, Math.floor(Number(game.permis?.dispo) || 0)),
   };
 }
 
