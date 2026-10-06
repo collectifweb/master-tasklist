@@ -58,7 +58,7 @@ Le prochain rang est toujours affiché avec ce qui manque, par exemple : « Hame
 
 ### Les quartiers (tes domaines de vie)
 
-Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne compte plus pour les niveaux : le compte des quêtes par quartier reste affiché (mémoire, filtre), rien de plus.
+Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne compte plus pour les niveaux : la fiche d'un quartier et la Carte en liste montrent seulement combien de ses quêtes sont à faire, rien de plus.
 
 | Domaine | Quartier |
 |---|---|
