@@ -302,24 +302,26 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 
 ### R2 — En parallèle, chacun dans sa copie de travail
 **R2a — Cœur : gains et permis** (logique et tests seulement)
-- [ ] Gains : tests écrits d'abord, puis la formule ; simulation recalée (cibles inchangées).
-- [ ] `core/quartiers.js` : effets des niveaux, prix, refus, `monterQuartier`, `suivrePermis` ; lectures branchées dans `batiments.js` (récolte par lieu, jours de pousse, places, stockage, prix d'une famille).
-- [ ] Permis des jours travaillés, des rangs et de l'objectif de saison ; événements dédiés.
-- [ ] Conversion des niveaux en permis (parties v1 et v2, sans toucher `STATE_VERSION`) ; lettre de conversion.
-- [ ] Version 3 du client et du serveur, les six envois `client: 2` des tests de l'API passés à 3 (dont `api.test.mjs:371`), cas « version 2 refusée » ; `ECHELLE` réglée par simulation, avec un profil de quêtes longues et difficiles en plus.
-- [ ] Gains dans un premier commit à part (point de repli P1).
-- [ ] Partie neuve : le compte des jours part aussi de la veille. Niveau maximum par quartier (Garage 2) : « Niveau {n} : le plus haut pour l'instant. » ; « Déjà fait. » seulement si le niveau visé est atteint, sinon « Il faut d'abord le niveau {n}. ».
-- [ ] Partie v1 (la vraie partie à la bascule) : pas de lettre de conversion ; la lettre de passage parle des permis.
-- [ ] Lectures pour R3 : `progressionPermis`, places par chalet exportées, événements `permis` et `quartier-monte` ; script de preuve de la conversion pour R6.
+- [x] Gains : tests écrits d'abord, puis la formule ; simulation recalée (cibles inchangées).
+- [x] `core/quartiers.js` : effets des niveaux, prix, refus, `monterQuartier`, `suivrePermis` ; lectures branchées dans `batiments.js` (récolte par lieu, jours de pousse, places, stockage, prix d'une famille).
+- [x] Permis des jours travaillés, des rangs et de l'objectif de saison ; événements dédiés.
+- [x] Conversion des niveaux en permis (parties v1 et v2, sans toucher `STATE_VERSION`) ; lettre de conversion.
+- [x] Version 3 du client et du serveur, les six envois `client: 2` des tests de l'API passés à 3 (dont `api.test.mjs:371`), cas « version 2 refusée » ; `ECHELLE` réglée par simulation, avec un profil de quêtes longues et difficiles en plus.
+- [x] Gains dans un premier commit à part (point de repli P1).
+- [x] Partie neuve : le compte des jours part aussi de la veille. Niveau maximum par quartier (Garage 2) : « Niveau {n} : le plus haut pour l'instant. » ; « Déjà fait. » seulement si le niveau visé est atteint, sinon « Il faut d'abord le niveau {n}. ».
+- [x] Partie v1 (la vraie partie à la bascule) : pas de lettre de conversion ; la lettre de passage parle des permis.
+- [x] Lectures pour R3 : `progressionPermis`, places par chalet exportées, événements `permis` et `quartier-monte` ; script de preuve de la conversion pour R6.
+- *Fait le 6 octobre vers 0 h 45 (agent dans sa copie, commit des gains d6613d2 à part, commit des permis 2270f5e). Les gains seuls sont fusionnés dans `feat/village-v2` (6ae4264). Les permis sont sur la branche d’intégration `lot-r-permis` (fusion a899e26) et n’entreront dans `feat/village-v2` qu’avec R3, vert (bloc tout ou rien). Vérifié par moi sur cette branche : 363 tests `node --test` sur 363, après le recalage du test (a′) (arbitrage 10). D’après le rapport de l’agent (relu, pas relancé) : série navigateur « TOUT REUSSI » sur sa branche ; `ECHELLE` = 25 ; à ce prix, les permis s’accumulent dans la simulation (16 en main à la semaine 16).*
 
 **R2b — Interface : rabat, colonne de la carte, catalogue** [impeccable]
-- [ ] Premier commit : `overscroll-behavior-y: contain` sur `html` et `body` (le défaut qu'Alex veut voir corrigé en premier).
-- [ ] En-tête qui se touche ou se glisse (sauf ses boutons), testé au doigt (toucher émulé), pas seulement à la souris ; rien en colonne latérale.
-- [ ] Table des passages entre ouvert, replié et caché (Tout voir, en-tête, Quêtes, Échap, filtre, Aujourd'hui, Voir sur la carte) ; panneau caché inerte ; un message ou une erreur d'enregistrement reste visible quand le panneau est caché.
-- [ ] Colonne : Construire, Quêtes (état « caché »), Vue (Rapprocher, Éloigner, Toute l'île, Carte en liste) ; caméra recadrée ; plaques jamais sous la colonne.
-- [ ] Catalogue « Construire » (bâtiments) : disponible, coût, ce qui manque. Il envoie `{ type, id }` (premier emplacement libre, calculé à l'affichage) pour qu'un double toucher ne bâtisse pas deux fois ; se ferme au succès ; la caméra montre l'emplacement (quai et parcelles compris).
-- [ ] Colonne ancrée au-dessus du vrai haut du panneau ; contrôles à la main à 360×640 et 390×667 ; la démo du monde reçoit les mêmes boutons, pour que `world-s3` les mesure.
-- [ ] Scénarios mis à jour ; `world-s3` et `world-perf` relancés à la main (hors `run-ui.sh`).
+- [x] Premier commit : `overscroll-behavior-y: contain` sur `html` et `body` (le défaut qu'Alex veut voir corrigé en premier).
+- [x] En-tête qui se touche ou se glisse (sauf ses boutons), testé au doigt (toucher émulé), pas seulement à la souris ; rien en colonne latérale.
+- [x] Table des passages entre ouvert, replié et caché (Tout voir, en-tête, Quêtes, Échap, filtre, Aujourd'hui, Voir sur la carte) ; panneau caché inerte ; un message ou une erreur d'enregistrement reste visible quand le panneau est caché.
+- [x] Colonne : Construire, Quêtes (état « caché »), Vue (Rapprocher, Éloigner, Toute l'île, Carte en liste) ; caméra recadrée ; plaques jamais sous la colonne.
+- [x] Catalogue « Construire » (bâtiments) : disponible, coût, ce qui manque. Il envoie `{ type, id }` (premier emplacement libre, calculé à l'affichage) pour qu'un double toucher ne bâtisse pas deux fois ; se ferme au succès ; la caméra montre l'emplacement (quai et parcelles compris).
+- [x] Colonne ancrée au-dessus du vrai haut du panneau ; contrôles à la main à 360×640 et 390×667 ; la démo du monde reçoit les mêmes boutons, pour que `world-s3` les mesure.
+- [x] Scénarios mis à jour ; `world-s3` et `world-perf` relancés à la main (hors `run-ui.sh`).
+- *Fait le 6 octobre vers 0 h 55 (agent dans sa copie, 6 commits, fusion e35840e = point de repli P1 : R1, gains et R2b). Vérifié par moi après la fusion : 329 tests `node --test` sur 329. D’après le rapport de l’agent (relu, pas relancé) : série complète de 27 scénarios « TOUT REUSSI », `world-s3` 94 contrôles sans échec, `world-perf` inchangé. Non vérifiable ici : le vrai geste de tirer pour rafraîchir sur le téléphone d’Alex. Défauts antérieurs au lot, relevés par l’agent, pour R4 : à 360×640, la plaque de l’Atelier passe d’environ 14 px sous le haut du rabat replié ; à 844×390, le bandeau d’objectifs est tronqué ; le panneau d’erreur couvre environ 47 % de l’écran à 390.*
 
 ### R3 — Le permis à l'écran (après la fusion de R2a et R2b) [impeccable]
 - [ ] Fiche de quartier (feuille propre, ses propres identifiants) ; toucher une plaque ouvre la fiche.
