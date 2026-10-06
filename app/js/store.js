@@ -37,7 +37,7 @@ const MAX_TRIES = 6;
 function loadQueue() {
   try {
     const q = JSON.parse(localStorage.getItem(QUEUE_KEY));
-    return Array.isArray(q) ? q : [];
+    return core.withoutRetiredGestures(q); // « Je m’y mets » n'existe plus : ces gestes en file sont écartés sans message
   } catch { return []; }
 }
 /** Renvoie false si la file n'a pas pu être écrite (stockage plein ou bloqué). */

@@ -116,6 +116,14 @@ function recountQuartiers(tasks, ledger) {
 // Gestes de jeu de la v1 sans équivalent en v2 (bible §13) : écartés de la file, et nommés au joueur.
 export const V1_GAME_GESTURES = ['souffler', 'build', 'sow', 'harvest', 'storeReserve', 'shareHarvest', 'lightBrasero', 'liftVeil', 'directFil'];
 
+// Gestes retirés de la v2 (« Je m'y mets », lot R1) : un geste déjà en file sur un appareil est écarté, sans message.
+export const RETIRED_GESTURES = ['startQuest', 'pauseQuest'];
+
+/** La file hors ligne sans les gestes retirés (RETIRED_GESTURES). Fonction pure ; ne touche pas aux autres entrées. */
+export function withoutRetiredGestures(queue) {
+  return (Array.isArray(queue) ? queue : []).filter((e) => !(isObj(e) && RETIRED_GESTURES.includes(e.name)));
+}
+
 /**
  * File d'attente hors ligne de la v1 (`oree.queue.v1`) → v2, une seule fois au démarrage. `known(name)` : l'action
  * existe en v2. Gardés : les gestes connus (quêtes, bonus, tenue) avec leur opId, nom, paramètres et instant ; le corps

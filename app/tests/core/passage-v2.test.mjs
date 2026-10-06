@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  migrateState, createInitialState, isV1State, convertQueueV1, migrateGame, isV1Entry, remballerQuest, completeQuest,
+  migrateState, createInitialState, isV1State, convertQueueV1, withoutRetiredGestures, migrateGame, isV1Entry, remballerQuest, completeQuest,
   toggleStep, passageLetter, markLetterShown,
 } from '../../core/index.js';
 import { task, step } from './helpers.mjs';
@@ -190,4 +190,20 @@ test('le texte de la lettre de passage existe, sans gabarit autre que le prénom
   const text = l.lignes.join(' ');
   for (const mot of ['Énergie', 'Matériaux', 'Nourriture', 'Habitants', 'quartier']) assert.ok(text.includes(mot), mot);
   assert.equal(/[{}]/.test(text), false);
+});
+
+test('« Je m’y mets » retiré : startQuest et pauseQuest en file sont écartés sans message, le reste est gardé', () => {
+  const at = '2026-10-06T14:00:00.000Z';
+  const file = [
+    { opId: 'a1', name: 'startQuest', params: { id: 'a' }, at },
+    { opId: 'a2', name: 'completeQuest', params: { id: 'a' }, at },
+    { opId: 'a3', name: 'pauseQuest', params: { id: 'a' }, at },
+    null, 'abîmée',
+  ];
+  assert.deepEqual(withoutRetiredGestures(file).filter((e) => e && typeof e === 'object').map((e) => e.opId), ['a2']);
+  assert.deepEqual(withoutRetiredGestures('pas une file'), []);
+  // file de la v1 : ces noms n'existent plus, ils sont écartés sans aller dans la liste des gestes nommés au joueur
+  const known = (n) => n === 'completeQuest';
+  assert.deepEqual(convertQueueV1(file, known).dropped, []);
+  assert.deepEqual(convertQueueV1(file, known).queue.map((e) => e.opId), ['a2']);
 });
