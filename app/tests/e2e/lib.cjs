@@ -89,7 +89,8 @@ async function launch() {
  * Contrôle commun, exécuté dans la page : le Fil du jour est-il cohérent ?
  * - quête affichée : titre non vide et visible, boutons visibles, qui visent une quête qui existe ;
  * - aucune quête : l'état vide s'affiche et les boutons sont cachés ;
- * - la coquille (#app) et le panneau replié ne défilent jamais tout seuls.
+ * - la coquille (#app) et le panneau replié ne défilent jamais tout seuls ;
+ * - panneau caché (bouton « Quêtes » de la carte) : le Fil n'a pas à être visible, mais le panneau doit être inert.
  * Renvoie la liste des anomalies (vide = tout va bien).
  */
 const FIL_CHECK = () => {
@@ -100,18 +101,20 @@ const FIL_CHECK = () => {
   const app = $('app'), ps = $('panel-scroll'), art = $('fil-quest'), empty = $('fil-empty');
   if (app.scrollTop || document.documentElement.scrollTop || document.body.scrollTop) errs.push(`la coquille a défilé (${app.scrollTop})`);
   const peek = app.dataset.panel === 'peek' && getComputedStyle(ps).overflowY !== 'auto'; // replié ET en disposition compacte (le panneau latéral défile)
+  const cache = app.dataset.panel === 'cache';
+  if (cache && !$('panel').inert) errs.push('panneau caché mais pas inert');
   if (peek && ps.scrollTop) errs.push(`le panneau replié a défilé (${ps.scrollTop})`);
   const complete = art.querySelector('[data-action="complete"]');
   if (!art.hidden) {
     const title = art.querySelector('.fil-title');
     const tx = (title.textContent || '').trim();
     if (!tx) errs.push('Fil du jour : titre vide');
-    if (!shown(art) || !shown(title)) errs.push('Fil du jour : titre invisible');
+    if (!cache && (!shown(art) || !shown(title))) errs.push('Fil du jour : titre invisible');
     else if (peek) {
       const r = title.getBoundingClientRect(), top = ps.getBoundingClientRect().top;
       if (r.top < top - 1 || r.bottom > window.innerHeight + 1) errs.push(`Fil du jour : titre hors de la zone visible (${Math.round(r.top)}..${Math.round(r.bottom)})`);
     }
-    if (!shown(complete)) errs.push('Fil du jour : bouton « Fait » invisible');
+    if (!cache && !shown(complete)) errs.push('Fil du jour : bouton « Fait » invisible');
     if (peek && shown(complete) && complete.getBoundingClientRect().bottom > window.innerHeight + 1) errs.push(`Fil du jour : « Fait » sous le bord de l'écran (${Math.round(complete.getBoundingClientRect().bottom)})`);
     const id = art.dataset.taskId;
     if (!id) errs.push('Fil du jour : aucune quête visée');
@@ -119,7 +122,7 @@ const FIL_CHECK = () => {
     if (id && !filtered && !document.querySelector(`#quest-list > li[data-task-id="${CSS.escape(id)}"]`)) errs.push(`Fil du jour : la quête visée (${id}) n'est pas dans la liste`);
     if (!(complete.getAttribute('aria-label') || '').includes(tx)) errs.push('Fil du jour : « Fait » ne nomme pas la quête');
   } else {
-    if (!shown(empty)) errs.push('aucune quête : l\'état vide ne s\'affiche pas');
+    if (!cache && !shown(empty)) errs.push('aucune quête : l\'état vide ne s\'affiche pas');
     if (shown(complete)) errs.push('aucune quête : le bouton « Fait » reste visible');
     if (!$('alts').hidden) errs.push('aucune quête : les alternatives restent affichées');
   }
@@ -233,12 +236,30 @@ async function closeWelcome(page, ms = 2500) {
   return closed;
 }
 
-/** Ouvre le panneau en compact (la liste n'est visible qu'ouverte). */
+/** Ouvre le panneau en compact (la liste n'est visible qu'ouverte) ; caché par « Quêtes », il revient d'abord. */
 async function openPanel(page) {
+  if (await page.evaluate(() => document.getElementById('app').dataset.panel === 'cache')) {
+    await page.click('[data-ow="quetes"]');
+    await page.waitForTimeout(450);
+  }
   const open = await page.evaluate(() => document.getElementById('app').dataset.panel === 'open');
   const visible = await page.locator('.panel-toggle').isVisible();
   if (visible && !open) await page.click('.panel-toggle');
   await page.waitForTimeout(450);
+}
+
+/**
+ * Ouvre la carte en liste par la colonne de la carte : « Vue », puis « Carte en liste ». En compact, le panneau ouvert
+ * recouvre la colonne : il se replie d'abord, comme le ferait le joueur.
+ */
+async function openPlan(page) {
+  await page.waitForSelector('[data-ow="vue"]', { timeout: 8000 });
+  if (await page.evaluate(() => document.getElementById('app').dataset.panel === 'open') && await page.locator('.panel-toggle').isVisible()) {
+    await page.click('.panel-toggle');
+    await page.waitForTimeout(450);
+  }
+  if (await page.getAttribute('[data-ow="vue"]', 'aria-expanded') !== 'true') await page.click('[data-ow="vue"]');
+  await page.click('[data-ow="plan"]');
 }
 
 /** Le bilan du dimanche est déjà passé sur cet appareil aujourd'hui (scénarios « calmes »). */
@@ -342,4 +363,4 @@ const rect = (page, sel) => page.evaluate((s) => {
   return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom };
 }, sel);
 
-module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, chromium, quietState, closeWelcome, VOICES, said, voice };
+module.exports = { FIL_CHECK, runScenario, resValue, rect, SIZES: sizes, SHOTS, REPO, startServer, launch, newPage, reporter, waitFor, ready, openPanel, openPlan, chromium, quietState, closeWelcome, VOICES, said, voice };

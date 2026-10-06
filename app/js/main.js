@@ -17,6 +17,7 @@ import {
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, coutText } from './ui/batiment.js';
+import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -55,6 +56,7 @@ const story = createStory({
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
+  showPanel(); // panneau caché : il revient replié avant que le focus y entre
   const done = $('#fil-quest:not([hidden]) [data-action="complete"]');
   (done || $('.panel-head [data-action="add"]')).focus();
 }
@@ -83,6 +85,7 @@ function renderAll({ deferHud = false } = {}) {
   else { clearTimeout(hudTimer); hud.render(c.game, { animate: true }); }
   if (world) world.render(c.game, c.tasks, c.ledger);
   refreshBatiment(c); // après le monde : la fiche reprend son dessin dans le nouvel état
+  if (world) refreshCatalogue(c, { slots: () => world.batiments(c.game, c.ledger) });
   if (worldPlan && $('#dlg-plan').open) worldPlan.render(c.game, c.tasks, c.ledger);
 }
 const panelDate = (now) => new Intl.DateTimeFormat('fr-CA', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Montreal' })
@@ -213,8 +216,10 @@ store.on('change', (payload) => {
     });
   }
 });
-store.on('sync', (s) => sync.set(s));
-store.on('notice', (n) => sync.notice(n));
+// Un message court ou une erreur d'enregistrement (« Réessayer ») vit dans la zone d'état du panneau : panneau caché,
+// il revient replié avant que le texte s'écrive, pour être vu et lu. « Enregistrement… » et « Enregistré » ne le font pas.
+store.on('sync', (s) => { if (s && (s.state === 'error' || s.state === 'offline')) showPanel(); sync.set(s); });
+store.on('notice', (n) => notice(n));
 const askToken = (locked = 0) => openToken(
   // pendant un blocage, le nouveau code attend : la feuille se rouvre avec le temps qui reste
   () => (store.lockLeft() ? askToken(store.lockLeft()) : started ? store.retryNow() : start()),
@@ -231,7 +236,7 @@ function run(action, params) {
   try {
     r = store.do(action, params);
   } catch (err) {
-    sync.notice({ kind: 'info', text: err.message });
+    notice({ kind: 'info', text: err.message });
     return null;
   }
   if (AFTER_TIME.has(action)) advanceTime();
@@ -242,14 +247,59 @@ function advanceTime() {
 }
 
 // ───────── Panneau ─────────
-function setPanel(open) {
-  app.dataset.panel = open ? 'open' : 'peek';
+// Trois états : 'open' (ouvert), 'peek' (replié : le Fil du jour), 'cache' (caché par « Quêtes » : la carte prend tout
+// l'écran ; le panneau est inert). true / false valent 'open' / 'peek'. Table des passages :
+//   « Tout voir » / « Replier »    replié ↔ ouvert (hors d'atteinte quand il est caché)
+//   en-tête, compact seulement     toucher : replié ↔ ouvert ; glisser vers le haut : ouvert ; vers le bas : replié
+//   « Quêtes » (carte)             ouvert ou replié → caché ; caché → replié
+//   Échap                          ouvert → replié, focus sur « Tout voir » (rien si une feuille est ouverte)
+//   filtre par quartier            tout état → ouvert
+//   « Aujourd'hui », retour au Fil caché → replié avant que le focus entre ; sinon inchangé
+//   « Voir sur la carte »          ouvert → replié ; replié et caché inchangés
+//   focus clavier entrant          replié → ouvert s'il tombe hors de la partie visible ; caché : impossible (inert)
+//   message court, erreur          caché → replié avant que le texte s'écrive
+function setPanel(state) {
+  state = state === true ? 'open' : state === false ? 'peek' : state;
+  const open = state === 'open';
+  app.dataset.panel = state;
+  $('#panel').inert = state === 'cache';
   if (open) bandeau.toggle(false); // la carte des objectifs dépliée passerait sous le panneau
   const toggle = $('[data-action="toggle-panel"]');
   toggle.setAttribute('aria-expanded', String(open));
   setText($('.panel-toggle-label', toggle), open ? t('panel.less') : t('panel.more'));
   if (!open) $('#panel-scroll').scrollTop = 0;
+  if (world) world.setQuestsShown(state !== 'cache');
 }
+/** Panneau caché : il revient replié (avant un focus ou un message qui doit être vu). */
+function showPanel() {
+  if (app.dataset.panel === 'cache') setPanel('peek');
+}
+/** Message court dans la zone d'état du panneau, montrée d'abord si le panneau était caché. */
+function notice(n) {
+  showPanel();
+  sync.notice(n);
+}
+
+// En-tête du rabat (disposition compacte, la même requête que le CSS) : un toucher n'importe où hors des boutons
+// déplie ou replie ; un glissement vers le haut ouvre, vers le bas replie. Les boutons gardent leur seule action.
+const LARGE = matchMedia('(min-width: 1000px), (min-width: 700px) and (orientation: landscape)');
+const SWIPE_PX = 8; // en deçà, c'est un toucher ; au-delà, un glissement
+let headDown = null;
+const head = $('.panel-head');
+head.addEventListener('pointerdown', (e) => {
+  if (LARGE.matches || app.dataset.panel === 'cache' || e.button !== 0) return;
+  if (e.target.closest('button, a, input, select, textarea')) return;
+  headDown = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  try { head.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+});
+head.addEventListener('pointerup', (e) => {
+  if (!headDown || e.pointerId !== headDown.id) return;
+  const dx = e.clientX - headDown.x, dy = e.clientY - headDown.y;
+  headDown = null;
+  if (Math.hypot(dx, dy) <= SWIPE_PX) setPanel(app.dataset.panel !== 'open');
+  else if (Math.abs(dy) > Math.abs(dx)) setPanel(dy < 0);
+});
+head.addEventListener('pointercancel', () => { headDown = null; });
 
 // Panneau replié : si le clavier envoie le focus sur un élément qui dépasse la partie visible, on ouvre le panneau
 // plutôt que de laisser le contenu glisser sous l'en-tête.
@@ -303,6 +353,13 @@ function openPlan() {
   openSheet($('#dlg-plan'));
   worldPlan.focus();
 }
+/** Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi. */
+let catalogueAt = 0;
+function openConstruire() {
+  if (!world || !store.view) return;
+  const c = ctx();
+  openCatalogue(c, { slots: () => world.batiments(c.game, c.ledger), thumb: (type) => world.thumbType(type), open: openSheet });
+}
 
 // ───────── Clics ─────────
 const idOf = (el) => (el.closest('[data-task-id]') || {}).dataset?.taskId || null;
@@ -337,7 +394,7 @@ document.addEventListener('click', (e) => {
   const task = findTask(id);
 
   if (disabled(target) && ['complete', 'split', 'archive', 'unarchive', 'delete', 'reopen', 'remballer'].includes(action)) {
-    if (task && task.readonly) sync.notice({ kind: 'info', text: t('readonly.reason') });
+    if (task && task.readonly) notice({ kind: 'info', text: t('readonly.reason') });
     return;
   }
 
@@ -355,7 +412,6 @@ document.addEventListener('click', (e) => {
       touchFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2, at: Date.now() };
       return run('completeQuest', { id });
     }
-    case 'open-plan': return openPlan();
     case 'open-settings': return story.openSettings();
     case 'open-review': return story.openReview();
     case 'review-keep': case 'review-archive': return story.reviewAction(action, target.dataset.id);
@@ -398,6 +454,16 @@ document.addEventListener('click', (e) => {
     case 'notice-close': return sync.closeNotice();
     case 'reload': return start();
     case 'jour-suivant': return jourSuivant();
+    case 'cat-construire': {
+      // un double toucher ne bâtit pas deux fois, et ne lit pas le refus de la ligne déjà mise à jour
+      if (Date.now() - catalogueAt < 800) return;
+      if (disabled(target)) return announce.say($(`#cat-${target.dataset.type}-etat`).textContent.trim());
+      catalogueAt = Date.now();
+      const bid = target.dataset.id;
+      if (!run('construire', { type: target.dataset.type, id: bid })) return;
+      closeSheet($('#dlg-construire'));
+      return world && world.focusEntity(bid); // la carte montre le bâtiment neuf (mouvement réduit respecté)
+    }
     case 'bat-geste': {
       // geste impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran
       if (disabled(target)) return announce.say(($(`#${target.getAttribute('aria-describedby')}`) || target).textContent.trim());
@@ -419,6 +485,7 @@ function goToday() {
   // la quête est au Fil du jour : son « Fait » est là, la carte s'éclaire un instant et « Fait » prend le focus
   const fil = $('#fil-quest:not([hidden])');
   if (fil && fil.dataset.taskId === id) {
+    showPanel();
     $('[data-action="complete"]', fil).focus();
     restart(fil, 'is-pointed');
     return;
@@ -458,12 +525,13 @@ document.addEventListener('submit', (e) => {
   } else if (e.target.id === 'fiche-form') {
     e.preventDefault();
     const r = readFiche(ctx());
-    if (r.error) { sync.notice({ kind: 'info', text: r.error }); return; }
+    if (r.error) { notice({ kind: 'info', text: r.error }); return; }
     if (!Object.keys(r.patch).length || run('updateQuest', r)) closeSheet($('#dlg-fiche'));
   }
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'fiche-step-new') { e.preventDefault(); addStepFromInput($('#dlg-fiche').dataset.taskId); }
+  if (e.key === 'Escape' && e.defaultPrevented) return; // déjà traitée (rangée « Vue » de la carte, animation…)
   if (e.key === 'Escape' && $('#bandeau').dataset.open === 'true' && !document.querySelector('dialog[open]')) {
     bandeau.toggle(false);
     $('.bandeau-more').focus();
@@ -519,6 +587,12 @@ async function start() {
     announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,
+    panelId: 'panel',
+    controls: {
+      build: openConstruire,
+      quests: () => setPanel(app.dataset.panel === 'cache' ? 'peek' : 'cache'),
+      plan: openPlan,
+    },
   }).then((w) => {
     world = w;
     setTimeout(() => story.welcome(), world ? 400 : 0);
@@ -527,12 +601,11 @@ async function start() {
     const host = $('#dlg-plan');
     host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('plan.close'))}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
     worldPlan = world.plan($('#plan-host'), {
-      onFocusSector: (id) => { closeSheet(host); setPanel(false); world.focusSector(id); },
+      onFocusSector: (id) => { closeSheet(host); if (app.dataset.panel === 'open') setPanel(false); world.focusSector(id); },
       onFilter: (id) => { closeSheet(host); filterByQuartier(id); },
       onBatiment: (id) => openBatimentSheet(id),
     });
     host.setAttribute('aria-labelledby', $('#plan-host .ow-plan-title').id);
-    $('[data-action="open-plan"]').hidden = false;
   });
 }
 

@@ -77,9 +77,10 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
   await page.keyboard.press('Escape');
   R.check('Échap ferme la fiche', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-batiment').open), 2000));
 
-  // ───── au clavier : Carte en liste → chalet → Entrée → geste → Entrée
-  await L.openPanel(page);
-  await page.focus('[data-action="open-plan"]');
+  // ───── au clavier : Vue → Carte en liste (colonne de la carte) → chalet → Entrée → geste → Entrée
+  await page.focus('[data-ow="vue"]');
+  await page.keyboard.press('Enter');
+  await page.focus('[data-ow="plan"]');
   await page.keyboard.press('Enter');
   R.check('« Carte en liste » s’ouvre au clavier', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-plan').open), 2000));
   const rows = await page.evaluate(() => [...document.querySelectorAll('#dlg-plan .ow-plan-bat')].map((li) => ({

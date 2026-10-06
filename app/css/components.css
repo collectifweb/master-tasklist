@@ -70,6 +70,22 @@
 .app[data-panel="peek"] .panel {
   transform: translateY(calc(100% - var(--panel-peek) - var(--safe-bottom)));
 }
+/* Haut réel de la feuille repliée (zone d'état comprise) : la colonne des commandes de la carte se pose dessus */
+.app {
+  --world-ctl-bottom: calc(var(--panel-peek) + var(--safe-bottom));
+}
+/* Panneau caché (bouton « Quêtes » de la carte) : la carte prend tout l'écran ; le panneau sort du champ, puis
+   devient invisible (et inert, posé par main.js) une fois sorti. */
+.app[data-panel="cache"] {
+  --world-ctl-bottom: var(--safe-bottom);
+  --world-cover-bottom: 0px;
+  --world-cover-right: 0px;
+}
+.app[data-panel="cache"] .panel {
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: transform var(--t-medium) var(--ease-out), visibility 0s linear var(--t-medium);
+}
 
 .panel-grip {
   position: absolute;
@@ -88,6 +104,12 @@
   align-items: center;
   gap: var(--sp-1);
   padding: 16px calc(var(--gutter) - var(--sp-2)) 0 var(--gutter);
+}
+@media (max-width: 999px) and (not ((min-width: 700px) and (orientation: landscape))) {
+  /* en-tête du rabat : un toucher le déplie ou le replie, un glissement l'ouvre ou le referme (main.js) */
+  .panel-head {
+    touch-action: none;
+  }
 }
 .panel-title {
   flex: 1;
@@ -205,6 +227,16 @@
   .app[data-panel] .panel-rest {
     visibility: visible;
     opacity: 1;
+  }
+  /* colonne cachée : elle glisse vers la droite ; la carte et le HUD reprennent sa largeur */
+  .app {
+    --world-ctl-bottom: var(--safe-bottom);
+  }
+  .app[data-panel="cache"] .panel {
+    transform: translateX(100%);
+  }
+  .app[data-panel="cache"] .panel-rest {
+    visibility: hidden;
   }
 }
 

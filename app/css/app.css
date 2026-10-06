@@ -292,6 +292,61 @@
 }
 .bat-foot[hidden] { display: none; }
 
+/* Catalogue « Construire » : les lignes de la carte en liste (.ow-plan-bat), avec le dessin du bâtiment debout à gauche */
+.cat-body {
+  gap: 0;
+}
+.cat-intro {
+  margin-bottom: var(--sp-4);
+  color: var(--text-soft);
+}
+.cat-body .cat-section {
+  margin-top: 0;
+}
+.cat-row {
+  flex-wrap: nowrap;
+  min-height: calc(var(--target) + 2 * var(--sp-2));
+}
+.cat-thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  background: var(--c-sage-wash);
+}
+.cat-thumb svg { width: 44px; height: 44px; overflow: visible; }
+.cat-row[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
+.cat-etat {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.cat-etat .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.cat-row[data-etat="libre"] .cat-etat {
+  font-weight: var(--w-semibold);
+  color: var(--c-sage-deep);
+}
+.cat-row[data-etat="libre"] .cat-etat .icon { color: currentColor; }
+.cat-go { flex: none; }
+/* très étroit (360 px) : le bouton passe sous le texte plutôt que d'écraser le nom */
+@media (max-width: 380px) {
+  .cat-row { flex-wrap: wrap; }
+  .cat-row .ow-plan-bat-text { flex-basis: calc(100% - 52px - var(--sp-3)); }
+  .cat-go { margin-left: calc(52px + var(--sp-3)); }
+}
+
 /* ───────── Lettre du matin ───────── */
 .letter-title {
   display: flex;

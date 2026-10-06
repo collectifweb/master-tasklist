@@ -81,7 +81,7 @@ L.runScenario('12. monde : fil de lumière, impact, niveau de quartier, repos', 
   await page.locator('.chip[data-quartier="champs"]').click(); // retire le filtre
 
   // carte en liste : un quartier par ligne, son niveau, deux boutons
-  await page.click('[data-action="open-plan"]');
+  await L.openPlan(page);
   await page.waitForSelector('#dlg-plan[open]');
   await page.waitForTimeout(500);
   R.check('la carte en liste s’ouvre et nomme les six quartiers', /Carte en liste/.test(await page.textContent('#dlg-plan')) && (await page.locator('#dlg-plan .ow-plan-sectors > li').count()) === 6);
@@ -90,7 +90,7 @@ L.runScenario('12. monde : fil de lumière, impact, niveau de quartier, repos', 
   await page.locator('#dlg-plan .ow-plan-quests[data-sector="champs"]').click();
   R.check('« Ses quêtes » referme la carte en liste et filtre la liste', await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-plan').open && document.querySelector('.chip[data-quartier="champs"]').getAttribute('aria-pressed') === 'true'), 2000));
   await page.locator('.chip[data-quartier="champs"]').click();
-  await page.click('[data-action="open-plan"]');
+  await L.openPlan(page);
   await page.waitForSelector('#dlg-plan[open]');
   await page.waitForTimeout(400);
   await page.locator('#dlg-plan .ow-plan-sectors button').first().click();
