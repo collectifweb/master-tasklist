@@ -544,7 +544,7 @@ Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille d
 
 ## Lot I — Imprévus : première série
 
-Référence : bible §8 (imprévus), §9 (retour après une absence), §6 (saisons), §14 (semaines 3 et 4) ; `PRODUCT.md` (aléas récupérables, lignes 41 à 43 et 60) ; revue d'octobre, `docs/revue-2026-10/DIRECTIONS.md` (« spirale de culpabilité », lignes 778 à 784 ; les Avis, lignes 1170 à 1180). **Statut : proposé le 6 octobre 2026 au soir, à valider par Alex. Le code se fera dans une autre session.**
+Référence : bible §8 (imprévus), §9 (retour après une absence), §6 (saisons), §14 (semaines 3 et 4) ; `PRODUCT.md` (aléas récupérables, lignes 41 à 43 et 60) ; revue d'octobre, `docs/revue-2026-10/DIRECTIONS.md` (« spirale de culpabilité », lignes 778 à 784 ; les Avis, lignes 1170 à 1180). **Statut : validé par Alex le 6 octobre 2026 au soir** (réponses en fin de section). Le code se fait dans une autre session.
 
 Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin sur l'île, la voix de Fanal, les réparations. Hors du lot :
 - tempête de neige, alertes météo annoncées d'avance avec leur barre de préparation, tour de guet, garage à chasse-neige : lot de l'hiver, à livrer avant le 1er décembre (bible §14) ;
@@ -609,4 +609,4 @@ Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin s
 4. **Allure** : tout le monde à « régulier » dans ce lot, les trois allures dans un lot à part ?
 5. **Envoi** : directement en production, comme le marchand (un imprévu peut tomber dès le lendemain) ?
 
-**Réponses d'Alex (6 octobre, soir)** : 1. deux par semaine au plus, le premier toujours bon, le second à pile ou face ; 2. oui à la troisième voie (une vraie quête du bon domaine répare gratuitement) ; 5. envoi direct en production. Questions 3 et 4 : réexpliquées, en attente.
+**Réponses d'Alex (6 octobre, soir)** : 1. deux par semaine au plus, le premier toujours bon, le second à pile ou face ; 2. oui à la troisième voie (une vraie quête du bon domaine répare gratuitement) ; 5. envoi direct en production. 3 et 4 : « à ta convenance » ; lots séparés, dans cet ordre : imprévus (ce lot), puis l'hiver (tempête de neige, alertes annoncées, objectif d'hiver ; avant le 1er décembre), puis l'allure du village. Raisons : chaque morceau arrive plus tôt en production, une relecture couvre un lot de taille moyenne, un retour arrière ne retire qu'un morceau. **Plan validé.**
