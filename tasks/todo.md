@@ -397,16 +397,20 @@ Alex a joué sur l'essai après l'envoi du lot R, jusqu'au jour de jeu 42 (déca
 10. Rabat à 360×640 accepté.
 11. Ordre : lot R2 ci-dessous, essai, puis lot 8 (bascule), puis visiteurs et imprévus.
 
-Idée nouvelle d'Alex : un bonus quand la semaine présentée au bilan est complète (« 7 jours actifs donnent X ressources »). Ma recommandation, en attente de son accord : « Semaine tenue » à 5 jours travaillés sur 7, payée en Matériaux, sans compteur de jours consécutifs (revue d'octobre, `docs/revue-2026-10/RECOMMANDATION.md:37` : « compteur cumulatif, jamais de série »). Sur les 5 semaines finies de l'essai (6, 7, 7, 5 et 6 jours travaillés), une règle à 7 sur 7 aurait payé 2 semaines, une règle à 5 sur 7 les 5.
+Idée nouvelle d'Alex : un bonus quand la semaine présentée au bilan est complète (« 7 jours actifs donnent X ressources »). **Accord d'Alex (6 octobre, matin) : « Semaine tenue » à 5 jours sur 7, bonus dès le 5e jour travaillé.** Recommandation retenue : « Semaine tenue » à 5 jours travaillés sur 7, payée en Matériaux, sans compteur de jours consécutifs (revue d'octobre, `docs/revue-2026-10/RECOMMANDATION.md:37` : « compteur cumulatif, jamais de série »). Sur les 5 semaines finies de l'essai (6, 7, 7, 5 et 6 jours travaillés), une règle à 7 sur 7 aurait payé 2 semaines, une règle à 5 sur 7 les 5.
 
 ## Lot R2 — Équilibrage, réglages, semaine tenue (avant le lot 8)
 
-À faire valider par Alex avant de commencer. Rien en production : tout part sur l'essai.
+Validé par Alex le 6 octobre au matin, avec l'orchestration de plusieurs agents (« Ultra Code »). Rien en production : tout part sur l'essai.
+
+Ordre : vague 1 en parallèle, R2a (cœur) et R2b-1 (Réglages, compteur Permis, fiche de quartier), chacune relue et contre-vérifiée ; fusion ; vague 2, R2b-2 (affichage de la semaine tenue, deuxième serre à l'écran, répliques de Fanal) ; relecture indépendante à plusieurs regards ; série complète, documents, essai.
+
+Cible d'équilibrage choisie par moi (à dire à Alex) : au rythme mesuré sur l'essai (1 à 2 quêtes par jour aux valeurs par défaut, 7 points), premier niveau acheté vers le jour 21 ; les cibles (a) à (f) de la simulation tiennent.
 
 ### R2a — Économie (logique seule)
 - [ ] Prix des niveaux inversé dans `core/quartiers.js` (`coutNiveau`) ; tests de `quartiers.test.mjs` mis à jour.
 - [ ] Deuxième serre : `max: 2` pour la serre, la seconde au rang Hameau (règle par exemplaire, raison écrite « Il faut d'abord le rang Hameau ») ; semis, récolte, chauffage et effet de l'Atelier valables pour `serre-2` ; un emplacement de plus sur l'île (`world/layout.js`, le test de correspondance des emplacements suit).
-- [ ] Semaine tenue (si Alex est d'accord) : au 5e jour travaillé d'une semaine (lundi au dimanche), une entrée au registre `semaine:{lundi}` (unique, rejouable sans doublon), payée en Matériaux ; le bilan de la semaine l'affiche. Montant réglé par la simulation.
+- [ ] Semaine tenue : au 5e jour travaillé d'une semaine (lundi au dimanche), une entrée au registre `semaine:{lundi}` (unique, rejouable sans doublon), payée en Matériaux ; le bilan de la semaine l'affiche. Montant réglé par la simulation.
 - [ ] `tests/core/simulation.test.mjs` relancée et recalée : premier niveau acheté, permis en main, usage de l'Énergie, au rythme d'Alex (1 à 2 quêtes par jour) et au rythme régulier. Chiffres refaits par moi avant d'être donnés à Alex.
 
 ### R2b — Interface
