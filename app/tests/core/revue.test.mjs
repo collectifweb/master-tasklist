@@ -182,7 +182,7 @@ test('gel : modifier P/L/D d’une quête de plus de 24 h fige d’abord les anc
   assert.deepEqual({ ...u.world.tasks[0].frozen, at: 0 }, { priority: 3, length: 2, difficulty: 2, at: 0 });
   assert.ok(upsert(u.r)[0].frozen);
   const f = step(u.world, completeQuest, { id: 'g' }, plusHours(T0, 0.01));
-  assert.equal(f.r.entries.find((e) => e.type === 'reward').pe, 8 + 2 * Math.floor(10 / 14) /* ancienneté 10 j : 0 */);
+  assert.equal(f.r.entries.find((e) => e.type === 'reward').pe, 6 + 2 * Math.floor(10 / 14) /* P3 L2 D2 ; ancienneté 10 j : 0 */);
 });
 
 test('gel : « Bon fil » lit la priorité gelée, pas la priorité courante', () => {
@@ -215,11 +215,11 @@ test('une étape ne paie rien si la quête a déjà été récompensée (même a
 test('bonus ×1,2 : il faut 48 h réelles entre la pose de l’échéance et la fin, et finir au plus tard le jour dit', () => {
   const base = { priority: 10, length: 10, difficulty: 10, deadline: '2026-10-10', created: '2026-10-06' };
   const pe = (setAt, now = T0) => questPe(task({ ...base, deadlineSetAt: setAt }), now).pe;
-  assert.equal(pe('2026-10-04T14:00:00Z'), 30); // 48 h pile
-  assert.equal(pe('2026-10-04T14:00:01Z'), 25); // 47 h 59 min 59 s
-  assert.equal(pe('2026-10-06T13:59:00Z'), 25); // posée il y a une minute
-  assert.equal(pe('2026-10-04T14:00:00Z', '2026-10-10T20:00:00Z'), 30); // le jour de l'échéance
-  assert.equal(pe('2026-10-04T14:00:00Z', '2026-10-11T14:00:00Z'), 25); // après
+  assert.equal(pe('2026-10-04T14:00:00Z'), 80); // 48 h pile : 67 × 1,2
+  assert.equal(pe('2026-10-04T14:00:01Z'), 67); // 47 h 59 min 59 s
+  assert.equal(pe('2026-10-06T13:59:00Z'), 67); // posée il y a une minute
+  assert.equal(pe('2026-10-04T14:00:00Z', '2026-10-10T20:00:00Z'), 80); // le jour de l'échéance
+  assert.equal(pe('2026-10-04T14:00:00Z', '2026-10-11T14:00:00Z'), 67); // après
   assert.equal(bonusPe(task({ ...base }), 25, T0).deadline, 0); // jamais posée : pas de bonus
 });
 
@@ -227,7 +227,7 @@ test('bonus ×1,2 : poser une échéance puis terminer aussitôt ne donne rien',
   const w = fresh([task({ id: 'p', priority: 7, length: 7, difficulty: 5, created: '2026-10-06' })]);
   let s = step(w, updateQuest, { id: 'p', patch: { deadline: '2026-10-09' } });
   s = step(s.world, completeQuest, { id: 'p' }, plusHours(T0, 0.01));
-  assert.equal(s.r.entries.find((e) => e.type === 'reward').pe, 17);
+  assert.equal(s.r.entries.find((e) => e.type === 'reward').pe, 30); // P7 L7 D5, sans bonus
 });
 
 // 10
@@ -255,7 +255,7 @@ test('remballer annule exactement le gain : sans plafond de stock, rien n’est 
   const w = fresh([task({ id: 's', priority: 10, length: 10, difficulty: 10 })]);
   w.game.resources = { energy: 40, materials: 150, food: 5 };
   let s = step(w, completeQuest, { id: 's' });
-  assert.deepEqual(s.world.game.resources, { energy: 49.5, materials: 162.5, food: 5 }); // +7,5 ⚡ +12,5 ▣ et « Bon fil » +2 ⚡
+  assert.deepEqual(s.world.game.resources, { energy: 58.8, materials: 178, food: 5 }); // 67 PE dont 56 comptés : +16,8 ⚡ +28 ▣ et « Bon fil » +2 ⚡
   s = step(s.world, remballerQuest, { id: 's' }, plusHours(T0, 0.1));
   assert.deepEqual(s.world.game.resources, { energy: 40, materials: 150, food: 5 });
   assert.equal(s.world.game.quartiers.atelier, 0);

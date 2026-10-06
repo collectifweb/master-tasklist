@@ -6,14 +6,20 @@ import {
 } from '../../core/index.js';
 import { T0, task, plusHours } from './helpers.mjs';
 
-test('Points d’effort : P6 L1 D1 = 6 ; P7 L7 D5 = 17 ; P10 L10 D10 = 25', () => {
-  assert.equal(effortPoints(6, 1, 1), 6);
-  assert.equal(effortPoints(7, 7, 5), 17);
-  assert.equal(effortPoints(10, 10, 10), 25);
+test('Points d’effort : P9 L2 D2 = 7 ; P9 L9 D9 = 55 ; P5 L5 D5 = 20 ; P3 L1 D1 = 3 ; P10 L10 D10 = 67', () => {
+  assert.equal(effortPoints(9, 2, 2), 7);
+  assert.equal(effortPoints(9, 9, 9), 55);
+  assert.equal(effortPoints(5, 5, 5), 20);
+  assert.equal(effortPoints(3, 1, 1), 3);
+  assert.equal(effortPoints(10, 10, 10), 67);
 });
 
-test('Points d’effort : +2 si difficulté 7 ou plus seulement', () => {
-  assert.ok(effortPoints(5, 4, 7) > effortPoints(5, 4, 6));
+test('Points d’effort : l’effort paie, une longue et difficile vaut plus que cinq courtes et faciles', () => {
+  assert.ok(effortPoints(9, 9, 9) > 5 * effortPoints(9, 2, 2));
+  // proportionnel à la longueur, multiplié par la difficulté, petite prime de priorité
+  assert.ok(effortPoints(5, 8, 5) > effortPoints(5, 4, 5));
+  assert.ok(effortPoints(5, 5, 9) > effortPoints(5, 5, 6));
+  assert.ok(effortPoints(10, 5, 5) > effortPoints(1, 5, 5));
 });
 
 test('gel de P/L/D : à la première étape, ou 24 h après la création', () => {
@@ -44,18 +50,18 @@ test('freezeValues, effectiveValues et applyFreeze', () => {
 test('bonus : ×1,2 si finie avant une échéance posée 48 h plus tôt', () => {
   const t = task({ priority: 10, length: 10, difficulty: 10, deadline: '2026-10-10', deadlineSetAt: '2026-10-03T10:00:00Z', created: '2026-10-06' });
   const q = questPe(t, T0);
-  assert.equal(q.base, 25);
-  assert.equal(q.pe, 30); // 25 × 1,2
+  assert.equal(q.base, 67);
+  assert.equal(q.pe, 80); // 67 × 1,2 = 80,4
   const tard = { ...t, deadlineSetAt: '2026-10-09T14:00:00Z' }; // posée la veille : pas de bonus
-  assert.equal(questPe(tard, T0).pe, 25);
-  assert.equal(questPe({ ...t, deadlineSetAt: undefined }, T0).pe, 25);
-  assert.equal(questPe(t, '2026-10-11T14:00:00Z').pe, 25); // après l’échéance
+  assert.equal(questPe(tard, T0).pe, 67);
+  assert.equal(questPe({ ...t, deadlineSetAt: undefined }, T0).pe, 67);
+  assert.equal(questPe(t, '2026-10-11T14:00:00Z').pe, 67); // après l’échéance
 });
 
 test('bonus : +2 PE par tranche de 14 jours d’ancienneté', () => {
   const t = task({ priority: 10, length: 10, difficulty: 10, created: '2026-09-08' }); // 28 jours
   assert.equal(bonusPe(t, 25, T0).age, 4);
-  assert.equal(questPe(t, T0).pe, 29);
+  assert.equal(questPe(t, T0).pe, 71);
 });
 
 test('bonus plafonnés ensemble à +40 %', () => {
@@ -63,7 +69,8 @@ test('bonus plafonnés ensemble à +40 %', () => {
   const b = bonusPe(t, 6, T0);
   assert.equal(b.capped, true);
   assert.ok(Math.abs(b.total - 2.4) < 1e-9);
-  assert.equal(questPe(t, T0).pe, Math.round(6 + 2.4));
+  assert.equal(questPe(t, T0).base, 3); // P6 L1 D1
+  assert.equal(questPe(t, T0).pe, Math.round(3 + 3 * 0.4));
 });
 
 test('plafond quotidien dégressif : 100 % jusqu’à 45 PE, 50 % de 45 à 90, 20 % au-delà', () => {

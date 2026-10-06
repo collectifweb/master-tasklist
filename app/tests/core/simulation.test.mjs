@@ -6,13 +6,15 @@
 //  (c) qu'aucun stock ne devient négatif ;
 //  (d) (lot 5) qu'un joueur qui suit le bandeau d'objectifs atteint les cinq premiers pas sans impasse, et que la
 //      première famille arrive vers le 6e jour, au départ du 25 octobre comme du 15 décembre.
+// (e) (lot R) mesure, sans cible, un joueur qui ne fait que des quêtes longues et difficiles (L et D de 6 à 9) : le
+//     plafond quotidien des points d'effort et ce que « l'effort paie » change au rythme du village.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
-  prochainGeste, PAS_IDS,
+  prochainGeste, PAS_IDS, cappedPe,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -22,18 +24,24 @@ const quetes = (n) => Array.from({ length: n }, (_, k) => ({
   id: `s${k}`, task: `Quête ordinaire ${k}`, domain: DOMAINS[k % 5],
   difficulty: 3 + (k % 3), length: 2 + (k % 3), priority: 4 + (k % 3), status: 'todo', created: '2026-01-01', deadline: null,
 }));
+// quêtes longues et difficiles, déterministes : (L6 D7), (L7 D8), (L8 D9), (L9 D6), priorité moyenne
+const longues = (n) => Array.from({ length: n }, (_, k) => ({
+  id: `s${k}`, task: `Quête longue ${k}`, domain: DOMAINS[k % 5],
+  difficulty: 6 + ((k + 1) % 4), length: 6 + (k % 4), priority: 4 + (k % 3), status: 'todo', created: '2026-01-01', deadline: null,
+}));
 const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00Z`;
 
 /**
  * Joue `jours` jours à partir de `debut`. rythme(i) = quêtes terminées le i-e jour. Après chaque geste, vérifie (c).
+ * profil(n) : les n quêtes du monde (quêtes ordinaires par défaut).
  * bandeau : tant que les premiers pas durent, le joueur fait le geste que le bandeau propose (prochainGeste) dès qu'il
  * le peut, et rien d'autre ; au pas « famille », il fait tout ce qui aide à nourrir. Sinon, il fait tout ce qui est
  * possible, dans l'ordre ci-dessous.
  * Renvoie le journal : { hameau (jour d'arrivée, ou null), familles: [jours], recoltes: [jours], plein (jour où tous les
  * logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour), monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false } = {}) {
-  let w = fresh(quetes(jours * 3 + 10), heure(debut, 12));
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes } = {}) {
+  let w = fresh(profil(jours * 3 + 10), heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, monde: null };
   const logementsMax = BATIMENTS.chalet.max * BATIMENTS.chalet.loge;
   let n = 0;
@@ -130,5 +138,31 @@ test('(d) en suivant le bandeau : les cinq premiers pas sans impasse, la premiè
     const log = simuler(debut, 30, () => 1, { bandeau: true });
     assert.deepEqual(Object.keys(log.pas), PAS_IDS, `${debut}, une quête par jour : ${JSON.stringify(log.pas)}`);
     assert.ok(log.premiereFamille <= 12, `${debut}, une quête par jour : première famille au jour ${log.premiereFamille}`);
+  }
+});
+
+// PE des quêtes par jour travaillé, et part comptée après le plafond quotidien (45 PE à plein, 90 à moitié).
+function pesParJour(ledger) {
+  const parJour = new Map();
+  for (const e of ledger) if (e.type === 'reward') parJour.set(e.day, (parJour.get(e.day) || 0) + e.pe);
+  const pes = [...parJour.values()];
+  const total = pes.reduce((s, x) => s + x, 0);
+  const comptes = pes.reduce((s, x) => s + cappedPe(0, x), 0);
+  return { moyenne: total / pes.length, max: Math.max(...pes), au45: pes.filter((x) => x > 45).length, au90: pes.filter((x) => x > 90).length, part: comptes / total };
+}
+
+test('(e) mesure sans cible : quêtes ordinaires contre quêtes longues et difficiles, sur 16 semaines', (t) => {
+  const f = (n) => String(Math.round(n * 10) / 10).replace('.', ',');
+  for (const [nomProfil, profil] of [['ordinaires', quetes], ['longues', longues]]) {
+    for (const debut of ['2026-06-01', '2026-10-25']) {
+      for (const [nomRythme, rythme] of [['2 à 3 par jour', regulier], ['1 par jour', () => 1]]) {
+        const log = simuler(debut, 112, rythme, { profil });
+        const pe = pesParJour(log.monde.ledger);
+        const { energy, materials } = log.monde.game.resources;
+        t.diagnostic(`${nomProfil}, ${debut}, ${nomRythme} : 1re famille j${log.premiereFamille}, Hameau j${log.hameau}, `
+          + `plein ${log.plein ?? '—'} ; PE par jour ${f(pe.moyenne)} (max ${pe.max}), jours au-delà de 45 : ${pe.au45}, de 90 : ${pe.au90}, `
+          + `part comptée ${Math.round(pe.part * 100)} % ; semaine 16 : ${f(energy)} Énergie, ${f(materials)} Matériaux`);
+      }
+    }
   }
 });
