@@ -352,7 +352,7 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 - [x] Cache v8, commit. Photo de `api/data` de l'essai dans `backups/avant-lot-r-<date>/`.
 - [x] Preuve hors ligne de la conversion : la photo passée dans `migrateState` du code envoyé, avec l'horloge de l'essai (somme des anciens niveaux = permis ; stock, quartiers et bilans inchangés ; second passage sans effet).
 - [x] Après l'envoi : liste des tâches et registre identiques à la photo ; page chargée sans code, 0 erreur ; écriture en version 2 refusée ; lecture avec le code d'essai = 200. **Ne jamais ouvrir l'essai avec le code** (ça écrirait et convertirait la partie avant Alex). Fichiers restés sur le serveur et absents du dépôt : listés, rien d'effacé. La production n'est pas touchée.
-- [ ] Topo pour Alex.
+- [x] Topo pour Alex (6 octobre, vers 4 h 45).
 - *Envoyé sur l’essai le 6 octobre à 4 h 27 (commit c1b38f1, dont l’app est celle de 7afb898, cache v8). La production n’est pas touchée.*
 - *Photo prise à 4 h 08 dans `backups/avant-lot-r-20261006-040858/`. Depuis la copie de 1 h 36, la partie avait reçu une seule ligne : le bonus d’ouverture du jour de jeu suivant, posé à 4 h 00, heure où la journée de jeu change. Hypothèse, non vérifiée : un onglet de l’essai resté ouvert avec le code.*
 - *Preuve hors ligne sur cette photo, avec le cœur envoyé : 4 anciens niveaux (Champs, Atelier, École, Place) deviennent 4 permis ; ressources, quartiers et bilans inchangés ; un second passage ne change rien.*
