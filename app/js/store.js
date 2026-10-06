@@ -8,7 +8,7 @@ import { t, tn } from './content.js';
 import { brancherHorloge, maintenant } from './horloge.js';
 
 const ACTIONS = {
-  createQuest: core.createQuest, updateQuest: core.updateQuest, startQuest: core.startQuest, pauseQuest: core.pauseQuest,
+  createQuest: core.createQuest, updateQuest: core.updateQuest,
   addStep: core.addStep, removeStep: core.removeStep, toggleStep: core.toggleStep, completeQuest: core.completeQuest,
   reopenQuest: core.reopenQuest, remballerQuest: core.remballerQuest, archiveQuest: core.archiveQuest,
   unarchiveQuest: core.unarchiveQuest, deleteQuest: core.deleteQuest, claimBonus: core.claimBonus, openApp: core.openApp,
@@ -37,7 +37,7 @@ const MAX_TRIES = 6;
 function loadQueue() {
   try {
     const q = JSON.parse(localStorage.getItem(QUEUE_KEY));
-    return Array.isArray(q) ? q : [];
+    return core.withoutRetiredGestures(q); // « Je m’y mets » n'existe plus : ces gestes en file sont écartés sans message
   } catch { return []; }
 }
 /** Renvoie false si la file n'a pas pu être écrite (stockage plein ou bloqué). */

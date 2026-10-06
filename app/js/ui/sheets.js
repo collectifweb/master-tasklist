@@ -1,7 +1,7 @@
 // Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  QUARTIERS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes, isPinned,
+  QUARTIERS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -226,14 +226,14 @@ function actionsHtml(m, ctx) {
       <span class="btn-reason" id="fiche-undo-why">${icon('clock')}${esc(t('fiche.undo.disabled.late'))}</span></span>`);
   }
   if (task.status === 'archived') out.push(`<button class="btn btn--quiet" type="button" data-action="unarchive"${dis}>${icon('unarchive')}${esc(t('quest.unarchive'))}</button>`);
-  else out.push(`<button class="btn btn--quiet" type="button" data-action="archive"${dis}>${icon('archive')}${esc(t('quest.archive'))}</button>`);
+  else out.push(`<span><button class="btn btn--quiet" type="button" data-action="archive" aria-describedby="fiche-archive-why"${dis}>${icon('archive')}${esc(t('quest.archive'))}</button>
+    <span class="btn-reason" id="fiche-archive-why">${esc(t('fiche.archive.hint'))}</span></span>`);
   out.push(`<button class="btn btn--quiet btn--danger" type="button" data-action="delete"${dis}>${icon('trash')}${esc(t('quest.delete'))}</button>`);
   return out.join('');
 }
 
 function summaryHtml(m) {
   const tags = [];
-  if (m.state === 'doing') tags.push(`<span class="tag tag--doing">${icon('pin')}${esc(t('status.in_progress'))}</span>`);
   if (m.state === 'done') tags.push(`<span class="tag tag--done">${icon('check')}${esc(t('status.done'))}</span>`);
   if (m.state === 'archived') tags.push(`<span class="tag tag--archived">${icon('archive')}${esc(t('status.archived'))}</span>`);
   if (m.deadline && m.deadline.late) tags.push(`<span class="tag tag--late">${icon('crate')}${esc(m.deadline.text)}</span>`);
@@ -363,7 +363,6 @@ export function openWhy(ctx, id) {
   const dlg = $('#dlg-why');
   const lines = w.parts.map((p) => `<div class="why-line"><dt>${esc(capitalize(p.label))}</dt><dd>+${esc(num(p.points))}</dd></div>`).join('');
   const notes = [];
-  if (isPinned(task)) notes.push(t('why.pinned'));
   if (task.priority >= 8) notes.push(t('why.priority_guard'));
   if (w.cote >= 100) notes.push(t('why.capped'));
   dlg.innerHTML = `

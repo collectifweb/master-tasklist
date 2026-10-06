@@ -147,20 +147,6 @@ export const CRATE_SPOTS = [[9.25, 5.5], [9.85, 5.5], [10.45, 5.5], [10.8, 6.45]
 /** Fanal, vieux robot de déneigement, sur la Place. */
 export const FANAL_HOME = [6.85, 6.55];
 
-/**
- * Côte à côte : où Fanal travaille avec toi pendant une séance « Je m'y mets » ([u, v, penché vers]) : au bord de la
- * Place, du côté du quartier de la quête ; aux Champs, entre la clôture et la route, hors de la plaque de la Place.
- * Pour une quête de la Place, il reste chez lui.
- */
-export const FANAL_SPOTS = {
-  place: [6.85, 6.55, 'gauche'],
-  champs: [2.5, 7.05, 'gauche'],
-  atelier: [7.8, 7.65, 'droite'],
-  mairie: [7.65, 5.65, 'droite'],
-  ecole: [4.35, 6.3, 'gauche'],
-  garage: [6.45, 4.3, 'droite'],
-};
-
 // ---------------------------------------------------------------- décor (arbres, buissons, rochers)
 // Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe.
 function isFree(u, v) {

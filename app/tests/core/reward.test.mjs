@@ -16,19 +16,19 @@ test('Points d’effort : +2 si difficulté 7 ou plus seulement', () => {
   assert.ok(effortPoints(5, 4, 7) > effortPoints(5, 4, 6));
 });
 
-test('gel de P/L/D : au « Je m’y mets », à la première étape, ou 24 h après la création', () => {
+test('gel de P/L/D : à la première étape, ou 24 h après la création', () => {
   assert.equal(shouldFreeze(task({ created: '2026-10-06', createdAt: T0 }), T0), false);
-  assert.equal(shouldFreeze(task({ startedAt: T0 }), T0), true);
+  assert.equal(shouldFreeze(task({ created: '2026-10-06', createdAt: T0, startedAt: T0 }), T0), false); // l'ancien « Je m’y mets » ne fige plus
   assert.equal(shouldFreeze(task({ steps: [{ id: 's1', label: 'a', done: true }] }), T0), true);
   assert.equal(shouldFreeze(task({ steps: [{ id: 's1', label: 'a', done: false }] }), T0), false);
   assert.equal(shouldFreeze(task({ createdAt: T0 }), plusHours(T0, 23)), false);
   assert.equal(shouldFreeze(task({ createdAt: T0 }), plusHours(T0, 24)), true);
   assert.equal(shouldFreeze(task({ created: '2026-10-05' }), T0), true); // sans createdAt : un jour de calendrier
-  assert.equal(shouldFreeze(task({ startedAt: T0, frozen: { priority: 1, length: 1, difficulty: 1, at: T0 } }), T0), false);
+  assert.equal(shouldFreeze(task({ frozen: { priority: 1, length: 1, difficulty: 1, at: T0 } }), T0), false);
 });
 
 test('freezeValues, effectiveValues et applyFreeze', () => {
-  const t = task({ priority: 8, length: 4, difficulty: 6, startedAt: T0 });
+  const t = task({ priority: 8, length: 4, difficulty: 6, created: '2026-10-05' });
   assert.deepEqual(freezeValues(t, T0), { priority: 8, length: 4, difficulty: 6, at: '2026-10-06T14:00:00.000Z' });
   const f = applyFreeze(t, T0);
   assert.notEqual(f, t);

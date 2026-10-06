@@ -701,7 +701,6 @@ button.cote:active {
   width: 14px;
   height: 14px;
 }
-.tag--doing,
 .tag--done { background: var(--c-sage-wash); color: var(--c-sage-deep); }
 .tag--prio { background: var(--c-lantern-wash); color: var(--c-lantern-ink); }
 .tag--late { background: var(--c-soil-wash); color: var(--c-soil-deep); }
@@ -738,13 +737,6 @@ button.cote:active {
   font-weight: var(--w-semibold);
 }
 .meta-item--late .icon {
-  color: currentColor;
-}
-.meta-item--doing {
-  color: var(--c-sage-deep);
-  font-weight: var(--w-semibold);
-}
-.meta-item--doing .icon {
   color: currentColor;
 }
 
@@ -795,15 +787,10 @@ button.cote:active {
   font-size: var(--text-14);
   color: var(--text-soft);
 }
-/* Côte à côte : la raison laisse place à « Fanal travaille avec toi · 12 min », au ton de « En cours » (.meta-item--doing) */
-.fil-quest.is-seance .fil-reason > span {
-  color: var(--c-sage-deep);
-  font-weight: var(--w-semibold);
-}
 .fil-actions {
   grid-area: actions;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); /* un bouton : toute la largeur ; deux : moitié-moitié */
   gap: var(--sp-2);
   margin-top: 2px;
 }
@@ -909,6 +896,9 @@ button.cote:active {
   display: grid;
   gap: var(--sp-2);
   padding: 0 0 var(--sp-4);
+}
+.alt-body .fil-actions {
+  grid-area: auto;
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1309,18 +1299,6 @@ button.quest-check:active .quest-check-ring {
   .quest-aside .btn {
     margin-left: calc(-1 * var(--sp-2));
   }
-}
-
-/* En cours : épinglée en tête, fond sauge, épingle + texte « En cours » */
-.quest[data-state="doing"] {
-  margin: var(--sp-1) calc(-1 * var(--sp-2)) var(--sp-2);
-  padding: 0 var(--sp-2) 0 0;
-  border: 1px solid rgb(63 96 71 / 0.28);
-  border-radius: var(--r-lg);
-  background: var(--c-sage-wash);
-}
-.quest[data-state="doing"] .quest-check-ring {
-  border-color: var(--c-sage-deep);
 }
 
 /* Faite : la case est pleine, le titre passe en encre mousse ; les actions restent pleinement lisibles */

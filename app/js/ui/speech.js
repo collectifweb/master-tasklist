@@ -18,7 +18,6 @@ export function situationFor(action, params, events, task) {
     case 'completeQuest': return doneFlow();
     case 'createQuest': return params.alreadyDone ? doneFlow() : null;
     case 'toggleStep': return events.some((e) => e.type === 'etape' && e.done) ? 'step.done' : null;
-    case 'startQuest': return 'quest.start';
     case 'remballerQuest': return 'quest.undo';
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
     case 'construire': return 'batiment.construit';

@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, isPinned, topCards, SEANCE_MAX_MINUTES } from '../core/index.js';
+import { SORTS, gameDay, topCards } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
@@ -10,7 +10,7 @@ import { createAnnounce, createVoice, summarize, gainList } from './ui/announce.
 import { createSpeech } from './ui/speech.js';
 import { createSync } from './ui/sync.js';
 import { renderFil, renderAlts, renderList } from './ui/quests.js';
-import { num, releveText } from './ui/format.js';
+import { num } from './ui/format.js';
 import {
   wireDialogs, openAdd, onAddInput, onAddSectorChange, readAdd, openFiche, refreshFiche, readFiche, openWhy,
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
@@ -119,41 +119,36 @@ function react(payload) {
   const reply = speech.react({ action, params, events, task, now: now || maintenant() });
   const replyText = reply ? ` ${reply.nom}\u00a0: ${reply.texte}` : '';
   const gains = gainList(s);
-  const fanal = SEANCE_ACTIONS.has(action) ? fanalSay(events, title) : '';
   const objectifs = objectifsSay(events);
 
   if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime', ...BAT_ACTIONS].includes(action) && gains.length) {
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
-          : action === 'advanceTime' ? timeSay(events)
-            : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
-    const liveText = `${head}${fanal ? ' ' + fanal : ''}${objectifs ? ' ' + objectifs : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
+          : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
+    const liveText = `${head}${objectifs ? ' ' + objectifs : ''} ${t('sr.gains', { liste: gains.join(', ') })}${replyText}`.trim();
     announce.show(s, 'gain', { liveText: action === 'advanceTime' ? after(liveText) : remember(liveText) });
     return;
   }
   if (action === 'completeQuest' && s.noGain) {
-    announce.show(s, 'none', { liveText: `${t('sr.quest.done', { quete: title })}${fanal ? ' ' + fanal : ''} ${t('sr.repeat_zero')}` });
+    announce.show(s, 'none', { liveText: `${t('sr.quest.done', { quete: title })} ${t('sr.repeat_zero')}` });
     return;
   }
   if (action === 'remballerQuest') {
     // l'écriture inverse de la quête, et celle de l'éolienne si le jour reste sans quête payée
     const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0) }), { energy: 0, materials: 0 });
     const list = [e.energy && `${num(e.energy)} ${t('resource.energy')}`, e.materials && `${num(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
-    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${fanal ? ' ' + fanal : ''}${replyText}` });
+    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${replyText}` });
     return;
   }
   const say = {
-    startQuest: () => t('sr.quest.started', { quete: title }),
-    pauseQuest: () => t('sr.paused', { quete: title }),
     archiveQuest: () => t('sr.archived', { quete: title }),
     unarchiveQuest: () => t('sr.unarchived', { quete: title }),
     deleteQuest: () => t('sr.deleted', { quete: title }),
     reopenQuest: () => t('sr.reopened', { quete: title }),
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
-  if (say) return announce.say(remember(say() + (fanal ? ' ' + fanal : '') + replyText));
-  if (action === 'advanceTime') { const text = timeSay(events); if (text) announce.say(after(text)); }
+  if (say) return announce.say(remember(say() + replyText));
   const bat = batimentSay(events);
   if (bat) announce.say(remember(bat + replyText));
 }
@@ -181,29 +176,6 @@ function batimentSay(events) {
     else if (e.type === 'recolte') out.push(t(e.perdu > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: num(e.nourriture), perdu: num(e.perdu) }));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
-  }
-  return out.join(' ');
-}
-
-// Côte à côte : une phrase au début de la séance, une à la fin, jamais pendant. Après Pause ou Fait, une quête qui a
-// pris plus de deux fois sa durée estimée reçoit une proposition de découpage (zone d'état), lue avec la fin.
-const SEANCE_ACTIONS = new Set(['startQuest', 'pauseQuest', 'completeQuest', 'remballerQuest', 'archiveQuest', 'deleteQuest']);
-function fanalSay(events, title) {
-  if (events.some((e) => e.type === 'seance-debut')) { sync.closeOffer(); return t('sr.seance.start'); }
-  const fin = events.find((e) => e.type === 'seance-fin');
-  if (!fin) return '';
-  const text = fin.oubliee ? t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }) : t('sr.seance.stop', { duree: releveText(fin.minutes) });
-  if (!fin.decoupage) return text;
-  const offer = t('offer.split', { quete: title });
-  sync.offer({ taskId: fin.taskId, text: offer });
-  return `${text} ${offer}`;
-}
-
-/** Phrase lue après le passage du temps : une séance oubliée qui se ferme d'elle-même. */
-function timeSay(events) {
-  const out = [];
-  for (const e of events) {
-    if (e.type === 'seance-fin' && e.raison === 'oubliee') out.push(t('sr.seance.oubliee', { duree: releveText(SEANCE_MAX_MINUTES) }));
   }
   return out.join(' ');
 }
@@ -250,7 +222,7 @@ const askToken = (locked = 0) => openToken(
 );
 store.on('need-token', (p) => askToken((p && p.locked) || 0));
 
-// Après ces gestes, le temps du jeu avance (séance oubliée refermée) : advanceTime est idempotente.
+// Après ces gestes, le temps du jeu avance : advanceTime est idempotente.
 const AFTER_TIME = new Set(['completeQuest', 'createQuest', 'toggleStep']);
 
 /** Lance une action ; un refus du jeu (message en français) s'affiche en message court, rien n'est modifié. */
@@ -364,7 +336,7 @@ document.addEventListener('click', (e) => {
   const id = idOf(target);
   const task = findTask(id);
 
-  if (disabled(target) && ['complete', 'start', 'split', 'archive', 'unarchive', 'delete', 'reopen', 'remballer'].includes(action)) {
+  if (disabled(target) && ['complete', 'split', 'archive', 'unarchive', 'delete', 'reopen', 'remballer'].includes(action)) {
     if (task && task.readonly) sync.notice({ kind: 'info', text: t('readonly.reason') });
     return;
   }
@@ -387,11 +359,7 @@ document.addEventListener('click', (e) => {
     case 'open-settings': return story.openSettings();
     case 'open-review': return story.openReview();
     case 'review-keep': case 'review-archive': return story.reviewAction(action, target.dataset.id);
-    case 'start':
-      if (!task) return;
-      return run(isPinned(task) ? 'pauseQuest' : 'startQuest', { id });
     case 'split':
-      if (target.closest('#offer')) { sync.closeOffer(); if (!task) return; } // proposition de découpage (Côte à côte)
       openFiche(ctx(), id);
       return $('#fiche-step-new').focus();
     case 'reopen': return run('reopenQuest', { id });
@@ -428,7 +396,6 @@ document.addEventListener('click', (e) => {
       return renderAll();
     case 'sync-retry': return store.retryNow();
     case 'notice-close': return sync.closeNotice();
-    case 'offer-close': return sync.closeOffer();
     case 'reload': return start();
     case 'jour-suivant': return jourSuivant();
     case 'bat-geste': {

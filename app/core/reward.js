@@ -27,12 +27,11 @@ export function effortPoints(priority, length, difficulty) {
 // ---- Gel de P / L / D --------------------------------------------------
 
 /**
- * Faut-il figer P/L/D ? Oui au premier de : « Je m'y mets », première étape cochée, 24 h après la création.
+ * Faut-il figer P/L/D ? Oui au premier de : première étape cochée, 24 h après la création.
  * (La création est lue dans `createdAt` si présent, sinon dans `created` : un jour de calendrier suffit alors.)
  */
 export function shouldFreeze(task, now) {
   if (task.frozen) return false;
-  if (task.startedAt) return true;
   if (Array.isArray(task.steps) && task.steps.some((s) => s.done)) return true;
   if (task.createdAt) return hoursBetween(task.createdAt, now) >= 24;
   const c = dayOnly(task.created);

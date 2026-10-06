@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cote, coteBreakdown, urgency, ageBonus, taskAgeDays, estimatedMinutes, durationLabel, isPinned,
+  cote, coteBreakdown, urgency, ageBonus, taskAgeDays, estimatedMinutes, durationLabel,
   SORTS, sortTasks, orderByCote, filterTasks, listQuests, topCards, why,
 } from '../../core/index.js';
 import { T0, task } from './helpers.mjs';
@@ -55,16 +55,10 @@ test('durée estimée : L1 5, L2 15, L3 30, L4 45, L5 60, L6 120, L7 180, L8+ 24
   assert.equal(durationLabel(6), '2 h');
 });
 
-test('isPinned : « Je m’y mets » posé et encore à faire', () => {
-  assert.equal(isPinned(task({ startedAt: T0 })), true);
-  assert.equal(isPinned(task({ startedAt: T0, status: 'done' })), false);
-  assert.equal(isPinned(task()), false);
-});
-
-test('la quête en cours est épinglée en tête du tri par Cote', () => {
+test('un ancien champ startedAt ne remonte plus la quête en tête du tri par Cote', () => {
   const a = task({ id: 'a', priority: 10, length: 1, difficulty: 1 });
   const b = task({ id: 'b', priority: 1, length: 10, difficulty: 10, startedAt: T0 });
-  assert.deepEqual(orderByCote([a, b], T0).map((t) => t.id), ['b', 'a']);
+  assert.deepEqual(orderByCote([a, b], T0).map((t) => t.id), ['a', 'b']);
 });
 
 test('une quête de priorité 8 ou plus est toujours dans les 3 premières', () => {

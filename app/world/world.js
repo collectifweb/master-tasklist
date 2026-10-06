@@ -18,16 +18,11 @@
 //   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
-// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-niveau, reflet, veille, etape,
-// seance-debut, seance-fin.
-//   seance-debut { taskId, occurrence }                     « Je m'y mets » (Côte à côte) : Fanal va une fois au bord
-//                                                           de la Place, vers le quartier de la quête, et y reste immobile
-//   seance-fin { taskId, occurrence, minutes, raison, … }   la séance s'arrête : Fanal rentre (s'il n'en commence pas une autre)
-// Pendant la séance, aucune boucle d'animation : Fanal est dessiné à sa place de travail (pose fixe, data-pose).
+// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-niveau, reflet, veille, etape.
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
-  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, FANAL_SPOTS, sectorAt, EMPLACEMENTS,
+  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -102,10 +97,8 @@ export function entitiesFor(v, tasks = []) {
     const task = tasks.find((t) => t && t.id === cr.taskId);
     list.push({ id: cr.id, model: 'caisse', sector: sectorAt(Math.floor(vv), Math.floor(u)), r: vv - 0.5, c: u - 0.5, seed: i + 2, interactive: true, crate: cr, title: task ? String(task.task ?? '') : '', reluit: v.reflets?.has?.(`caisse:${i}`) || false });
   });
-  // Fanal sur la Place ; au travail (Côte à côte), penché vers le quartier de la quête (pose fixe, voir world.css)
+  // Fanal sur la Place
   const fanal = { id: 'fanal', kind: 'char', who: 'fanal', sector: 'place', u: FANAL_HOME[0], v: FANAL_HOME[1], interactive: true, light: 'fanal', allume: true };
-  const spot = v.fanal && FANAL_SPOTS[v.fanal.sector];
-  if (spot) [fanal.u, fanal.v, fanal.pose] = spot;
   list.push(fanal);
   return list;
 }
@@ -241,7 +234,7 @@ export function createWorld(container, options = {}) {
   // ---------------------------------------------------------------------------- textes accessibles
   function sectorName(s) { return t(`quartier.${s}.name`); }
   function objName(e) {
-    if (e.kind === 'char') return t(e.pose ? `monde.obj.${e.who}.travail` : `monde.obj.${e.who}`);
+    if (e.kind === 'char') return t(`monde.obj.${e.who}`);
     if (e.batiment) return `${batimentNom(t, e.batiment)}, ${batimentEtat(t, e.batiment)}`;
     if (e.crate) {
       const d = e.crate.days;

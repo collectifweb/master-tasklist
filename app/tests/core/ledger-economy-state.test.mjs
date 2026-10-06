@@ -228,7 +228,7 @@ test('createInitialState : partie v2, départ 10 ⚡ / 20 ▣ / 5 Nourriture, 0 
   assert.deepEqual(g.quartiers, { champs: 0, atelier: 0, mairie: 0, ecole: 0, garage: 0, place: 0 });
   assert.deepEqual([g.batiments, g.parcelles, g.premiersPas, g.bilans], [[], [], {}, []]);
   assert.equal(g.startDay, '2026-10-06');
-  assert.deepEqual(g.coteACote, { current: null, totals: [] });
+  assert.equal('coteACote' in g, false);
   for (const k of ['lueur', 'filLibre', 'caps', 'chapter', 'sectors', 'avis', 'lisiereDays', 'weeksHeld', 'garden', 'story', 'recentApplied']) {
     assert.equal(k in g, false, k);
   }

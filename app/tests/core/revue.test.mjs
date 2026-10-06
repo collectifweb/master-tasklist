@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createQuest, updateQuest, startQuest, pauseQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
+  createQuest, updateQuest, addStep, removeStep, toggleStep, completeQuest, reopenQuest,
   remballerQuest, archiveQuest, unarchiveQuest, deleteQuest, claimBonus, openApp, newTaskId,
   normalizeTask, normalizeTasks, dayOnly, daysUntil, isValidDay, addMonths, orderByCote, bonusPe, questPe,
   hydrateLedger, cote,
@@ -95,7 +95,7 @@ test('tâche sans id ou à id en double : marquée en lecture seule, jamais cibl
   assert.equal(normalizeTask(ts[1], T0).readonly, true); // la marque survit à une nouvelle normalisation
   const w = fresh(ts);
   const actions = [
-    [updateQuest, { patch: { notes: 'x' } }], [startQuest, {}], [pauseQuest, {}], [addStep, { label: 'x' }],
+    [updateQuest, { patch: { notes: 'x' } }], [addStep, { label: 'x' }],
     [removeStep, { stepId: 's1' }], [toggleStep, { stepId: 's1' }], [completeQuest, {}], [reopenQuest, {}],
     [remballerQuest, {}], [archiveQuest, {}], [unarchiveQuest, {}], [deleteQuest, {}],
   ];
@@ -337,16 +337,15 @@ test('mineur : newTaskId reste un texte exact, sans dépassement de 2^53', () =>
   assert.equal(BigInt('20261006140000123') > BigInt(Number.MAX_SAFE_INTEGER), true);
 });
 
-test('tri : les quêtes épinglées restent en tête ; la règle « priorité 8 ou plus » vise les non épinglées', () => {
+test('tri : une quête de priorité 8 ou plus reste dans les 3 premières, même devant des quêtes à forte Cote', () => {
   const ts = [
-    task({ id: 'p1', priority: 2, startedAt: '2026-10-06T10:00:00Z' }),
-    task({ id: 'p2', priority: 2, startedAt: '2026-10-06T11:00:00Z' }),
-    task({ id: 'p3', priority: 2, startedAt: '2026-10-06T12:00:00Z' }),
+    task({ id: 'p1', priority: 2 }),
+    task({ id: 'p2', priority: 2 }),
+    task({ id: 'p3', priority: 2 }),
     ...[1, 2, 3, 4].map((i) => task({ id: 'u' + i, priority: 3, length: 1, difficulty: 1, deadline: '2026-09-20' })),
     task({ id: 'hi', priority: 9, length: 10, difficulty: 10 }),
   ];
   const ordre = orderByCote(ts, T0).map((t) => t.id);
-  assert.deepEqual(ordre.slice(0, 3), ['p3', 'p2', 'p1']);
-  const rangNonEpingle = ordre.slice(3).indexOf('hi');
-  assert.ok(rangNonEpingle >= 0 && rangNonEpingle <= 2, 'rang parmi les non épinglées : ' + rangNonEpingle);
+  const rang = ordre.indexOf('hi');
+  assert.ok(rang >= 0 && rang <= 2, 'rang : ' + rang);
 });

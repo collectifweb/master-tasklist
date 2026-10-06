@@ -31,22 +31,13 @@ export function renderFil(root, ctx) {
   setText($('.fil-title', art), m.title);
   setText($('.cote-value', art.querySelector('.cote')), String(m.cote));
   for (const c of art.querySelectorAll('.cote')) setAttr(c, 'aria-label', `Cote ${m.cote}. ${t('quest.why')}`);
-  setHtml($('.meta', art), metaItems(m, { now, withSeance: false }).map(metaLi).join(''));
+  setHtml($('.meta', art), metaItems(m, { now }).map(metaLi).join(''));
   setText($('.fil-reason > span', art), reasonText(m, now));
-  art.classList.toggle('is-seance', m.seanceMinutes !== null);
   const complete = $('[data-action="complete"]', art);
-  const start = $('[data-action="start"]', art);
-  const doing = m.state === 'doing';
   setAttr(complete, 'aria-label', `Fait\u00a0: ${m.title}`);
-  setAttr(start, 'aria-pressed', String(doing));
-  setText($('.start-label', start), doing ? t('fil.pause') : t('quest.start'));
-  const use = start.querySelector('use');
-  setAttr(use, 'href', `${use.getAttribute('href').split('#')[0]}#i-${doing ? 'pause' : 'start'}`);
-  // quête en lecture seule : actions grisées, raison écrite
-  for (const b of [complete, start]) {
-    setAttr(b, 'aria-disabled', m.readonly ? 'true' : null);
-    setAttr(b, 'aria-describedby', m.readonly ? READONLY_ID : null);
-  }
+  // quête en lecture seule : action grisée, raison écrite
+  setAttr(complete, 'aria-disabled', m.readonly ? 'true' : null);
+  setAttr(complete, 'aria-describedby', m.readonly ? READONLY_ID : null);
   const ro = document.getElementById(READONLY_ID);
   ro.hidden = !m.readonly;
   return cards;
@@ -58,11 +49,11 @@ const ALT_KIND = {
 };
 
 function altMarkup(kind) {
+  const done = `<button class="btn btn--primary" type="button" data-action="complete">${t('quest.done').replace(' ✓', '')} ${icon('check')}</button>`;
   const actions = kind === 'quick'
-    ? `<button class="btn btn--primary" type="button" data-action="complete">${t('quest.done').replace(' ✓', '')} ${icon('check')}</button>
-       <button class="btn btn--secondary" type="button" data-action="start">${icon('start')}<span class="start-label">${esc(t('quest.start'))}</span></button>`
-    : `<button class="btn btn--secondary" type="button" data-action="start">${icon('start')}<span class="start-label">${esc(t('quest.start'))}</span></button>
-       <button class="btn btn--quiet" type="button" data-action="split">${icon('split')}${esc(t('quest.split'))}</button>`;
+    ? done
+    : `${done}
+       <button class="btn btn--secondary" type="button" data-action="split">${icon('split')}${esc(t('quest.split'))}</button>`;
   return `
     <button class="alt-row" type="button" aria-expanded="false" aria-controls="alt-${kind}">
       <span class="alt-text"><span class="alt-title"></span><span class="alt-kind"></span></span>
@@ -99,12 +90,8 @@ export function renderAlts(root, ctx, cards) {
     setHtml($('.alt-kind', li), `${icon(ALT_KIND[kind].icon)}${esc(t(ALT_KIND[kind].key))} · ${esc(m.duration)}${esc(steps)}`);
     setText($('.cote-value', li), String(m.cote));
     setHtml($('.meta', li), metaItems(m, { now: ctx.now }).map(metaLi).join(''));
-    const start = $('[data-action="start"]', li);
-    const doing = m.state === 'doing';
-    setText($('.start-label', start), doing ? t('fil.pause') : t('quest.start'));
-    setAttr(start, 'aria-pressed', String(doing));
     const complete = $('[data-action="complete"]', li);
-    for (const b of [complete, start, $('[data-action="split"]', li)]) {
+    for (const b of [complete, $('[data-action="split"]', li)]) {
       if (b) setAttr(b, 'aria-disabled', m.readonly ? 'true' : null);
     }
     if (complete) setAttr(complete, 'aria-label', `Fait\u00a0: ${m.title}`);
@@ -158,6 +145,15 @@ function patchRow(li, m, now) {
 export function renderList(root, ctx, ui) {
   const { tasks, now } = ctx;
   const ul = $('#quest-list', root);
+  // « Archivées » n'apparaît qu'à partir de la première quête archivée ; si la dernière sort des archives pendant
+  // qu'on les regarde, retour à « À faire » (sinon : liste vide et plus de contrôle pour en sortir)
+  const archived = tasks.filter((x) => x.status === 'archived').length;
+  $('#seg-archived', root).hidden = archived === 0;
+  if (archived === 0 && ui.status === 'archived') {
+    ui.status = 'todo';
+    const todo = root.querySelector('input[name="statut"][value="todo"]');
+    if (todo) todo.checked = true;
+  }
   const filters = { status: ui.status, quick: ui.quick, lowEnergy: ui.lowEnergy, thisWeek: ui.thisWeek, quartier: ui.quartier, search: ui.search };
   let items = listQuests(tasks, { sort: ui.sort, filters }, now);
   if (ui.sort === 'cote' && ui.status === 'done') items = items.slice().sort((a, b) => String(b.doneAt || '').localeCompare(String(a.doneAt || '')));

@@ -5,7 +5,6 @@ import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js'
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
 import { reverseKey, quartierOfEntry } from './ledger.js';
-import { releve } from './cote-a-cote.js';
 
 export const RECYCLE_AGE_DAYS = 60;
 export const BILANS_MAX = 104; // deux ans de bilans figés gardés dans la partie
@@ -14,13 +13,12 @@ const hours = (min) => Math.round(min / 6) / 10;
 
 /**
  * Bilan de la semaine (lundi à dimanche) qui contient `now` :
- * { day, dimanche, semaine: { start, end }, quetes, heures, minutesReleve, heuresReleve,
- *   domaines: [{ quartier, domain, quetes, minutes, heures, minutesReleve, heuresReleve }],
+ * { day, dimanche, semaine: { start, end }, quetes, heures,
+ *   domaines: [{ quartier, domain, quetes, minutes, heures }],
  *   joursTravailles, aTrier: [{ id, task, domain, ageDays }], ratioJeuQuetes: null }.
  * Quêtes = gains de quête du registre (remballées exclues) ; heures estimées par estimatedMinutes(Durée) ; domaine
  * lu par le quartier du gain (domain null = Place du village, « autres quêtes » ; un gain écrit en v1 porte son ancien
- * secteur, traduit). Jours travaillés = jours de la semaine avec au moins une de ces quêtes. Temps relevé : séances
- * « Je m'y mets » des mêmes quêtes (cote-a-cote.js), 0 quand rien n'a été relevé. `ratioJeuQuetes` reste null :
+ * secteur, traduit). Jours travaillés = jours de la semaine avec au moins une de ces quêtes. `ratioJeuQuetes` reste null :
  * il demande de mesurer le temps passé dans le jeu, que rien ne mesure encore.
  */
 export function weeklyReview(tasks, game, ledger, now) {
@@ -66,25 +64,23 @@ function bilanSemaine(tasks, game, ledger, start, now) {
   const byId = new Map(tasks.map((t) => [String(t.id), t]));
   const byQuartier = {};
   const jours = new Set();
-  let quetes = 0, minutes = 0, minutesReleve = 0;
+  let quetes = 0, minutes = 0;
   for (const e of paidQuests(ledger)) {
     if (e.day < start || e.day > end) continue;
     const quartier = quartierOfEntry(e) ?? PLACE_ID;
-    const d = (byQuartier[quartier] ||= { quartier, domain: QUARTIERS[quartier].domain, quetes: 0, minutes: 0, minutesReleve: 0 });
+    const d = (byQuartier[quartier] ||= { quartier, domain: QUARTIERS[quartier].domain, quetes: 0, minutes: 0 });
     jours.add(e.day);
     const t = byId.get(String(e.taskId));
     const m = t ? estimatedMinutes(t.frozen?.length ?? t.length) : 0; // quête supprimée depuis : comptée sans durée
-    const r = releve(game, e.taskId, e.occurrence, now).minutes;
-    d.quetes++; d.minutes += m; d.minutesReleve += r;
-    quetes++; minutes += m; minutesReleve += r;
+    d.quetes++; d.minutes += m;
+    quetes++; minutes += m;
   }
-  const round1 = (n) => Math.round(n * 10) / 10;
   const domaines = Object.values(byQuartier)
-    .map((d) => ({ ...d, heures: hours(d.minutes), minutesReleve: round1(d.minutesReleve), heuresReleve: hours(d.minutesReleve) }))
+    .map((d) => ({ ...d, heures: hours(d.minutes) }))
     .sort((a, b) => b.minutes - a.minutes || a.quartier.localeCompare(b.quartier));
   return {
     semaine: { start, end },
-    quetes, heures: hours(minutes), minutesReleve: round1(minutesReleve), heuresReleve: hours(minutesReleve), domaines,
+    quetes, heures: hours(minutes), domaines,
     joursTravailles: jours.size,
   };
 }

@@ -6,7 +6,7 @@ import { morningLetter, passageLetter, weeklyReview, gameDay, daysBetween } from
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
-import { num, shortDate, releveText } from './format.js';
+import { num, shortDate } from './format.js';
 import { openSheet, closeSheet } from './sheets.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
@@ -116,11 +116,8 @@ export function createStory(app) {
     const summary = r.quetes
       ? `${tn('review.quests', r.quetes, { n: r.quetes })} ${t('review.hours', { h: num(r.heures) })}`
       : t('review.none');
-    // temps relevé avec Fanal (Côte à côte), seulement s'il y en a : à côté des heures estimées, jamais à leur place
-    const releve = r.minutesReleve >= 1 ? t('review.releve', { duree: releveText(r.minutesReleve) }) : '';
-    const domainReleve = (d) => (d.minutesReleve >= 1 ? `<small>${esc(t('review.domain.releve', { duree: releveText(d.minutesReleve) }))}</small>` : '');
     const jours = tn('review.days', r.joursTravailles, { n: r.joursTravailles });
-    const domains = r.domaines.map((d) => `<div class="why-line"><dt>${esc(t(`quartier.${d.quartier}.domain`))}<small>${esc(tn('review.domain.quests', d.quetes, { n: d.quetes }))} · ${esc(t(`quartier.${d.quartier}.name`))}</small></dt><dd>${esc(t('review.domain.hours', { h: num(d.heures) }))}${domainReleve(d)}</dd></div>`).join('');
+    const domains = r.domaines.map((d) => `<div class="why-line"><dt>${esc(t(`quartier.${d.quartier}.domain`))}<small>${esc(tn('review.domain.quests', d.quetes, { n: d.quetes }))} · ${esc(t(`quartier.${d.quartier}.name`))}</small></dt><dd>${esc(t('review.domain.hours', { h: num(d.heures) }))}</dd></div>`).join('');
     const olds = old.map((q) => `<li class="review-old" data-quest="${esc(q.id)}">
         <span class="review-old-text"><span class="review-old-title">${esc(q.task)}</span><span class="review-old-meta">${esc(t('review.old.age', { n: q.ageDays }))}${q.domain ? ` · ${esc(q.domain)}` : ''}</span></span>
         <span class="review-old-acts">
@@ -136,7 +133,6 @@ export function createStory(app) {
       <div class="sheet-body review-body">
         <section class="review-sum">
           <p class="review-lead">${esc(summary)}</p>
-          ${releve ? `<p class="act-text">${icon('clock')}<span>${esc(releve)}</span></p>` : ''}
           <p class="review-days">${icon('calendar')}<span>${esc(jours)}</span></p>
           ${domains ? `<dl class="why-ledger review-domains">${domains}</dl>` : ''}
         </section>

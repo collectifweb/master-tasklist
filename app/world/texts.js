@@ -34,7 +34,7 @@ const DEFAULTS = {
   'monde.obj.lanterne': 'Lanterne', 'monde.obj.cloture': 'Clôture', 'monde.obj.caisse': 'Caisse d’échéance',
   'monde.obj.convoi': 'Pièces de rechange', 'monde.obj.atelier': 'Atelier', 'monde.obj.etabli': 'Établi',
   'monde.obj.erable': 'Érable', 'monde.obj.glaciere': 'Glacière',
-  'monde.obj.fanal': 'Fanal, vieux robot de déneigement', 'monde.obj.fanal.travail': 'Fanal, au travail avec toi',
+  'monde.obj.fanal': 'Fanal, vieux robot de déneigement',
   'monde.crate.days': 'dans {n} jours', 'monde.crate.today': 'aujourd’hui', 'monde.crate.passed': 'elle attend au bord du chemin',
 
   // carte en liste
