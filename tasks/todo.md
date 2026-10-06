@@ -222,3 +222,30 @@ Pour le joueur : chaque jour à 8 h, une notification au texte général ; la to
 1. Les tâches terminées avant l'app ne sont pas au registre. Les compter une fois pour les niveaux de quartier, sans Énergie ni Matériaux ? **Alex : oui.**
 2. La tâche planifiée du rappel est hors du dossier de l'app sur le serveur. Recommandation : je l'ajoute moi-même, après une copie des tâches planifiées existantes, sans toucher aux autres. Autre choix : tu l'ajoutes dans cPanel. **Alex : accord pour que je l'ajoute moi-même** (au lot 7, quand le script existe).
 3. Impasse d'hiver : la v2 arrive vers la fin octobre. Au campement, la seule Nourriture vient du potager, qui dort de novembre à avril, et la serre n'arrive qu'au hameau, qui demande 3 habitants nourris. Sans changement, le village reste bloqué tout l'hiver, et le premier pas « Semer » est impossible. Recommandation : une petite serre dès le campement ; l'objectif d'hiver « garder la serre allumée » devient jouable dès le premier hiver. **Alex : vrai calendrier et petite serre dès le campement (décision A).**
+
+## Retours d'essai d'Alex — 5 octobre 2026, soir (à trancher en début de session suivante)
+
+Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). « C'est un super jeu, j'adore. » Constats vérifiés par lecture du code (sous-agents, puis repris par moi), propositions à valider.
+
+| # | Retour d'Alex | Constat dans le code | Proposition |
+|---|---|---|---|
+| 1 | Toucher un quartier ouvre la liste filtrée : on attend plutôt ce que le bâtiment fait | `app/js/main.js` `filterByQuartier` : filtre + ouvre le panneau | Toucher un quartier ouvre sa fiche (ce qu'il fait, ce que le prochain niveau débloque). Le filtre reste dans la liste (puces) |
+| 2 | Niveaux par catégorie injustes : peu de tâches Garage, rien en Terrain l'hiver | Niveau = nombre de tâches du domaine (`economy.js`, `village.js`) | **A (recommandé)** : toutes les tâches remplissent le même stock ; on monte un quartier en y investissant des ressources ; chaque niveau a un effet concret. Ça donne aussi un usage aux ressources qui s'accumulent une fois le village plein (simulation du lot 4). **B** : garder le compte par domaine, sans rien de bloquant derrière |
+| 3 | À quoi servent les niveaux ? | Rien de concret : affichage et annonce seulement. Les effets promis par la bible §4 (Atelier N2 répare moins cher, Champs N3 +1 parcelle) ne sont pas codés | Chaque niveau = un effet écrit sur la fiche du quartier |
+| 4 | Mode construction pénible avec de gros doigts | Les emplacements sont fixes (`app/world/layout.js`, `EMPLACEMENTS`) | Bouton « Construire » : catalogue (dispo, coût, ce qui manque) ; le choix va sur le prochain emplacement libre, la caméra le montre. Plus besoin de viser |
+| 5 | L'effort devrait payer : prioritaire, longue, difficile. Plein de courtes ne devraient pas tant payer | Gain = (6·√longueur + 2 si difficulté ≥ 7) × (0,8 + 0,04·priorité) (`reward.js`). Cinq tâches courtes et faciles (P9, L2, D2) : 5 × 10 = 50 points ; une longue et difficile (P9, L9, D9) : 23 points. Plafond quotidien : plein tarif jusqu'à 45 points, moitié jusqu'à 90, 20 % au-delà | Gain proportionnel à la longueur, multiplié par la difficulté, petite prime de priorité (ex. 2·L × (0,6 + 0,08·D) × (0,8 + 0,04·P) : A ≈ 3,5, B ≈ 27,6). La Cote (ordre des quêtes) ne change pas. Rééquilibrer par la simulation |
+| 6 | Carte en liste : pertinence ? | Exigée par la règle « chaque geste a un bouton équivalent » (CLAUDE.md, PRODUCT.md) : c'est l'accès à la carte sans toucher l'île | La garder, mais rangée hors de la vue principale ; elle liste les fiches des quartiers et bâtiments |
+| 7 | « Je m'y mets » : ça apporte quoi ? | Aucune ressource (voulu : impossible à exploiter). Note le temps passé, le montre au bilan, propose de découper une quête qui prend plus de 2 fois son estimation. Idée de la revue d'octobre ; Alex avait choisi « simple relevé du temps ». C'est aussi un des déclencheurs du gel de priorité/longueur/difficulté (`reward.js`) | Le retirer de la carte du Fil du jour (les autres déclencheurs du gel restent) |
+| 8 | Voir les habitants bouger | Prévu aux semaines 3-4 (« île vivante », bible §14) | Inchangé |
+| 9 | Rabat : il faut viser « Tout voir » ; un glissement recharge la page | Bouton seulement, aucun glissement ; la protection contre « tirer pour rafraîchir » est posée sur les zones qui défilent (`.panel-scroll`, `.sheet-body`, `.ow-scroller`), pas sur la page | Bloquer le rechargement par glissement sur la page ; poignée qui se glisse ; toucher n'importe où dans l'en-tête ouvre ou replie. **Défaut à corriger en premier** |
+| 10 | Boutons de zoom inutiles (on pince) | Exigés par la même règle d'équivalence | Colonne remplacée par : « Construire », « Quêtes » (montre ou cache le panneau, carte plein écran), et un bouton « Vue » qui déplie zoom +, −, toute l'île |
+| 11 | Récolte en 5 jours actifs : un peu long, mais juste | — | Inchangé |
+| 12 | Aucun obstacle en 17 jours | Normal : imprévus et alertes n'existent pas encore (semaines 3-4) ; les Avis de la v1 ont été retirés au lot 1 | Inchangé |
+| 13 | Filtre « Archivées » : jamais vu comment archiver | « Archiver » n'existe que dans la feuille d'édition d'une quête (`sheets.js`) | Cacher le filtre tant qu'aucune quête n'est archivée ; dire ce qu'archiver veut dire. À vérifier : Hermes utilise-t-il ce statut ? |
+
+**Questions pour Alex**
+1. Quartiers : A (stock commun, améliorations achetées) ou B ?
+2. Gains : d'accord pour « l'effort paie » (longueur × difficulté, petite prime de priorité) ?
+3. « Je m'y mets » : on le retire ?
+4. Carte en liste : rangée dans un menu, d'accord ?
+5. Ordre : ces changements avant la bascule (recommandé : sa vraie partie démarre alors sur les bonnes règles, sans seconde migration), ou après ?
