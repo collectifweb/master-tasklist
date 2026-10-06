@@ -593,13 +593,10 @@
 }
 @container hud (max-width: 349px) {
   .res {
-    padding-inline: 4px;
+    padding-inline: 2px; /* libellés à 12 px : « Nourriture » tient sans points de suspension */
   }
   .res-value {
     font-size: var(--text-15);
-  }
-  .res-label {
-    font-size: 0.6875rem; /* 11 px : « Nourriture » et « Matériaux » tiennent sans points de suspension */
   }
 }
 
@@ -1664,6 +1661,23 @@ button.quest-check:active .quest-check-ring {
 .sector-option input:focus-visible + .sector-card {
   outline: 3px solid var(--c-focus);
   outline-offset: 2px;
+}
+
+/* Réglages : « Quête par défaut » est un titre de section, un cran au-dessus de ses trois rangées (16 px), détaché du prénom */
+.set-quete {
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-line);
+}
+.set-quete > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 6px;
+  font-size: var(--text-18);
+  color: var(--text);
+}
+.set-quete > legend + * {
+  clear: both;
 }
 
 /* Réglages P / L / D : pas à pas, 44 px par bouton */

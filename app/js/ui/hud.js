@@ -5,6 +5,14 @@ import { num } from './format.js';
 
 const LABEL = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants', permis: 'resource.permis' };
 
+/** Chiffre de la puce : à partir de 1 000, la forme courte (« 1,2 k », « 12 k ») tient dans une puce de téléphone ; la valeur complète reste dans le nom lu. */
+export function shortNum(n) {
+  const a = Math.round(Math.abs(n) * 10) / 10;
+  if (a < 1000) return num(n);
+  if (a < 10000) return `${num(n / 1000)}\u00a0k`;
+  return `${Math.round(n / 1000)}\u00a0k`;
+}
+
 export function resourcesOf(game) {
   return {
     energie: game.resources.energy,
@@ -24,9 +32,9 @@ export function createHud(root) {
       for (const [name, value] of Object.entries(vals)) {
         const btn = $(`.res[data-res="${name}"]`, root);
         const valueEl = $('.res-value', btn);
-        const text = num(value);
+        const text = shortNum(value);
         if (valueEl.firstChild.nodeValue !== text) valueEl.firstChild.nodeValue = text;
-        setAttr(btn, 'aria-label', `${t(LABEL[name])}\u00a0: ${text}`);
+        setAttr(btn, 'aria-label', `${t(LABEL[name])}\u00a0: ${num(value)}`);
         if (animate && last && last[name] !== undefined) {
           const diff = Math.round((value - last[name]) * 10) / 10;
           if (diff !== 0) {

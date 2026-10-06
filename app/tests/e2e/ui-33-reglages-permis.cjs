@@ -67,6 +67,44 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   R.check(`barre des ressources à ${tag} px : cinq puces, rien de coupé ni hors de la barre, cibles de 44 px, pas de défilement`, bar.n === 5 && !bar.hors.length && !bar.coupes.length && !bar.petits.length && !bar.defile, JSON.stringify(bar));
   await shot(page, '33-barre');
 
+  // ───── 360 px, AVANT l'achat (206,1 Énergie et 170,9 Matériaux, les valeurs de départ), puis des valeurs à quatre chiffres et plus
+  if (tag === 390) {
+    const small = await newPage({}, { viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true });
+    const sp2 = small.page;
+    await sp2.goto(srv.url);
+    await L.ready(sp2);
+    await sp2.waitForSelector('[data-ow="vue"]', { timeout: 8000 });
+    await L.closeWelcome(sp2);
+    await settle(sp2);
+    const b360 = await barre(sp2);
+    R.check('barre des ressources à 360 px, valeurs de départ (environ 207 Énergie, 170,9 Matériaux, le bonus d’ouverture compris) : cinq puces, rien de coupé ni hors de la barre, pas de défilement', b360.n === 5 && !b360.hors.length && !b360.coupes.length && !b360.petits.length && !b360.defile && await sp2.evaluate(() => innerWidth) === 360 && /20[67],1/.test(b360.texte.energie) && /170,9/.test(b360.texte.materiaux), JSON.stringify(b360));
+    const tailles = await sp2.evaluate(() => [...document.querySelectorAll('.hud .res-label')].map((l) => getComputedStyle(l).fontSize).join());
+    R.check('barre à 360 px : les libellés gardent 12 px (le plus petit texte du contrat visuel)', new Set(tailles.split(',')).size === 1 && tailles.split(',')[0] === '12px', tailles);
+    await sp2.screenshot({ path: `${L.SHOTS}/33-barre-360.png`, clip: { x: 0, y: 0, width: 360, height: 200 } });
+    // valeurs larges : la forme courte de la puce, la valeur complète dans le nom lu (la même fonction que l'application)
+    const larges = await sp2.evaluate(async () => {
+      const { shortNum } = await import('./js/ui/hud.js');
+      const cas = [999.96, 1238.5, 9999.96, 12349.6, 250000];
+      const res = [];
+      for (const v of cas) {
+        const out = [];
+        for (const r of document.querySelectorAll('.hud .res')) {
+          const el = r.querySelector('.res-value');
+          el.firstChild.nodeValue = shortNum(v);
+          const rg = document.createRange();
+          rg.selectNodeContents(el.firstChild);
+          out.push(rg.getBoundingClientRect().width <= el.getBoundingClientRect().width + 0.5 && rg.getBoundingClientRect().right <= r.getBoundingClientRect().right - 2);
+        }
+        res.push({ v, texte: shortNum(v), tient: out.every(Boolean) });
+      }
+      return res;
+    });
+    R.check('valeurs à quatre chiffres et plus à 360 px : la forme courte tient dans chaque puce', larges.every((c) => c.tient), JSON.stringify(larges));
+    R.check('forme courte : 1 238,5 → « 1,2 k », 12 349,6 → « 12 k », 999,96 → « 1 k », en dessous de 1 000 la valeur exacte', larges[1].texte === '1,2\u00a0k' && larges[3].texte === '12\u00a0k' && larges[0].texte === '1\u00a0k', JSON.stringify(larges.map((c) => c.texte)));
+    await sp2.screenshot({ path: `${L.SHOTS}/33-barre-large-360.png`, clip: { x: 0, y: 0, width: 360, height: 200 } });
+    await small.context.close();
+  }
+
   // feuille d'aide du compteur
   await page.click('.res[data-res="permis"]');
   await L.waitFor(() => isOpen(page, 'dlg-help'), 2000);
@@ -136,6 +174,54 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   R.check('la quête créée sur l’appareil 2 porte priorité 8, durée 3, effort 2', await L.waitFor(() => { const q = srv.readTasks().find((x) => x.task === 'Vider la remise'); return q && q.priority === 8 && q.length === 3 && q.difficulty === 2; }, 8000), JSON.stringify(srv.readTasks().find((x) => x.task === 'Vider la remise')));
   await second.context.close();
 
+  // ───── deux appareils en même temps : un enregistrement du prénom seul n'écrase pas la quête réglée entre-temps ailleurs
+  await L.openPanel(page);
+  await page.click('[data-action="open-settings"]');
+  await page.waitForSelector('#dlg-settings[open]');
+  await settle(page);
+  R.check('Réglages ouvert depuis le panneau : le focus n’est pas dans le champ Prénom (le clavier du téléphone cacherait les rangées)', await page.evaluate(() => document.activeElement.id !== 'set-prenom' && document.activeElement.closest('#dlg-settings') !== null), await page.evaluate(() => document.activeElement.id || document.activeElement.className));
+  const dev3 = await newPage({}, { hasTouch: true, isMobile: compact });
+  const p3 = dev3.page;
+  await p3.goto(srv.url);
+  await L.ready(p3);
+  await p3.waitForSelector('[data-ow="vue"]', { timeout: 8000 });
+  await L.closeWelcome(p3);
+  await settle(p3);
+  await L.openPanel(p3);
+  await p3.click('[data-action="open-settings"]');
+  await p3.waitForSelector('#dlg-settings[open]');
+  await settle(p3);
+  await p3.click('#dlg-settings .stepper-row[data-kind="priority"] [data-step="1"]'); // 8 → 9
+  await p3.click('#dlg-settings [type="submit"]');
+  R.check('appareil 3 : enregistre la priorité 9', await L.waitFor(() => srv.game()?.reglages?.queteDefaut?.priority === 9, 8000), JSON.stringify(srv.game()?.reglages));
+  await dev3.context.close();
+  // l'appareil 1 relit le serveur (retour sur la page) pendant que sa feuille Réglages reste ouverte, puis n'enregistre que le prénom
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await page.waitForTimeout(1500);
+  R.check('appareil 1 : sa feuille montre toujours les valeurs de l’ouverture (8, 3, 2)', await steppers(page, '#dlg-settings') === '8,3,2', await steppers(page, '#dlg-settings'));
+  await page.fill('#set-prenom', 'Sam');
+  await page.click('#dlg-settings [type="submit"]');
+  R.check('appareil 1 : le prénom seul ne remet pas l’ancienne quête par défaut (serveur : priorité 9)', await L.waitFor(async () => !(await isOpen(page, 'dlg-settings')), 3000) && (await page.waitForTimeout(800), srv.game().reglages.queteDefaut.priority === 9), JSON.stringify(srv.game()?.reglages));
+  R.check('annonce : seul le prénom est dit, pas la quête par défaut', await L.waitFor(() => page.evaluate(() => /Prénom enregistré\s:\sSam/.test(document.getElementById('live').textContent) && !/Quête par défaut/.test(document.getElementById('live').textContent)), 3000), await page.textContent('#live'));
+  // la quête seule, prénom inchangé : on ne lit pas la phrase du prénom ; au clavier, la borne ne fait pas perdre le focus
+  await page.click('[data-action="open-settings"]');
+  await page.waitForSelector('#dlg-settings[open]');
+  await settle(page);
+  R.check('la feuille rouverte montre la quête relue (9, 3, 2)', await steppers(page, '#dlg-settings') === '9,3,2', await steppers(page, '#dlg-settings'));
+  await page.focus('#dlg-settings .stepper-row[data-kind="priority"] [data-step="1"]');
+  await page.keyboard.press('Enter'); // 9 → 10 : le bouton « + » se désactive
+  const foc = await page.evaluate(() => { const a = document.activeElement; return { step: a.dataset.step, kind: a.closest('.stepper-row')?.dataset.kind, off: a.disabled, valeur: document.querySelector('#dlg-settings .stepper-row[data-kind="priority"] output').textContent }; });
+  R.check('borne 10 atteinte au clavier : le focus passe sur « Diminuer la priorité », il ne tombe pas sur la page', foc.valeur === '10' && foc.step === '-1' && foc.kind === 'priority' && !foc.off, JSON.stringify(foc));
+  await page.keyboard.press('Enter'); // 10 → 9 : le focus reste sur « − »
+  await page.keyboard.press('Enter'); // 9 → 8
+  for (let i = 0; i < 7; i++) await page.keyboard.press('Enter'); // jusqu'à 1 : « − » se désactive, le focus passe sur « + »
+  const foc1 = await page.evaluate(() => { const a = document.activeElement; return { step: a.dataset.step, kind: a.closest('.stepper-row')?.dataset.kind, off: a.disabled, valeur: document.querySelector('#dlg-settings .stepper-row[data-kind="priority"] output').textContent }; });
+  R.check('borne 1 atteinte au clavier : le focus passe sur « Augmenter la priorité »', foc1.valeur === '1' && foc1.step === '1' && foc1.kind === 'priority' && !foc1.off, JSON.stringify(foc1));
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Enter'); // 1 → 7
+  await page.click('#dlg-settings [type="submit"]');
+  R.check('quête seule enregistrée (priorité 7) : le serveur la porte', await L.waitFor(() => srv.game()?.reglages?.queteDefaut?.priority === 7, 8000), JSON.stringify(srv.game()?.reglages));
+  R.check('annonce : seule la quête par défaut est dite, sans la phrase du prénom', await L.waitFor(() => page.evaluate(() => /Quête par défaut enregistrée\s:\spriorité 7/.test(document.getElementById('live').textContent) && !/Aucun prénom|Prénom enregistré/.test(document.getElementById('live').textContent)), 3000), await page.textContent('#live'));
+
   // ───── fiche de quartier : le bouton d'achat ne bouge pas (en compact, le panneau ouvert recouvre la colonne : on le replie)
   if (await page.evaluate(() => document.getElementById('app').dataset.panel === 'open') && await page.locator('.panel-toggle').isVisible()) {
     await page.click('.panel-toggle');
@@ -174,19 +260,23 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   await L.waitFor(async () => (await valeur()) === 2, 4000);
   R.check('compteur « Permis » à jour après l’achat : 2', await valeur() === 2 && srv.game().permis.dispo === 2, String(await valeur()));
 
-  // ───── 360 px : la barre tient aussi avec des valeurs larges
-  if (tag === 390) {
-    const small = await newPage({}, { viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true });
-    await small.page.goto(srv.url);
-    await L.ready(small.page);
-    await small.page.waitForSelector('[data-ow="vue"]', { timeout: 8000 });
-    await L.closeWelcome(small.page);
-    await settle(small.page);
-    const b360 = await barre(small.page);
-    R.check('barre des ressources à 360 px : cinq puces, rien de coupé ni hors de la barre, pas de défilement', b360.n === 5 && !b360.hors.length && !b360.coupes.length && !b360.petits.length && !b360.defile && await small.page.evaluate(() => innerWidth) === 360, JSON.stringify(b360));
-    await small.page.screenshot({ path: `${L.SHOTS}/33-barre-360.png`, clip: { x: 0, y: 0, width: 360, height: 200 } });
-    await small.context.close();
-  }
+  // ───── avant que la partie soit lue (échec du chargement, aucune copie locale) : le « + » du panneau ouvre quand même l'ajout
+  const vide = await newPage({}, { hasTouch: true, isMobile: compact });
+  const pv = vide.page;
+  const erreurs = [];
+  pv.on('pageerror', (e) => erreurs.push(e.message));
+  pv.expected.push(/status of 400/); // le 400 est provoqué par le scénario
+  await pv.route('**/api/api.php', (r) => r.fulfill({ status: 400, contentType: 'application/json', body: '{"ok":false}' }));
+  await pv.goto(srv.url);
+  await L.waitFor(() => pv.evaluate(() => !document.getElementById('load-error').hidden), 8000);
+  await settle(pv);
+  const plus = pv.locator('.panel-head [data-action="add"]');
+  if (await plus.isVisible()) {
+    await plus.click();
+    R.check('chargement échoué : le « + » du panneau ouvre quand même le formulaire d’ajout, sans erreur JavaScript', await L.waitFor(() => isOpen(pv, 'dlg-add'), 2000) && !erreurs.length, JSON.stringify(erreurs));
+    R.check('chargement échoué : le formulaire d’ajout part des valeurs de base (5, 2, 3)', await steppers(pv, '#dlg-add') === '5,2,3', await steppers(pv, '#dlg-add'));
+  } else R.check('chargement échoué : le « + » du panneau est visible', false, 'bouton absent');
+  await vide.context.close();
 }, {
   tasks: TASKS,
   game: (core) => {

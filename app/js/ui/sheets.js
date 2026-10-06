@@ -72,7 +72,10 @@ export function handleStep(btn) {
   const row = btn.closest('.stepper-row');
   const out = $('output', row);
   out.textContent = String(Math.min(10, Math.max(1, Number(out.textContent) + Number(btn.dataset.step))));
+  const focused = document.activeElement === btn;
   syncStepper(row);
+  // borne atteinte : le bouton touché se désactive, le focus passe au bouton opposé au lieu de tomber sur la page
+  if (btn.disabled && focused) $(`[data-step="${-Number(btn.dataset.step)}"]`, row).focus();
   const dlg = row.closest('dialog');
   if (dlg && dlg.id === 'dlg-add') updateAddSummary();
 }

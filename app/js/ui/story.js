@@ -57,9 +57,12 @@ export function createStory(app) {
   }
 
   // ───────── Réglages : prénom facultatif (sur l'appareil), quête par défaut (dans la partie) ─────────
+  let queteOuverte = null; // valeurs montrées à l'ouverture : seul un geste sur « + » ou « − » les fait partir au serveur
   function openSettings() {
     const dlg = $('#dlg-settings');
     const quete = queteDefaut(app.ctx()?.game);
+    queteOuverte = quete;
+    const depuisLettre = !!$('#dlg-letter[open]'); // le lien « prénom » de la lettre vient pour écrire le prénom
     dlg.innerHTML = `
       <header class="sheet-head">
         <h2 class="sheet-title" id="settings-t">${esc(t('settings.title'))}</h2>
@@ -80,19 +83,22 @@ export function createStory(app) {
       <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="settings-form">${esc(t('settings.save'))}</button></footer>`;
     for (const row of $$('.stepper-row', dlg)) syncStepper(row);
     openSheet(dlg);
-    $('#set-prenom', dlg).focus();
+    // clavier virtuel : il ne s'ouvre que si l'on vient écrire le prénom, sinon il cacherait les trois rangées
+    (depuisLettre ? $('#set-prenom', dlg) : $('[data-close]', dlg)).focus();
   }
   function saveSettings(form) {
+    const avantPrenom = prenom();
     const v = setPrenom(form.elements.prenom.value);
     const quete = { priority: stepValue(form, 'priority'), length: stepValue(form, 'length'), difficulty: stepValue(form, 'difficulty') };
-    const avant = queteDefaut(app.ctx()?.game);
+    const avant = queteOuverte || queteDefaut(app.ctx()?.game); // pas la partie relue depuis : un autre appareil a pu la changer
     const change = Object.keys(quete).some((k) => quete[k] !== avant[k]);
     if (change && !app.run('reglerQueteDefaut', quete)) return; // refus : la feuille reste ouverte, le message est affiché
     const link = $('#dlg-letter[open] .letter-prenom .link-btn');
     if (link) link.textContent = v ? t('letter.prenom.change', { prenom: v }) : t('letter.prenom.add');
     closeSheet($('#dlg-settings'));
     const dit = v ? t('settings.saved', { prenom: v }) : t('settings.saved.none');
-    app.announce(change ? `${dit} ${t('settings.saved.quete', { p: quete.priority, d: durationText(quete.length), e: quete.difficulty })}` : dit);
+    const diteQuete = t('settings.saved.quete', { p: quete.priority, d: durationText(quete.length), e: quete.difficulty });
+    app.announce(!change ? dit : v === avantPrenom ? diteQuete : `${dit} ${diteQuete}`);
   }
 
   // ───────── Bilan de la semaine ─────────
