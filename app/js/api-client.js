@@ -48,8 +48,8 @@ async function call(method, payload) {
   return body;
 }
 
-/** Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas. */
-export const CLIENT_VERSION = 3;
+/** Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas, et un onglet resté en version 3, qui achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue. */
+export const CLIENT_VERSION = 4;
 
 export const api = {
   get: () => call('GET'),
