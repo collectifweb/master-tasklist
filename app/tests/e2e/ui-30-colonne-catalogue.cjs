@@ -83,6 +83,16 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
   R.check('rangée dépliée : cibles de 44 px', lay.btns.length === 7 && lay.btns.every((b) => b.w >= 43.99 && b.h >= 43.99), JSON.stringify(lay.btns.map((b) => [b.k, b.w])));
   R.check('rangée dépliée : dans l’écran, aucun défilement horizontal', lay.row.l >= 0 && lay.scrollW <= lay.clientW, JSON.stringify({ l: lay.row.l, sw: lay.scrollW }));
   await shot(page, '30-vue');
+  // la rangée fait seulement remonter les plaques qu'elle toucherait : aucune ne change de côté, aucune ne s'empile
+  await page.click('[data-ow="vue"]');
+  await page.waitForTimeout(250);
+  const closed = await layout(page);
+  await page.click('[data-ow="vue"]');
+  await page.waitForTimeout(250);
+  const pairs = (ps) => { const out = []; ps.forEach((a, i) => ps.slice(i + 1).forEach((b) => { if (meets(a, b)) out.push(`${a.s}/${b.s}`); })); return out; };
+  const moved = lay.plaques.filter((p) => { const q = closed.plaques.find((x) => x.s === p.s); return Math.abs(p.l - q.l) > 1; }).map((p) => p.s);
+  const stacked = pairs(lay.plaques).filter((x) => !pairs(closed.plaques).includes(x));
+  R.check('rangée dépliée : aucune plaque ne change de côté ni ne s’empile sur une autre', !moved.length && !stacked.length, JSON.stringify({ moved, stacked }));
 
   // ───── « Carte en liste » depuis la rangée ; en se fermant, elle rend le focus à « Vue »
   await page.click('[data-ow="plan"]');
@@ -152,6 +162,8 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
     return { cx, cy, fx: ow.width / 2, fy: top + (ow.height - top - bottom) / 2, top, bottom: ow.height - bottom, w: ow.width };
   });
   R.check('la carte montre le chalet neuf, dans la zone libre', cam.cx > 20 && cam.cx < cam.w - 20 && cam.cy > cam.top && cam.cy < cam.bottom, JSON.stringify(cam));
+  const tagText = await page.evaluate(() => { const t = document.querySelector('.ow-tag'); return t.hidden ? '' : t.textContent; });
+  R.check('… et le nomme (étiquette de la carte)', /^Chalet/.test(tagText), tagText);
   if (compact) R.check('… près du centre de la zone libre', Math.abs(cam.cx - cam.fx) < 80 && Math.abs(cam.cy - cam.fy) < 80, JSON.stringify(cam));
   await shot(page, '30-bati');
 

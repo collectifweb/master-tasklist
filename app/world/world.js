@@ -5,7 +5,7 @@
 //   world.play(events);          // joue les événements du cœur, dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
 //   world.focusSector('champs'); // cadre un quartier
-//   world.focusEntity('chalet-2'); // cadre un objet (bâtiment, emplacement, repère), quai compris
+//   world.focusEntity('chalet-2'); // cadre un objet (bâtiment, emplacement, repère), quai compris, et le nomme
 //   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
 //   world.setQuestsShown(false); // le panneau des quêtes est caché (bouton « Quêtes » : aria-expanded)
 //   world.thumbType('serre');    // dessin d'un bâtiment debout (catalogue « Construire »)
@@ -372,21 +372,18 @@ export function createWorld(container, options = {}) {
   // Les plaques suivent leur ancre mais restent dans la zone libre : jamais sous le HUD, la feuille,
   // la colonne des commandes (rangée « Vue » dépliée comprise) ni hors de l'écran (elles se rangent alors au bord).
   const plaqueSize = {};
-  let zoomBox = null; // [gauche, haut, droite, bas] en coordonnées de vue
+  let zoomBox = null; // colonne : [gauche, haut, droite, bas] en coordonnées de vue, jusqu'au bord droit
+  let rowBox = null;  // rangée « Vue » dépliée, ou null
   function measurePlaques() {
     for (const s of SECTOR_ORDER) if (plaqueEls[s]) plaqueSize[s] = [plaqueEls[s].offsetWidth, plaqueEls[s].offsetHeight];
   }
-  /** Boîte réelle de la colonne et de la rangée dépliée, avec une marge, jusqu'au bord droit de la vue. */
+  /** Boîtes réelles de la colonne et de la rangée dépliée, avec une marge : deux obstacles, pas leur union. */
   function measureZoom() {
     const R = root.getBoundingClientRect(), m = 6;
-    const boxes = [zoom.getBoundingClientRect()];
-    if (!row.hidden) boxes.push(row.getBoundingClientRect());
-    zoomBox = [
-      Math.min(...boxes.map((b) => b.left)) - R.left - m,
-      Math.min(...boxes.map((b) => b.top)) - R.top - m,
-      camera.W,
-      Math.max(...boxes.map((b) => b.bottom)) - R.top + m,
-    ];
+    const c = zoom.getBoundingClientRect();
+    zoomBox = [c.left - R.left - m, c.top - R.top - m, camera.W, c.bottom - R.top + m];
+    const r = row.hidden ? null : row.getBoundingClientRect();
+    rowBox = r ? [r.left - R.left - m, r.top - R.top - m, r.right - R.left + m, r.bottom - R.top + m] : null;
   }
   function relayoutControls() {
     if (first || destroyed) return;
@@ -407,12 +404,15 @@ export function createWorld(container, options = {}) {
       let vt = (mode === 'hang' ? y + 8 : y - h / 2) - camera.sy;
       vl = Math.max(m, Math.min(camera.W - w - m, vl));
       vt = Math.max(camera.top + m, Math.min(camera.H - camera.bottom - h - m, vt));
+      const hit = (z) => vl + w > z[0] && vl < z[2] && vt + h > z[1] && vt < z[3];
       const z = zoomBox;
-      if (vl + w > z[0] && vl < z[2] && vt + h > z[1] && vt < z[3]) {
-        // à gauche de la colonne de zoom si elle y tient entière, sinon au-dessus d'elle
+      if (hit(z)) {
+        // à gauche de la colonne si elle y tient entière, sinon au-dessus d'elle
         if (z[0] - w >= m) vl = z[0] - w;
         else vt = Math.max(camera.top + m, z[1] - h);
       }
+      // rangée « Vue » dépliée : la plaque remonte juste au-dessus d'elle, sans changer de côté
+      if (rowBox && hit(rowBox)) vt = Math.max(camera.top + m, rowBox[1] - h);
       b.style.transform = `translate(${f(vl + camera.sx)}px, ${f(vt + camera.sy)}px)`;
     }
   }
@@ -511,7 +511,8 @@ export function createWorld(container, options = {}) {
     wake();
   }
 
-  /** Cadre un objet de la carte (bâtiment ou emplacement, quai compris) au centre de la zone libre. */
+  /** Cadre un objet de la carte (bâtiment ou emplacement, quai compris) au centre de la zone libre, et le nomme
+   *  (sélection et étiquette, retirées comme les autres : Échap, toucher à côté, clearSelection()). */
   function focusEntity(eid) {
     if (destroyed) return;
     const p = scene.pointOf(eid);
@@ -519,6 +520,7 @@ export function createWorld(container, options = {}) {
     setActive(scene.get(eid).e.sector);
     if (camera.s < NEAR_SCALE - 0.001) camera.setScale(NEAR_SCALE);
     camera.centerOn(p[0], p[1], !reduced);
+    select(eid);
     wake();
   }
 

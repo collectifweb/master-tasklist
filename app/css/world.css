@@ -435,12 +435,14 @@
   flex-direction: row-reverse;
   gap: var(--sp-2, 8px);
 }
-.ow-zbtn[data-ow="vue"][aria-expanded="true"] {
+/* bascules enfoncées : « Vue » dépliée ; « Quêtes » quand le panneau est caché (la carte seule est le mode en cours) */
+.ow-zbtn[data-ow="vue"][aria-expanded="true"],
+.ow-zbtn[data-ow="quetes"][aria-expanded="false"] {
   border-color: var(--c-sage-deep);
   background: var(--c-sage-wash);
   color: var(--c-sage-deep);
   box-shadow: none;
-  transform: translateY(var(--face-h, 3px));
+  transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1)));
 }
 .ow-zbtn {
   display: grid;

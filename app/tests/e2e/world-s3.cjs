@@ -230,10 +230,12 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
         let top = probe('--world-safe-top'), bottom = probe('--world-cover-bottom');
         if (top + bottom > ow.height * 0.55) { const k = ow.height * 0.55 / (top + bottom); top *= k; bottom *= k; }
         const cx = e.left + e.width / 2 - ow.left, cy = e.top + e.height / 2 - ow.top;
-        return { cx: Math.round(cx), cy: Math.round(cy), ok: cx > 0 && cx < ow.width && cy > top && cy < ow.height - bottom };
+        const t = document.querySelector('.ow-tag');
+        return { cx: Math.round(cx), cy: Math.round(cy), ok: cx > 0 && cx < ow.width && cy > top && cy < ow.height - bottom, tag: t.hidden ? '' : t.textContent };
       }, eid);
-      check(`${tag} focusEntity('${eid}') : l'objet est dans la zone libre`, v.ok, v);
+      check(`${tag} focusEntity('${eid}') : l'objet est dans la zone libre, nommé par l'étiquette`, v.ok && v.tag.length > 0, v);
     }
+    await page.evaluate(() => window.__world.clearSelection());
 
     // ---- cibles de 44 px
     r.targets = await targets(page);
