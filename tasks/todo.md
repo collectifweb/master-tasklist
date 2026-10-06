@@ -474,3 +474,58 @@ Cible d'équilibrage choisie par moi (à dire à Alex) : au rythme mesuré sur l
 - *Essai (6 octobre, 12 h 18) : photo `backups/avant-lot-r2-20261006-121819/` (4 fichiers, empreintes identiques), envoi de `a9c3e0b`, 27 contrôles en lecture seule sur 27 (20 fichiers identiques au commit, partie inchangée avant et après l'essai d'écriture refusé en version 3, SANDBOX actif) ; navigateur neuf : cache `oree-coquille-v9`, seules erreurs les deux 401 attendus sans code, aucune écriture.*
 
 Non inclus (défauts connus du topo du lot R, laissés pour plus tard) : panneau caché qui revient hors ligne, bulle de Fanal sur « Construire » à 360×640, plaques qui se chevauchent rangée « Vue » dépliée, boutons de la carte tabulables sous le panneau, jour travaillé perdu par un second appareil hors ligne.
+
+## Lot V — Visiteurs au quai : le marchand d'abord
+
+Référence : bible §7 (visiteurs), §10 (bandeau « Cette semaine »), §14 (semaines 3 et 4), §15 (décisions 16, 17 et 21). **Statut : à valider par Alex.** Rien n'est codé avant sa réponse.
+
+Le lot ne contient que le marchand. Les visiteurs à commande (convoi, famille du Sud, scientifique ; le colporteur quand les décors existeront) viendront au lot suivant, sur la même base du « visiteur de la semaine ». Hors du lot : imprévus, alertes météo, allure du village (la taille des offres ne la suit pas encore), chronique d'Hermes.
+
+### Ce que verra Alex
+- Une fois le quai rebâti, le marchand accoste chaque semaine et reste du lundi au dimanche (semaine de jeu, celle de la semaine tenue). Quai rebâti en milieu de semaine : il arrive aussitôt.
+- Une barque amarrée au quai le montre sur l'île. Fanal annonce son arrivée.
+- « Cette semaine », dans le bandeau : « Le marchand est au quai, encore N jours ». Le toucher ouvre son comptoir, comme toucher la barque ou le quai.
+- La fiche du quai devient son comptoir : quatre offres, chacune prise une fois par visite.
+  1. De l'Énergie contre des Matériaux.
+  2. De l'Énergie contre de la Nourriture.
+  3. Des Matériaux contre de l'Énergie.
+  4. De la Nourriture contre de l'Énergie.
+  Chaque offre dit ce qu'elle prend et ce qu'elle donne, avec un bouton « Échanger », ou la raison écrite quand c'est impossible (il manque N Énergie, réserve pleine, déjà fait cette semaine).
+- Il repart dans la nuit du dimanche au lundi et revient le lundi avec les mêmes offres, de nouveau disponibles. Laisser passer une semaine ne fait rien perdre ; aucune taxe (décision 17).
+- Sans quai, rien ne change, sauf la fiche du vieux quai : « Rebâtis-le : un marchand passe chaque semaine. » (Aujourd'hui, elle dit que les visiteurs viendront « bientôt », `content/fr-CA/batiments.json`.)
+
+### Règles proposées
+- Aucun aller-retour ne rapporte : échanger dans un sens puis revenir rend toujours un peu moins que le départ. Le comptoir ne fabrique aucune ressource.
+- Taux non fixés (la bible le prévoit). Je les règle par la simulation et par la reconstitution de la partie d'essai, puis je les montre à Alex **avant** de coder l'écran. Cible proposée : en prenant l'offre « Énergie contre Matériaux » chaque semaine, le premier niveau de quartier arrive quelques jours avant le jour 23 de la reconstitution (chiffre du lot R2), sans devenir gratuit.
+- Nourriture reçue au-delà de la réserve : échange refusé, avec la raison. Rien ne se perd en cachette (bible §3).
+- Le marchand ne donne aucun permis et ne touche à aucune tâche.
+
+### Comment ça marche
+- Le visiteur de la semaine se déduit de la date et du quai bâti : tous les appareils voient le même, même hors ligne, sans rien enregistrer.
+- Un échange s'enregistre dans la partie, comme une construction : les ressources bougent, et la partie note les offres prises cette semaine. Deux appareils qui échangent en même temps : le serveur refuse le second (contrôle de conflit déjà en place) et l'appareil se remet à jour. Rien au registre des gains, rien dans `tasks.json`.
+- Un onglet resté ouvert sur la version 4 garde, en réécrivant la partie, ce qu'elle contient de nouveau (lu dans `merge`, `core/state.js` ; à prouver par un test). La version minimale ne devrait donc pas monter ; si elle monte, Alex recharge d'abord ses onglets (leçon du lot R2).
+
+### V1 — Cœur (logique seule, tests écrits d'abord et vus en échec)
+- [ ] `core/visiteurs.js` : visiteur de la semaine, offres, raisons de refus, geste `echanger`. Tests : présent du lundi au dimanche ; quai bâti en milieu de semaine ; une fois par offre et par semaine ; offres de nouveau disponibles le lundi suivant ; manque ; réserve pleine ; aucun aller-retour gagnant ; rien au registre ni dans `tasks.json`.
+- [ ] Taux réglés par la simulation et la reconstitution ; **tableau des taux montré à Alex avant V2**.
+- [ ] Test d'API : une partie qui porte la nouvelle clé, réécrite par un client version 4, la garde.
+
+### V2 — Écran [impeccable]
+- [ ] Barque du marchand au quai : touchable, cible de 44 px au moins, mouvement réduit respecté.
+- [ ] Fiche du quai en comptoir ; « Cette semaine » du bandeau ; carte en liste (le marchand y figure, avec un bouton) ; annonce de l'échange (une seule voix) ; réplique de Fanal à l'arrivée.
+- [ ] Textes dans `content/fr-CA/`, typographie de `app/content/README.md`.
+- [ ] Scénario navigateur neuf : quai bâti, arrivée, échange, double toucher qui n'échange qu'une fois, réserve pleine, départ du dimanche avec « Jour suivant », deux appareils.
+
+### V3 — Vérification et documents
+- [ ] `node --test` ; série complète aux trois largeurs sur un code figé, machine au calme ; `world-s3` et `world-perf` (l'île change).
+- [ ] Relecture indépendante.
+- [ ] Documents : bible §7 (règles et taux), `app/ARCHITECTURE.md`, `app/DESIGN.md`, `PRODUCT.md` au besoin ; cache `oree-coquille-v11`.
+
+### V4 — Envoi
+- [ ] Selon la réponse d'Alex à la question 4 : photo des données, envoi d'une étiquette `v2.1`, contrôles en lecture seule.
+
+### Questions pour Alex
+1. **Comptoir** : quatre offres fixes, une fois chacune par visite (recommandé : simple, borné, lisible) ? Ou un échange libre jusqu'à un plafond par visite ?
+2. **Fréquence** : chaque semaine, tant qu'il est le seul visiteur (recommandé) ? Son tour sera revu quand les autres visiteurs arriveront.
+3. **Quai au rang Hameau**, comme dans la bible ? D'après le code de conversion (`core/state.js`), la partie de production est repartie du village de départ le 6 octobre ; la production n'a pas été regardée. Si le quai n'y est pas, le marchand n'y paraîtra qu'après le Hameau (3 habitants) et le quai (25 Matériaux, 4 Énergie).
+4. **Envoi** : directement en production (rien ne change avant le quai), après la série complète et des captures envoyées à Alex ? Ou d'abord un essai sur un sous-domaine qu'Alex crée (stockage séparé d'office), avec une partie déjà au quai et « Jour suivant » ? Recommandé : l'essai si la production n'a pas de quai, l'envoi direct sinon.
