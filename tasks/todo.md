@@ -268,8 +268,8 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 - Bible (§4, §6, §7, §9, §13, §15) et `PRODUCT.md` mis à jour, chaque passage changé signalé dans le topo.
 
 **Arbitrages pris par moi (à relire par Alex)**
-1. **Gains.** PE = arrondi(4·L × (0,6 + 0,08·D) × (0,8 + 0,04·P)). C'est la formule proposée, multipliée par 4 pour garder l'échelle actuelle : sans ce facteur, le gain moyen est divisé par deux (5,1 PE contre 10,1 sur `tasks.example.json`) et, pour un départ le 15 décembre, la première famille arrive au jour 9 au lieu du jour 7 (jour 14 au lieu de 10 à une quête par jour). Avec le facteur 4, toutes les cibles de la simulation tiennent comme aujourd'hui. Exemples : courte et facile (P9 L2 D2) 7 PE au lieu de 10 ; longue et difficile (P9 L9 D9) 55 au lieu de 23. Plafond quotidien inchangé (45 puis 90) : dans la simulation, une journée ne le dépasse que de 2 PE au plus. *Chiffres relancés par moi le 5 octobre à 23 h (simulation du dépôt copiée hors dépôt, formule seule changée).* La Cote ne change pas.
-2. **Gel des valeurs.** « Je m'y mets » disparaît des déclencheurs ; restent la première étape cochée, 24 h après la création, et la fin. Risque connu, non traité : gonfler la longueur et la difficulté d'une quête créée puis finie aussitôt paie plus qu'avant (le levier existait déjà, plus petit).
+1. **Gains.** PE = arrondi(4·L × (0,6 + 0,08·D) × (0,8 + 0,04·P)). C'est la formule proposée, multipliée par 2 (2·L devient 4·L) pour garder l'échelle actuelle : sans ce facteur, le gain moyen est divisé par deux (5,1 PE contre 10,1 sur `tasks.example.json`) et, pour un départ le 15 décembre, la première famille arrive au jour 9 au lieu du jour 7 (jour 14 au lieu de 10 à une quête par jour). Avec le facteur 4, toutes les cibles de la simulation tiennent comme aujourd'hui. Exemples : courte et facile (P9 L2 D2) 7 PE au lieu de 10 ; longue et difficile (P9 L9 D9) 55 au lieu de 23. Plafond quotidien inchangé cette nuit (45 puis 90), décision laissée à Alex : le joueur simulé (quêtes L2 à 4, D3 à 5) ne le dépasse que de 2 PE au plus, mais une seule quête P9 L9 D9 vaut 55 PE dont 50 comptés, et deux le même jour 110 dont 71,5 comptés (−35 %, calcul de la relecture). *Chiffres relancés par moi le 5 octobre à 23 h (simulation du dépôt copiée hors dépôt, formule seule changée).* La Cote ne change pas.
+2. **Gel des valeurs.** « Je m'y mets » disparaît des déclencheurs ; restent la première étape cochée, 24 h après la création, et la fin. Risque connu, non traité cette nuit, décision laissée à Alex : gonfler la longueur et la difficulté d'une quête créée puis finie aussitôt rapportait 2,4 fois plus ; avec la nouvelle formule, 7,9 fois plus (calcul de la relecture, à refaire avant le topo). C'est en tension avec un principe de `PRODUCT.md` (vers la ligne 80), qui ne sera ni effacé ni adouci.
 3. **Retrait de « Je m'y mets ».** Le module `core/cote-a-cote.js` et l'épingle (`isPinned`, `pinnedFirst`) partent avec le bouton ; sinon une quête déjà épinglée resterait en tête sans moyen de la libérer. Le bouton « Découper » des grands chantiers reste (il ne dépend pas de la séance). Les parties existantes gardent `game.coteACote` et les minutes des bilans figés, inertes, sans migration ; `startedAt` reste dans les données et n'est plus lu.
 4. **Construire.** Le cœur choisit déjà le premier emplacement libre (`construire` avec `{ type }`) : le catalogue l'appelle, puis la caméra centre l'emplacement (nouvelle fonction du monde). Toucher l'île reste comme aujourd'hui.
 5. **Quêtes.** Troisième état du panneau, « caché » : la carte prend tout l'écran aux trois largeurs, et la caméra se recadre.
@@ -277,14 +277,23 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 7. **Toucher un quartier.** Tout ce qui filtrait la liste (plaque, repère, Fanal sans quête) ouvre la fiche du quartier. Le filtre reste dans les puces de la liste et dans la fiche (« Voir les quêtes Terrain (14) »).
 8. **Permis.** Comme la spécification, avec quatre écarts tirés du relevé : le niveau 3 du Garage (tournée d'hiver, seul mécanisme neuf, avec deux pièges relevés) est reporté, le Garage s'arrête donc au niveau 2 pour l'instant ; à la conversion, le compte des jours part de la veille, pour que le jour de la conversion compte ; la lettre de conversion a sa propre fonction (`passageLetter` ne sait pas remplir `{n}`) ; `ECHELLE` se règle par simulation après la nouvelle formule de gains. Version de l'app 3 (client et serveur), cache v8.
 
+**Règles d'exécution (après la critique du plan par quatre relecteurs, 5 octobre vers 23 h 15)**
+- `feat/village-v2` reste toujours un état qu'on peut envoyer : chaque sous-lot se code dans sa propre copie de travail et n'est fusionné que vert (`node --test`, série complète aux trois largeurs, `world-s3`).
+- Fichiers de R2a : `app/core/**`, `app/tests/core/**`, `app/tests/api/**`, `app/api/api.php`, `app/js/api-client.js` (version seulement), `app/content/fr-CA/lettres.json`, et une ligne de `app/sw.js` (son module). Fichiers de R2b : `app/index.html`, `app/css/**`, `app/js/main.js`, `app/js/world-bridge.js`, `app/js/ui/**`, `app/world/**`, `interface.json`, `batiments.json`, `app/tests/e2e/**`, une ligne de `app/sw.js`. Personne en R2 : version du cache, `js/store.js`, `repliques.json`, documents. R2a garde l'événement `quartier-niveau` et les exports de `village.js` : R3 les retire avec ce qui les lit.
+- Nouveau fichier : dans la liste `SHELL` de `sw.js` dans le même commit. La version du cache ne monte qu'une fois, en R6.
+- Point de repli **P1** = R1 + gains (commit à part de R2a) + R2b. Le bloc permis (reste de R2a, version 3, conversion, R3) part en entier ou pas du tout : jamais de conversion en permis sans l'écran pour les dépenser. Si R3 n'est pas vert et fusionné à 5 h, on envoie P1. L'envoi commence au plus tard à 6 h.
+- Ordre de coupe si ça déborde : rattrapage de la relecture de design du lot 2 ; répliques de Fanal par quartier et animation de montée ; poignée glissable (on garde la règle anti-rechargement et le toucher de l'en-tête) ; enfin tout le bloc permis.
+- Le correctif du rechargement ne se vérifie pas dans Chromium de bureau : à essayer par Alex dans Brave sur Android.
+
 **Sous-lots**
 
 ### R1 — Retrait de « Je m'y mets » et filtre « Archivées »
 - [ ] D'abord le contrôle commun des scénarios (`FIL_CHECK` de `tests/e2e/lib.cjs`) et `ui-01`, sinon toute la série échoue.
 - [ ] Écran : bouton (trois cartes), proposition de découper, état « en cours », temps au bilan, textes.
+- [ ] La carte « Grand chantier » reçoit le bouton « Fait » de la carte rapide (sans lui, elle n'aurait plus d'action principale) ; « Découper » reste en second. Un geste « Je m'y mets » resté en file hors ligne est écarté sans message.
 - [ ] Cœur : `startQuest`, `pauseQuest`, épingle, séance, gel par `startedAt`, relevé du recyclage ; `core/cote-a-cote.js` retiré de `sw.js`.
 - [ ] Tests : `cote-a-cote.test.mjs` et `ui-22` retirés, les autres adaptés.
-- [ ] Filtre « Archivées » caché tant qu'aucune quête n'est archivée ; retour à « À faire » si la dernière est désarchivée ; une phrase dit ce qu'archiver veut dire (texte du bilan réutilisé).
+- [ ] Filtre « Archivées » caché tant qu'aucune quête n'est archivée ; retour à « À faire » si la dernière est désarchivée ; une phrase à côté du bouton « Archiver » de la fiche dit ce qu'archiver veut dire (rangée sans rien effacer, on peut la ressortir). Hermes : le flux décrit dans `TASKS_WORKFLOW.md` ne lit que `todo` et `done` (lu, non vérifié chez Hermes).
 
 ### R2 — En parallèle, chacun dans sa copie de travail
 **R2a — Cœur : gains et permis** (logique et tests seulement)
@@ -292,17 +301,26 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 - [ ] `core/quartiers.js` : effets des niveaux, prix, refus, `monterQuartier`, `suivrePermis` ; lectures branchées dans `batiments.js` (récolte par lieu, jours de pousse, places, stockage, prix d'une famille).
 - [ ] Permis des jours travaillés, des rangs et de l'objectif de saison ; événements dédiés.
 - [ ] Conversion des niveaux en permis (parties v1 et v2, sans toucher `STATE_VERSION`) ; lettre de conversion.
-- [ ] Version 3 du client et du serveur, tests de l'API mis à jour ; `ECHELLE` réglée par simulation.
+- [ ] Version 3 du client et du serveur, les six envois `client: 2` des tests de l'API passés à 3 (dont `api.test.mjs:371`), cas « version 2 refusée » ; `ECHELLE` réglée par simulation, avec un profil de quêtes longues et difficiles en plus.
+- [ ] Gains dans un premier commit à part (point de repli P1).
+- [ ] Partie neuve : le compte des jours part aussi de la veille. Niveau maximum par quartier (Garage 2) : « Niveau {n} : le plus haut pour l'instant. » ; « Déjà fait. » seulement si le niveau visé est atteint, sinon « Il faut d'abord le niveau {n}. ».
+- [ ] Partie v1 (la vraie partie à la bascule) : pas de lettre de conversion ; la lettre de passage parle des permis.
+- [ ] Lectures pour R3 : `progressionPermis`, places par chalet exportées, événements `permis` et `quartier-monte` ; script de preuve de la conversion pour R6.
 
 **R2b — Interface : rabat, colonne de la carte, catalogue** [impeccable]
-- [ ] Rabat : `overscroll-behavior-y: contain` sur `html` et `body` ; en-tête qui se touche ou se glisse (sauf ses boutons) ; rien en colonne latérale.
+- [ ] Premier commit : `overscroll-behavior-y: contain` sur `html` et `body` (le défaut qu'Alex veut voir corrigé en premier).
+- [ ] En-tête qui se touche ou se glisse (sauf ses boutons), testé au doigt (toucher émulé), pas seulement à la souris ; rien en colonne latérale.
+- [ ] Table des passages entre ouvert, replié et caché (Tout voir, en-tête, Quêtes, Échap, filtre, Aujourd'hui, Voir sur la carte) ; panneau caché inerte ; un message ou une erreur d'enregistrement reste visible quand le panneau est caché.
 - [ ] Colonne : Construire, Quêtes (état « caché »), Vue (Rapprocher, Éloigner, Toute l'île, Carte en liste) ; caméra recadrée ; plaques jamais sous la colonne.
-- [ ] Catalogue « Construire » (bâtiments) : disponible, coût, ce qui manque ; la caméra montre l'emplacement.
+- [ ] Catalogue « Construire » (bâtiments) : disponible, coût, ce qui manque. Il envoie `{ type, id }` (premier emplacement libre, calculé à l'affichage) pour qu'un double toucher ne bâtisse pas deux fois ; se ferme au succès ; la caméra montre l'emplacement (quai et parcelles compris).
+- [ ] Colonne ancrée au-dessus du vrai haut du panneau ; contrôles à la main à 360×640 et 390×667 ; la démo du monde reçoit les mêmes boutons, pour que `world-s3` les mesure.
 - [ ] Scénarios mis à jour ; `world-s3` et `world-perf` relancés à la main (hors `run-ui.sh`).
 
 ### R3 — Le permis à l'écran (après la fusion de R2a et R2b) [impeccable]
 - [ ] Fiche de quartier (feuille propre, ses propres identifiants) ; toucher une plaque ouvre la fiche.
-- [ ] Plaques « Champs · niv. 2 » sans barre, signal « niveau possible » sans agrandir la plaque repliée (44 px pile à 390).
+- [ ] Plaques « Champs · niv. 2 » sans barre. Le signal « niveau possible » sur la plaque est reporté : la pastille sur « Construire » mène à la section Quartiers, qui montre le prix et ce qui manque.
+- [ ] Carte en liste : chaque quartier ouvre sa fiche ; son texte vient du niveau acheté. Toucher Fanal ouvre la fiche de la Place.
+- [ ] `monterQuartier` dans les actions du magasin (`js/store.js`) ; places par chalet réelles dans `world/view.js` ; la fiche « Voir les quêtes » ferme toutes les feuilles ouvertes.
 - [ ] Section « Quartiers » du catalogue ; pastille des permis sur « Construire ».
 - [ ] Annonces et Fanal : permis gagné, quartier monté ; lettre de conversion ; fiches des bâtiments aux vraies valeurs.
 - [ ] Nouveau scénario navigateur aux trois largeurs (toucher, clavier, Carte en liste) ; `ui-12` et `world-s3` réécrits.
@@ -312,8 +330,14 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 - [ ] Relecture indépendante à plusieurs regards (cœur et conversion, interface et accessibilité, fidélité aux décisions, design avec /impeccable, rattrapage de la relecture de design promise au lot 2). Correctifs.
 
 ### R5 — Documents
-- [ ] Bible, `PRODUCT.md`, `app/ARCHITECTURE.md` (dont les dettes des lots 3, 5 et 6), `CLAUDE.md`, `app/content/README.md`, `app/DESIGN.md`.
+- [ ] Bible (§3, §4, §6, §7, §9, §12, §13, §15) et `PRODUCT.md` dès R2 (ils ne sont pas envoyés) ; puis `app/ARCHITECTURE.md` (dont les dettes des lots 3, 5 et 6, et la vraie raison de la version 3 : un ancien onglet n'appelle pas le compte des permis), `CLAUDE.md`, `app/content/README.md`, `app/DESIGN.md`.
 
 ### R6 — Essai
-- [ ] Cache v8, commit, photo de la partie d'essai, envoi, contrôle sans écriture. La production n'est pas touchée.
+- [ ] Cache v8, commit. Photo de `api/data` de l'essai dans `backups/avant-lot-r-<date>/`.
+- [ ] Preuve hors ligne de la conversion : la photo passée dans `migrateState` du code envoyé, avec l'horloge de l'essai (somme des anciens niveaux = permis ; stock, quartiers et bilans inchangés ; second passage sans effet).
+- [ ] Après l'envoi : liste des tâches et registre identiques à la photo ; page chargée sans code, 0 erreur ; écriture en version 2 refusée ; lecture avec le code d'essai = 200. **Ne jamais ouvrir l'essai avec le code** (ça écrirait et convertirait la partie avant Alex). Fichiers restés sur le serveur et absents du dépôt : listés, rien d'effacé. La production n'est pas touchée.
 - [ ] Topo pour Alex.
+
+### Après le lot R (noté pour plus tard)
+- Niveaux 4 et suivants : à prévoir avant que les 17 niveaux soient achetés, soit environ 19 à 22 semaines au rythme régulier (calcul de la relecture).
+- Reportés : niveau 3 du Garage (tournée d'hiver), signal « niveau possible » sur les plaques, fichiers retirés à effacer à la main sur l'essai et en production (lot 8), essai et production qui partagent probablement la même origine dans le navigateur (risque connu, non traité).
