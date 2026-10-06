@@ -256,3 +256,64 @@ Alex a joué 17 faux jours sur l'essai (lot 4, avant l'accueil et le bandeau). �
 3. « Je m'y mets » : **retiré**.
 4. Carte en liste : **rangée dans un menu**.
 5. Ces changements se font **avant la bascule**.
+
+## Lot R — Retours d'essai, avant le lot 8 (nuit du 5 au 6 octobre 2026)
+
+**Statut : en cours, en autonomie** (mandat d'Alex le 5 octobre à 22 h 30 : toute la nuit, auto-vérification, topo au réveil). Plan écrit après un relevé du code par neuf agents en lecture seule (chaque constat cité en fichier:ligne ; relevé gardé hors dépôt), puis soumis à une critique indépendante.
+
+**Décisions d'Alex (5 octobre, 22 h 36)**
+- « Je m'y mets » : tout retiré de l'écran (bouton, épingle en tête du Fil, relevé du temps, temps au bilan, proposition de découper).
+- Carte en liste : rangée dans le bouton « Vue » de la carte.
+- Cette nuit : jusqu'à l'essai, jamais la production. La partie d'essai passe aux permis (niveaux convertis).
+- Bible (§4, §6, §7, §9, §13, §15) et `PRODUCT.md` mis à jour, chaque passage changé signalé dans le topo.
+
+**Arbitrages pris par moi (à relire par Alex)**
+1. **Gains.** PE = arrondi(4·L × (0,6 + 0,08·D) × (0,8 + 0,04·P)). C'est la formule proposée, multipliée par 4 pour garder l'échelle actuelle : sans ce facteur, le gain moyen est divisé par deux (5,1 PE contre 10,1 sur `tasks.example.json`, mesuré par simulation) et la première famille arrive au jour 9 au lieu du jour 6 pour un départ le 15 décembre. Exemples : courte et facile (P9 L2 D2) 7 PE au lieu de 10 ; longue et difficile (P9 L9 D9) 55 au lieu de 23. Plafond quotidien inchangé (45 puis 90) : la simulation ne le voit mordre que de 2 PE certains jours. La Cote ne change pas.
+2. **Gel des valeurs.** « Je m'y mets » disparaît des déclencheurs ; restent la première étape cochée, 24 h après la création, et la fin. Risque connu, non traité : gonfler la longueur et la difficulté d'une quête créée puis finie aussitôt paie plus qu'avant (le levier existait déjà, plus petit).
+3. **Retrait de « Je m'y mets ».** Le module `core/cote-a-cote.js` et l'épingle (`isPinned`, `pinnedFirst`) partent avec le bouton ; sinon une quête déjà épinglée resterait en tête sans moyen de la libérer. Le bouton « Découper » des grands chantiers reste (il ne dépend pas de la séance). Les parties existantes gardent `game.coteACote` et les minutes des bilans figés, inertes, sans migration ; `startedAt` reste dans les données et n'est plus lu.
+4. **Construire.** Le cœur choisit déjà le premier emplacement libre (`construire` avec `{ type }`) : le catalogue l'appelle, puis la caméra centre l'emplacement (nouvelle fonction du monde). Toucher l'île reste comme aujourd'hui.
+5. **Quêtes.** Troisième état du panneau, « caché » : la carte prend tout l'écran aux trois largeurs, et la caméra se recadre.
+6. **Vue.** Déplie vers la gauche une rangée : Rapprocher, Éloigner, Toute l'île, Carte en liste. Le bouton « Carte en liste » quitte le bas du panneau.
+7. **Toucher un quartier.** Tout ce qui filtrait la liste (plaque, repère, Fanal sans quête) ouvre la fiche du quartier. Le filtre reste dans les puces de la liste et dans la fiche (« Voir les quêtes Terrain (14) »).
+8. **Permis.** Comme la spécification, avec quatre écarts tirés du relevé : le niveau 3 du Garage (tournée d'hiver, seul mécanisme neuf, avec deux pièges relevés) est reporté, le Garage s'arrête donc au niveau 2 pour l'instant ; à la conversion, le compte des jours part de la veille, pour que le jour de la conversion compte ; la lettre de conversion a sa propre fonction (`passageLetter` ne sait pas remplir `{n}`) ; `ECHELLE` se règle par simulation après la nouvelle formule de gains. Version de l'app 3 (client et serveur), cache v8.
+
+**Sous-lots**
+
+### R1 — Retrait de « Je m'y mets » et filtre « Archivées »
+- [ ] D'abord le contrôle commun des scénarios (`FIL_CHECK` de `tests/e2e/lib.cjs`) et `ui-01`, sinon toute la série échoue.
+- [ ] Écran : bouton (trois cartes), proposition de découper, état « en cours », temps au bilan, textes.
+- [ ] Cœur : `startQuest`, `pauseQuest`, épingle, séance, gel par `startedAt`, relevé du recyclage ; `core/cote-a-cote.js` retiré de `sw.js`.
+- [ ] Tests : `cote-a-cote.test.mjs` et `ui-22` retirés, les autres adaptés.
+- [ ] Filtre « Archivées » caché tant qu'aucune quête n'est archivée ; retour à « À faire » si la dernière est désarchivée ; une phrase dit ce qu'archiver veut dire (texte du bilan réutilisé).
+
+### R2 — En parallèle, chacun dans sa copie de travail
+**R2a — Cœur : gains et permis** (logique et tests seulement)
+- [ ] Gains : tests écrits d'abord, puis la formule ; simulation recalée (cibles inchangées).
+- [ ] `core/quartiers.js` : effets des niveaux, prix, refus, `monterQuartier`, `suivrePermis` ; lectures branchées dans `batiments.js` (récolte par lieu, jours de pousse, places, stockage, prix d'une famille).
+- [ ] Permis des jours travaillés, des rangs et de l'objectif de saison ; événements dédiés.
+- [ ] Conversion des niveaux en permis (parties v1 et v2, sans toucher `STATE_VERSION`) ; lettre de conversion.
+- [ ] Version 3 du client et du serveur, tests de l'API mis à jour ; `ECHELLE` réglée par simulation.
+
+**R2b — Interface : rabat, colonne de la carte, catalogue** [impeccable]
+- [ ] Rabat : `overscroll-behavior-y: contain` sur `html` et `body` ; en-tête qui se touche ou se glisse (sauf ses boutons) ; rien en colonne latérale.
+- [ ] Colonne : Construire, Quêtes (état « caché »), Vue (Rapprocher, Éloigner, Toute l'île, Carte en liste) ; caméra recadrée ; plaques jamais sous la colonne.
+- [ ] Catalogue « Construire » (bâtiments) : disponible, coût, ce qui manque ; la caméra montre l'emplacement.
+- [ ] Scénarios mis à jour ; `world-s3` et `world-perf` relancés à la main (hors `run-ui.sh`).
+
+### R3 — Le permis à l'écran (après la fusion de R2a et R2b) [impeccable]
+- [ ] Fiche de quartier (feuille propre, ses propres identifiants) ; toucher une plaque ouvre la fiche.
+- [ ] Plaques « Champs · niv. 2 » sans barre, signal « niveau possible » sans agrandir la plaque repliée (44 px pile à 390).
+- [ ] Section « Quartiers » du catalogue ; pastille des permis sur « Construire ».
+- [ ] Annonces et Fanal : permis gagné, quartier monté ; lettre de conversion ; fiches des bâtiments aux vraies valeurs.
+- [ ] Nouveau scénario navigateur aux trois largeurs (toucher, clavier, Carte en liste) ; `ui-12` et `world-s3` réécrits.
+
+### R4 — Vérification et relecture
+- [ ] Tout relancer : `node --test`, série complète aux trois largeurs, `world-s3`, `world-perf`.
+- [ ] Relecture indépendante à plusieurs regards (cœur et conversion, interface et accessibilité, fidélité aux décisions, design avec /impeccable, rattrapage de la relecture de design promise au lot 2). Correctifs.
+
+### R5 — Documents
+- [ ] Bible, `PRODUCT.md`, `app/ARCHITECTURE.md` (dont les dettes des lots 3, 5 et 6), `CLAUDE.md`, `app/content/README.md`, `app/DESIGN.md`.
+
+### R6 — Essai
+- [ ] Cache v8, commit, photo de la partie d'essai, envoi, contrôle sans écriture. La production n'est pas touchée.
+- [ ] Topo pour Alex.
