@@ -19,9 +19,12 @@ export const ALREADY_DONE_RATE = 0.5;
 export const round1 = (n) => Math.round(n * 10) / 10;
 export const round2 = (n) => Math.round(n * 100) / 100;
 
-/** PE = round((6·√L + 2·[D ≥ 7]) × (0,8 + 0,04·P)). */
+/**
+ * L'effort paie : PE = round(4·L × (0,6 + 0,08·D) × (0,8 + 0,04·P)). Proportionnel à la longueur, multiplié par la
+ * difficulté, petite prime de priorité. Exemples : P9 L2 D2 = 7 ; P5 L5 D5 = 20 ; P9 L9 D9 = 55 ; P10 L10 D10 = 67.
+ */
 export function effortPoints(priority, length, difficulty) {
-  return Math.round((6 * Math.sqrt(length) + (difficulty >= 7 ? 2 : 0)) * (0.8 + 0.04 * priority));
+  return Math.round(4 * length * (0.6 + 0.08 * difficulty) * (0.8 + 0.04 * priority));
 }
 
 // ---- Gel de P / L / D --------------------------------------------------

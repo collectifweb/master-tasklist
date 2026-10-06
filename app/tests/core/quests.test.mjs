@@ -124,11 +124,11 @@ test('toggleStep : une étape paie une seule fois ; le total de la quête reste 
   w = again.world;
   for (const id of ['s2', 's3', 's4']) w = step(w, toggleStep, { id: 't1', stepId: id }).world;
   const stepsPe = sum(w.ledger, (e) => e.pe);
-  assert.ok(Math.abs(stepsPe - 25 * 0.4) < 0.05, 'étapes : ' + stepsPe);
+  assert.ok(Math.abs(stepsPe - 67 * 0.4) < 0.05, 'étapes : ' + stepsPe);
   const fin = step(w, completeQuest, { id: 't1' });
   const total = sum(fin.world.ledger, (e) => e.pe);
   assert.equal(total, totalSans);
-  assert.equal(totalSans, 25);
+  assert.equal(totalSans, 67);
 });
 
 test('toggleStep : refus sur une quête terminée ou une étape inconnue', () => {
@@ -145,12 +145,12 @@ test('completeQuest : gain, +1 tâche au quartier, opérations pour l’API', ()
   assert.deepEqual(kinds(r), ['task.upsert', 'ledger.append', 'game.set']);
   assert.equal(r.ops[2].baseGameRevision, 7);
   assert.equal(r.ops[1].entries[0].key, rewardKey('t1', 1));
-  assert.equal(r.entries[0].pe, 6);
+  assert.equal(r.entries[0].pe, 3);
   const ev = r.events.find((e) => e.type === 'reward');
-  assert.deepEqual({ ...ev }, { type: 'reward', source: 'quete', taskId: 't1', pe: 6, energy: 1.8, materials: 3, quartier: 'atelier' });
+  assert.deepEqual({ ...ev }, { type: 'reward', source: 'quete', taskId: 't1', pe: 3, energy: 0.9, materials: 1.5, quartier: 'atelier' });
   assert.equal(world.game.quartiers.atelier, 1);
-  assert.deepEqual(world.game.resources, { energy: 11.8, materials: 23, food: 5 });
-  assert.equal(questPe(world.tasks[0], T0).pe, 6);
+  assert.deepEqual(world.game.resources, { energy: 10.9, materials: 21.5, food: 5 });
+  assert.equal(questPe(world.tasks[0], T0).pe, 3);
 });
 
 test('chaque quête payée compte au quartier de son domaine, plusieurs fois le même jour', () => {
@@ -239,7 +239,7 @@ test('« Déjà faite » : 3 par jour à plein tarif, puis 50 %', () => {
     assert.equal(w.tasks[i].status, 'done');
     assert.equal(w.tasks[i].alreadyDone, true);
   }
-  assert.deepEqual(pes, [6, 6, 6, 3, 3]);
+  assert.deepEqual(pes, [3, 3, 3, 1.5, 1.5]);
   assert.equal(w.game.quartiers.place, 5); // sans domaine : la Place du village
 });
 
@@ -251,11 +251,11 @@ test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45
     w = s.world;
     rewards.push(s.r.entries[0]);
   }
-  assert.deepEqual(rewards.map((e) => e.pe), [25, 25, 25, 25]);
-  assert.equal(rewards[0].energy, 7.5);
-  assert.equal(rewards[1].energy, 6.8); // 20 PE à 100 % + 5 PE à 50 % = 22,5 × 0,3 = 6,75
-  assert.equal(rewards[2].energy, 3.8); // 25 PE à 50 % = 12,5 × 0,3 = 3,75, arrondi à 0,1
-  assert.ok(Math.abs(rewards[3].energy - 2.85) < 0.06); // 15 PE à 50 %, 10 PE à 20 % = 9,5 × 0,3
+  assert.deepEqual(rewards.map((e) => e.pe), [67, 67, 67, 67]);
+  assert.equal(rewards[0].energy, 16.8); // 45 PE à 100 % + 22 PE à 50 % = 56 × 0,3
+  assert.equal(rewards[1].energy, 6.1); // 23 PE à 50 % + 44 PE à 20 % = 20,3 × 0,3 = 6,09, arrondi à 0,1
+  assert.equal(rewards[2].energy, 4); // 67 PE à 20 % = 13,4 × 0,3 = 4,02
+  assert.equal(rewards[3].energy, 4);
   assert.ok(rewards.every((e) => e.quartier === 'atelier'));
   assert.equal(w.game.quartiers.atelier, 4);
 });
@@ -263,8 +263,8 @@ test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45
 test('aucun plafond de stock : tout le gain entre, même avec de grosses réserves', () => {
   const w = fresh([task({ priority: 10, length: 10, difficulty: 10 })]);
   w.game.resources = { energy: 400, materials: 900, food: 5 };
-  const s = step(w, completeQuest, { id: 't1' }); // +7,5 ⚡ et +12,5 ▣, plus le « Bon fil » (+2 ⚡)
-  assert.deepEqual(s.world.game.resources, { energy: 409.5, materials: 912.5, food: 5 });
+  const s = step(w, completeQuest, { id: 't1' }); // 67 PE, dont 56 comptés : +16,8 ⚡ et +28 ▣, plus le « Bon fil » (+2 ⚡)
+  assert.deepEqual(s.world.game.resources, { energy: 418.8, materials: 928, food: 5 });
   assert.equal(s.r.events.some((e) => e.type === 'surplus'), false);
 });
 
@@ -304,7 +304,7 @@ test('récurrence : une seule occurrence active, payée plein tarif, une clé pa
   assert.equal(s1.r.entries[0].key, 'reward:t1:1');
   const s2 = step(s1.world, completeQuest, { id: 't1' }, plusHours(T0, 24 * 7));
   assert.equal(s2.r.entries[0].key, 'reward:t1:2');
-  assert.equal(s2.r.entries[0].pe, 6);
+  assert.equal(s2.r.entries[0].pe, 3);
   assert.equal(s2.world.tasks[0].occurrence, 3);
 });
 
@@ -520,5 +520,5 @@ test('registre ancien : étapes versées connues par leur clé, la complétion n
   const base = task({ priority: 10, length: 10, difficulty: 10, steps: [1, 2, 3, 4].map((i) => ({ id: 's' + i, label: 'é', done: i <= 2 })) });
   const ledger = hydrateLedger([], ['step:t1:1:s1', 'step:t1:1:s2']);
   const r = step({ tasks: [base], game: fresh().game, ledger }, completeQuest, { id: 't1' });
-  assert.equal(r.r.entries[0].pe, 20); // 25 − 5 (2 étapes sur 4 : 2 × 40 % de 25 ÷ 4)
+  assert.equal(r.r.entries[0].pe, 53.6); // 67 − 13,4 (2 étapes sur 4 : 2 × 40 % de 67 ÷ 4)
 });
