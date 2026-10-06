@@ -24,7 +24,7 @@ export const ECHELLE = 20;
  * par semaine. 12 est une valeur de départ à décider, pas un réglage mesuré. Dans la simulation (tests/core/simulation.test.mjs,
  * joueur (g), mesuré le 6 octobre aux départs du 23 octobre, 25 octobre, 15 août et 1er juin), le premier niveau arrive aux
  * jours 30, 30, 58 et 61 sans bonus, 22, 22, 42 et 42 avec 12, 22, 22, 28 et 27 avec 30 : plus le bonus est gros, plus tôt
- * on monte. Des Matériaux, jamais de compteur.
+ * on monte, jusqu'à un plancher au jour 27 aux départs d'été dès 40 Matériaux (mesuré). Des Matériaux, jamais de compteur.
  */
 export const SEMAINE_TENUE = { jours: 5, materials: 12 };
 
@@ -158,7 +158,8 @@ export function suivrePermis(ctx) {
  */
 export function suivreSemaine(ctx) {
   const lundi = weekStart(ctx.day);
-  const jours = joursTravailles(ctx.ledger, addDays(lundi, -1), ctx.day);
+  // la semaine entière, pas seulement jusqu'au jour payé : un second appareil hors ligne envoie après coup des jours plus anciens
+  const jours = joursTravailles(ctx.ledger, addDays(lundi, -1), addDays(lundi, 6));
   if (jours < SEMAINE_TENUE.jours) return;
   const key = semaineKey(lundi);
   if (hasKey(ctx.ledger, key)) return;

@@ -13,10 +13,12 @@
 //     4 jours travaillés, le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
 //     nettement plus bas qu'une partie sans niveaux. ECHELLE (quartiers.js) se règle ici. (a) se mesure sans niveaux ;
 //     (a′) mesure la même chose avec niveaux, cible élargie à 15-25 (voir plus bas).
-// (g) (lot R2) un joueur simulé qui reprend le MOTIF de l'essai d'Alex (24 jours : 17 à une quête, 4 à deux, 3 sans ;
+// (g) (lot R2) un joueur simulé qui reprend les comptes de l'essai d'Alex (24 jours : 17 à une quête, 4 à deux, 3 sans, dans
+//     un ordre inventé ;
 //     toutes à priorité 5, longueur 2, difficulté 3, soit 7 points), avec les prix des niveaux à 80 Énergie et 60 Matériaux
-//     (ECHELLE 20) et la semaine tenue (SEMAINE_TENUE.materials, quartiers.js). Ses habitudes sont celles de l'essai, lues dans
-//     tasks/todo.md : chaque quête est ajoutée le jour même par l'ajout complet (bonus d'ajout), le bonus d'ouverture est pris
+//     (ECHELLE 20) et la semaine tenue (SEMAINE_TENUE.materials, quartiers.js). Ses habitudes sont des hypothèses tirées des types de
+//     gains de l'essai (tasks/todo.md, « 87 hors quêtes (ouverture, ajout, bon fil, éolienne, objectif de saison) », sans
+//     dire quand ni combien de fois) : chaque quête est ajoutée le jour même par l'ajout complet (bonus d'ajout), le bonus d'ouverture est pris
 //     chaque jour, l'éolienne, le grenier et le quai sont bâtis dès que le Hameau et les ressources le permettent, la serre est
 //     semée l'hiver. Une seule serre : la seconde est venue au lot R2a, après l'essai (avec elle, le premier niveau des départs
 //     d'été arrive aux jours 45 et 48 au lieu de 42 et 42, mesuré le 6 octobre ; ceux d'octobre ne changent pas).
@@ -253,7 +255,8 @@ test('(f) permis et niveaux : un permis tous les 4 jours travaillés, le premier
 
 // ───────── (g) le rythme mesuré sur l'essai ─────────
 
-// 24 jours : 17 à une quête, 4 à deux, 3 sans, répartis à intervalles à peu près égaux (le 3 octobre est un jour sans quête).
+// 24 jours : 17 à une quête, 4 à deux, 3 sans (mêmes comptes que l'essai ; l'ordre des jours est inventé, répartis à
+// intervalles à peu près égaux).
 const MOTIF_ESSAI = [1, 1, 1, 2, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 2, 1, 0, 1];
 const rythmeEssai = (i) => MOTIF_ESSAI[i % MOTIF_ESSAI.length];
 // quêtes par défaut du formulaire : priorité 5, longueur 2, difficulté 3 (7 points d'effort). Créées « dans le futur » : la
@@ -291,7 +294,9 @@ test('(g) la semaine tenue (12 Matériaux) n’éloigne aucun premier niveau : j
   // Mesuré le 6 octobre, premier niveau sans bonus, avec 12 puis avec 30 : (g) départs du 23 octobre, 25 octobre, 15 août,
   // 1er juin : jours 30, 30, 58, 61 sans bonus ; 22, 22, 42, 42 avec 12 ; 22, 22, 28, 27 avec 30. (f) départs du 25 octobre et du
   // 1er juin : jour 8 dans les trois cas. Ce joueur bâtit tout dès que possible : les Matériaux de la semaine tenue paient le
-  // Hameau, puis le niveau. Le montant reste à décider (le jour 24 aux départs d'été ne tient qu'avec un bonus plus gros).
+  // Hameau, puis le niveau. Le montant reste à décider. Aux départs d'été, aucun montant n'atteint le jour 24 : le premier niveau
+  // plafonne au jour 27 à partir de 40 Matériaux (mesuré le 6 octobre : 12 → 42, 20 → 36 et 34, 30 → 28 et 27, 40 à 120 → 27).
+  // La cible d'été dépend de l'ordre des bâtiments du Hameau, pas du bonus (voir le test « todo » des départs d'été, plus bas).
   const sauve = SEMAINE_TENUE.materials;
   const jours = (debut, profil, rythme) => simuler(debut, 16 * 7, rythme, { profil, habitudes: profil === parDefaut }).niveaux[0];
   try {

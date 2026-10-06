@@ -21,6 +21,18 @@ export function queteDefaut(game) {
 }
 
 /**
+ * Quête par défaut à enregistrer depuis la feuille des Réglages : la partie d'à présent (`actuel`), avec seulement les
+ * valeurs que le joueur a changées dans la feuille (`lue` différente de `ouverte`, ce que la feuille montrait à
+ * l'ouverture). Une valeur qu'il n'a pas touchée ne repart donc jamais périmée (feuille ouverte avant le chargement, ou
+ * quête changée entre-temps par un autre appareil).
+ */
+export function fusionQuete(actuel, ouverte, lue) {
+  const out = { ...actuel };
+  for (const k of Object.keys(QUETE_DEFAUT)) if (lue[k] !== ouverte[k]) out[k] = lue[k];
+  return out;
+}
+
+/**
  * Enregistre la quête par défaut. params : { priority, length, difficulty } (entiers de 1 à 10, les trois requis) ;
  * une valeur hors de 1 à 10 est refusée. Sans changement, aucune opération n'est envoyée.
  */

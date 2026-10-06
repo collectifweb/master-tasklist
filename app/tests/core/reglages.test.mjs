@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  queteDefaut, reglerQueteDefaut, QUETE_DEFAUT, createInitialState, migrateState, completeQuest,
+  queteDefaut, reglerQueteDefaut, fusionQuete, QUETE_DEFAUT, createInitialState, migrateState, completeQuest,
 } from '../../core/index.js';
 import { fresh, step, task, T0 } from './helpers.mjs';
 
@@ -79,4 +79,16 @@ test('la quête par défaut ne change ni le score ni l’argent : aucune entrée
   assert.deepEqual(world.ledger, []);
   assert.deepEqual(world.game.resources, w.game.resources);
   assert.deepEqual(world.game.permis, w.game.permis);
+});
+
+test('fusionQuete : seules les valeurs changées dans la feuille partent, sur la partie d’à présent', () => {
+  const ouverte = { priority: 5, length: 2, difficulty: 3 }; // feuille ouverte avant le chargement : 5 / 2 / 3
+  const actuel = { priority: 8, length: 2, difficulty: 3 }; // la partie relue depuis garde 8 en priorité
+  // seule la durée change : la priorité 8 n'est pas remise à 5
+  assert.deepEqual(fusionQuete(actuel, ouverte, { priority: 5, length: 3, difficulty: 3 }), { priority: 8, length: 3, difficulty: 3 });
+  // rien de touché : la partie d'à présent, telle quelle
+  assert.deepEqual(fusionQuete(actuel, ouverte, ouverte), actuel);
+  // une valeur touchée l'emporte, même si un autre appareil l'a changée entre-temps
+  assert.deepEqual(fusionQuete({ priority: 9, length: 7, difficulty: 3 }, ouverte, { priority: 5, length: 4, difficulty: 3 }), { priority: 9, length: 4, difficulty: 3 });
+  assert.deepEqual(fusionQuete(actuel, ouverte, { priority: 6, length: 2, difficulty: 3 }), { priority: 6, length: 2, difficulty: 3 });
 });

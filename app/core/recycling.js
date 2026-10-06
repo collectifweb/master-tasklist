@@ -4,7 +4,7 @@
 import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js';
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
-import { reverseKey, quartierOfEntry, hasKey, semaineKey } from './ledger.js';
+import { reverseKey, quartierOfEntry, findEntry, semaineKey } from './ledger.js';
 
 export const RECYCLE_AGE_DAYS = 60;
 export const BILANS_MAX = 104; // deux ans de bilans figés gardés dans la partie
@@ -21,6 +21,8 @@ const hours = (min) => Math.round(min / 6) / 10;
  * secteur, traduit). Jours travaillés = jours de la semaine avec au moins une de ces quêtes. `ratioJeuQuetes` reste null :
  * il demande de mesurer le temps passé dans le jeu, que rien ne mesure encore. `tenue` : vrai si la semaine a payé le
  * bonus « semaine tenue » (clé semaine:{lundi} au registre, quartiers.js) ; un bilan figé avant ce champ ne l'a pas.
+ * `tenueMateriaux` (seulement quand `tenue` est vrai et que l'entrée du registre porte son montant) : les Matériaux payés
+ * cette semaine-là, qui ne suivent pas un changement ultérieur de SEMAINE_TENUE.
  */
 export function weeklyReview(tasks, game, ledger, now) {
   const today = gameDay(now);
@@ -79,10 +81,12 @@ function bilanSemaine(tasks, game, ledger, start, now) {
   const domaines = Object.values(byQuartier)
     .map((d) => ({ ...d, heures: hours(d.minutes) }))
     .sort((a, b) => b.minutes - a.minutes || a.quartier.localeCompare(b.quartier));
+  const tenue = findEntry(ledger, semaineKey(start));
   return {
     semaine: { start, end },
     quetes, heures: hours(minutes), domaines,
     joursTravailles: jours.size,
-    tenue: hasKey(ledger, semaineKey(start)),
+    tenue: tenue !== null,
+    ...(tenue && Number.isFinite(tenue.materials) ? { tenueMateriaux: tenue.materials } : {}),
   };
 }
