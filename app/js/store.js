@@ -103,7 +103,12 @@ export class Store {
     window.addEventListener('online', () => this.flush().then(() => this.refresh({ force: true })));
     window.addEventListener('offline', () => this.setSync('offline'));
     window.addEventListener('storage', (e) => {
-      if (e.key === QUEUE_KEY) { this.queue = loadQueue(); this.recompute(); this.emit('change', {}); this.updatePending(); }
+      if (e.key === QUEUE_KEY) {
+        this.queue = loadQueue();
+        // partie pas encore lue (onglet qui s'ouvre) : adopt() refera la vue avec cette file
+        if (this.server) { this.recompute(); this.emit('change', {}); }
+        this.updatePending();
+      }
       if (e.key === TICK_KEY) this.refresh({ force: true });
     });
   }
