@@ -66,7 +66,7 @@ test('refus : il manque des ressources, avec le nombre exact (« Il manque 4 Mat
   assert.throws(() => step(w, construire, { type: 'chalet' }, NOW), { message: 'Il manque 4 Matériaux.' });
   w.game.resources = { energy: 0, materials: 0.5, food: 5 };
   const a = BATIMENTS.atelier.cout;
-  assert.equal(refusConstruire(w.game, 'atelier'), `Il manque ${String(a.materials - 0.5).replace('.', ',')} Matériaux et ${a.energy} Énergie.`);
+  assert.equal(refusConstruire(w.game, 'atelier'), `Il manque ${a.energy} Énergie et ${String(a.materials - 0.5).replace('.', ',')} Matériaux.`);
   w.game.resources = { energy: 0, materials: BATIMENTS.chalet.cout.materials - 1, food: 5 };
   assert.equal(refusConstruire(w.game, 'chalet'), 'Il manque 1 Matériau.');
 });

@@ -15,11 +15,11 @@ import { num, shortDate } from './format.js';
 
 const typeOf = (id) => String(id ?? '').replace(/-\d+$/, '');
 
-/** « 15 Matériaux », « 20 Matériaux et 4 Énergie » (les mêmes mots que le HUD). */
+/** « 15 Matériaux », « 4 Énergie et 20 Matériaux » (les mêmes mots et le même ordre que le HUD et les prix des quartiers). */
 export function coutText(cout) {
   const parts = [];
-  if (cout.materials) parts.push(`${num(cout.materials)} ${t(cout.materials < 2 ? 'resource.materials.one' : 'resource.materials.other')}`);
   if (cout.energy) parts.push(`${num(cout.energy)} ${t('resource.energy')}`);
+  if (cout.materials) parts.push(`${num(cout.materials)} ${t(cout.materials < 2 ? 'resource.materials.one' : 'resource.materials.other')}`);
   return parts.join(' et ');
 }
 

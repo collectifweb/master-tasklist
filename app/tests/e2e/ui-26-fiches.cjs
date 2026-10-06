@@ -93,7 +93,7 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
     row('grenier-1').etat === 'Verrouillé : Hameau : encore 3 habitants.' && row('chalet-1').nom === 'Chalet vide' && row('chalet-1').etat === 'À rebâtir' && row('parcelle-1').etat === 'Rien de semé',
     JSON.stringify([row('grenier-1'), row('chalet-1'), row('parcelle-1')]));
   R.check('liste : la seconde serre est verrouillée au rang Hameau, la première ne l’est pas',
-    row('serre-2').etat === 'Verrouillé : Il faut d’abord le rang Hameau : encore 3 habitants.' && !!row('serre-1').etat && !/rang Hameau/.test(row('serre-1').etat),
+    row('serre-2').etat === 'Verrouillé : Il faut d’abord le rang Hameau pour la 2e petite serre : encore 3 habitants.' && !!row('serre-1').etat && !/rang Hameau/.test(row('serre-1').etat),
     JSON.stringify([row('serre-1'), row('serre-2')]));
   R.check('liste : boutons « Ouvrir la fiche » de 44 px au moins', rows.every((r) => r.h >= 44), JSON.stringify(rows.map((r) => r.h)));
   // le titre de la liste a le focus ; Tab mène au premier bouton, les flèches parcourent la liste
@@ -130,7 +130,7 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
   await page.focus('#dlg-plan [data-bat="serre-2"]');
   await page.keyboard.press('Enter');
   const s2 = await L.waitFor(async () => { const x = await sheetInfo(page); return x.open && x.id === 'serre-2' ? x : null; }, 3000);
-  R.check('fiche de serre-2 : geste verrouillé, raison « Il faut d’abord le rang Hameau… »', s2 && s2.raison === 'Il faut d’abord le rang Hameau : encore 3 habitants.' && s2.cadenas && s2.geste?.off, JSON.stringify(s2));
+  R.check('fiche de serre-2 : geste verrouillé, raison « Il faut d’abord le rang Hameau… »', s2 && s2.raison === 'Il faut d’abord le rang Hameau pour la 2e petite serre : encore 3 habitants.' && s2.cadenas && s2.geste?.off, JSON.stringify(s2));
   await page.keyboard.press('Escape');
   await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
   await shot(page, '26-liste');

@@ -138,10 +138,10 @@ const jourSuivant = async (page, srv, k) => {
     R.check('compteur Permis : teinte airelle, ni le givre ni son lavis', couleurs.res === PERMIS_COULEUR && couleurs.res !== couleurs.frost && couleurs.wash !== couleurs.frostWash, JSON.stringify(couleurs));
 
     // ───── 2e serre verrouillée au Campement (1 habitant sur les 3 du Hameau)
-    const RAISON = 'Il faut d’abord le rang Hameau : encore 2 habitants.';
+    const RAISON = 'Il faut d’abord le rang Hameau pour la 2e petite serre : encore 2 habitants.';
     await openCatalogue(page);
     const serre = await ligne(page, 'serre');
-    R.check('catalogue : la 1re serre est bâtie, la 2e est verrouillée avec sa raison', serre.off && serre.etat === RAISON && serre.id === 'serre-2' && serre.label === 'Bâtir : Petite serre' && serre.cout === 'Coûte 25 Matériaux et 6 Énergie.', JSON.stringify(serre));
+    R.check('catalogue : la 1re serre est bâtie, la 2e est verrouillée avec sa raison', serre.off && serre.etat === RAISON && serre.id === 'serre-2' && serre.label === 'Bâtir : Petite serre' && serre.cout === 'Coûte 6 Énergie et 25 Matériaux.', JSON.stringify(serre));
     const effetAtelier = await page.evaluate(() => document.querySelector('#dlg-construire .cat-qrt[data-quartier="atelier"] .cat-suivant').textContent.replace(/ /g, ' '));
     R.check('catalogue : l’effet de l’Atelier parle de chaque petite serre', /par récolte de chaque petite serre/.test(effetAtelier), effetAtelier);
     R.check('catalogue : boutons de 44 px au moins', serre.h >= 43.99, String(serre.h));
@@ -149,7 +149,7 @@ const jourSuivant = async (page, srv, k) => {
     await closeCatalogue(page);
     await page.waitForTimeout(400);
     let s = await openBat(page, 'serre-2');
-    R.check('fiche de l’emplacement serre-2 : « Emplacement de la petite serre », coût, raison écrite, geste Bâtir verrouillé', s && s.nom === 'Emplacement de la petite serre' && /Coûte 25 Matériaux et 6 Énergie\./.test(s.now) && s.raison === RAISON && s.geste?.label === 'Bâtir' && s.geste.off, JSON.stringify(s));
+    R.check('fiche de l’emplacement serre-2 : « Emplacement d’une petite serre », coût, raison écrite, geste Bâtir verrouillé', s && s.nom === 'Emplacement d’une petite serre' && /Coûte 6 Énergie et 25 Matériaux\./.test(s.now) && s.raison === RAISON && s.geste?.label === 'Bâtir' && s.geste.off, JSON.stringify(s));
     await closeBat(page);
 
     // ───── la 5e quête de la semaine : la semaine tenue
@@ -311,7 +311,7 @@ const jourSuivant = async (page, srv, k) => {
       R.check('Hameau : la 2e serre est disponible au catalogue, sur serre-2', !r.off && r.etat === 'Disponible' && r.id === 'serre-2' && r.label === 'Bâtir : Petite serre', JSON.stringify(r));
       await shot(pb, '34-catalogue-hameau');
       await pb.click('#dlg-construire .cat-row[data-type="serre"] .cat-go');
-      R.check('serre-2 bâtie : enregistrée, 25 Matériaux et 6 Énergie dépensés', await L.waitFor(() => {
+      R.check('serre-2 bâtie : enregistrée, 6 Énergie et 25 Matériaux dépensés', await L.waitFor(() => {
         const g = srvB.game();
         return (g?.batiments || []).some((b) => b.id === 'serre-2') && g.resources.materials === b0.resources.materials - 25 && g.resources.energy === b0.resources.energy - 6;
       }, 5000), JSON.stringify(srvB.game()?.resources));
