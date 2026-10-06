@@ -27,7 +27,7 @@
   },
   "serre": {
     "nom": "Petite serre",
-    "vide": "Emplacement de la petite serre",
+    "vide": "Emplacement d’une petite serre",
     "quoi": "Un tunnel de bois et de toile, avec un petit poêle.",
     "quoiVide": "Un terrain plat et ensoleillé, piqueté pour une petite serre.",
     "fait": "Toute l’année, une récolte de {recolte} Nourriture après {jours} jours travaillés. De novembre à avril, chaque semis coûte aussi {chauffage} Énergie de chauffage.",

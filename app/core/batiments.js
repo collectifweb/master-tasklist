@@ -135,15 +135,15 @@ export function etatCulture(game, ledger, id, now) {
 
 // ───────── Raisons écrites ─────────
 
-/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials? }), en une phrase, ou null. */
+/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials? }), en une phrase, ou null. Même ordre que le HUD et les prix : permis, Énergie, Matériaux. */
 export function manque(game, cout) {
   const p = (cout.permis || 0) - Math.max(0, Math.floor(Number(game.permis?.dispo) || 0));
   const m = round1((cout.materials || 0) - game.resources.materials);
   const e = round1((cout.energy || 0) - game.resources.energy);
   const parts = [];
   if (p > 0) parts.push(`${p} permis`);
-  if (m > 0) parts.push(`${num(m)} ${m < 2 ? 'Matériau' : 'Matériaux'}`);
   if (e > 0) parts.push(`${num(e)} Énergie`);
+  if (m > 0) parts.push(`${num(m)} ${m < 2 ? 'Matériau' : 'Matériaux'}`);
   if (!parts.length) return null;
   return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
@@ -178,7 +178,9 @@ export function refusConstruire(game, type, id) {
   const h = logements(game).habitants;
   if (besoin && h < besoin.min) {
     const encore = `encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}`;
-    return def.rangParExemplaire?.[n] ? `Il faut d’abord le rang ${besoin.name}\u00a0: ${encore}.` : `${besoin.name}\u00a0: ${encore}.`;
+    // règle propre à l'exemplaire : la phrase le nomme (« la 2e petite serre »), pour qu'on ne croie pas le bâtiment entier verrouillé
+    const lequel = `${def.un.startsWith('une ') ? 'la' : 'le'} ${n}e ${def.un.replace(/^une? /, '')}`;
+    return def.rangParExemplaire?.[n] ? `Il faut d’abord le rang ${besoin.name} pour ${lequel}\u00a0: ${encore}.` : `${besoin.name}\u00a0: ${encore}.`;
   }
   if (def.prerequis && !compte(game, def.prerequis)) return `Il faut d’abord ${BATIMENTS[def.prerequis].un}.`;
   return manque(game, def.cout);

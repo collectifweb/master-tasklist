@@ -130,7 +130,7 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   await settle(page);
   R.check('Réglages : « Quête par défaut » montre 5, 2, 3 au départ', await steppers(page, '#dlg-settings') === '5,2,3', await steppers(page, '#dlg-settings'));
   const phrase = sp(await page.textContent('#dlg-settings'));
-  R.check('Réglages : la phrase dit « gardées avec la partie, les mêmes sur tous tes appareils » et que le prénom reste sur l’appareil', /gardées avec la partie/.test(phrase) && /mêmes sur tous tes appareils/.test(phrase) && /Le prénom, lui, reste sur cet appareil/.test(phrase), phrase.slice(0, 300));
+  R.check('Réglages : la phrase dit « gardées avec la partie : les mêmes sur tous tes appareils »', /Gardées avec la partie/.test(phrase) && /mêmes sur tous tes appareils/.test(phrase), phrase.slice(0, 300));
   const cibles = await page.evaluate(() => [...document.querySelectorAll('#dlg-settings button')].map((b) => [b, b.getBoundingClientRect()]).filter(([, r]) => r.width && (r.width < 43.99 || r.height < 43.99)).map(([b, r]) => `${b.dataset.step || b.className} ${r.width.toFixed(0)}×${r.height.toFixed(0)}`));
   R.check('Réglages : cibles de 44 px, aucun débordement horizontal', !cibles.length && await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), JSON.stringify(cibles));
   const pas = (kind, sens, n) => (async () => { for (let i = 0; i < n; i++) await page.click(`#dlg-settings .stepper-row[data-kind="${kind}"] [data-step="${sens}"]`); })();

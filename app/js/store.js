@@ -335,10 +335,15 @@ export class Store {
         return 'continue';
       }
       case 'op_id_reused':
-        // geste repris de la file v1 : son opId a déjà été appliqué par l'ancienne app, rien n'est refait
-        if (e.v1) { this.dropHead(e.opId); this.recompute(); this.emit('change', {}); return 'continue'; }
+        // geste repris de la file v1, ou dont le calcul d'une version plus ancienne a été effacé (stale) : son opId a déjà
+        // été appliqué par le serveur, rien n'est refait
+        if (e.v1 || e.stale) { this.dropHead(e.opId); this.recompute(); this.emit('change', {}); return 'continue'; }
         this.patchHead(e.opId, { body: null, opId: newOpId() });
         return 'continue';
+      case 'client_outdated':
+        // cet onglet est plus ancien que le serveur : le geste reste en file, pour un onglet à jour du même appareil
+        this.setSync('error', err.message);
+        return 'stop';
       case 'busy':
       case 'tasks_changed':
       case 'server_error':

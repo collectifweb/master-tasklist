@@ -55,8 +55,28 @@ test('7 jours travaillés : le bonus n’est payé qu’une fois (le 5e jour), j
   let w = fresh(quetes(12), at(LUNDI, 12));
   const sept = jouer(w, jours(LUNDI, 7));
   assert.deepEqual(semaines(sept.w.ledger).map((e) => [e.key, e.day]), [['semaine:2026-10-05', '2026-10-09']]);
-  // deux quêtes le même jour du 5e jour, ou un 8e jour de la semaine d'après : toujours aucun second bonus pour cette semaine
+  // ni au 6e ni au 7e jour (le 7e est le dernier calculé), puis un 8e jour, lundi de la semaine d'après : toujours aucun second
+  // bonus pour la semaine du 5, et aucun pour celle du 12 (un seul jour travaillé)
   assert.deepEqual(evenements(sept.last.r), []);
+  const huit = faire(sept.w, addDays(LUNDI, 7));
+  assert.deepEqual(evenements(huit.r), []);
+  assert.deepEqual(semaines(huit.world.ledger).map((e) => e.key), ['semaine:2026-10-05']);
+});
+
+test('deux appareils : les jours les plus anciens arrivent après les plus récents, la semaine est tenue quand même', () => {
+  // l'appareil B fait mercredi, jeudi et vendredi ; l'appareil A, hors ligne lundi et mardi, envoie sa file ensuite
+  // (store.js recalcule chaque geste à sa date, sur l'état du serveur) : aucun envoi n'a vu les 5 jours ensemble
+  let w = fresh(quetes(8), at(LUNDI, 12));
+  w = jouer(w, jours(addDays(LUNDI, 2), 3)).w;
+  assert.deepEqual(semaines(w.ledger), []);
+  const lundi = faire(w, LUNDI);
+  assert.deepEqual(semaines(lundi.r.entries), []); // 4 jours sur 5
+  const mardi = faire(lundi.world, addDays(LUNDI, 1));
+  assert.deepEqual(semaines(mardi.r.entries).map((e) => e.key), ['semaine:2026-10-05']);
+  assert.deepEqual(evenements(mardi.r), [{ type: 'semaine-tenue', semaine: LUNDI, jours: 5, materials: X }]);
+  // le bilan figé de la semaine la compte tenue
+  const bilan = figerBilans(mardi.world.tasks, mardi.world.game, mardi.world.ledger, at(addDays(LUNDI, 7)));
+  assert.deepEqual(bilan.map((b) => [b.semaine.start, b.joursTravailles, b.tenue]), [[LUNDI, 5, true]]);
 });
 
 test('frontière du lundi : le dimanche appartient à la semaine d’avant, le lundi à la suivante', () => {
@@ -156,6 +176,24 @@ test('bilan figé : `tenue` vrai pour la semaine payée, faux sinon ; un ancien 
   // la semaine en cours se lit aussi (bilan vivant)
   assert.equal(weeklyReview(w.tasks, w.game, w.ledger, at(addDays(LUNDI, 4))).tenue, true);
   assert.equal(weeklyReview(w.tasks, w.game, w.ledger, at(addDays(LUNDI, 10))).tenue, false);
+});
+
+test('bilan : le montant payé est celui du registre, pas la constante du moment', () => {
+  const w = jouer(fresh(quetes(20), at(LUNDI, 12)), [...jours(LUNDI, 5), ...jours(addDays(LUNDI, 7), 4)]).w;
+  const lundi3 = addDays(LUNDI, 14);
+  const sauve = SEMAINE_TENUE.materials;
+  try {
+    SEMAINE_TENUE.materials = 99; // un changement ultérieur du réglage ne réécrit pas ce qui a été payé
+    const [tenue, pas] = figerBilans(w.tasks, w.game, w.ledger, at(lundi3));
+    assert.equal(tenue.tenueMateriaux, sauve);
+    assert.equal('tenueMateriaux' in pas, false);
+    assert.equal(weeklyReview(w.tasks, w.game, w.ledger, at(addDays(LUNDI, 4))).tenueMateriaux, sauve);
+    // une entrée minimale (clé seule, relue du serveur) : tenue vraie, montant inconnu
+    const minimal = hydrateLedger([], [semaineKey(LUNDI)]);
+    const b = weeklyReview(w.tasks, w.game, minimal, at(addDays(LUNDI, 4)));
+    assert.equal(b.tenue, true);
+    assert.equal('tenueMateriaux' in b, false);
+  } finally { SEMAINE_TENUE.materials = sauve; }
 });
 
 test('l’entrée du registre s’applique à l’état comme un gain : Matériaux ajoutés, rien d’autre', () => {

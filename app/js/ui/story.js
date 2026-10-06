@@ -2,7 +2,7 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, SEMAINE_TENUE } from '../../core/index.js';
+import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
@@ -23,7 +23,8 @@ function writeReview(v) {
 const anyOpen = () => document.querySelector('dialog[open]');
 
 /**
- * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, announce(texte), focusHome(),
+ * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, attempt(action, params) → null ou
+ * le message du refus (pour l'écrire dans la feuille ouverte, la page derrière étant inerte), announce(texte), focusHome(),
  * thumb(id) → dessin d'un bâtiment (ou ''), lightBandeau(), focusBandeau() }.
  */
 export function createStory(app) {
@@ -60,6 +61,7 @@ export function createStory(app) {
   let queteOuverte = null; // valeurs montrées à l'ouverture : seul un geste sur « + » ou « − » les fait partir au serveur
   function openSettings() {
     const dlg = $('#dlg-settings');
+    const charge = !!app.ctx(); // sans la partie, la quête par défaut n'est pas connue : les trois valeurs restent fermées
     const quete = queteDefaut(app.ctx()?.game);
     queteOuverte = quete;
     const depuisLettre = !!$('#dlg-letter[open]'); // le lien « prénom » de la lettre vient pour écrire le prénom
@@ -76,23 +78,35 @@ export function createStory(app) {
         </div>
         <fieldset class="field set-quete" aria-describedby="set-quete-hint">
           <legend class="field-label">${esc(t('settings.quete'))}</legend>
-          <p class="field-hint" id="set-quete-hint">${esc(t('settings.quete.hint'))}</p>
+          <p class="field-hint" id="set-quete-hint">${esc(t('settings.quete.hint'))}${charge ? '' : ` ${esc(t('settings.quete.attente'))}`}</p>
           ${stepperRow('set', 'priority', quete.priority)}${stepperRow('set', 'length', quete.length)}${stepperRow('set', 'difficulty', quete.difficulty)}
         </fieldset>
+        <p class="field-error" id="set-err" role="alert" hidden>${icon('why')}<span></span></p>
       </form>
       <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="settings-form">${esc(t('settings.save'))}</button></footer>`;
-    for (const row of $$('.stepper-row', dlg)) syncStepper(row);
+    for (const row of $$('.stepper-row', dlg)) { if (!charge) row.dataset.locked = '1'; syncStepper(row); }
     openSheet(dlg);
     // clavier virtuel : il ne s'ouvre que si l'on vient écrire le prénom, sinon il cacherait les trois rangées
     (depuisLettre ? $('#set-prenom', dlg) : $('[data-close]', dlg)).focus();
   }
   function saveSettings(form) {
+    const lu = { priority: stepValue(form, 'priority'), length: stepValue(form, 'length'), difficulty: stepValue(form, 'difficulty') };
+    const avant = queteOuverte || queteDefaut(app.ctx()?.game); // ce que la feuille montrait : seul ce que le joueur change part
+    const change = Object.keys(lu).some((k) => lu[k] !== avant[k]);
+    // les valeurs non touchées viennent de la partie d'à présent, pas de l'ouverture de la feuille (un autre appareil a pu les changer)
+    const quete = fusionQuete(queteDefaut(app.ctx()?.game), avant, lu);
+    // la quête d'abord : un refus laisse la feuille ouverte, avec son message dedans (la page derrière est inerte, rien n'y serait lu)
+    if (change) {
+      const refus = app.attempt('reglerQueteDefaut', quete);
+      if (refus) {
+        const err = $('#set-err');
+        $('span', err).textContent = refus;
+        err.hidden = false;
+        return;
+      }
+    }
     const avantPrenom = prenom();
     const v = setPrenom(form.elements.prenom.value);
-    const quete = { priority: stepValue(form, 'priority'), length: stepValue(form, 'length'), difficulty: stepValue(form, 'difficulty') };
-    const avant = queteOuverte || queteDefaut(app.ctx()?.game); // pas la partie relue depuis : un autre appareil a pu la changer
-    const change = Object.keys(quete).some((k) => quete[k] !== avant[k]);
-    if (change && !app.run('reglerQueteDefaut', quete)) return; // refus : la feuille reste ouverte, le message est affiché
     const link = $('#dlg-letter[open] .letter-prenom .link-btn');
     if (link) link.textContent = v ? t('letter.prenom.change', { prenom: v }) : t('letter.prenom.add');
     closeSheet($('#dlg-settings'));
@@ -108,9 +122,9 @@ export function createStory(app) {
     return new Set(Object.keys(kept).filter((id) => daysBetween(kept[id], today) < KEEP_DAYS));
   }
 
-  /** Ligne de la semaine tenue (icône des Matériaux + texte) ; rien pour une semaine non tenue ni pour un ancien bilan sans le champ. */
+  /** Ligne de la semaine tenue (icône des Matériaux + texte) ; rien pour une semaine non tenue ni pour un ancien bilan sans le champ. Le montant est celui qui a été payé (repli : le montant actuel). */
   const tenueHtml = (b, tag) => (b.tenue === true
-    ? `<${tag} class="review-tenue">${icon('materiaux')}<span>${esc(t('review.tenue', { n: num(SEMAINE_TENUE.materials) }))}</span></${tag}>` : '');
+    ? `<${tag} class="review-tenue">${icon('materiaux')}<span>${esc(t('review.tenue', { n: num(Number.isFinite(b.tenueMateriaux) ? b.tenueMateriaux : SEMAINE_TENUE.materials) }))}</span></${tag}>` : '');
 
   /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), quêtes et heures. */
   function weekHtml(b) {

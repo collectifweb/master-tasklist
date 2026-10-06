@@ -1,7 +1,7 @@
 // Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
+  QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, JOURS_PAR_PERMIS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -77,7 +77,22 @@ export function handleStep(btn) {
   // borne atteinte : le bouton touché se désactive, le focus passe au bouton opposé au lieu de tomber sur la page
   if (btn.disabled && focused) $(`[data-step="${-Number(btn.dataset.step)}"]`, row).focus();
   const dlg = row.closest('dialog');
-  if (dlg && dlg.id === 'dlg-add') updateAddSummary();
+  if (dlg && dlg.id === 'dlg-add') { dlg.dataset.stepped = '1'; updateAddSummary(); }
+}
+/**
+ * Formulaire d'ajout ouvert avant que la partie soit lue : il montre 5 / 2 / 3. Quand la partie arrive, tant que le joueur
+ * n'a touché à aucun des trois « + » ou « − », les valeurs prennent la quête par défaut de ses Réglages.
+ */
+export function refreshAddDefaults(quete) {
+  const dlg = $('#dlg-add');
+  if (!dlg.open || dlg.dataset.stepped === '1' || !$('#add-form', dlg)) return;
+  for (const row of $$('.stepper-row', dlg)) {
+    const v = quete[row.dataset.kind];
+    if (Number(row.querySelector('output').textContent) === v) continue;
+    row.querySelector('output').textContent = String(v);
+    syncStepper(row);
+  }
+  updateAddSummary();
 }
 const valueOf = (root, kind) => Number($(`.stepper-row[data-kind="${kind}"] output`, root).textContent);
 export { valueOf as stepValue };
@@ -128,6 +143,7 @@ export function openAdd(quete = QUETE_DEFAUT) {
       <button class="btn btn--primary btn--block" type="submit" form="add-form" data-action="add-submit">${icon('plus')}${esc(t('add.submit'))}</button>
     </footer>`;
   dlg.dataset.manual = '';
+  dlg.dataset.stepped = '';
   for (const row of $$('.stepper-row', dlg)) syncStepper(row);
   updateAddSummary();
   openSheet(dlg);
@@ -456,7 +472,8 @@ export function openHelp(name) {
   const nom = HELP[name];
   if (!nom) return;
   const dlg = $('#dlg-help');
-  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours }; // la phrase des Matériaux dit le bonus de la semaine tenue
+  // la phrase des Matériaux dit le bonus de la semaine tenue, celle des permis le nombre de jours travaillés pour un permis
+  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours, parPermis: JOURS_PAR_PERMIS };
   const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`, vars))}</dd></div>`;
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title help-title" id="help-t" data-res="${esc(name)}">${icon(name)}<span>${esc(t(nom))}</span></h2>

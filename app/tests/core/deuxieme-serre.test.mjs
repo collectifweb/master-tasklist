@@ -41,10 +41,10 @@ test('catalogue : deux petites serres, la seconde exige le rang Hameau, la premi
 
 test('refus avant le Hameau : « Il faut d’abord le rang Hameau », avec ce qui manque ; accepté dès 3 habitants', () => {
   const w = monde(ETE, { batiments: [ATELIER, SERRE1], habitants: 0 });
-  assert.equal(refusConstruire(w.game, 'serre'), 'Il faut d’abord le rang Hameau : encore 3 habitants.');
+  assert.equal(refusConstruire(w.game, 'serre'), 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 3 habitants.');
   w.game.habitants = 2;
-  assert.equal(refusConstruire(w.game, 'serre'), 'Il faut d’abord le rang Hameau : encore 1 habitant.');
-  assert.throws(() => step(w, construire, { type: 'serre' }, at(ETE)), { message: 'Il faut d’abord le rang Hameau : encore 1 habitant.' });
+  assert.equal(refusConstruire(w.game, 'serre'), 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 1 habitant.');
+  assert.throws(() => step(w, construire, { type: 'serre' }, at(ETE)), { message: 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 1 habitant.' });
   w.game.habitants = 3;
   assert.equal(refusConstruire(w.game, 'serre'), null);
   // les autres bâtiments du Hameau gardent leur ancienne phrase
@@ -66,7 +66,7 @@ test('construire la seconde : identifiant serre-2, même prix que la première, 
 test('le rang se lit sur l’emplacement visé : serre-2 refusé au campement même sans aucune serre, serre-1 reste permis', () => {
   const camp = monde(ETE, { batiments: [ATELIER], habitants: 1 });
   assert.equal(refusConstruire(camp.game, 'serre', 'serre-1'), null);
-  assert.equal(refusConstruire(camp.game, 'serre', 'serre-2'), 'Il faut d’abord le rang Hameau : encore 2 habitants.');
+  assert.equal(refusConstruire(camp.game, 'serre', 'serre-2'), 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 2 habitants.');
   assert.throws(() => step(camp, construire, { type: 'serre', id: 'serre-2' }, at(ETE)), /rang Hameau/);
   assert.equal(step(camp, construire, { type: 'serre', id: 'serre-1' }, at(ETE)).world.game.batiments.at(-1).id, 'serre-1');
   // au Hameau, on peut poser la seconde la première ; la première libre est alors serre-1, au rang du campement
@@ -159,10 +159,10 @@ test('île : les deux emplacements de la serre ne se chevauchent avec aucun autr
 test('vue de l’île au campement : serre-2 verrouillée (rang Hameau), serre-1 libre, chacune selon son emplacement', () => {
   const w = monde(ETE, { batiments: [ATELIER, { id: 'chalet-1', type: 'chalet' }], habitants: 0 });
   const serres = (g) => batimentsView(g, [], new Date(at(ETE))).filter((b) => b.type === 'serre').map((b) => [b.id, b.refus]);
-  assert.deepEqual(serres(w.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau\u00a0: encore 3 habitants.']]);
+  assert.deepEqual(serres(w.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 3 habitants.']]);
   // serre-1 bâtie : serre-2 reste verrouillée tant qu'on n'a pas 3 habitants, puis s'ouvre
   const w2 = monde(ETE, { batiments: [ATELIER, SERRE1], habitants: 0 });
-  assert.deepEqual(serres(w2.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau\u00a0: encore 3 habitants.']]);
+  assert.deepEqual(serres(w2.game), [['serre-1', null], ['serre-2', 'Il faut d’abord le rang Hameau pour la 2e petite serre\u00a0: encore 3 habitants.']]);
   w2.game.habitants = 3;
   assert.deepEqual(serres(w2.game), [['serre-1', null], ['serre-2', null]]);
 });

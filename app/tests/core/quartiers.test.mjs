@@ -188,7 +188,7 @@ test('refus : niveau le plus haut (Garage 2, les autres 3), « Déjà fait. », 
   assert.equal(refusMonter(w.game, w.ledger, { quartier: 'atelier', niveau: 2 }), null);
 });
 
-test('refus : ce qui manque, en une phrase (permis, Matériaux, Énergie)', () => {
+test('refus : ce qui manque, en une phrase (permis, Énergie, Matériaux)', () => {
   const c1 = coutNiveau(1);
   const c2 = coutNiveau(2);
   const refus = (o, niveau = 1) => {
@@ -202,7 +202,7 @@ test('refus : ce qui manque, en une phrase (permis, Matériaux, Énergie)', () =
   assert.equal(refus({ materials: c1.materials - 12 }), 'Il manque 12 Matériaux.');
   assert.equal(refus({ energy: c1.energy - 5 }), 'Il manque 5 Énergie.');
   assert.equal(refus({ permis: 0, materials: c1.materials - 12 }), 'Il manque 1 permis et 12 Matériaux.');
-  assert.equal(refus({ permis: 1, materials: c2.materials - 12, energy: c2.energy - 5 }, 2), 'Il manque 1 permis, 12 Matériaux et 5 Énergie.');
+  assert.equal(refus({ permis: 1, materials: c2.materials - 12, energy: c2.energy - 5 }, 2), 'Il manque 1 permis, 5 Énergie et 12 Matériaux.');
   assert.equal(refus({ permis: 1, materials: c1.materials, energy: c1.energy }), null); // juste assez
 });
 
@@ -484,7 +484,9 @@ test('file hors ligne : un achat de niveau calculé à l’ancien prix (100 et 7
   assert.equal(sortie[0].body, null);
   assert.equal(sortie[1].body, null);
   // l'entrée effacée garde son opId (le serveur a pu l'appliquer sans que l'onglet le sache), son nom, ses paramètres, son instant
-  assert.deepEqual({ ...sortie[0], body: 0 }, { ...vieux(), body: 0 });
+  // et il est marqué `stale` : si le serveur l'avait appliqué, son rejeu ne doit pas repartir sous un nouvel opId
+  assert.deepEqual({ ...sortie[0], body: 0 }, { ...vieux(), body: 0, stale: true });
+  assert.equal(sortie[2].stale, undefined);
   assert.deepEqual(withoutStaleBodies('pas une file', 4), []);
   // le cœur courant refait le calcul à l'envoi : 80 et 60, pas 100 et 75
   const r = step(w, monterQuartier, sortie[0].params, new Date(sortie[0].at).toISOString());
