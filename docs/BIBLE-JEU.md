@@ -328,3 +328,8 @@ Décisions du 6 octobre 2026 (matin), après son essai jusqu'au jour de jeu 42 
 19. **Rabat à 360 × 640 accepté** tel quel.
 20. **« Semaine tenue »** : bonus dès le 5e jour travaillé sur 7, payé en Matériaux, sans compteur de jours de suite, en accord avec la revue d'octobre (un compteur cumulatif, jamais de série). Montant de départ : 12 Matériaux (§4).
 21. **Ordre des travaux** : lot R2 (équilibrage, réglages, semaine tenue), essai, puis lot 8 (bascule), puis visiteurs et imprévus.
+
+Décisions du 6 octobre 2026 (après-midi), lot 8 :
+
+22. **Ressources en nombres entiers à l'écran** : le calcul garde ses dixièmes ; ce qu'on a est arrondi vers le bas, ce qui manque vers le haut, un gain au plus proche.
+23. **La v2 remplace la v1 en production le 6 octobre 2026**, en convertissant la partie v1 (pas de départ à zéro, pas de reprise de la partie d'essai). L'essai est fermé, ses données gardées ; un futur essai aura son propre stockage (dossier à part ou sous-domaine).
