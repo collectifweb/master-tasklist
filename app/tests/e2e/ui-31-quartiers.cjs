@@ -1,8 +1,8 @@
 // 31. Niveaux de quartier achetés par permis.
-//   - pastille des permis sur « Construire », dite par le nom du bouton ; plaques « Champs · niv. 0 », sans barre ;
+//   - compteur « Permis » de la barre des ressources (et plus de pastille sur « Construire ») ; plaques « Champs · niv. 0 », sans barre ;
 //   - toucher une plaque ouvre la fiche du quartier : ce qu'il fait, le niveau suivant, son prix, les permis ;
 //   - achat : un double toucher n'achète qu'un niveau ; la phrase « Champs : niveau 1. … » est lue dans la feuille ;
-//     plaque, pastille et fiche à jour, le focus reste sur le bouton ; le niveau suivant, trop cher, reste visible avec
+//     plaque, compteur et fiche à jour, le bouton d'achat reste à sa place et garde le focus ; le niveau suivant, trop cher, reste visible avec
 //     le cadenas et la raison du cœur, redite au toucher, sans rien acheter ;
 //   - même chemin au clavier par « Construire » → Quartiers (la fiche s'empile sur le catalogue, Échap la referme
 //     seule) et par « Vue » → Carte en liste ; « Voir les quêtes » ferme toutes les feuilles et filtre la liste ;
@@ -48,10 +48,11 @@ const plaque = (page, s) => page.evaluate((s) => {
   const tx = (sel) => (b.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
   return { label: b.getAttribute('aria-label'), niveau: b.dataset.niveau, text: [tx('.ow-plaque-name'), tx('.ow-plaque-sep'), tx('.ow-plaque-val')].join(' '), barre: !!b.querySelector('.ow-plaque-bar') };
 }, s);
+/** Compteur « Permis » de la barre des ressources, et « Construire » (qui ne porte plus de pastille). */
 const badge = (page) => page.evaluate(() => {
+  const r = document.querySelector('.res[data-res="permis"]');
   const b = document.querySelector('[data-ow="build"]');
-  const p = b.querySelector('.ow-badge');
-  return { text: p.textContent, hidden: p.hidden, label: b.getAttribute('aria-label') };
+  return { text: r.querySelector('.res-value').textContent.trim(), label: r.getAttribute('aria-label'), pastille: !!b.querySelector('.ow-badge'), build: b.getAttribute('aria-label') };
 });
 /** Centre touchable d'une plaque (rien par-dessus), ou null. */
 const hit = (page, s) => page.evaluate((s) => {
@@ -73,9 +74,9 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await L.closeWelcome(page);
   await page.waitForTimeout(500);
 
-  // ───── pastille et plaques
+  // ───── compteur des permis et plaques
   let bd = await badge(page);
-  R.check('pastille « 3 » sur « Construire », dite par son nom', bd.text === '3' && !bd.hidden && bd.label === 'Construire, 3 permis à placer', JSON.stringify(bd));
+  R.check('compteur « Permis : 3 » dans la barre ; « Construire » sans pastille ni chiffre', bd.text === '3' && bd.label === 'Permis\u00a0: 3' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
   let pc = await plaque(page, 'champs');
   R.check('plaque des Champs : « Champs · niv. 0 », lue « Champs : niveau 0. », sans barre', pc.text === 'Champs · niv. 0' && pc.label === 'Champs : niveau 0.' && pc.niveau === '0' && !pc.barre, JSON.stringify(pc));
   const pg = await plaque(page, 'garage');
@@ -117,13 +118,15 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('… et un lecteur d’écran la reçoit (région non inerte)', v.sheet === 'dlg-quartier' && v.ignored === false, JSON.stringify(v));
   pc = await plaque(page, 'champs');
   R.check('plaque à jour : « Champs · niv. 1 », lue « Champs : niveau 1. »', pc.text === 'Champs · niv. 1' && pc.label === 'Champs : niveau 1.' && pc.niveau === '1', JSON.stringify(pc));
+  await L.waitFor(async () => (await badge(page)).text === '2', 4000); // le compteur monte à l'impact, après l'écriture
   bd = await badge(page);
-  R.check('pastille à jour : « 2 »', bd.text === '2' && bd.label === 'Construire, 2 permis à placer', JSON.stringify(bd));
+  R.check('compteur à jour : « Permis : 2 »', bd.text === '2' && bd.label === 'Permis\u00a0: 2' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
+  const apres = await page.evaluate(() => { const r = document.querySelector('#dlg-quartier [data-action="qrt-monter"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  R.check('le bouton d’achat n’a pas bougé après l’achat (second toucher sur le même bouton)', Math.abs(apres[0] - go[0]) <= 1 && Math.abs(apres[1] - go[1]) <= 1, JSON.stringify({ avant: go, apres }));
   f = await fiche(page);
   R.check('fiche à jour sur place : niveau 1, ce qu’il fait, niveau 2 à 2 permis', f.open && f.ligne.endsWith('niveau 1') && /Ce qu’il fait 5 Nourriture par récolte du potager \(\d+ au départ\)\./.test(f.corps) && /Prix 2 permis, 150 Énergie et 200 Matériaux\./.test(f.corps) && /^Tu as 2 permis\./.test(f.permis), JSON.stringify(f));
-  // le focus après un achat se contrôle au niveau 2 (clic) : en fenêtre centrée (834, 1280), la ligne de réussite
-  // agrandit la fiche et le second toucher tombe à côté du bouton, sur la feuille (sans rien acheter)
-  if (tag < 834) R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
+  // la fiche a une hauteur fixe dès 700 px : la ligne de réussite ne la fait plus grandir ni descendre son bouton
+  R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
   R.check('niveau 2 achetable : bouton actif', f.monter && !f.monter.off && f.monter.niveau === '2', JSON.stringify(f.monter));
   R.check('réussite visible dans la fiche : coche et « Champs : niveau 1. 5 Nourriture par récolte du potager. », en tête, à l’écran', f.monte && f.monte.check && f.monte.premier && f.monte.vu && f.monte.text === 'Champs : niveau 1. 5 Nourriture par récolte du potager.', JSON.stringify(f.monte));
   await shot(page, '31-achat');
@@ -141,8 +144,9 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   const raison = `Il manque 3 permis, ${300 - g.resources.materials} Matériaux et ${225 - g.resources.energy} Énergie.`;
   R.check('raison écrite par le cœur, avec le cadenas', f.raison && f.raison.lock && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
   R.check('« Tu n’as aucun permis. »', /^Tu n’as aucun permis\./.test(f.permis), f.permis);
+  await L.waitFor(async () => (await badge(page)).text === '0', 4000);
   bd = await badge(page);
-  R.check('plus de permis : pastille cachée, le bouton redevient « Construire »', bd.hidden && bd.label === 'Construire', JSON.stringify(bd));
+  R.check('plus de permis : le compteur dit « Permis : 0 », « Construire » reste « Construire »', bd.text === '0' && bd.label === 'Permis\u00a0: 0' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
   await shot(page, '31-refus');
   const g2 = JSON.stringify(srv.game());
   await L.said(page, true);
