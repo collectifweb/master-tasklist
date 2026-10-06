@@ -80,11 +80,33 @@ function hud(g) {
 }
 let pendingHud = null;
 window.__selections = [];
+window.__controls = []; // commandes de la carte touchées (build, quests, plan), pour les tests
 const world = createWorld($('#world'), {
   texts, anchors, announce, now: () => new Date(now),
   onImpact: () => { if (pendingHud) { hud(pendingHud); pendingHud = null; } },
   onSelect: (info) => { window.__selections.push(info); },
+  // mêmes boutons que l'app : la démo n'a pas de catalogue, « Quêtes » cache le panneau, « Carte en liste » montre le plan
+  panelId: 'panel',
+  controls: {
+    build: () => { window.__controls.push('build'); announce('Construire\u00a0: le catalogue est dans l’app.'); },
+    quests: () => { window.__controls.push('quests'); setPanel(app.dataset.panel === 'cache' ? 'peek' : 'cache'); },
+    plan: () => {
+      window.__controls.push('plan');
+      const b = $('[data-demo="plan"]');
+      if (b.getAttribute('aria-pressed') !== 'true') actions.plan(b);
+      else plan.focus();
+    },
+  },
 });
+/** Panneau de la démo : 'open', 'peek' ou 'cache' (caché par « Quêtes » : inert, la carte prend tout l'écran). */
+function setPanel(state) {
+  app.dataset.panel = state;
+  $('#panel').inert = state === 'cache';
+  const b = $('[data-demo="panel"]');
+  b.setAttribute('aria-expanded', String(state === 'open'));
+  b.querySelector('.panel-toggle-label').textContent = state === 'open' ? 'Replier' : 'Tout voir';
+  world.setQuestsShown(state !== 'cache');
+}
 window.__filters = [];
 const plan = createWorldPlan($('#plan'), {
   texts, anchors, now: () => new Date(now),
@@ -165,12 +187,7 @@ const actions = {
     world.render(game, tasks, ledger);
     plan.render(game, tasks, ledger);
   },
-  panel: (b) => {
-    const open = app.dataset.panel !== 'open';
-    app.dataset.panel = open ? 'open' : 'peek';
-    b.setAttribute('aria-expanded', String(open));
-    b.querySelector('.panel-toggle-label').textContent = open ? 'Replier' : 'Tout voir';
-  },
+  panel: () => setPanel(app.dataset.panel !== 'open' ? 'open' : 'peek'),
 };
 
 document.addEventListener('click', (ev) => {

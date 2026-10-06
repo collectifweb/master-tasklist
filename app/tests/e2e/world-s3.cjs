@@ -1,8 +1,9 @@
 // Monde v2 (app/world/demo.html, état fictif) aux trois largeurs : six quartiers ouverts avec leur niveau, plus rien de
 // la v1 (cendre, brume, braseros, givre, germes, personnages autres que Fanal), front de givre en sommeil, quête qui
 // fait avancer un quartier, niveau suivant joué, sélections typées (onSelect), cibles de 44 px, plaques entières à côté
-// de la colonne de zoom, bouton « Passer l'animation » touchable panneau ouvert, mouvement réduit, aucune image
-// demandée au repos, aucune erreur console.
+// de la colonne des commandes (Construire, Quêtes, Vue, et la rangée « Vue » dépliée), « Quêtes » qui cache le panneau,
+// focusEntity (quai hors grille, parcelle du départ), bouton « Passer l'animation » touchable panneau ouvert et jamais
+// sur la colonne, mouvement réduit, aucune image demandée au repos, aucune erreur console.
 //
 //   python3 -m http.server 8791 --bind 127.0.0.1      (depuis la racine du dépôt)
 //   PW_CORE=<chemin>/node_modules/playwright-core PW_CHROME=<chemin>/chrome node app/tests/e2e/world-s3.cjs
@@ -91,17 +92,17 @@ async function targets(page) {
   });
 }
 
-/** Plaques : entières dans le monde, jamais sous la colonne de zoom, texte non coupé. */
+/** Plaques : entières dans le monde, jamais sous la colonne des commandes ni sous la rangée « Vue » dépliée, texte non coupé. */
 async function plaques(page) {
   return page.evaluate(() => {
     const ow = document.querySelector('.ow').getBoundingClientRect();
-    const z = document.querySelector('.ow-zoom').getBoundingClientRect();
+    const boxes = [...document.querySelectorAll('.ow-zoom, .ow-zrow:not([hidden])')].map((e) => e.getBoundingClientRect());
     const bad = [];
     for (const b of document.querySelectorAll('.ow-plaque')) {
       const r = b.getBoundingClientRect();
       const name = `${b.dataset.sector} « ${b.innerText.replace(/\s+/g, ' ').trim()} »`;
       if (r.left < ow.left - 1 || r.right > ow.right + 1 || r.top < ow.top - 1) bad.push(`${name} hors du monde`);
-      if (r.right > z.left && r.left < z.right && r.bottom > z.top && r.top < z.bottom) bad.push(`${name} sous la colonne de zoom`);
+      for (const z of boxes) if (r.right > z.left && r.left < z.right && r.bottom > z.top && r.top < z.bottom) bad.push(`${name} sous la colonne des commandes`);
       if (b.scrollWidth > b.clientWidth + 1) bad.push(`${name} texte coupé`);
     }
     return bad;
@@ -194,6 +195,46 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     await page.screenshot({ path: `${OUT}/${tag}-03-atelier.png` });
     check(`${tag} plaques entières (vue rapprochée)`, !r.plaquesNear.length, r.plaquesNear);
 
+    // ---- commandes de la carte : colonne Construire, Quêtes, Vue ; « Vue » déplie la rangée du cadrage
+    r.ctl = await page.evaluate(() => ({
+      col: [...document.querySelectorAll('.ow-zoom > .ow-zbtn')].map((b) => b.dataset.ow),
+      row: [...document.querySelectorAll('.ow-zrow > .ow-zbtn')].map((b) => b.dataset.zoom || b.dataset.ow),
+    }));
+    check(`${tag} colonne : Construire, Quêtes, Vue ; rangée : Rapprocher, Éloigner, Toute l'île, Carte en liste`, r.ctl.col.join() === 'build,quetes,vue' && r.ctl.row.join() === 'in,out,fit,plan', r.ctl);
+    await page.click('[data-ow="vue"]');
+    await page.waitForTimeout(250);
+    r.vue = await page.evaluate(() => {
+      const c = document.querySelector('.ow-zoom').getBoundingClientRect(), w = document.querySelector('.ow-zrow').getBoundingClientRect();
+      return { open: document.querySelector('[data-ow="vue"]').getAttribute('aria-expanded'), col: [c.left, c.top, c.right, c.bottom].map(Math.round), row: [w.left, w.top, w.right, w.bottom].map(Math.round) };
+    });
+    r.plaquesVue = await plaques(page);
+    await page.screenshot({ path: `${OUT}/${tag}-03b-vue.png` });
+    check(`${tag} « Vue » dépliée : aucune plaque sous la colonne ni sous la rangée`, r.vue.open === 'true' && r.vue.row[2] > 0 && !r.plaquesVue.length, { vue: r.vue, bad: r.plaquesVue });
+    r.targetsVue = await targets(page);
+    check(`${tag} « Vue » dépliée : cibles de 44 px`, r.targetsVue.small.length === 0, r.targetsVue);
+    await page.click('[data-ow="vue"]');
+    await page.click('[data-ow="quetes"]');
+    await page.waitForTimeout(450);
+    r.quetes = await page.evaluate(() => ({ panel: document.getElementById('app').dataset.panel, inert: document.getElementById('panel').inert, exp: document.querySelector('[data-ow="quetes"]').getAttribute('aria-expanded'), calls: window.__controls.slice() }));
+    r.plaquesCache = await plaques(page);
+    await page.click('[data-ow="quetes"]');
+    await page.waitForTimeout(450);
+    check(`${tag} « Quêtes » cache le panneau (inert, aria-expanded=false), plaques toujours entières`, r.quetes.panel === 'cache' && r.quetes.inert && r.quetes.exp === 'false' && r.quetes.calls.includes('quests') && !r.plaquesCache.length, { q: r.quetes, bad: r.plaquesCache });
+    // focusEntity : un objet hors grille (le quai) et la parcelle du départ viennent dans la zone libre
+    for (const eid of ['quai-1', 'parcelle-1']) {
+      await page.evaluate((x) => window.__world.focusEntity(x), eid);
+      await page.waitForTimeout(800);
+      const v = await page.evaluate((x) => {
+        const e = document.querySelector(`.ow-ent[data-id="${x}"]`).getBoundingClientRect(), ow = document.querySelector('.ow').getBoundingClientRect();
+        const probe = (n) => [...document.querySelectorAll('.ow > .ow-probe')].find((p) => p.style.height.includes(n)).offsetHeight;
+        let top = probe('--world-safe-top'), bottom = probe('--world-cover-bottom');
+        if (top + bottom > ow.height * 0.55) { const k = ow.height * 0.55 / (top + bottom); top *= k; bottom *= k; }
+        const cx = e.left + e.width / 2 - ow.left, cy = e.top + e.height / 2 - ow.top;
+        return { cx: Math.round(cx), cy: Math.round(cy), ok: cx > 0 && cx < ow.width && cy > top && cy < ow.height - bottom };
+      }, eid);
+      check(`${tag} focusEntity('${eid}') : l'objet est dans la zone libre`, v.ok, v);
+    }
+
     // ---- cibles de 44 px
     r.targets = await targets(page);
     check(`${tag} cibles d'au moins 44 px`, r.targets.small.length === 0 && r.targets.n > 0, r.targets);
@@ -207,7 +248,8 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
       const b = document.querySelector('.ow-skip');
       const rr = b.getBoundingClientRect();
       const pts = [[rr.left + rr.width / 2, rr.top + rr.height / 2], [rr.left + 8, rr.top + rr.height / 2], [rr.right - 8, rr.top + rr.height / 2]];
-      return { hidden: b.hidden, box: [rr.left, rr.top, rr.width, rr.height].map(Math.round), hits: pts.map(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && b.contains(e); }) };
+      const c = document.querySelector('.ow-zoom').getBoundingClientRect();
+      return { hidden: b.hidden, box: [rr.left, rr.top, rr.width, rr.height].map(Math.round), col: [c.left, c.top, c.right, c.bottom].map(Math.round), hits: pts.map(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && b.contains(e); }) };
     });
     await page.screenshot({ path: `${OUT}/${tag}-04-veille-saut.png` });
     if (!r.skip.hidden) await page.mouse.click(r.skip.box[0] + r.skip.box[2] / 2, r.skip.box[1] + r.skip.box[3] / 2);
@@ -215,6 +257,7 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     await idle(page);
     r.skipMs = Date.now() - tSkip;
     check(`${tag} « Passer l'animation » touchable, panneau ouvert`, !r.skip.hidden && r.skip.hits.every(Boolean) && r.skip.box[3] >= 44, r.skip);
+    check(`${tag} « Passer l'animation » jamais sur la colonne des commandes`, !(r.skip.box[0] + r.skip.box[2] > r.skip.col[0] && r.skip.box[0] < r.skip.col[2] && r.skip.box[1] + r.skip.box[3] > r.skip.col[1] && r.skip.box[1] < r.skip.col[3]), r.skip);
     check(`${tag} le saut termine en moins de 400 ms`, r.skipMs < 400, r.skipMs);
     await page.evaluate(() => { document.querySelector('[data-demo="panel"]').click(); });
 

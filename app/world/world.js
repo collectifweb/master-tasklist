@@ -5,8 +5,16 @@
 //   world.play(events);          // joue les événements du cœur, dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
 //   world.focusSector('champs'); // cadre un quartier
+//   world.focusEntity('chalet-2'); // cadre un objet (bâtiment, emplacement, repère), quai compris
 //   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
+//   world.setQuestsShown(false); // le panneau des quêtes est caché (bouton « Quêtes » : aria-expanded)
+//   world.thumbType('serre');    // dessin d'un bâtiment debout (catalogue « Construire »)
 //   world.destroy();
+//
+// Commandes de la carte (colonne en bas à droite) : « Construire », « Quêtes », « Vue ». « Vue » déplie vers la gauche
+// Rapprocher, Éloigner, Toute l'île et Carte en liste. options.controls = { build, quests, plan } : ce que l'hôte fait
+// de « Construire », « Quêtes » et « Carte en liste » ; options.panelId : l'élément que « Quêtes » montre ou cache.
+// La colonne se pose au-dessus de --world-ctl-bottom (le vrai haut du panneau, posé par l'hôte).
 //
 // Appeler render(game, tasks) PUIS play(events) dans la même tâche (ou play d'abord) : le nouvel état
 // est retenu pendant que les animations le dévoilent, puis appliqué en entier à la fin.
@@ -52,6 +60,17 @@ export const SECTOR_GLYPH = {
   mairie: 'M3.5 20.2h17M4.8 18h14.4M4.6 10 12 6.2l7.4 3.8zM7.2 10v8M10.4 10v8M13.6 10v8M16.8 10v8M12 6.2V2.6l3.6 1.3L12 5.2',
   ecole: 'M3.5 20.2h17M3.8 12.6 12 7.4l8.2 5.2M5.4 11.6v8.6M18.6 11.6v8.6M10.2 20.2v-4.6h3.6v4.6M9.6 4.6 12 2.8l2.4 1.8M10.2 4.6v3.6M13.8 4.6v3.6',
   garage: 'M3 20.2h18M3 10.4 12 5.2l9 5.2M4.8 9.4v10.8M19.2 9.4v10.8M7.4 20.2v-7.6h9.2v7.6M7.4 15.2h9.2M7.4 17.7h9.2',
+};
+
+/** Pictos des commandes de la carte (même grille et même trait que les pictos de quartier). */
+const CTL_GLYPH = {
+  construire: 'M6 20.5V4M18 20.5V4M6 8h12M6 14h12M6 8l12 6M3.5 20.5h17', // échafaudage : le même que le geste « Bâtir »
+  quetes: 'M11 6.5h9M11 12h9M11 17.5h9M3.8 6.4l1.6 1.6 2.8-3M3.8 12l1.6 1.6 2.8-3M7.9 17.5a1.9 1.9 0 1 1-3.8 0 1.9 1.9 0 0 1 3.8 0',
+  vue: 'M2.5 12s3.5-6.2 9.5-6.2 9.5 6.2 9.5 6.2-3.5 6.2-9.5 6.2S2.5 12 2.5 12zM14.8 12a2.8 2.8 0 1 1-5.6 0 2.8 2.8 0 0 1 5.6 0',
+  plan: 'M9.5 6.5h10.5M9.5 12h10.5M9.5 17.5h10.5M5.4 6.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0M5.4 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0M5.4 17.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0',
+  in: 'M12 5v14M5 12h14',
+  out: 'M5 12h14',
+  fit: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
 };
 
 function glyph(id, cls = '') {
@@ -186,22 +205,35 @@ export function createWorld(container, options = {}) {
   scroller.append(content);
 
   const fxv = el('div', 'ow-fxv', { 'aria-hidden': 'true' });
-  const zoom = el('div', 'ow-zoom', { role: 'group', 'aria-label': t('monde.zoom.group') });
-  const zbtn = (act, label, d) => {
-    const b = el('button', 'ow-zbtn', { type: 'button', 'data-zoom': act, 'aria-label': label, title: label });
+  // colonne des commandes : Construire, Quêtes, Vue ; « Vue » déplie vers la gauche la rangée du cadrage
+  const ctl = options.controls || {};
+  const zoom = el('div', 'ow-zoom', { role: 'group', 'aria-label': t('monde.ctl.group') });
+  const zbtn = (attrs, label, d) => {
+    const b = el('button', 'ow-zbtn', { type: 'button', ...attrs, 'aria-label': label, title: label });
     b.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="${d}"/></svg>`;
     return b;
   };
-  const zIn = zbtn('in', t('monde.zoom.in'), 'M12 5v14M5 12h14');
-  const zOut = zbtn('out', t('monde.zoom.out'), 'M5 12h14');
-  const zFit = zbtn('fit', t('monde.zoom.fit'), 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5');
-  zoom.append(zIn, zOut, zFit);
+  const rowId = `ow-vue-${id}`;
+  const bBuild = zbtn({ 'data-ow': 'build', 'aria-haspopup': 'dialog' }, t('monde.ctl.construire'), CTL_GLYPH.construire);
+  const bQuests = zbtn({ 'data-ow': 'quetes', 'aria-expanded': 'true', ...(options.panelId ? { 'aria-controls': options.panelId } : {}) }, t('monde.ctl.quetes'), CTL_GLYPH.quetes);
+  const bView = zbtn({ 'data-ow': 'vue', 'aria-expanded': 'false', 'aria-controls': rowId }, t('monde.ctl.vue'), CTL_GLYPH.vue);
+  const row = el('div', 'ow-zrow', { id: rowId, role: 'group', 'aria-label': t('monde.zoom.group') });
+  row.hidden = true;
+  const zIn = zbtn({ 'data-zoom': 'in' }, t('monde.zoom.in'), CTL_GLYPH.in);
+  const zOut = zbtn({ 'data-zoom': 'out' }, t('monde.zoom.out'), CTL_GLYPH.out);
+  const zFit = zbtn({ 'data-zoom': 'fit' }, t('monde.zoom.fit'), CTL_GLYPH.fit);
+  const bPlan = zbtn({ 'data-ow': 'plan', 'aria-haspopup': 'dialog' }, t('monde.ctl.plan'), CTL_GLYPH.plan);
+  row.append(zIn, zOut, zFit, bPlan);
+  zoom.append(bBuild, bQuests, bView, row);
+  // la colonne se pose sur --world-ctl-bottom (haut réel du panneau) : quand il bouge, les plaques s'écartent à nouveau
+  const ctlProbe = el('i', 'ow-probe');
+  ctlProbe.style.height = 'var(--world-ctl-bottom, 0px)';
   const skipBtn = el('button', 'ow-skip', { type: 'button' });
   skipBtn.textContent = t('a11y.skip_animation');
   skipBtn.hidden = true;
   let live = null;
   if (!options.announce) { live = el('p', 'ow-sr', { role: 'status', 'aria-live': 'polite' }); }
-  root.append(scroller, hint, fxv, zoom, skipBtn);
+  root.append(scroller, hint, fxv, zoom, skipBtn, ctlProbe);
   if (live) root.append(live);
   container.appendChild(root);
 
@@ -338,15 +370,29 @@ export function createWorld(container, options = {}) {
     if (sizePlaques()) { measurePlaques(); placePlaques(); }
   }
   // Les plaques suivent leur ancre mais restent dans la zone libre : jamais sous le HUD, la feuille,
-  // la colonne de zoom ni hors de l'écran (elles se rangent alors au bord, côté de leur secteur).
+  // la colonne des commandes (rangée « Vue » dépliée comprise) ni hors de l'écran (elles se rangent alors au bord).
   const plaqueSize = {};
   let zoomBox = null; // [gauche, haut, droite, bas] en coordonnées de vue
   function measurePlaques() {
     for (const s of SECTOR_ORDER) if (plaqueEls[s]) plaqueSize[s] = [plaqueEls[s].offsetWidth, plaqueEls[s].offsetHeight];
   }
+  /** Boîte réelle de la colonne et de la rangée dépliée, avec une marge, jusqu'au bord droit de la vue. */
   function measureZoom() {
-    const zw = zoom.offsetWidth, zh = zoom.offsetHeight, m = 12;
-    zoomBox = [camera.W - m - zw - 6, camera.H - camera.bottom - m - zh - 6, camera.W, camera.H - camera.bottom];
+    const R = root.getBoundingClientRect(), m = 6;
+    const boxes = [zoom.getBoundingClientRect()];
+    if (!row.hidden) boxes.push(row.getBoundingClientRect());
+    zoomBox = [
+      Math.min(...boxes.map((b) => b.left)) - R.left - m,
+      Math.min(...boxes.map((b) => b.top)) - R.top - m,
+      camera.W,
+      Math.max(...boxes.map((b) => b.bottom)) - R.top + m,
+    ];
+  }
+  function relayoutControls() {
+    if (first || destroyed) return;
+    measureZoom();
+    placePlaques();
+    placeTag();
   }
   function placePlaques() {
     if (!zoomBox) return;
@@ -423,9 +469,15 @@ export function createWorld(container, options = {}) {
     placePlaques();
     placeTag();
     placeSkip();
+    // aux limites, aria-disabled plutôt que disabled : le bouton garde le focus et reste lu
     const lv = camera.levels();
-    zOut.disabled = camera.s <= lv[0] + 0.001;
-    zIn.disabled = camera.s >= lv[lv.length - 1] - 0.001;
+    limit(zOut, camera.s <= lv[0] + 0.001);
+    limit(zIn, camera.s >= lv[lv.length - 1] - 0.001);
+  }
+  function limit(b, on) {
+    if ((b.getAttribute('aria-disabled') === 'true') === on) return;
+    if (on) b.setAttribute('aria-disabled', 'true');
+    else b.removeAttribute('aria-disabled');
   }
 
   function defaultActive() { return active || 'place'; }
@@ -457,6 +509,37 @@ export function createWorld(container, options = {}) {
     const [x, y] = sectorPoint(s);
     camera.centerOn(x, y, !reduced);
     wake();
+  }
+
+  /** Cadre un objet de la carte (bâtiment ou emplacement, quai compris) au centre de la zone libre. */
+  function focusEntity(eid) {
+    if (destroyed) return;
+    const p = scene.pointOf(eid);
+    if (!p) return;
+    setActive(scene.get(eid).e.sector);
+    if (camera.s < NEAR_SCALE - 0.001) camera.setScale(NEAR_SCALE);
+    camera.centerOn(p[0], p[1], !reduced);
+    wake();
+  }
+
+  // ---------------------------------------------------------------------------- commandes de la carte
+  function setRow(open) {
+    if (row.hidden === !open) return;
+    if (!open && row.contains(doc.activeElement)) bView.focus({ preventScroll: true });
+    row.hidden = !open;
+    bView.setAttribute('aria-expanded', String(open));
+    relayoutControls();
+  }
+  function control(kind) {
+    if (kind === 'vue') setRow(row.hidden);
+    else if (kind === 'build') ctl.build?.();
+    else if (kind === 'quetes') ctl.quests?.();
+    else if (kind === 'plan') {
+      // la rangée se replie et le focus revient sur « Vue » : la carte en liste le rendra à « Vue » en se fermant
+      bView.focus({ preventScroll: true });
+      setRow(false);
+      ctl.plan?.();
+    }
   }
 
   /** Amène un point du monde dans la zone libre s'il n'y est pas. */
@@ -595,8 +678,11 @@ export function createWorld(container, options = {}) {
 
   function onClick(ev) {
     if (suppressClick) { suppressClick = false; ev.preventDefault(); return; }
+    // commandes de la carte : avant le zoom et avant la garde des animations (elles restent utilisables)
+    const c = ev.target.closest('[data-ow]');
+    if (c) { control(c.dataset.ow); return; }
     const z = ev.target.closest('[data-zoom]');
-    if (z) { zoomTo(z.dataset.zoom); return; }
+    if (z) { if (z.getAttribute('aria-disabled') !== 'true') zoomTo(z.dataset.zoom); return; }
     if (ev.target.closest('.ow-skip')) { skip(); return; }
     if (playing) return;
     clearVeille();
@@ -638,6 +724,8 @@ export function createWorld(container, options = {}) {
 
   function onKey(ev) {
     if (ev.key === 'Escape') {
+      // Échap dans la colonne, rangée « Vue » dépliée : elle se replie et le focus revient sur « Vue »
+      if (!row.hidden && zoom.contains(doc.activeElement)) { setRow(false); bView.focus({ preventScroll: true }); ev.preventDefault(); return; }
       if (playing || queued) { skip(); ev.preventDefault(); return; }
       if (shown?.veille) { clearVeille(); return; }
       if (selected) { select(null); ev.preventDefault(); }
@@ -667,6 +755,7 @@ export function createWorld(container, options = {}) {
   const touches = new Map();
   let pinch = null;
   function onPointerDown(ev) {
+    if (!row.hidden && !ev.target.closest('.ow-zoom')) setRow(false); // un toucher sur la carte replie la rangée « Vue »
     if (playing || queued) { skip(); }
     clearVeille();
     wake();
@@ -741,7 +830,12 @@ export function createWorld(container, options = {}) {
     camera.centerOn(wx, wy);
   });
   ro.observe(root);
-  const io = win.IntersectionObserver ? new win.IntersectionObserver((list) => {
+  // les zones couvertes changent sans que la carte change de taille (panneau caché, bandeau) : la caméra se recentre
+  ro.observe(camera.probeTop);
+  ro.observe(camera.probeBottom);
+  const ctlRo = new win.ResizeObserver(relayoutControls);
+  ctlRo.observe(ctlProbe);
+  const io =win.IntersectionObserver ? new win.IntersectionObserver((list) => {
     for (const e of list) root.toggleAttribute('data-hors-vue', !e.isIntersecting);
   }) : null;
   io?.observe(root);
@@ -820,6 +914,11 @@ export function createWorld(container, options = {}) {
       const a = artFor(e);
       return `<svg class="ow-thumb" viewBox="${a.x} ${a.y} ${a.w} ${a.h}" width="${a.w}" height="${a.h}" focusable="false" aria-hidden="true">${a.svg}</svg>`;
     },
+    /** Dessin d'un type de bâtiment debout (catalogue « Construire »), indépendant de l'état du jeu. */
+    thumbType(type) {
+      const a = artFor({ model: type, variant: '' });
+      return `<svg class="ow-thumb" viewBox="${a.x} ${a.y} ${a.w} ${a.h}" width="${a.w}" height="${a.h}" focusable="false" aria-hidden="true">${a.svg}</svg>`;
+    },
     /** Mémorise le nouvel état ; l'applique au prochain micro-temps, ou à la fin des animations en cours. */
     render(game, taskList = [], ledger = []) {
       if (destroyed) return;
@@ -843,6 +942,9 @@ export function createWorld(container, options = {}) {
     /** true : mouvement réduit ; false : complet ; null : suivre le système et <html data-motion>. */
     setReducedMotion(v) { forced = v === null || v === undefined ? null : !!v; syncMotion(); },
     focusSector,
+    focusEntity,
+    /** Le panneau des quêtes est montré (true) ou caché (false) : état du bouton « Quêtes ». */
+    setQuestsShown(on) { if (!destroyed) bQuests.setAttribute('aria-expanded', String(!!on)); },
     /** Retire la sélection et son étiquette (par exemple quand la feuille de l'objet se ferme). */
     clearSelection() { if (!destroyed) select(null); },
     /** Termine les animations en cours en 150 ms au plus. */
@@ -869,6 +971,7 @@ export function createWorld(container, options = {}) {
       mq?.removeEventListener?.('change', syncMotion);
       motionObs.disconnect();
       ro.disconnect();
+      ctlRo.disconnect();
       io?.disconnect();
       camera.destroy();
       scene.clear();

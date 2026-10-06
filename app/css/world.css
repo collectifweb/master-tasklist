@@ -415,14 +415,32 @@
 }
 
 /* ---------------------------------------------------------------- commandes */
+/* Colonne Construire, Quêtes, Vue : posée sur le vrai haut du panneau (--world-ctl-bottom, donné par l'hôte).
+   Si l'écran est plus bas que la hauteur minimale de l'app (téléphone couché), elle remonte d'autant pour rester visible. */
 .ow-zoom {
   position: absolute;
   z-index: 5;
   right: calc(var(--sp-3, 12px) + var(--safe-right, 0px));
-  bottom: calc(var(--ow-bottom, 0px) + var(--sp-3, 12px));
+  bottom: calc(var(--world-ctl-bottom, var(--ow-bottom, 0px)) + max(0px, 100% - 100dvh) + var(--sp-3, 12px));
   display: flex;
   flex-direction: column;
   gap: var(--sp-2, 8px);
+}
+/* Rangée « Vue » : dépliée vers la gauche, à hauteur du bouton « Vue » ; le premier bouton est le plus proche de lui */
+.ow-zrow {
+  position: absolute;
+  right: calc(100% + var(--sp-2, 8px));
+  bottom: 0;
+  display: flex;
+  flex-direction: row-reverse;
+  gap: var(--sp-2, 8px);
+}
+.ow-zbtn[data-ow="vue"][aria-expanded="true"] {
+  border-color: var(--c-sage-deep);
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+  box-shadow: none;
+  transform: translateY(var(--face-h, 3px));
 }
 .ow-zbtn {
   display: grid;
@@ -438,8 +456,9 @@
   transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out);
 }
 .ow-zbtn svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.ow-zbtn:active:not(:disabled) { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
-.ow-zbtn:disabled { cursor: default; border-style: dashed; color: var(--text-muted); background: var(--c-sunken); box-shadow: none; }
+.ow-zbtn:active:not(:disabled, [aria-disabled="true"]) { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
+.ow-zbtn:disabled,
+.ow-zbtn[aria-disabled="true"] { cursor: default; border-style: dashed; color: var(--text-muted); background: var(--c-sunken); box-shadow: none; }
 .ow-zbtn:focus { outline: none; }
 .ow-zbtn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
 
