@@ -345,7 +345,7 @@ test('objectif d’hiver : les récoltes de la petite serre de décembre à fév
   assert.equal(recoltesHiver(w.game, 'hiver-2026'), 0, 'le potager ne compte pas');
   let r;
   for (let k = 1; k <= obj.recoltes; k++) {
-    const day = addDays('2026-12-03', 9 * k);
+    const day = addDays('2026-12-01', 8 * k);
     ({ world: w, r } = recolte(w, 'serre-1', day));
     assert.equal(recoltesHiver(w.game, 'hiver-2026'), k, day);
     const o = objectifSaison(w.game, w.ledger, at(day));

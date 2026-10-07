@@ -35,6 +35,11 @@
 //     imprévus ; il paie les réparations dès qu'il le peut ('paie'), ou attend qu'elles se fassent seules ou par une quête du
 //     bon domaine ('attend'). Pire cas : il attend et aucune de ses quêtes n'est du bon domaine ('attend' et profil tout en
 //     Enfants). Cible : sur 16 semaines, le premier niveau ne bouge que de quelques jours, dans un sens ou dans l'autre.
+// (j) (lot H) l'hiver (core/hiver.js) : tempêtes annoncées, barre de préparation, neige sur l'éolienne ou la serre, objectif
+//     « Garder la serre allumée ». Le joueur se prépare ('prepare' : la veille, il achète les crans qui manquent et paie
+//     le déneigement) ou compte sur ses seules quêtes ('quetes' : il attend que la neige fonde ou qu'une quête Terrain
+//     déneige) ; 'sans' : les tempêtes sont déjà réglées au registre, seuls les imprévus jouent. Cible : sur l'hiver, le
+//     premier niveau de quartier ne bouge que de quelques jours, qu'on se prépare ou non.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,6 +49,7 @@ import {
   prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
+  tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -71,7 +77,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -82,6 +88,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
   // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
+  // (j) hiver : issues des tempêtes, raisons du passage sans dégât, bâtiments ensevelis, crans achetés et leur prix,
+  // récompenses des tempêtes tenues, Énergie que l'éolienne ensevelie n'a pas donnée, jours de pousse perdus sous la neige,
+  // déneigements payés et par quête, jour de l'objectif d'hiver
+  const hiv = log.hiver = { issues: {}, raisons: {}, cibles: {}, crans: 0, coutCrans: 0, recompense: 0, eolienne: 0, serre: 0, deneige: { paiement: 0, quete: 0, energie: 0 }, objectif: null };
+  if (hiver === 'sans') w.ledger = tempetesDeLHiver(debut).map((j) => ({ key: `tempete:${j}` }));
   let n = 0;
   let i = 0;
   const geste = (fn, params, now) => {
@@ -92,10 +103,23 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       else if (e.type === 'imprevu') {
         imp[e.nature][e.imprevu] = (imp[e.nature][e.imprevu] || 0) + 1;
         if (e.nature === 'bon') for (const k of ['energy', 'materials', 'food']) imp.gains[k] += e[k] || 0;
+      } else if (e.type === 'reparation' && e.imprevu === 'neige') {
+        hiv.deneige[e.par]++;
+        hiv.deneige.energie += e.cout?.energy || 0;
       } else if (e.type === 'reparation') {
         imp.par[e.par]++;
         for (const k of ['energy', 'materials']) imp.paye[k] += e.cout?.[k] || 0;
-      } else if (e.type === 'eolienne-arretee') imp.eolienne += e.energy;
+      } else if (e.type === 'eolienne-arretee' && degatsActifs(w.game, now).some((d) => d.type === 'neige' && d.cible.startsWith('eolienne'))) hiv.eolienne += e.energy;
+      else if (e.type === 'eolienne-arretee') imp.eolienne += e.energy;
+      else if (e.type === 'tempete') {
+        hiv.issues[e.resultat] = (hiv.issues[e.resultat] || 0) + 1;
+        if (e.raison) hiv.raisons[e.raison] = (hiv.raisons[e.raison] || 0) + 1;
+        if (e.cible) hiv.cibles[e.cible.replace(/-\d+$/, '')] = (hiv.cibles[e.cible.replace(/-\d+$/, '')] || 0) + 1;
+        hiv.recompense += e.materials || 0;
+      } else if (e.type === 'preparation') {
+        hiv.crans++;
+        hiv.coutCrans += e.cout.materials || 0;
+      } else if (e.type === 'objectif-saison' && e.objectif === OBJECTIFS_SAISON.hiver.id) hiv.objectif = i + 1;
       else if (e.type === 'recolte' && e.ours) imp.ours += e.ours;
     }
     const { energy, materials, food } = w.game.resources;
@@ -119,12 +143,26 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     }
     // le soir : le joueur fait tout ce qui est possible, dans un ordre raisonnable
     const soir = heure(day, 22);
+    // (j) 'prepare' : la veille de la tempête, il rentre le bois qui manque (avant toute autre dépense) et, le jour venu, il
+    // a déjà payé le déneigement avec les autres réparations ('paie')
+    if (hiver === 'prepare') {
+      const a = alerteTempete(w.tasks, w.game, w.ledger, soir);
+      if (a && a.joursRestants === 1) {
+        for (let k = a.achetes + 1; k <= a.achetes + a.max - a.crans; k++) {
+          if (refusPreparer(w.tasks, w.game, w.ledger, { jour: a.jour, n: k }, soir)) break;
+          geste(preparer, { jour: a.jour, n: k }, soir);
+        }
+      }
+    }
     for (let guard = 0; guard < 20; guard++) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
       const mure = cultures.find((id) => !refusRecolter(w.game, w.ledger, id, soir));
       if (mure) {
         const semeLe = w.game.parcelles.find((p) => p.id === mure)?.semeLe;
-        if (imprevus && semeLe) imp.gel += joursGeles(w.game, w.ledger, mure, semeLe, day);
+        if (imprevus && semeLe) {
+          const perdus = joursGeles(w.game, w.ledger, mure, semeLe, day);
+          if (mure.startsWith('serre')) hiv.serre += perdus; else imp.gel += perdus; // la neige ne touche que la serre, le gel que le potager
+        }
         geste(recolter, { id: mure }, soir); log.recoltes.push(day); continue;
       }
       const g = bandeau ? prochainGeste(w.tasks, w.game, w.ledger, soir) : null;
@@ -494,3 +532,42 @@ test('(i) les imprévus : le premier niveau ne bouge que de quelques jours sur 1
   }
 });
 
+// (j) Rythme lent : une quête un jour sur deux.
+const lent = (i) => (i % 2 ? 0 : 1);
+
+test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint, mais pas avant Noël', (t) => {
+  const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+  const resume = (l) => { const h = l.hiver; return `tempêtes ${JSON.stringify(h.issues)} (sans dégât : ${JSON.stringify(h.raisons)}), ensevelis ${JSON.stringify(h.cibles)}, `
+    + `${h.crans} crans achetés (${h.coutCrans} M), récompenses ${h.recompense} M, déneigés ${h.deneige.paiement} payés (${h.deneige.energie} É) et ${h.deneige.quete} par quête, `
+    + `perdu ${f(h.eolienne)} É d'éolienne et ${h.serre} j de pousse en serre ; objectif d'hiver ${h.objectif ? `j${h.objectif}` : 'non'} (${recoltesHiver(l.monde.game, 'hiver-2026')} récoltes de serre)`; };
+  const jours = 25 * 7; // jusqu'au printemps : tout l'hiver 2026-2027
+  for (const [nom, rythme, profil, habitudes, departs] of [
+    ['(g)', rythmeEssai, parDefaut, true, ['2026-10-07', '2026-11-15']],
+    ['(f)', regulier, quetes, false, ['2026-10-07', '2026-11-15']],
+    ['(lent)', lent, quetes, false, ['2026-10-07']],
+  ]) {
+    for (const debut of departs) {
+      const sans = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'attend', hiver: 'sans' });
+      const quetesSeules = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'attend', hiver: 'quetes' });
+      const prepare = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'paie', hiver: 'prepare' });
+      const pire = simuler(debut, jours, rythme, { profil: enfants(profil), habitudes, imprevus: 'attend', hiver: 'quetes' });
+      t.diagnostic(`${nom} ${debut} : 1er niveau j${sans.niveaux[0]} sans tempête, j${quetesSeules.niveaux[0]} quêtes seules, j${prepare.niveaux[0]} se prépare, j${pire.niveaux[0]} pire ; `
+        + `niveaux ${sans.niveaux.length} / ${quetesSeules.niveaux.length} / ${prepare.niveaux.length} / ${pire.niveaux.length} ; Hameau j${sans.hameau} / j${quetesSeules.hameau} / j${prepare.hameau} / j${pire.hameau}`);
+      t.diagnostic(`  quêtes seules : ${resume(quetesSeules)}`);
+      t.diagnostic(`  se prépare : ${resume(prepare)}`);
+      t.diagnostic(`  pire : ${resume(pire)}`);
+      t.diagnostic(`  sans tempête : objectif d'hiver ${sans.hiver.objectif ? `j${sans.hiver.objectif}` : 'non'} (${recoltesHiver(sans.monde.game, 'hiver-2026')} récoltes de serre)`);
+      // date de la k-e récolte de l'hiver (décembre à février : le potager dort, ce sont celles de la serre)
+      const kieme = (l) => { const r = l.recoltes.filter((d) => d >= '2026-12-01' && d <= '2027-02-28'); return [4, 6, 8, 10, 12, 14].map((k) => `${k}e ${r[k - 1]?.slice(5) ?? 'jamais'}`).join(', '); };
+      t.diagnostic(`  récoltes d'hiver, quêtes seules : ${kieme(quetesSeules)} ; pire : ${kieme(pire)}`);
+      for (const [qui, l] of [['quêtes seules', quetesSeules], ['se prépare', prepare], ['pire', pire]]) {
+        if (sans.niveaux[0] === undefined) assert.ok(l.niveaux.length <= 1, `${nom} ${debut}, ${qui}`);
+        else assert.ok(Math.abs(l.niveaux[0] - sans.niveaux[0]) <= 4, `${nom} ${debut}, ${qui} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]} sans tempête`);
+        assert.ok(Math.abs(l.niveaux.length - sans.niveaux.length) <= 1, `${nom} ${debut}, ${qui} : ${l.niveaux.length} niveaux contre ${sans.niveaux.length}`);
+        // « Garder la serre allumée » : atteint dans l'hiver, sans tomber dès décembre
+        const jour = l.hiver.objectif && addDays(debut, l.hiver.objectif - 1);
+        assert.ok(jour && jour >= '2026-12-25' && jour <= '2027-02-28', `${nom} ${debut}, ${qui} : objectif d'hiver le ${jour}`);
+      }
+    }
+  }
+});
