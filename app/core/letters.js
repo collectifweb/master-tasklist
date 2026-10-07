@@ -29,7 +29,8 @@ function periodOf(day) {
   return m >= 9 && m <= 11 ? 'automne' : null;
 }
 
-function hash(s) {
+/** Hash djb2 d'une chaîne (entier non signé) : tirages déterministes des lettres et des imprévus (imprevus.js). */
+export function hash(s) {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
   return h >>> 0;

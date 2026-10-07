@@ -16,6 +16,7 @@ import { hasKey, reverseKey } from './ledger.js';
 import { rangDuVillage, RANGS } from './village.js';
 import { suivreObjectifs } from './objectifs.js';
 import { valeur, placesParChalet, permisDeRang } from './quartiers.js';
+import { joursGeles, degatsALaRecolte, degatDe } from './imprevus.js';
 
 /**
  * Catalogue, dans l'ordre d'affichage. cout : { energy, materials } ; rang : identifiant de RANGS ; max : emplacements
@@ -121,14 +122,15 @@ export function joursTravailles(ledger, apres, jusqua) {
 
 /**
  * État d'un emplacement de culture : { id, lieu, semee, semeLe, jours, reste, mure }. Au potager, ce qui est en terre
- * mûrit d'un coup le 1er novembre (sans perte) ; la serre suit seulement les jours travaillés.
+ * mûrit d'un coup le 1er novembre (sans perte) ; la serre suit seulement les jours travaillés. Un jour travaillé pendant
+ * un gel (imprevus.js) ne compte pas.
  */
 export function etatCulture(game, ledger, id, now) {
   const today = gameDay(now);
   const lieu = lieuDe(id);
   const c = list(game.parcelles).find((p) => p.id === id);
   if (!c || typeof c.semeLe !== 'string') return { id, lieu, semee: false, semeLe: null, jours: 0, reste: 0, mure: false };
-  const jours = joursTravailles(ledger, c.semeLe, today);
+  const jours = joursTravailles(ledger, c.semeLe, today) - joursGeles(game, ledger, id, c.semeLe, today);
   const pousse = valeur(game, 'joursPousse');
   const gel = lieu === 'potager' && today >= `${c.semeLe.slice(0, 4)}-11-01`;
   const mure = gel || jours >= pousse;
@@ -273,7 +275,8 @@ export function semer(tasks, game, ledger, params, now) {
 
 /**
  * Récolte une culture mûre : +Nourriture, plafonnée par le stockage (`perdu` : ce qui n'a pas tenu, dit au joueur).
- * Stockage déjà plein : refusé, la culture attend en terre. Événement { type: 'recolte', id, lieu, nourriture, perdu, stock, max }.
+ * Stockage déjà plein : refusé, la culture attend en terre. Un ours en visite (imprevus.js) prend sa part et repart.
+ * Événement { type: 'recolte', id, lieu, nourriture, perdu, stock, max, ours? (Nourriture prise par l'ours) }.
  */
 export function recolter(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -282,12 +285,14 @@ export function recolter(tasks, game, ledger, params, now) {
   const g = structuredClone(ctx.game);
   const max = stockage(g);
   const lieu = lieuDe(params.id);
-  const recolte = recolteDe(g, lieu);
+  const { mange, degats } = degatsALaRecolte(g, params.id, recolteDe(g, lieu), now);
+  const recolte = recolteDe(g, lieu) - mange;
   const nourriture = round1(Math.min(recolte, max - g.resources.food));
   g.resources.food = round1(g.resources.food + nourriture);
   g.parcelles = list(g.parcelles).filter((p) => p.id !== params.id);
+  if (Array.isArray(g.degats)) g.degats = degats;
   ctx.game = g;
-  ctx.events.push({ type: 'recolte', id: params.id, lieu, nourriture, perdu: round1(recolte - nourriture), stock: g.resources.food, max });
+  ctx.events.push({ type: 'recolte', id: params.id, lieu, nourriture, perdu: round1(recolte - nourriture), stock: g.resources.food, max, ...(mange ? { ours: mange } : {}) });
   suivreObjectifs(ctx);
   return ctx.result();
 }
@@ -341,10 +346,18 @@ function cleLibre(ledger, base, depuis = 2) {
  * Production de l'éolienne, appelée par quests.js après une quête payée : la première du jour inscrit
  * prod:eolienne:{jour} au registre. Jamais deux fois en même temps : rien si l'Énergie du jour est déjà acquise. Si
  * elle a été reprise (Remballer), une nouvelle quête payée ce jour-là la reverse sous prod:eolienne:{jour}:2, :3…
+ * Une éolienne en panne (imprevus.js) ne produit rien : à la première quête payée du jour, événement
+ * { type: 'eolienne-arretee', energy } (ce qu'elle aurait donné).
  */
 export function produireEolienne(ctx) {
-  const n = compte(ctx.game, 'eolienne');
-  if (!n || eolienneDuJour(ctx.ledger, ctx.day) > 0) return;
+  const eoliennes = batimentsDuVillage(ctx.game).filter((b) => b.type === 'eolienne');
+  if (!eoliennes.length || eolienneDuJour(ctx.ledger, ctx.day) > 0) return;
+  const enPanne = eoliennes.filter((b) => degatDe(ctx.game, b.id, ctx.now)).length;
+  if (enPanne && ctx.ledger.filter((e) => e.type === 'reward' && e.day === ctx.day).length === 1) {
+    ctx.events.push({ type: 'eolienne-arretee', energy: EOLIENNE_ENERGIE * enPanne });
+  }
+  const n = eoliennes.length - enPanne;
+  if (!n) return;
   const key = cleLibre(ctx.ledger, `prod:eolienne:${ctx.day}`);
   ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: 'eolienne', pe: 0, energy: EOLIENNE_ENERGIE * n, materials: 0 }, 'eolienne');
 }

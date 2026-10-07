@@ -348,7 +348,7 @@ test('objectif d’automne : il ne change pas quand la Place monte (stockage de 
   w.game.resources.food = STOCKAGE;
   assert.equal(objectifSaison(w.game, w.ledger, at(OCT)).max, STOCKAGE);
   const s = step(w, advanceTime, {}, at(OCT));
-  assert.deepEqual(s.r.entries.map((e) => e.key), ['saison:automne-2026']);
+  assert.deepEqual(s.r.entries.filter((e) => e.type !== 'imprevu').map((e) => e.key), ['saison:automne-2026']); // un imprévu peut tomber ce jour-là (lot I)
 });
 
 // ───────── Équité ─────────

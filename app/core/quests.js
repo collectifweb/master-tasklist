@@ -24,6 +24,7 @@ import { figerBilans } from './recycling.js';
 import { produireEolienne, reprendreEolienne } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
+import { suivreImprevus, reparerParQuete } from './imprevus.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -235,6 +236,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   const entry = buildRewardEntry({ task: t, occurrence: occ, pe: net, alreadyDone }, ctx.ledger, now);
   if (entry) ctx.append(entry, alreadyDone ? 'deja-faite' : 'quete');
   else ctx.events.push({ type: 'sans-gain', taskId: t.id, reason: 'deja-recompensee' });
+  if (entry) reparerParQuete(ctx, t); // une quête payée du bon domaine règle les dégâts en cours (imprevus.js), avant l'éolienne
   if (entry) produireEolienne(ctx); // la première quête payée du jour fait tourner l'éolienne (une fois par jour)
   if (entry) suivrePermis(ctx); // le 4e jour travaillé depuis le dernier permis en donne un (une fois par jour)
   if (entry) suivreSemaine(ctx); // le 5e jour travaillé de la semaine (lundi au dimanche) paie la semaine tenue, une fois
@@ -501,9 +503,10 @@ export function openApp(tasks, game, ledger, params, now) {
 /**
  * Passage du temps, à appeler à l'ouverture (après openApp), au changement de jour de jeu et après les gestes du jeu.
  * Au premier passage d'une nouvelle semaine, fige le bilan des semaines finies (figerBilans, recycling.js). Note le
- * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), puis valide les objectifs
- * devenus vrais (premiers pas, saison : objectifs.js). Idempotente : rejouée avec le même instant, elle ne fait rien.
- * Événements : 'premier-pas', 'objectif-saison'.
+ * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), après avoir validé les
+ * objectifs devenus vrais (premiers pas, saison : objectifs.js) puis tiré les imprévus du jour (imprevus.js, qui lisent le
+ * dernier jour vu pour la reprise). Idempotente : rejouée avec le même instant, elle ne fait rien.
+ * Événements : 'imprevu', 'premier-pas', 'objectif-saison'.
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -512,8 +515,9 @@ export function advanceTime(tasks, game, ledger, params, now) {
     const bilans = figerBilans(ctx.tasks, ctx.game, ctx.ledger, now);
     if (bilans !== ctx.game.bilans) ctx.game = { ...ctx.game, bilans };
   }
-  if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   suivreObjectifs(ctx);
+  suivreImprevus(ctx, seen); // après les premiers pas (validés juste avant), avant que le jour de présence soit noté
+  if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   return ctx.result();
 }
 

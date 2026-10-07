@@ -16,3 +16,4 @@ export * from './objectifs.js';
 export * from './quartiers.js';
 export * from './reglages.js';
 export * from './visiteurs.js';
+export * from './imprevus.js';
