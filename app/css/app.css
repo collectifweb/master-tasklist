@@ -1069,6 +1069,147 @@
   display: none;
 }
 
+/* Tempête annoncée (lot H) : une rangée sous les objectifs, à toutes les largeurs, posée sur un lavis de givre (le
+   front qui approche sur la carte a les mêmes tons). Le picto (flocon) dans son disque, les jours restants, la barre de
+   trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix. Le jour même : l'issue, coche sauge (tenue)
+   ou pelle braise (un bâtiment sous la neige, la couleur des menaces), et le bouton qui ouvre sa fiche. Rien ne bouge. */
+.bandeau-alerte {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--sp-2);
+  min-height: var(--bandeau-alerte-h);
+  padding: 4px var(--sp-2) 4px var(--sp-2);
+  border-top: 1px solid color-mix(in srgb, var(--c-frost) 55%, var(--c-line));
+  background: var(--c-frost-wash);
+  color: var(--c-frost-ink);
+}
+.bandeau-alerte[hidden] {
+  display: none;
+}
+.bandeau[data-alerte]:not([data-open="true"]) {
+  grid-template-rows: minmax(var(--bandeau-h), auto) minmax(var(--bandeau-alerte-h), auto);
+}
+.bandeau-alerte-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c-paper-raised);
+  box-shadow: inset 0 0 0 1.5px var(--c-frost);
+  color: var(--c-frost-ink);
+}
+.bandeau-alerte-mark .icon {
+  width: 18px;
+  height: 18px;
+}
+.bandeau[data-alerte="tenue"] .bandeau-alerte-mark {
+  background: var(--c-sage-wash);
+  box-shadow: inset 0 0 0 1.5px var(--c-sage);
+  color: var(--c-sage-deep);
+}
+.bandeau[data-alerte="neige"] .bandeau-alerte-mark {
+  background: var(--c-ember-wash);
+  box-shadow: inset 0 0 0 1.5px var(--c-ember);
+  color: var(--c-ember-ink);
+}
+.bandeau-alerte-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bandeau-alerte-titre {
+  overflow: hidden;
+  font-size: var(--text-14);
+  font-weight: var(--w-heavy);
+  line-height: 1.25;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bandeau-alerte-ligne {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bandeau-alerte-etat {
+  overflow: hidden;
+  font-size: var(--text-12);
+  font-weight: var(--w-bold);
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* trois crans : vides, un filet de givre ; pleins, l'encre de givre. Le texte « 1 sur 3 » les double. */
+.bandeau-crans {
+  flex: none;
+  display: inline-flex;
+  gap: 3px;
+}
+.bandeau-crans i {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--c-paper-raised);
+  box-shadow: inset 0 0 0 1.5px var(--c-frost);
+}
+.bandeau-crans i[data-on] {
+  background: var(--c-frost-ink);
+  box-shadow: none;
+}
+.bandeau[data-alerte="neige"] .bandeau-crans,
+.bandeau[data-alerte="passee"] .bandeau-crans,
+.bandeau[data-alerte="souffle"] .bandeau-crans {
+  display: none;
+}
+.bandeau[data-alerte="neige"] .bandeau-alerte-etat {
+  color: var(--c-ember-ink);
+}
+.bandeau-alerte-aide {
+  display: none;
+  font-size: var(--text-12);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.bandeau-alerte-go {
+  gap: 6px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  font-size: var(--text-14);
+}
+.bandeau-alerte-go[hidden] {
+  display: none;
+}
+.bandeau-alerte-go .icon {
+  width: 18px;
+  height: 18px;
+}
+.bandeau-alerte-geste {
+  display: grid;
+  text-align: left;
+  line-height: 1.15;
+}
+.bandeau-alerte-geste small {
+  font-family: var(--font-num);
+  font-size: var(--text-12);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.bandeau[data-open="true"] .bandeau-alerte {
+  padding-left: var(--sp-2);
+}
+.bandeau[data-open="true"] .bandeau-alerte-aide:not(:empty) {
+  display: block;
+}
+.bandeau[data-open="true"] .bandeau-alerte-titre,
+.bandeau[data-open="true"] .bandeau-alerte-etat {
+  white-space: normal;
+}
+
 /* Déplier (compact seulement) */
 .bandeau-more {
   display: grid;

@@ -14,7 +14,7 @@ export const BASE = {
   roof: '#7f9d69', roofb: '#56795c',
   metal: '#f0e6cb', tech: '#58a9a4', panel: '#2f6c71',
   glass: '#aee0d7', glassin: '#5f9584', canvas: '#eef2e2', ice: '#eef4f0',
-  paper: '#fbf2d9', rope: '#c9a46a',
+  paper: '#fbf2d9', rope: '#c9a46a', snow: '#f2f4ee',
   // végétation et récoltes
   leaf: '#87a65b', leafd: '#5d8150', leafb: '#a1ba66', gold: '#dbb457', amber: '#cf9446',
   maple: '#b8404a', sprout: '#8fc25c', wheat: '#e6c163', squash: '#e8a542', hay: '#e8c86f',
@@ -28,6 +28,14 @@ export const BASE = {
 };
 
 const SHADES = ['t', 'l', 'r'];
+
+// Hiver (lot H) : du 15 novembre au 30 avril, l'île est sous la neige (world.js pose data-neige sur .ow ; les miniatures du
+// catalogue n'en ont pas). Le sol prend la neige sur ses trois tons ; le dessus (-t) des toits, des feuillages et de la
+// toile des serres devient neige et leurs faces gardent leur couleur, comme une neige posée. L'érable a perdu ses
+// feuilles : ses faces passent au gris bleuté du givre. Les chemins restent dégagés (Fanal déneige).
+const NEIGE_SOL = { grass: '#eef2ec', grassd: '#e2e8e6', grassl: '#f6f7f1', lip: '#e5ebe8' };
+const NEIGE_DESSUS = ['roof', 'roofb', 'leaf', 'leafd', 'leafb', 'maple', 'gold', 'amber', 'canvas'];
+const NEIGE_NU = { maple: '#aab5b4', gold: '#b6bfba', amber: '#a3adab' };
 
 // jetons de tokens.css qui alimentent des matières du monde
 const TOKEN_MAP = {
@@ -76,6 +84,10 @@ export function paletteCSS(tokenRoot) {
 
   let s = '';
   s += `.ow,.ow-thumb{${decl(Object.keys(base))};--lampg-off:#6d6b5f;--lampg-on:${tk.lantern};--win-day:#4f7f82;--win-night:#ffd98c}`;
+  const neige = [];
+  for (const [m, c] of Object.entries({ ...NEIGE_SOL, ...NEIGE_NU })) for (const k of SHADES) neige.push(`--${m}-${k}:${css(shade(hex(c), k))}`);
+  for (const m of NEIGE_DESSUS) neige.push(`--${m}-t:${css(hex(base.snow))}`);
+  s += `.ow[data-neige]{${neige.join(';')}}`;
   // classes de remplissage et de trait
   for (const m of Object.keys(base)) {
     for (const k of SHADES) s += `.${m}-${k}{fill:var(--${m}-${k});stroke:var(--${m}-${k})}.k-${m}-${k}{stroke:var(--${m}-${k});fill:none}`;

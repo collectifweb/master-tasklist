@@ -122,11 +122,11 @@ export const SECTOR_LANDMARK = {
   place: 'chalet-1', champs: 'cloture-c1', atelier: 'atelier-1', mairie: 'grenier-1', ecole: 'chalet-3', garage: 'convoi',
 };
 
-// ---------------------------------------------------------------- front de givre (en sommeil)
+// ---------------------------------------------------------------- front de givre (lot H)
 /**
  * Bord de l'île par où arrive un front de givre, selon le quartier visé : segment a → b sur le bord
  * (grille [u, v]), normale sortante n, `face` = le socle de ce bord est visible (le lac commence à son pied).
- * La Place n'a pas de bord : son front vient du quai. En sommeil : gardé pour les alertes météo (semaines 3-4).
+ * La Place n'a pas de bord : son front vient du quai. Une tempête annoncée (core/hiver.js) arrive par TEMPETE_BORD.
  */
 export const AVIS_EDGE = {
   champs: { a: [0.5, 12], b: [5.5, 12], n: [0, 1], face: true },
@@ -136,6 +136,8 @@ export const AVIS_EDGE = {
   garage: { a: [0.5, 0], b: [5.5, 0], n: [0, -1], face: false },
   place: { a: [4.5, 12], b: [7.5, 12], n: [0, 1], face: true },
 };
+/** La tempête arrive par le bord de l'Atelier : la face avant droite, visible à toutes les largeurs, au pied des serres. */
+export const TEMPETE_BORD = 'atelier';
 
 /**
  * Caisses d'échéance : au bord de la route de droite (v = 6), de la Place vers le bord de l'île. Pas sur la route

@@ -151,6 +151,19 @@
     <button class="bandeau-more" type="button" data-action="bandeau-toggle" aria-expanded="false" aria-controls="bandeau-semaine-item bandeau-saison-item">
       <svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-chevron-down"/></svg>
     </button>
+    <div class="bandeau-alerte" id="bandeau-alerte" role="group" aria-labelledby="bandeau-alerte-titre" hidden>
+      <span class="bandeau-alerte-mark"><svg class="icon" aria-hidden="true"><use href="design/icons.svg#i-flocon"/></svg></span>
+      <span class="bandeau-alerte-text">
+        <span class="bandeau-alerte-titre" id="bandeau-alerte-titre"></span>
+        <span class="bandeau-alerte-ligne">
+          <span class="bandeau-crans" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="bandeau-alerte-etat"></span>
+        </span>
+        <span class="bandeau-alerte-aide"></span>
+        <span class="sr-only" id="bandeau-alerte-raison"></span>
+      </span>
+      <button class="btn btn--small bandeau-alerte-go" type="button" hidden></button>
+    </div>
   </section>
   <div class="speech" id="speech" hidden aria-hidden="true"></div>
   <p class="sr-only" role="status" aria-live="polite" id="live"></p>

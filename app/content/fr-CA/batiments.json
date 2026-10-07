@@ -42,7 +42,8 @@
     "geste": "Bâtir",
     "maintenant": "Elle tournera à ta première quête terminée aujourd’hui.",
     "maintenant.fait": "Elle a tourné aujourd’hui : {n} Énergie de plus.",
-    "maintenant.panne": "À l’arrêt pour l’instant : une pale est cassée."
+    "maintenant.panne": "À l’arrêt pour l’instant : une pale est cassée.",
+    "maintenant.neige": "À l’arrêt pour l’instant : la neige bloque ses pales."
   },
   "grenier": {
     "nom": "Grenier",
@@ -86,6 +87,13 @@
     "gel.effet": "La culture a gelé : la journée ne compte pas pour sa pousse.",
     "gel.geste": "Couvrir la culture",
     "gel.fait": "Culture couverte aujourd’hui.",
+    "neige.titre": "Sous la neige",
+    "neige.effet.eolienne": "La tempête l’a ensevelie : elle ne donne plus son Énergie les jours où tu termines une quête.",
+    "neige.effet.serre": "La tempête a chargé la toile : la culture ne pousse plus tant que la serre est sous la neige.",
+    "neige.geste": "Déneiger",
+    "neige.fait": "Déneigée aujourd’hui.",
+    "neige.seul.one": "Sinon, la neige fond demain.",
+    "neige.seul.other": "Sinon, la neige fond dans {n} jours.",
     "geste.label": "{geste} pour {cout}",
     "quete": "Ou termine une quête {domaine} : elle règle ça, gratuitement.",
     "seul.one": "Sinon, ça se règle tout seul demain.",
@@ -110,7 +118,9 @@
     "degat.ours.one": "un ours rôde, il repart demain",
     "degat.ours.other": "un ours rôde, il repart dans {n} jours",
     "degat.gel.one": "gelée, dégèle demain",
-    "degat.gel.other": "gelée, dégèle dans {n} jours"
+    "degat.gel.other": "gelée, dégèle dans {n} jours",
+    "degat.neige.one": "sous la neige, fond demain",
+    "degat.neige.other": "sous la neige, fond dans {n} jours"
   },
   "fiche": {
     "quoi": "Ce que c’est",
@@ -145,12 +155,15 @@
     "reparation.panne": "Éolienne réparée, pour {cout}.",
     "reparation.ours": "Ours chassé, pour {cout}.",
     "reparation.gel": "Culture couverte, pour {cout}.",
+    "reparation.neige": "Bâtiment déneigé, pour {cout}.",
     "reparation.quete.panne": "La quête répare aussi l’éolienne.",
     "reparation.quete.ours": "La quête chasse aussi l’ours du potager.",
     "reparation.quete.gel": "La quête couvre aussi la culture gelée.",
+    "reparation.quete.neige": "La quête déneige aussi le bâtiment enseveli.",
     "rouvert.panne": "L’éolienne retombe en panne.",
     "rouvert.ours": "L’ours revient au potager.",
     "rouvert.gel": "La culture n’est plus couverte.",
+    "rouvert.neige": "La neige retombe sur le bâtiment déneigé.",
     "eolienne.arretee": "L’éolienne en panne n’a pas tourné."
   },
   "plan": {

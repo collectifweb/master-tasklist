@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════
    Le monde : l'île de l'Orée (app/world/). Jetons : tokens.css.
    Couches de la scène (une seule mise à l'échelle) :
-     terrain 1 · front de givre 5 (en sommeil) · effets au sol 6 · ombres 7 · objets 10 à ~3400 (tri par profondeur)
+     terrain 1 · front de givre 5 (tempête annoncée, lot H) · effets au sol 6 · ombres 7 · objets 10 à ~3400 (tri par profondeur)
      crépuscule 4100 · étoiles 4150 · halos 4200 · effets 4300
    Les objets n'ont pas de contexte d'empilement par secteur : ils se trient entre secteurs.
    Les couleurs des matières viennent de palette.js (variables --<matière>-<t|l|r>).
@@ -124,6 +124,13 @@
 .ow-foam { fill: none; stroke: rgb(255 255 255 / 0.7); stroke-width: 1.6; }
 .ow-edge { fill: none; stroke: rgb(255 250 225 / 0.55); stroke-width: 1.2; stroke-linejoin: round; }
 .ow-edge-front { stroke: rgb(255 250 225 / 0.32); }
+
+/* hiver (lot H, du 15 novembre au 30 avril) : palette.js met le sol, les toits et les feuillages sous la neige ; ici, les
+   bords du lac pris par la glace, et les fleurs du terrain enfouies (leurs tiges restent, en brindilles). Statique. */
+.ow[data-neige] .ow-shallow { fill: var(--ice-t); opacity: 0.88; }
+.ow[data-neige] .ow-foam { stroke: var(--ice-r); stroke-width: 1.2; }
+.ow[data-neige] .ow-terrain :is(.fl1-t, .fl2-t, .fl3-t) { fill: var(--grassl-t); stroke: var(--grassl-t); }
+.ow[data-neige] .ow-terrain .k-leafd-l { stroke: var(--maple-r); }
 
 /* détails des modèles */
 .ow .rim, .ow-thumb .rim { stroke: rgb(255 251 238 / 0.5); stroke-width: 0.8; }
@@ -513,9 +520,9 @@
 }
 .ow-probe { position: absolute; left: 0; top: 0; width: 0; visibility: hidden; pointer-events: none; }
 
-/* ---------------------------------------------------------------- front de givre (en sommeil) */
-/* banquise, glaçons à deux tons, crête en tirets d'encre de givre ; il avance d'un jour à l'autre.
-   Gardé pour les alertes météo (semaines 3-4) : le monde ne l'affiche pas encore. */
+/* ---------------------------------------------------------------- front de givre (lot H) */
+/* La tempête annoncée : banquise, glaçons à deux tons, crête en tirets d'encre de givre, au large du bord de l'Atelier.
+   Il avance d'un jour à l'autre jusqu'au rivage le jour de la tempête ; rien ne bouge au repos. */
 .ow-front-move { transition: transform var(--t-day) var(--ease-out); }
 .ow[data-mouvement="reduit"] .ow-front-move { transition-duration: 0s; }
 .ow-front-band { fill: var(--c-frost-wash); stroke: var(--c-frost); stroke-width: 1.2; stroke-linejoin: round; }

@@ -2,13 +2,14 @@
 // le monde et la carte en liste lisent la même vue, donc ils disent toujours la même chose.
 import { QUARTIER_IDS, quartierOfTask } from '../core/domains.js';
 import { niveauDe, niveauMax } from '../core/quartiers.js';
-import { gameDay, daysUntil, daysBetween, dayOf } from '../core/time.js';
+import { gameDay, daysUntil, daysBetween, dayOf, isSnowSeason } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
 import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
 import { placesParChalet } from '../core/quartiers.js';
 import { visiteurDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
-import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS } from './layout.js';
+import { TEMPETE, alerteTempete } from '../core/hiver.js';
+import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
 export const REFLET_DAYS = 14;
@@ -68,6 +69,8 @@ export function batimentsView(game, ledger = [], now = new Date()) {
  * Vue complète. options : { now (Date|ISO, obligatoire), anchors (content/fr-CA/ancres.json, facultatif),
  * ledger (registre, pour les cultures et les imprévus ; facultatif) }. Ne lit que des champs connus et tolère un état
  * partiel. imprevus : les bons imprévus reçus aujourd'hui (aurore, peche, trouvaille, orignal), que l'île montre le jour même.
+ * Hiver (lot H) : neige, l'île sous la neige (du 15 novembre au 30 avril) ; tempete, l'alerte en cours { jour,
+ * joursRestants, crans, max } ou null ; avis, son front de givre { sector, progress (0 à l'annonce, 1 le jour même) }.
  */
 export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const g = game || {};
@@ -107,5 +110,8 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const batiments = batimentsView(g, reg, now ?? new Date());
   const imprevus = new Set();
   for (const e of reg) if (e && e.type === 'imprevu' && e.day === today && Object.hasOwn(IMPREVUS.bons, e.imprevu)) imprevus.add(e.imprevu);
-  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus };
+  const a = alerteTempete(list, g, reg, now ?? new Date());
+  const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max } : null;
+  const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / TEMPETE.annonce } : null;
+  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, neige: isSnowSeason(today), tempete, avis };
 }

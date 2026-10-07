@@ -99,8 +99,15 @@ export function createWorldPlan(container, options = {}) {
 
   function render(game, tasks = [], ledger = []) {
     const v = deriveView(game, tasks, { now: nowOf(), anchors: options.anchors, ledger });
-    // résumé : les caisses d'échéance, puis l'imprévu heureux du jour que l'île montre (rien quand il n'y a ni l'un ni l'autre)
-    const sum = v.crates.length ? [v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length })] : [];
+    // résumé : la tempête annoncée et la neige (lot H), les caisses d'échéance, puis l'imprévu heureux du jour que l'île
+    // montre (rien quand il n'y a rien de tout ça)
+    const sum = [];
+    if (v.tempete) {
+      const n = v.tempete.joursRestants;
+      sum.push(t(`monde.plan.tempete.${n === 0 ? 'zero' : n === 1 ? 'one' : 'other'}`, { n }));
+    }
+    if (v.neige) sum.push(t('monde.plan.neige'));
+    if (v.crates.length) sum.push(v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length }));
     for (const id of v.imprevus || []) sum.push(t(`monde.plan.imprevu.${id}`));
     const sk = sum.join('|');
     if (last.summary !== sk) {

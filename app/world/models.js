@@ -186,6 +186,8 @@ export const MARK_GLYPH = {
   panne: '<path d="M15.6 4.4a4.6 4.6 0 0 0-5 6.2l-6.2 6.2a1.9 1.9 0 0 0 2.7 2.7l6.2-6.2a4.6 4.6 0 0 0 6.2-5l-2.9 2.9-2.6-.5-.5-2.6z"/>',
   ours: '<ellipse cx="12" cy="15.6" rx="4.4" ry="3.6" class="ow-mark-fill"/><circle cx="6.4" cy="10.4" r="1.9" class="ow-mark-fill"/><circle cx="9.7" cy="6.9" r="2" class="ow-mark-fill"/><circle cx="14.3" cy="6.9" r="2" class="ow-mark-fill"/><circle cx="17.6" cy="10.4" r="1.9" class="ow-mark-fill"/>',
   gel: '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><circle cx="12" cy="12" r="2.2" class="ow-mark-fill"/>',
+  // une pelle penchée (lot H) : la neige d'une tempête, à déneiger
+  neige: '<g transform="rotate(-32 12 12)"><path d="M9.4 3.2h5.2M12 3.2v8.6"/><path d="M8.2 11.8h7.6v3.4a3.8 3.8 0 0 1-7.6 0z" class="ow-mark-fill"/></g>',
 };
 /** (x, y) : la pointe, en px du dessin. */
 function marque(a, x, y, type) {
@@ -194,6 +196,35 @@ function marque(a, x, y, type) {
     + `<circle class="ow-mark-disc" cx="${f(x)}" cy="${f(cy)}" r="${r}"/>`
     + `<g class="ow-mark-glyph" transform="translate(${f(x - 6.6)} ${f(cy - 6.6)}) scale(.55)">${MARK_GLYPH[type] || ''}</g></g>`);
   a.ext(x - r - 1, cy - r - 1); a.ext(x + r + 1, y + 1);
+}
+
+// ---------------------------------------------------------------- congère d'une tempête (lot H)
+// La neige d'une tempête (dégât « neige », core/hiver.js) s'amoncelle contre les faces avant d'une emprise
+// (u0..u1 × v0..v1) : un bourrelet bosselé, haut de h px contre le mur et plus chargé vers le coin avant, qui descend
+// jusqu'au sol à `o` case du mur. Une pente par face (lumière du dessus côté +v, ton de face côté +u), sans facettes
+// alternées : de loin, une congère, pas des éclats.
+function congere(a, u0, u1, v0, v1, h, o, seed) {
+  const R = rng(seed);
+  const n = 6;
+  const z = (k) => h * (0.62 + 0.38 * (k / n) + (R() - 0.5) * 0.18); // k = n : le coin avant
+  const ov = (k) => o * (0.45 + 0.55 * (k / n));
+  const zu = Array.from({ length: n + 1 }, (_, k) => z(k));
+  const zv = Array.from({ length: n + 1 }, (_, k) => z(k));
+  zu[n] = zv[n] = h;
+  const along = (k, a0, a1) => a0 + ((a1 - a0) * k) / n;
+  // face +u (avant droite), du fond vers le coin
+  const pu = [];
+  for (let k = 0; k <= n; k++) pu.push([u1, along(k, v0, v1), zv[k]]);
+  for (let k = n; k >= 0; k--) pu.push([u1 + ov(k), along(k, v0, v1), 0]);
+  a.poly(pu, 'snow-l');
+  // face +v (avant gauche), du fond vers le coin
+  const pv = [];
+  for (let k = 0; k <= n; k++) pv.push([along(k, u0, u1), v1, zu[k]]);
+  for (let k = n; k >= 0; k--) pv.push([along(k, u0, u1), v1 + ov(k), 0]);
+  a.poly(pv, 'snow-t');
+  // le coin : la neige fait le tour
+  a.poly([[u1, v1, h], [u1 + o, v1, 0], [u1 + o * 0.78, v1 + o * 0.78, 0], [u1, v1 + o, 0]], 'snow-t');
+  a.ext(...P(u1 + o, v1 + o)); a.ext(...P(u0, v1 + o)); a.ext(...P(u1 + o, v0));
 }
 
 // ---------------------------------------------------------------- bâtiments du joueur (lot 4)
@@ -340,8 +371,13 @@ export function parcelle(stade = '', degat = '') {
   return r;
 }
 
-/** Petite serre : tunnel de bois et de toile, emprise 1,9 (u) × 1,5 (v), porte et tuyau de poêle sur le pignon. */
-export function serre(stade = '') {
+/**
+ * Petite serre : tunnel de bois et de toile, emprise 1,9 (u) × 1,5 (v), porte et tuyau de poêle sur le pignon. degat
+ * 'neige' (lot H) : une épaisse couche de neige sur la toile, une congère qui bloque la porte et cache les godets, et la
+ * marque braise (une pelle) au-dessus du faîte.
+ */
+export function serre(stade = '', degat = '') {
+  const neige = degat === 'neige';
   const a = new Art();
   const u0 = 0.12, u1 = 1.72, v0 = 0.16, v1 = 1.3, vm = (v0 + v1) / 2;
   a.box(u0, v0 - 0.04, u1 - u0, 0.07, 0, 3, 'woodd', { rim: true });
@@ -360,9 +396,22 @@ export function serre(stade = '') {
   a.poly(arch.map(([v, z]) => [u1, v, z]), 'canvas-r', ' fill-opacity=".94"');
   for (let k = 0; k < 4; k++) a.seg([u1, arch[k][0], arch[k][1]], [u1, arch[k + 1][0], arch[k + 1][1]], 'k-woodd-r', 0.9);
   rectU(a, u1, vm - 0.14, vm + 0.14, 2, 14, 'woodd-r');
+  if (neige) {
+    // la neige pèse sur la toile : une couche épaisse sur les deux pans du dessus, qui déborde au pignon
+    a.poly([[u0 - 0.03, arch[1][0] - 0.02, arch[1][1] + 1], [u1 + 0.05, arch[1][0] - 0.02, arch[1][1] + 1], [u1 + 0.05, vm, 26.5], [u0 - 0.03, vm, 26.5]], 'snow-r');
+    a.poly([[u0 - 0.03, vm, 26.5], [u1 + 0.05, vm, 26.5], [u1 + 0.05, arch[3][0] + 0.03, arch[3][1] + 1.6], [u0 - 0.03, arch[3][0] + 0.03, arch[3][1] + 1.6]], 'snow-t');
+    a.poly([[u1 + 0.05, arch[3][0] + 0.03, arch[3][1] + 1.6], [u1 + 0.05, vm, 26.5], [u1 + 0.05, vm, 23.5], [u1 + 0.05, arch[3][0] + 0.03, arch[3][1] - 1.4]], 'snow-l');
+  }
   a.box(u0 + 0.3, vm - 0.04, 0.08, 0.08, 20, 9, 'metal', { rim: true });
   for (const [x, y] of [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]) a.cast(x, y, 2);
   a.cast(u0, vm, 23); a.cast(u1, vm, 23);
+  if (neige) {
+    // la congère bloque la porte et recouvre les godets ; la marque au-dessus du faîte
+    congere(a, u0, u1, v0, v1, 10, 0.24, 5);
+    const [mx, my] = P((u0 + u1) / 2, vm, 34);
+    marque(a, mx, my, 'neige');
+    return a.done(2);
+  }
   // ce qui pousse : des godets devant la porte ; mûr : le panier
   if (stade) {
     for (const dv of [-0.2, 0, 0.2]) {
@@ -381,14 +430,16 @@ export function serre(stade = '') {
 
 /**
  * Éolienne, emprise 1 × 1 : mât, nacelle et rotor à trois pales (tourne quand l'île est éveillée). degat 'panne' (lot I) :
- * le rotor est arrêté, une pale cassée net, la trappe de la nacelle ouverte, et la marque braise au pied du mât.
+ * le rotor est arrêté, une pale cassée net, la trappe de la nacelle ouverte, et la marque braise au pied du mât. degat
+ * 'neige' (lot H) : le rotor arrêté, de la neige sur la nacelle et le moyeu, une congère au pied du mât, la marque (pelle).
  */
 export function eolienne(degat = '') {
-  const panne = degat === 'panne';
+  const panne = degat === 'panne', neige = degat === 'neige';
   const a = new Art();
   a.box(0.3, 0.3, 0.4, 0.4, 0, 3, 'stoned', { rim: true });
   a.prism(0.5, 0.5, 0.07, 3, 62, 'metal', 6);
   a.box(0.42, 0.36, 0.16, 0.3, 64, 6, 'metal', { rim: true });
+  if (neige) a.box(0.41, 0.35, 0.18, 0.32, 70, 2.2, 'snow'); // un chapeau de neige sur la nacelle
   if (panne) a.poly([[0.58, 0.42, 65], [0.58, 0.56, 65], [0.58, 0.56, 69], [0.58, 0.42, 69]], 'wooddk-r'); // trappe ouverte
   const [hx, hy] = P(0.5, 0.68, 67);
   let blades = '';
@@ -401,8 +452,14 @@ export function eolienne(degat = '') {
     const bout = panne && k === 2 ? [[tip[0] - s * 2.6, tip[1] + c * 2.6], [tip[0] + c * 2, tip[1] + s * 2], tip] : [tip];
     blades += `<polygon points="${pts([p1, p2, ...bout, [hx + s * 1, hy - c * 1]])}" class="${k === 1 ? 'metal-r' : 'metal-l'}"/>`;
   }
-  a.raw(`<g${panne ? '' : ' class="ow-rotor"'} style="transform-origin:${f(hx)}px ${f(hy)}px">${blades}<circle cx="${f(hx)}" cy="${f(hy)}" r="3.2" class="tech-t"/></g>`);
+  a.raw(`<g${panne || neige ? '' : ' class="ow-rotor"'} style="transform-origin:${f(hx)}px ${f(hy)}px">${blades}<circle cx="${f(hx)}" cy="${f(hy)}" r="3.2" class="${neige ? 'snow-t' : 'tech-t'}"/></g>`);
   a.ext(hx - 31, hy - 31); a.ext(hx + 31, hy + 31);
+  if (neige) {
+    // rotor pris dans la glace, la neige monte au pied du mât ; la marque braise (une pelle) à côté
+    congere(a, 0.3, 0.7, 0.3, 0.7, 9, 0.22, 3);
+    const [mx, my] = P(0.22, 0.86, 8);
+    marque(a, mx, my, 'neige');
+  }
   if (panne) {
     // le bout de pale tombé au pied du mât
     a.poly([[0.74, 0.5, 0.6], [0.98, 0.62, 0.6], [0.98, 0.7, 0.6], [0.76, 0.58, 0.6]], 'metal-t');
@@ -684,7 +741,7 @@ export function artFor(e) {
     case 'atelier': return atelier(e.variant === 'abime');
     case 'chalet': return chalet(e.variant || '');
     case 'parcelle': return parcelle(e.variant || '', e.degat || '');
-    case 'serre': return serre(e.variant || '');
+    case 'serre': return serre(e.variant || '', e.degat || '');
     case 'eolienne': return eolienne(e.degat || '');
     case 'orignal': return orignal();
     case 'bois': return bois();

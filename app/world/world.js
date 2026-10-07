@@ -49,7 +49,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 const LIGHT = { lanterne: 'lantern', etabli: 'lamp', chalet: 'window', grenier: 'window' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
 const AMBIENT_MS = 9000; // l'île respire quelques secondes après chaque activité, puis s'immobilise
-const FRONT_FAR = 1.8; // recul du front de givre à l'annonce (cases), jusqu'au rivage la veille (en sommeil)
+const FRONT_FAR = 1.8; // recul du front de givre à l'annonce d'une tempête (cases), jusqu'au rivage le jour même
 let uid = 0;
 
 /** Pictos de quartier : les mêmes tracés que design/icons.svg (grille de 24, trait arrondi, currentColor). */
@@ -206,7 +206,7 @@ export function createWorld(container, options = {}) {
   veils.setAttribute('width', TERRAIN.w); veils.setAttribute('height', TERRAIN.h);
   veils.setAttribute('aria-hidden', 'true');
   Object.assign(veils.style, { left: TERRAIN.x + 'px', top: TERRAIN.y + 'px' });
-  // front de givre : en sommeil, gardé pour les alertes météo (semaines 3-4) ; caché tant qu'aucune n'est annoncée
+  // front de givre : la tempête annoncée (lot H) ; caché tant qu'aucune ne l'est
   veils.innerHTML = '<g class="ow-front" hidden><g class="ow-front-move"></g></g>';
   const frontHost = veils.querySelector('.ow-front');
   const frontMove = frontHost.firstElementChild;
@@ -322,8 +322,8 @@ export function createWorld(container, options = {}) {
   }
 
   // ---------------------------------------------------------------------------- application d'une vue
-  // ---- front de givre (en sommeil) : posé au rivage du bord visé, reculé selon le temps qui reste.
-  // La vue ne porte pas encore d'alerte météo (v.avis) : il reste caché. Gardé pour les semaines 3-4.
+  // ---- front de givre (lot H) : posé au rivage du bord visé, reculé selon le temps qui reste avant la tempête (v.avis).
+  // Il avance d'un jour à l'autre (transition --t-day), jamais au repos.
   let frontSector = null;
   function frontShift(progress, extra = 0) {
     const [nx, ny] = edgeNormal(AVIS_EDGE[frontSector]);
@@ -451,6 +451,7 @@ export function createWorld(container, options = {}) {
   }
 
   function apply(v, { quiet = false, enter = true } = {}) {
+    if (root.hasAttribute('data-neige') !== !!v.neige) root.toggleAttribute('data-neige', !!v.neige); // l'hiver : palette.js
     applyFront(v);
     const aur = !v.imprevus?.has?.('aurore');
     if (aurore.hidden !== aur) aurore.hidden = aur;

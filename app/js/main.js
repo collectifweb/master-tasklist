@@ -1,5 +1,8 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS } from '../core/index.js';
+import {
+  SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
+  findEntry,
+} from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
@@ -55,7 +58,7 @@ const story = createStory({
   thumb: (id) => (world ? world.thumb(id) : ''),
   lightBandeau: () => bandeau.light(),
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
-  arrivee: () => { annonceVisiteur(); annonceImprevu(); },
+  arrivee: () => { annonceVisiteur(); annonceImprevu(); annonceTempete(); },
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -134,7 +137,7 @@ function react(payload) {
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
-          : action === 'advanceTime' ? imprevuSay(events, now || maintenant())
+          : action === 'advanceTime' ? [imprevuSay(events, now || maintenant()), tempeteSay(events)].filter(Boolean).join(' ')
             : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
     const liveText = `${head}${objectifs ? ' ' + objectifs : ''} ${gains.length ? t('sr.gains', { liste: gains.join(', ') }) : ''}${replyText}`.trim();
     announce.show(s, 'gain', { liveText: remember(action === 'advanceTime' ? after(liveText) : liveText) }); // « Jour suivant » s'y ajoute
@@ -160,8 +163,8 @@ function react(payload) {
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
   if (say) return announce.say(remember(say() + replyText));
-  // geste du village sans gain (réparer), ou passage du temps sans gain (orignal, mauvais imprévu)
-  const bat = [batimentSay(events), imprevuSay(events, now || maintenant())].filter(Boolean).join(' ');
+  // geste du village sans gain (réparer, rentrer du bois), ou passage du temps sans gain (orignal, mauvais imprévu, tempête)
+  const bat = [batimentSay(events), imprevuSay(events, now || maintenant()), tempeteSay(events)].filter(Boolean).join(' ');
   if (bat) announce.say(remember(action === 'advanceTime' ? after(bat + replyText) : bat + replyText));
 }
 
@@ -227,6 +230,27 @@ function imprevuSay(events, now) {
   return out.join(' ');
 }
 
+/**
+ * Phrase lue pour une tempête (lot H) : un cran de bois rentré (et la barre pleine), ou l'issue au passage du temps (tenue,
+ * un bâtiment sous la neige avec ses trois voies, passée sans rien abîmer).
+ */
+function tempeteSay(events) {
+  const out = [];
+  for (const e of events) {
+    if (e.type === 'preparation') {
+      out.push(t('sr.tempete.preparation', { cout: coutText(e.cout), n: e.crans, max: TEMPETE.crans }));
+      if (e.crans >= TEMPETE.crans) out.push(t('sr.tempete.prete'));
+    } else if (e.type !== 'tempete') continue;
+    else if (e.resultat === 'tenue') out.push(t('sr.tempete.tenue'));
+    else if (e.resultat === 'passee') out.push(t('sr.tempete.passee'));
+    else {
+      const n = daysBetween(e.jour, e.jusqua);
+      out.push(t(`sr.tempete.neige.${String(e.cible).replace(/-\d+$/, '')}.${n === 1 ? 'one' : 'other'}`, { n, cout: coutText(DEGATS.neige.reparer) }));
+    }
+  }
+  return out.join(' ');
+}
+
 /** Événements du jeu + ceux que seule l'interface connaît : objet-reflet de la quête faite. */
 function worldEvents(payload) {
   const events = [...((payload && payload.events) || [])];
@@ -283,8 +307,12 @@ function run(action, params) {
     notice({ kind: 'info', text: err.message });
     return null;
   }
-  // un imprévu peut arriver ici, la première fois que le temps passe après les premiers pas : Fanal le raconte
-  if (AFTER_TIME.has(action) && advanceTime()?.events.some((e) => e.type === 'imprevu')) annonceImprevu();
+  // un imprévu ou une tempête peut arriver ici, la première fois que le temps passe après les premiers pas : Fanal le raconte
+  if (AFTER_TIME.has(action)) {
+    const ev = advanceTime()?.events || [];
+    if (ev.some((e) => e.type === 'imprevu')) annonceImprevu();
+    if (ev.some((e) => e.type === 'tempete')) annonceTempete();
+  }
   return r;
 }
 function advanceTime() {
@@ -492,6 +520,26 @@ document.addEventListener('click', (e) => {
       const quai = store.view && batimentsDuVillage(store.view.game).find((b) => b.type === 'quai');
       return quai && openBatimentSheet(quai.id);
     }
+    case 'preparer': {
+      // « Rentrer du bois » (bandeau, tempête annoncée) : un cran payé une fois, même touché deux fois
+      if (spendBlocked(e, target, action)) return;
+      if (disabled(target)) {
+        const raison = $('#bandeau-alerte-raison').textContent.trim();
+        notice({ kind: 'info', text: raison });
+        return announce.say(raison);
+      }
+      let params = {};
+      try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
+      markSpent(action, target);
+      return run('preparer', params);
+    }
+    case 'tempete-voir': {
+      // le bâtiment sous la neige : sa fiche (« Déneiger », la quête Terrain, la fonte)
+      bandeau.toggle(false);
+      let params = {};
+      try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
+      return params.id && openBatimentSheet(params.id);
+    }
     case 'accueil-suivant': return story.accueilSuivant();
     case 'add': return openAdd(queteDefaut(store.view?.game));
     case 'res-help': return openHelp(target.dataset.res);
@@ -625,6 +673,45 @@ function annonceImprevu() {
   if (!reply) return;
   speech.showText(reply.nom, reply.texte);
   announce.say(remember(after(`${reply.nom}\u00a0: ${reply.texte}`))); // la phrase d'un geste ou du passage du temps juste lue est gardée, et « Jour suivant » s'ajoute
+}
+
+// Une tempête (lot H) : Fanal l'annonce une fois par appareil (avec, pour le lecteur d'écran, la barre et son prix), en
+// reparle la veille si la barre n'est pas pleine, et raconte son issue le jour même (tenue, ou un bâtiment sous la neige ;
+// rien pour une tempête passée sans dégât). Même moment que l'imprévu, après lui. Étape dite gardée sur l'appareil :
+// oree.tempete.v1 = « jour:étape » (1 annonce, 2 veille, 3 issue) ; un rechargement ne la répète pas.
+const TEMPETE_KEY = 'oree.tempete.v1';
+function etapeDite(jour) {
+  try {
+    const [j, n] = String(localStorage.getItem(TEMPETE_KEY) || '').split(':');
+    return j === jour ? Number(n) || 0 : 0;
+  } catch { return 3; } // sans stockage : pas d'annonce répétée
+}
+function annonceTempete() {
+  if (!started || !store.view) return;
+  const c = ctx();
+  const a = alerteTempete(c.tasks, c.game, c.ledger, c.now);
+  if (!a) return;
+  const dite = etapeDite(a.jour);
+  let etape = 0, sit = null, sr = '';
+  if (a.joursRestants === 0) {
+    const e = findEntry(c.ledger, `tempete:${a.jour}`);
+    if (!e || dite >= 3) return;
+    etape = 3;
+    sit = e.resultat === 'tenue' ? 'tempete.tenue' : e.resultat === 'neige' ? 'tempete.neige' : null;
+  } else if (!dite) {
+    etape = a.joursRestants === 1 ? 2 : 1;
+    sit = 'tempete.annonce';
+    sr = t(`sr.tempete.annonce.${a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants, max: a.max, cout: coutText(a.prix) });
+  } else if (a.joursRestants === 1 && dite < 2) {
+    etape = 2;
+    sit = a.crans < a.max ? 'tempete.veille' : null;
+  } else return;
+  if (sit && (!$('#speech').hidden || document.querySelector('dialog[open]'))) { setTimeout(annonceTempete, 7500); return; }
+  try { localStorage.setItem(TEMPETE_KEY, `${a.jour}:${etape}`); } catch { /* sans stockage : pas d'annonce répétée */ }
+  const reply = sit && pickReply(sit, { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
+  if (reply) speech.showText(reply.nom, reply.texte);
+  const text = [reply ? `${reply.nom}\u00a0: ${reply.texte}` : '', sr].filter(Boolean).join(' ');
+  if (text) announce.say(remember(after(text)));
 }
 
 /** Toucher « Aujourd'hui » dans le bandeau : la fiche où se fait le geste proposé (bâtiment, quête), ou l'ajout. */
@@ -784,7 +871,11 @@ document.addEventListener('visibilitychange', () => {
   if (!started || document.visibilityState !== 'visible') return;
   store.refresh({ force: true });
   if (gameDay(maintenant()) !== playedDay) tickDay();
-  else if (advanceTime()?.events.some((e) => e.type === 'imprevu')) annonceImprevu(); // idempotente : ne fait rien si rien n'a bougé
+  else {
+    const ev = advanceTime()?.events || []; // idempotente : ne fait rien si rien n'a bougé
+    if (ev.some((e) => e.type === 'imprevu')) annonceImprevu();
+    if (ev.some((e) => e.type === 'tempete')) annonceTempete();
+  }
 });
 
 // Installation sur l'écran d'accueil : le service worker garde la coquille pour un lancement hors ligne

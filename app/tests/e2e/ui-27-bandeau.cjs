@@ -109,7 +109,8 @@ L.runScenario('27. bandeau d’objectifs : visible, lisible, compact à 390, sui
   }
   await L.closeWelcome(page, 600);
 
-  // ───── l'hiver : l'objectif de saison est « à venir » ; trois pas faits, semer passe par l'atelier
+  // ───── l'hiver : l'objectif de saison compte les récoltes de serre (lot H) ; sans serre, il dit d'en bâtir une ; trois
+  // pas faits, semer passe par l'atelier (pas de tempête pendant les premiers pas)
   const fait = core.gameDay(DEC);
   const hiver = { ...L.quietState(core, DEC), batiments: [{ id: 'chalet-1', type: 'chalet' }], premiersPas: { chalet: fait, tache: fait, terminer: fait } };
   const srv2 = await L.startServer({ tasks: TASKS, game: hiver });
@@ -120,7 +121,8 @@ L.runScenario('27. bandeau d’objectifs : visible, lisible, compact à 390, sui
     await L.ready(p2);
     await L.closeWelcome(p2, 1200);
     const h = await lire(p2);
-    R.check('hiver : « Hiver : à venir », rien de bloquant', h.saison === 'Hiver : à venir', h.saison);
+    R.check('hiver : objectif d’hiver sans serre, « Bâtir une petite serre », rien de bloquant', h.saison === 'Bâtir une petite serre', h.saison);
+    R.check('hiver : aucune alerte de tempête pendant les premiers pas', await p2.evaluate(() => document.getElementById('bandeau-alerte').hidden && !document.getElementById('bandeau').hasAttribute('data-alerte')));
     R.check('hiver : semer passe par l’atelier (« Bâtis l’atelier, pour la serre »), 3 sur 5', h.today === 'Bâtis l’atelier, pour la serre' && h.semaine === 'Premiers pas : 3 sur 5', JSON.stringify([h.today, h.semaine]));
     R.check('hiver : rien de coupé, aucun défilement horizontal', !h.coupes.length && !h.deborde, JSON.stringify(h.coupes));
     if (!compact) await shot(p2, '27-bandeau-hiver');

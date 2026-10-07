@@ -10,11 +10,12 @@
 // Un mauvais imprévu (core/imprevus.js, lot I) se lit dans « Maintenant » : ce qui s'est passé, ce que ça change, puis
 // « Réparer » (« Chasser l'ours », « Couvrir la culture ») et son prix, en bouton secondaire (data-geste="reparer"), ou le
 // cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
-// Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir.
+// Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir. La neige d'une tempête (core/hiver.js, lot H)
+// est un dégât du même genre : « Déneiger », une quête Terrain, ou la neige qui fond.
 import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
-  recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, degatDe, refusReparer,
+  recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -52,31 +53,33 @@ export function ressource(obj) {
   return { res: RES[k], n, nom, texte: `${n} ${nom}` };
 }
 
-const DEGAT_ICON = { panne: 'cle', ours: 'patte', gel: 'flocon' };
-const domaine = (type) => t(`quartier.${IMPREVUS.mauvais[type].quartier}.domain`);
+const DEGAT_ICON = { panne: 'cle', ours: 'patte', gel: 'flocon', neige: 'pelle' };
+const domaine = (type) => t(`quartier.${DEGATS[type].quartier}.domain`);
 
 /**
  * Dégât d'un mauvais imprévu sur ce bâtiment : en cours { id, type, titre, effet, geste, cout, label, raison, quete, seul,
  * voie (picto du quartier de la quête qui le règle) }, réglé aujourd'hui { id, type, titre, fini }, ou null.
  */
 function degatModel(game, id, now) {
+  const type = typeOf(id);
   const d = degatDe(game, id, now);
   if (d) {
-    const def = IMPREVUS.mauvais[d.type];
+    const def = DEGATS[d.type];
     const geste = t(`bat.degat.${d.type}.geste`);
     const cout = coutText(def.reparer);
+    const neige = d.type === 'neige'; // la neige dit ce qu'elle change selon le bâtiment, et qu'elle fond
     return {
       id: d.id, type: d.type, fini: null,
       titre: t(`bat.degat.${d.type}.titre`),
-      effet: t(`bat.degat.${d.type}.effet`, { n: IMPREVUS.mauvais.ours.mange }),
+      effet: t(neige ? `bat.degat.neige.effet.${type}` : `bat.degat.${d.type}.effet`, { n: IMPREVUS.mauvais.ours.mange }),
       geste, cout, label: t('bat.degat.geste.label', { geste, cout }),
       raison: refusReparer(game, { id: d.id }, now),
       quete: t('bat.degat.quete', { domaine: domaine(d.type) }), voie: def.quartier,
-      seul: t(`bat.degat.seul.${d.joursRestants === 1 ? 'one' : 'other'}`, { n: d.joursRestants }),
+      seul: t(`bat.degat.${neige ? 'neige.' : ''}seul.${d.joursRestants === 1 ? 'one' : 'other'}`, { n: d.joursRestants }),
     };
   }
   const today = gameDay(now);
-  const f = (Array.isArray(game.degats) ? game.degats : []).find((x) => x && x.cible === id && x.fin === today && Object.hasOwn(IMPREVUS.mauvais, x.type));
+  const f = (Array.isArray(game.degats) ? game.degats : []).find((x) => x && x.cible === id && x.fin === today && Object.hasOwn(DEGATS, x.type));
   if (!f) return null;
   const fini = f.par === 'quete' ? t('bat.degat.fait.quete', { domaine: domaine(f.type) })
     : f.par === 'recolte' ? t('bat.degat.ours.recolte') : t(`bat.degat.${f.type}.fait`);
@@ -131,7 +134,8 @@ export function batimentModel(c, id) {
     m.raison = refusAccueillir(game);
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {
-    m.maintenant = degatDe(game, id, now) ? t('bat.eolienne.maintenant.panne')
+    const d = degatDe(game, id, now);
+    m.maintenant = d ? t(`bat.eolienne.maintenant.${d.type}`)
       : eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
   } else if (type === 'quai') {
     const v = visiteurDeLaSemaine(game, now);

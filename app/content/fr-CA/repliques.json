@@ -242,6 +242,72 @@
         {"id": "imprevu.regle.05", "voix": "fanal", "texte": "Problème réglé, on passe à autre chose. J’aime ce rythme-là."}
       ]
     },
+    "tempete.annonce": {
+      "quand": "Une tempête est annoncée (lot H) : dit une fois par appareil, à la première ouverture pendant les trois jours d’annonce, après l’imprévu du jour. Rassure, ne chiffre rien : les jours, la barre et le prix sont dans le bandeau et la phrase lue.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "tempete.annonce.01", "voix": "fanal", "texte": "Une tempête s’en vient. Je l’ai sentie dans mes vieux boulons."},
+        {"id": "tempete.annonce.02", "voix": "fanal", "texte": "Le ciel se charge au-dessus du lac. Une tempête approche, on a le temps."},
+        {"id": "tempete.annonce.03", "voix": "fanal", "texte": "Avis de tempête. Une quête par jour, et le village sera paré."},
+        {"id": "tempete.annonce.04", "voix": "fanal", "texte": "Une tempête arrive. Je sors ma pelle, toi, tu fais ce que tu fais."},
+        {"id": "tempete.annonce.05", "voix": "fanal", "texte": "Ça sent la neige. Une tempête se prépare, rien ne presse encore."}
+      ]
+    },
+    "tempete.veille": {
+      "quand": "La veille de la tempête, barre pas encore pleine : dit une fois par appareil. Aucun reproche : une quête ou du bois aide, et rien n’est perdu si la neige gagne.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "tempete.veille.01", "voix": "fanal", "texte": "Demain, la tempête. Une quête aujourd’hui, ou du bois, et on est prêts."},
+        {"id": "tempete.veille.02", "voix": "fanal", "texte": "La tempête arrive demain. Sinon, on déneigera après. Pas de drame."},
+        {"id": "tempete.veille.03", "voix": "fanal", "texte": "Dernière journée avant la neige. Ce qui est rentré est rentré."},
+        {"id": "tempete.veille.04", "voix": "fanal", "texte": "Demain, ça va souffler. Une petite quête aiderait, mais rien n’est perdu."},
+        {"id": "tempete.veille.05", "voix": "fanal", "texte": "La neige arrive demain. Je fais le plein de bois, toi, ton possible."}
+      ]
+    },
+    "tempete.tenue": {
+      "quand": "La tempête est tenue (barre pleine), le jour même : dit une fois par appareil. La récompense est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "tempete.tenue.01", "voix": "fanal", "texte": "Tempête tenue. Le village n’a même pas frissonné."},
+        {"id": "tempete.tenue.02", "voix": "fanal", "texte": "Il a neigé fort, et tout tient. Beau travail d’équipe."},
+        {"id": "tempete.tenue.03", "voix": "fanal", "texte": "La tempête est passée. Rien d’enseveli, et du bois en surplus."},
+        {"id": "tempete.tenue.04", "voix": "fanal", "texte": "Elle a soufflé toute la nuit. Le village l’a regardée passer, au chaud."},
+        {"id": "tempete.tenue.05", "voix": "fanal", "texte": "Tenue! Même ma pelle a pris congé."}
+      ]
+    },
+    "tempete.neige": {
+      "quand": "La tempête ensevelit un bâtiment (éolienne ou petite serre), le jour même : dit une fois par appareil. Même ton que imprevu.panne : tout se déneige, rien ne presse, ni prix ni nombre de jours.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "tempete.neige.01", "voix": "fanal", "texte": "La tempête a enterré un bâtiment. Rien de cassé, juste de la neige à pelleter."},
+        {"id": "tempete.neige.02", "voix": "fanal", "texte": "Un bâtiment dort sous la neige. Une pelletée, ou un peu de patience."},
+        {"id": "tempete.neige.03", "voix": "fanal", "texte": "Grosse bordée cette nuit. On déneigera quand ça te va."},
+        {"id": "tempete.neige.04", "voix": "fanal", "texte": "La neige a gagné une manche. Elle fond toujours, à la fin."},
+        {"id": "tempete.neige.05", "voix": "fanal", "texte": "Un bâtiment est sous la neige. Déneiger, c’est mon métier de base."}
+      ]
+    },
+    "tempete.deneige": {
+      "quand": "Un bâtiment est déneigé : en payant (geste « Déneiger »), ou par une quête Terrain payée (prend la place de imprevu.regle). Lot H.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "tempete.deneige.01", "voix": "fanal", "texte": "Déneigé. Ça, c’est de l’ouvrage que je comprends."},
+        {"id": "tempete.deneige.02", "voix": "fanal", "texte": "La pelle a parlé. Le bâtiment respire."},
+        {"id": "tempete.deneige.03", "voix": "fanal", "texte": "Plus de neige sur le toit. On repart."},
+        {"id": "tempete.deneige.04", "voix": "fanal", "texte": "Bien dégagé. Je n’aurais pas fait mieux, et je suis un chasse-neige."},
+        {"id": "tempete.deneige.05", "voix": "fanal", "texte": "Le bâtiment revoit le jour. Merci pour la pelletée."}
+      ]
+    },
+    "saison.serre": {
+      "quand": "L’objectif d’hiver est atteint, à la récolte de serre qui le complète (geste « Récolter »). Lot H. La récompense est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "saison.serre.01", "voix": "fanal", "texte": "La serre a tenu bon. L’hiver peut bien faire ce qu’il veut."},
+        {"id": "saison.serre.02", "voix": "fanal", "texte": "Des légumes frais en plein hiver. Le village mange vert."},
+        {"id": "saison.serre.03", "voix": "fanal", "texte": "Objectif d’hiver atteint. La petite serre mérite une médaille."},
+        {"id": "saison.serre.04", "voix": "fanal", "texte": "La serre ronronne malgré le froid. Ça fait chaud au cœur."},
+        {"id": "saison.serre.05", "voix": "fanal", "texte": "En plein hiver, la serre donne encore. Le village n’en revient pas."}
+      ]
+    },
     "famille.arrive": {
       "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,

@@ -6,12 +6,14 @@ import { quartierOfTask } from '../../core/index.js';
 /** Quelle situation joue pour ce geste ? Une seule, la première de la liste de content/README.md. */
 export function situationFor(action, params, events, task) {
   const has = (type) => events.some((e) => e.type === type);
+  // un dégât réglé : la neige d'une tempête a sa propre réplique (lot H)
+  const regle = () => (events.some((e) => e.type === 'reparation' && e.imprevu === 'neige') ? 'tempete.deneige' : 'imprevu.regle');
   const lengthOf = task ? (task.frozen ? task.frozen.length : task.length) : 0;
   const doneFlow = () => {
     if (has('sans-gain')) return null;
     if (events.some((e) => e.type === 'permis' && e.source === 'jours')) return 'permis.gagne';
     if (has('semaine-tenue')) return 'semaine.tenue';
-    if (has('reparation')) return 'imprevu.regle'; // la quête règle aussi un dégât de son domaine (lot I)
+    if (has('reparation')) return regle(); // la quête règle aussi un dégât de son domaine (lot I)
     if (lengthOf >= 6) return 'quest.done.big';
     if (events.some((e) => e.type === 'reward' && e.source === 'deja-faite')) return 'quest.already_done';
     return lengthOf >= 4 ? 'quest.done.medium' : 'quest.done.short';
@@ -27,7 +29,9 @@ export function situationFor(action, params, events, task) {
     case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
     // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
     case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;
-    case 'reparer': return 'imprevu.regle';
+    case 'reparer': return regle();
+    // la récolte qui atteint l'objectif d'hiver (lot H) ; les autres récoltes ne disent rien
+    case 'recolter': return events.some((e) => e.type === 'objectif-saison' && e.objectif === 'serre') ? 'saison.serre' : null;
     default: return null;
   }
 }

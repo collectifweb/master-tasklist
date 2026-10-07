@@ -204,15 +204,21 @@
   /* bandeau d'objectifs (lot 5) : une rangée sous la voie d'annonce, toujours visible ; déplié, il passe sur le monde */
   --bandeau-h: 48px;
   --bandeau-top: calc(var(--lane-top) + var(--lane-h));
+  /* rangée de la tempête annoncée (lot H) : elle s'ajoute sous les objectifs ; --bandeau-alerte vaut 0 sans alerte */
+  --bandeau-alerte-h: 54px;
+  --bandeau-alerte: 0px;
   /* le panneau ouvert s'arrête sous le bandeau : ressources, annonce et objectifs restent visibles */
-  --panel-open-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--sp-2));
+  --panel-open-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--bandeau-alerte) + var(--sp-2));
   /* feuille repliée : le monde garde ≈ 70 % de la hauteur à 390×844 */
   --panel-peek: clamp(248px, 30dvh, 300px);
   --column-w: clamp(340px, 34vw, 420px);
   /* ce que le monde doit laisser libre en bas (feuille repliée) ou à droite (colonne) */
   --world-cover-bottom: var(--panel-peek);
   --world-cover-right: 0px;
-  --world-safe-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--sp-2));
+  --world-safe-top: calc(var(--bandeau-top) + var(--bandeau-h) + var(--bandeau-alerte) + var(--sp-2));
+}
+:root:has(#bandeau[data-alerte]) {
+  --bandeau-alerte: var(--bandeau-alerte-h);
 }
 
 @media (min-width: 700px) {
