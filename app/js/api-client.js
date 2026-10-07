@@ -52,9 +52,10 @@ async function call(method, payload) {
  * Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas, et un onglet resté
  * en version 3, qui achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue. Version 5 (imprévus, lot I) :
  * l'API refuse la version 4, qui ferait tourner une éolienne en panne, récolterait sans la part de l'ours et effacerait la
- * reprise ; son geste reste en file et l'onglet rechargé le recalcule avant l'envoi (`withoutStaleBodies`).
+ * reprise ; son geste reste en file et l'onglet rechargé le recalcule avant l'envoi (`withoutStaleBodies`). Version 6 (hiver,
+ * lot H) : l'API refuse la version 5, qui ferait tourner une éolienne ensevelie et effacerait la neige des tempêtes.
  */
-export const CLIENT_VERSION = 5;
+export const CLIENT_VERSION = 6;
 
 export const api = {
   get: () => call('GET'),

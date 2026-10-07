@@ -25,6 +25,7 @@ import { hash } from './letters.js';
 import { quartierOfTask } from './domains.js';
 import { batimentsDuVillage, etatCulture, joursTravailles, stockage, potagerOuvert, manque } from './batiments.js';
 import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
+import { estJourDeTempete } from './hiver.js';
 
 /**
  * Catalogue. bons : gain { energy?, materials?, food? } (la Nourriture ne dépasse jamais la réserve). mauvais : quartier
@@ -44,6 +45,11 @@ export const IMPREVUS = {
     gel: { quartier: 'champs', reparer: { energy: 1 }, jours: 1, mois: [9, 10] },
   },
 };
+/**
+ * Dégâts que la partie connaît : ceux des mauvais imprévus, et la neige qu'une tempête laisse sur un bâtiment (hiver.js,
+ * jamais tirée par un créneau de la semaine). La neige arrête la serre et l'éolienne ; une quête Terrain déneige.
+ */
+export const DEGATS = { ...IMPREVUS.mauvais, neige: { quartier: 'champs', reparer: { energy: 2 }, jours: 3 } };
 /** Reprise (bible §9) : après `absence` jours ou plus sans passage, `jours` jours sans mauvais imprévu (celui du retour compris). */
 export const REPRISE = { absence: 5, jours: 3 };
 
@@ -53,8 +59,8 @@ const own = (o, k) => typeof k === 'string' && Object.hasOwn(o, k);
 const cle = (jour) => `imprevu:${jour}`;
 
 // Tirage déterministe : le hash des lettres (letters.js), brassé (fmix32) pour que deux clés voisines, comme deux lundis
-// qui se suivent, donnent des tirages indépendants.
-function tirage(s) {
+// qui se suivent, donnent des tirages indépendants. Aussi utilisé par hiver.js.
+export function tirage(s) {
   let h = hash(s);
   h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
   h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
@@ -81,7 +87,7 @@ export function calendrierImprevus(day) {
 }
 
 // Dégâts lisibles de la partie (un dégât abîmé est ignoré).
-const degatsDe = (game) => list(game.degats).filter((d) => typeof d.id === 'string' && own(IMPREVUS.mauvais, d.type)
+const degatsDe = (game) => list(game.degats).filter((d) => typeof d.id === 'string' && own(DEGATS, d.type)
   && typeof d.cible === 'string' && isDayString(d.le) && isDayString(d.jusqua));
 const actif = (d, day) => !d.fin && d.le <= day && day < d.jusqua;
 
@@ -100,13 +106,13 @@ const repriseLe = (game, day) => isObj(game.reprise) && isDayString(game.reprise
 export const enReprise = (game, now) => repriseLe(game, gameDay(now));
 
 /**
- * Jours travaillés perdus par une culture à cause du gel : ceux de la fenêtre de gel (du jour du gel à sa fin, réparée ou
- * non), après le semis et jusqu'à aujourd'hui. Lu par etatCulture (batiments.js).
+ * Jours travaillés perdus par une culture à cause du gel ou de la neige (serre ensevelie) : ceux de la fenêtre du dégât (de
+ * son jour à sa fin, réglé ou non), après le semis et jusqu'à aujourd'hui. Lu par etatCulture (batiments.js).
  */
 export function joursGeles(game, ledger, id, semeLe, today) {
   let n = 0;
   for (const d of degatsDe(game)) {
-    if (d.type !== 'gel' || d.cible !== id || d.semeLe !== semeLe) continue;
+    if ((d.type !== 'gel' && d.type !== 'neige') || d.cible !== id || d.semeLe !== semeLe) continue;
     const debut = addDays(d.le, -1) > semeLe ? addDays(d.le, -1) : semeLe;
     const fin = addDays(d.fin ?? d.jusqua, -1) < today ? addDays(d.fin ?? d.jusqua, -1) : today;
     if (fin > debut) n += joursTravailles(ledger, debut, fin);
@@ -121,7 +127,7 @@ export function joursGeles(game, ledger, id, semeLe, today) {
 export function degatsALaRecolte(game, id, recolte, now) {
   const day = gameDay(now);
   const ours = degatsDe(game).find((d) => d.type === 'ours' && d.cible === id && actif(d, day));
-  const degats = list(game.degats).filter((d) => !(d.type === 'gel' && d.cible === id))
+  const degats = list(game.degats).filter((d) => !((d.type === 'gel' || d.type === 'neige') && d.cible === id && d.semeLe))
     .map((d) => (ours && d.id === ours.id ? { ...d, fin: day, par: 'recolte' } : d));
   return { mange: ours ? Math.min(IMPREVUS.mauvais.ours.mange, recolte) : 0, degats };
 }
@@ -130,9 +136,13 @@ export function degatsALaRecolte(game, id, recolte, now) {
 export function refusReparer(game, params, now) {
   const d = degatsDe(game).find((x) => x.id === params?.id);
   if (!d) return 'Rien à réparer.';
-  if (d.fin) return d.par === 'quete' ? 'Déjà réparé par une quête.' : d.par === 'recolte' ? 'L’ours est reparti avec sa part.' : 'Déjà réparé.';
-  if (gameDay(now) >= d.jusqua) return 'Ça s’est réglé tout seul : rien à payer.';
-  return manque(game, IMPREVUS.mauvais[d.type].reparer);
+  const neige = d.type === 'neige';
+  if (d.fin) {
+    if (d.par === 'recolte') return 'L’ours est reparti avec sa part.';
+    return `${neige ? 'Déjà déneigé' : 'Déjà réparé'}${d.par === 'quete' ? ' par une quête' : ''}.`;
+  }
+  if (gameDay(now) >= d.jusqua) return neige ? 'La neige a fondu : rien à payer.' : 'Ça s’est réglé tout seul : rien à payer.';
+  return manque(game, DEGATS[d.type].reparer);
 }
 
 /**
@@ -144,7 +154,7 @@ export function reparer(tasks, game, ledger, params, now) {
   const refus = refusReparer(ctx.game, params, now);
   if (refus) throw new Error(refus);
   const d = degatsDe(ctx.game).find((x) => x.id === params.id);
-  const cout = { ...IMPREVUS.mauvais[d.type].reparer };
+  const cout = { ...DEGATS[d.type].reparer };
   const g = structuredClone(ctx.game);
   for (const [k, n] of Object.entries(cout)) g.resources[k] = round1(g.resources[k] - n);
   g.degats = list(g.degats).map((x) => (x.id === d.id ? { ...x, fin: ctx.day, par: 'paiement' } : x));
@@ -154,13 +164,13 @@ export function reparer(tasks, game, ledger, params, now) {
 }
 
 /**
- * Une quête payée règle les dégâts en cours de son domaine (Maison : l'éolienne ; Terrain : le potager), sans rien changer
+ * Une quête payée règle les dégâts en cours de son domaine (Maison : la panne ; Terrain : le potager et la neige), sans rien changer
  * à la quête ni à son gain. Appelée par quests.js juste après le gain, avant l'éolienne. Événement { type: 'reparation',
  * degat, imprevu, cible, par: 'quete', taskId } par dégât réglé.
  */
 export function reparerParQuete(ctx, task) {
   const q = quartierOfTask(task);
-  const regles = degatsDe(ctx.game).filter((d) => actif(d, ctx.day) && IMPREVUS.mauvais[d.type].quartier === q);
+  const regles = degatsDe(ctx.game).filter((d) => actif(d, ctx.day) && DEGATS[d.type].quartier === q);
   if (!regles.length) return;
   const ids = new Set(regles.map((d) => d.id));
   ctx.game = { ...ctx.game, degats: list(ctx.game.degats).map((d) => (ids.has(d.id) ? { ...d, fin: ctx.day, par: 'quete', taskId: task.id } : d)) };
@@ -169,12 +179,13 @@ export function reparerParQuete(ctx, task) {
 
 /**
  * « Remballer » la quête qui avait réglé un dégât le jour de son gain (remballerQuest, quests.js) : le dégât revient, comme
- * le gain s'en va, s'il a encore de quoi agir (l'ours et le gel, sur la même culture en terre). Un dégât réglé en payant ou
+ * le gain s'en va, s'il a encore de quoi agir (l'ours sur une culture en terre ; le gel et la neige d'une serre, sur la même
+ * culture ; la panne et la neige d'une éolienne, toujours). Un dégât réglé en payant ou
  * par une autre quête ne bouge pas. Événement { type: 'degat-rouvert', degat, imprevu, cible } par dégât rouvert.
  */
 export function rouvrirParQuete(ctx, taskId, day) {
   const terre = new Map(list(ctx.game.parcelles).map((p) => [p.id, p.semeLe]));
-  const encore = (d) => d.type === 'panne' || (terre.has(d.cible) && (d.type !== 'gel' || terre.get(d.cible) === d.semeLe));
+  const encore = (d) => (d.semeLe ? terre.get(d.cible) === d.semeLe : d.type !== 'ours' || terre.has(d.cible));
   const rouverts = degatsDe(ctx.game).filter((d) => d.par === 'quete' && d.taskId === taskId && d.fin === day && encore(d));
   if (!rouverts.length) return;
   const ids = new Set(rouverts.map((d) => d.id));
@@ -209,9 +220,9 @@ function cibles(ctx) {
 
 // Un mauvais imprévu frappe, s'il le peut. Renvoie false sinon (le créneau devient un bon). Jamais un jour que la partie a
 // déjà dépassé (`seen` après lui : un passage du temps rejoué depuis une file hors ligne), ni un dégât qui serait encore là
-// quand la trêve commence.
+// quand la trêve commence, ni le jour d'une tempête (hiver.js : jamais deux coups le même jour).
 function frapper(ctx, jour, seen) {
-  if (isTruce(jour) || repriseLe(ctx.game, jour) || (isDayString(seen) && seen > jour)) return false;
+  if (isTruce(jour) || repriseLe(ctx.game, jour) || (isDayString(seen) && seen > jour) || estJourDeTempete(jour)) return false;
   const possibles = cibles(ctx).filter((c) => !isTruce(addDays(jour, IMPREVUS.mauvais[c.type].jours - 1)));
   if (!possibles.length) return false;
   const types = [...new Set(possibles.map((c) => c.type))];
@@ -237,12 +248,13 @@ function offrir(ctx, jour) {
   if (food) suivreObjectifs(ctx); // une bonne pêche peut remplir le grenier (objectif d'automne), comme le marchand
 }
 
-// Les dégâts finis avant le lundi de la semaine quittent la partie, sauf un gel dont la culture est encore en terre.
+// Les dégâts finis avant le lundi de la semaine quittent la partie, sauf un gel ou une neige de serre dont la culture est
+// encore en terre (ses jours perdus comptent toujours pour la pousse).
 function ranger(ctx) {
   if (!Array.isArray(ctx.game.degats)) return;
   const lundi = weekStart(ctx.day);
   const terre = new Map(list(ctx.game.parcelles).map((p) => [p.id, p.semeLe]));
-  const garde = degatsDe(ctx.game).filter((d) => (d.fin ?? d.jusqua) >= lundi || (d.type === 'gel' && terre.get(d.cible) === d.semeLe));
+  const garde = degatsDe(ctx.game).filter((d) => (d.fin ?? d.jusqua) >= lundi || (d.semeLe && terre.get(d.cible) === d.semeLe));
   if (garde.length !== ctx.game.degats.length) ctx.game = { ...ctx.game, degats: garde };
 }
 

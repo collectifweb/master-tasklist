@@ -17,3 +17,4 @@ export * from './quartiers.js';
 export * from './reglages.js';
 export * from './visiteurs.js';
 export * from './imprevus.js';
+export * from './hiver.js';

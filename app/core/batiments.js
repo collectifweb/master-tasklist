@@ -14,7 +14,7 @@ import { gameDay, toISO } from './time.js';
 import { round1 } from './reward.js';
 import { hasKey, reverseKey } from './ledger.js';
 import { rangDuVillage, RANGS } from './village.js';
-import { suivreObjectifs } from './objectifs.js';
+import { suivreObjectifs, noterRecolteHiver } from './objectifs.js';
 import { valeur, placesParChalet, permisDeRang } from './quartiers.js';
 import { joursGeles, degatsALaRecolte, degatDe } from './imprevus.js';
 
@@ -291,6 +291,7 @@ export function recolter(tasks, game, ledger, params, now) {
   g.resources.food = round1(g.resources.food + nourriture);
   g.parcelles = list(g.parcelles).filter((p) => p.id !== params.id);
   if (Array.isArray(g.degats)) g.degats = degats;
+  noterRecolteHiver(g, lieu, ctx.day); // objectif d'hiver : les récoltes de serre (objectifs.js)
   ctx.game = g;
   ctx.events.push({ type: 'recolte', id: params.id, lieu, nourriture, perdu: round1(recolte - nourriture), stock: g.resources.food, max, ...(mange ? { ours: mange } : {}) });
   suivreObjectifs(ctx);

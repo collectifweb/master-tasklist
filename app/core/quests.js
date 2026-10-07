@@ -25,6 +25,7 @@ import { produireEolienne, reprendreEolienne } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
 import { suivreImprevus, reparerParQuete, rouvrirParQuete } from './imprevus.js';
+import { suivreTempetes } from './hiver.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -507,7 +508,7 @@ export function openApp(tasks, game, ledger, params, now) {
  * jour de présence (game.lastSeenDay, ne recule jamais : file hors ligne rejouée en retard), après avoir validé les
  * objectifs devenus vrais (premiers pas, saison : objectifs.js) puis tiré les imprévus du jour (imprevus.js, qui lisent le
  * dernier jour vu pour la reprise). Idempotente : rejouée avec le même instant, elle ne fait rien.
- * Événements : 'imprevu', 'premier-pas', 'objectif-saison'.
+ * Événements : 'tempete', 'imprevu', 'premier-pas', 'objectif-saison'.
  */
 export function advanceTime(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -517,6 +518,7 @@ export function advanceTime(tasks, game, ledger, params, now) {
     if (bilans !== ctx.game.bilans) ctx.game = { ...ctx.game, bilans };
   }
   suivreObjectifs(ctx);
+  suivreTempetes(ctx, seen); // la tempête du jour (hiver.js), avant les imprévus : jamais deux coups le même jour
   suivreImprevus(ctx, seen); // après les premiers pas (validés juste avant), avant que le jour de présence soit noté
   if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   return ctx.result();

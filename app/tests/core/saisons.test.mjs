@@ -34,12 +34,13 @@ test('saisons nettes, sans chevauchement : automne 9-11, hiver 12-2, printemps 3
   assert.deepEqual(parMois, ['hiver', 'hiver', 'printemps', 'printemps', 'printemps', 'ete', 'ete', 'ete', 'automne', 'automne', 'automne', 'hiver']);
 });
 
-test('objectif d’automne : « grenier » ; les autres saisons n’en ont pas encore (affichés « à venir »)', () => {
+test('objectif d’automne : « grenier » ; d’hiver : « serre » (lot H) ; le printemps et l’été n’en ont pas encore (affichés « à venir »)', () => {
   assert.equal(OBJECTIFS_SAISON.automne.id, 'grenier');
   const r = OBJECTIFS_SAISON.automne.recompense;
   assert.ok((r.energy || 0) + (r.materials || 0) > 0);
   assert.ok(!r.food); // le grenier est plein quand on la reçoit : de la Nourriture ne tiendrait pas
-  for (const s of ['hiver', 'printemps', 'ete']) assert.equal(OBJECTIFS_SAISON[s], undefined, s);
+  assert.equal(OBJECTIFS_SAISON.hiver.id, 'serre');
+  for (const s of ['printemps', 'ete']) assert.equal(OBJECTIFS_SAISON[s], undefined, s);
 });
 
 test('Nourriture au plafond pendant l’automne (récolte) : objectif atteint, récompense au registre, une seule fois', () => {
@@ -135,10 +136,12 @@ test('bandeau, après les cinq pas : la quête n° 1, et le compte vrai de la se
   assert.deepEqual(vide.aujourdhui, { kind: 'rien' });
 });
 
-test('bandeau, hiver : l’objectif de saison est « à venir », sans rien bloquer', () => {
+test('bandeau, hiver : l’objectif « Garder la serre allumée » (lot H), compté sans rien bloquer ; le printemps est « à venir »', () => {
   const w = fresh([], at('2026-12-10'));
   const b = bandeau(w.tasks, w.game, w.ledger, at('2026-12-10'));
-  assert.deepEqual(b.saison, { id: 'hiver', cle: 'hiver-2026', objectif: null, atteint: false, aVenir: true });
+  assert.deepEqual(b.saison, { id: 'hiver', cle: 'hiver-2026', objectif: 'serre', atteint: false, stock: 0, max: OBJECTIFS_SAISON.hiver.recoltes });
+  const p = bandeau(w.tasks, w.game, w.ledger, at('2027-04-10'));
+  assert.deepEqual(p.saison, { id: 'printemps', cle: 'printemps-2027', objectif: null, atteint: false, aVenir: true });
 });
 
 // ───────── Écrans d'accueil ─────────

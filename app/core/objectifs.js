@@ -30,9 +30,14 @@ export const PREMIERS_PAS = [
 ];
 export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
 
-/** Objectif de chaque saison (récompense : { energy?, materials?, permis? }). Seul l'automne en a un pour l'instant : les autres s'affichent « à venir ». */
+/**
+ * Objectif de chaque saison (récompense : { energy?, materials?, permis? }). L'automne : remplir le grenier ; l'hiver :
+ * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février. Le printemps et l'été
+ * s'affichent « à venir ».
+ */
 export const OBJECTIFS_SAISON = {
   automne: { id: 'grenier', recompense: { energy: 3, materials: 10, permis: 1 } },
+  hiver: { id: 'serre', recoltes: 4, recompense: { energy: 3, materials: 10, permis: 1 } },
 };
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -50,11 +55,26 @@ const CONSTATS = {
   famille: (tasks, game) => logements(game).habitants > 0,
 };
 
-// Condition de chaque objectif de saison. Le grenier se mesure au stockage de base (départ et greniers) : monter la
-// Place ne rend pas l'objectif plus dur.
-const ATTEINT = {
-  grenier: (game) => game.resources.food >= stockageBase(game),
+/** Récoltes de petite serre comptées pour l'hiver `cle` (hiver-AAAA), d'après game.recoltesHiver = { cle, n }. */
+export function recoltesHiver(game, cle) {
+  const r = game.recoltesHiver;
+  return isObj(r) && r.cle === cle ? Math.max(0, Math.floor(Number(r.n)) || 0) : 0;
+}
+
+/** Récolte faite (recolter, batiments.js) : une récolte de serre en hiver compte pour l'objectif. Modifie `g` (une copie). */
+export function noterRecolteHiver(g, lieu, day) {
+  const s = saisonDe(day);
+  if (lieu !== 'serre' || s.id !== 'hiver') return;
+  g.recoltesHiver = { cle: s.cle, n: recoltesHiver(g, s.cle) + 1 };
+}
+
+// Avancée de chaque objectif de saison : { stock, max } ; atteint quand stock ≥ max. Le grenier se mesure au stockage de
+// base (départ et greniers) : monter la Place ne rend pas l'objectif plus dur.
+const AVANCEE = {
+  grenier: (game) => ({ stock: round1(game.resources.food), max: stockageBase(game) }),
+  serre: (game, cle) => ({ stock: recoltesHiver(game, cle), max: OBJECTIFS_SAISON.hiver.recoltes }),
 };
+const atteint = (id, game, cle) => { const a = AVANCEE[id](game, cle); return a.stock >= a.max; };
 
 /** Saison du vrai calendrier pour un jour de jeu : { id, cle }. L'hiver de décembre 2026 à février 2027 est hiver-2026. */
 export function saisonDe(day) {
@@ -110,14 +130,15 @@ export function prochainGeste(tasks, game, ledger, now) {
 }
 
 /**
- * Objectif de la saison en cours : { id, cle, objectif, atteint, stock, max } (automne ; max : le stockage de base), ou
- * { id, cle, objectif: null, atteint: false, aVenir: true } pour une saison qui n'en a pas encore.
+ * Objectif de la saison en cours : { id, cle, objectif, atteint, stock, max } (automne : la Nourriture sur le stockage de
+ * base ; hiver : les récoltes de serre sur leur nombre), ou { id, cle, objectif: null, atteint: false, aVenir: true } pour
+ * une saison qui n'en a pas encore.
  */
 export function objectifSaison(game, ledger, now) {
   const s = saisonDe(gameDay(now));
   const obj = OBJECTIFS_SAISON[s.id];
   if (!obj) return { id: s.id, cle: s.cle, objectif: null, atteint: false, aVenir: true };
-  return { id: s.id, cle: s.cle, objectif: obj.id, atteint: hasKey(ledger, saisonKey(s.cle)), stock: round1(game.resources.food), max: stockageBase(game) };
+  return { id: s.id, cle: s.cle, objectif: obj.id, atteint: hasKey(ledger, saisonKey(s.cle)), ...AVANCEE[obj.id](game, s.cle) };
 }
 
 // Quêtes payées cette semaine (lundi à aujourd'hui, remballées exclues) et jours où il y en a eu au moins une.
@@ -179,7 +200,7 @@ function suivrePremiersPas(ctx) {
 function suivreSaison(ctx) {
   const s = saisonDe(ctx.day);
   const obj = OBJECTIFS_SAISON[s.id];
-  if (!obj || hasKey(ctx.ledger, saisonKey(s.cle)) || !ATTEINT[obj.id](ctx.game)) return;
+  if (!obj || hasKey(ctx.ledger, saisonKey(s.cle)) || !atteint(obj.id, ctx.game, s.cle)) return;
   const r = obj.recompense;
   ctx.append({ key: saisonKey(s.cle), at: ctx.iso, day: ctx.day, type: 'saison', saison: s.cle, objectif: obj.id, pe: 0, energy: r.energy || 0, materials: r.materials || 0, food: 0, permis: r.permis || 0 }, 'saison', { objectif: obj.id });
   ctx.events.push({ type: 'objectif-saison', saison: s.id, cle: s.cle, objectif: obj.id, energy: r.energy || 0, materials: r.materials || 0, permis: r.permis || 0 });
