@@ -754,7 +754,7 @@ Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (impr
 - `calendrierImprevus` reçoit l'allure : au ralenti, il garde le premier créneau (toujours bon) ; régulier, il reste identique à aujourd'hui (un test le vérifie sur plusieurs années de dates) ; plein régime, il ajoute deux créneaux tirés à part, sur d'autres jours.
 - L'objectif de saison lit la cible de l'allure ; au ralenti, la lettre du matin et le bandeau lisent la quête la plus courte (à durée égale, la mieux placée dans la Cote).
 - Le bilan figé de chaque semaine garde son allure et sa raison ; un bilan figé avant le lot ne l'a pas, et rien ne s'affiche.
-- Un onglet resté en v2.3 tirerait deux imprévus par semaine quelle que soit l'allure : `CLIENT_VERSION` et `MIN_CLIENT` passent à 7, cache `oree-coquille-v14`. Tu recharges tes onglets à l'envoi.
+- Un onglet resté en v2.3 tirerait deux imprévus par semaine quelle que soit l'allure : `CLIENT_VERSION` et `MIN_CLIENT` passent à 7, cache `oree-coquille-v15` (le v14 est pris par le correctif des premiers pas). Tu recharges tes onglets à l'envoi.
 - Leçons à appliquer d'entrée : avant la série, chercher les scénarios dont le registre préparé ferait changer l'allure (donc le nombre d'imprévus) et ceux qui vérifient un montant exact ; un échec sans lien avec le lot se relance d'abord sur `v2.3`.
 
 ### A1 — Cœur (tests écrits d'abord et vus en échec)

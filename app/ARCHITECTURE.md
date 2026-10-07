@@ -207,7 +207,7 @@ Même forme que `quests.js` pour tout ce qui modifie l'état : `fn(tasks, game,
 **Application installable** :
 - `manifest.webmanifest` et `sw.js` utilisent des chemins relatifs : l'app peut vivre dans un sous-dossier.
 - `sw.js` : réseau d'abord ; en repli, la copie en cache du même fichier si le réseau est coupé **ou si le serveur répond une erreur**. Une adresse inconnue garde sa vraie 404. Ne touche jamais `…/api/…`, ni une autre origine, ni ce qui est hors de sa portée (`../tasks.json`), ni une adresse avec chaîne de requête, ni une requête autre que GET.
-- **À chaque déploiement qui modifie la coquille, changer `VERSION` dans `sw.js`** (la valeur actuelle est `oree-coquille-v13`, lot H : l'hiver, avec `core/hiver.js` ajouté à `SHELL` ; avant, `oree-coquille-v12`, lot I : les imprévus) (l'ancien cache est effacé à l'activation), et ajouter à `SHELL` tout nouveau fichier chargé par la page.
+- **À chaque déploiement qui modifie la coquille, changer `VERSION` dans `sw.js`** (la valeur actuelle est `oree-coquille-v14`, correctif des premiers pas cochés dans le désordre ; avant, `oree-coquille-v13`, lot H : l'hiver, avec `core/hiver.js` ajouté à `SHELL`) (l'ancien cache est effacé à l'activation), et ajouter à `SHELL` tout nouveau fichier chargé par la page.
 - Ne pas déployer `app/.impeccable/`, `app/tests/` ni la page de référence `app/design/reference.*`. `app/design/icons.svg` est utilisé par l'app : il doit être déployé.
 
 **Vérifications navigateur** (Playwright est une bibliothèque, pas une commande ; voir l'en-tête de chaque script) :
