@@ -785,3 +785,11 @@ Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (impr
 7. **Envoi** : directement en production dès que c'est prêt, comme les lots I et H ?
 
 **Réponses d'Alex (7 octobre, soir), première passe** : 1. seuils de la bible, d'accord ; 5. d'accord (lettre et bandeau) ; 6. tempêtes inchangées. Questions 2, 3 et 4 mal comprises : réexpliquées. Question 7 sans réponse.
+
+**Réponses d'Alex (7 octobre, soir), seconde passe** : 2. d'accord, seules les quêtes comptent pour l'instant ; 3. oui ; 4. « je te laisse choisir » : réduit à l'automne comme l'hiver (même règle toute l'année) ; 7. envoi direct en production dès que c'est prêt. **Plan validé.**
+
+### Correctif — premiers pas cochés dans le désordre (demande d'Alex, 7 octobre au soir)
+Constat d'Alex : le premier pas est de rebâtir un chalet ; sans les Matériaux, les autres pas déjà faits ne se cochent pas. Cause (lu) : `suivrePremiersPas` (`core/objectifs.js`) s'arrête au premier pas qui n'est pas vrai (« les pas se suivent »). Partie de production (lue le 7 octobre au soir, lecture seule) : aucun pas noté ; 6 Matériaux sur les 15 du chalet ; des quêtes ajoutées, 15 terminées, trois parcelles semées le 6 octobre ; aucun habitant.
+- [ ] Chaque pas se coche dès qu'il est vrai, même avant son tour, et verse son coup de pouce une seule fois ; le bandeau propose toujours le premier pas qui reste. Tests écrits d'abord et vus en échec.
+- [ ] `node --test`, série complète (un scénario qui fait les pas dans le désordre voit ses montants changer), documents.
+- [ ] Envoi : à demander à Alex (seul tout de suite, ou avec le lot A).
