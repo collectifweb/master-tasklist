@@ -31,6 +31,10 @@
 //     ne tient plus dans la réserve ; le joueur qui échange « toujours » prend Énergie → Matériaux chaque semaine. Le joueur
 //     (f) bâtit alors aussi le quai. Le marchand ne doit ni retarder le Hameau, ni faire acheter plus de deux niveaux de
 //     plus en 16 semaines.
+// (i) (lot I) les imprévus (core/imprevus.js) : le joueur passe le temps à chaque ouverture (advanceTime), ce qui tire les
+//     imprévus ; il paie les réparations dès qu'il le peut ('paie'), ou attend qu'elles se fassent seules ou par une quête du
+//     bon domaine ('attend'). Pire cas : il attend et aucune de ses quêtes n'est du bon domaine ('attend' et profil tout en
+//     Enfants). Cible : sur 16 semaines, le premier niveau ne bouge que de quelques jours, dans un sens ou dans l'autre.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -39,6 +43,7 @@ import {
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
   prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
+  advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -66,7 +71,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -74,12 +79,25 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, monde: null };
+  // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
+  // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
+  const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
   let n = 0;
   let i = 0;
   const geste = (fn, params, now) => {
     const s = step(w, fn, params, now);
     w = s.world;
-    for (const e of s.r.events) if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
+    for (const e of s.r.events) {
+      if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
+      else if (e.type === 'imprevu') {
+        imp[e.nature][e.imprevu] = (imp[e.nature][e.imprevu] || 0) + 1;
+        if (e.nature === 'bon') for (const k of ['energy', 'materials', 'food']) imp.gains[k] += e[k] || 0;
+      } else if (e.type === 'reparation') {
+        imp.par[e.par]++;
+        for (const k of ['energy', 'materials']) imp.paye[k] += e.cout?.[k] || 0;
+      } else if (e.type === 'eolienne-arretee') imp.eolienne += e.energy;
+      else if (e.type === 'recolte' && e.ours) imp.ours += e.ours;
+    }
     const { energy, materials, food } = w.game.resources;
     assert.ok(energy >= 0 && materials >= 0 && food >= 0 && w.game.habitants >= 0, `stock négatif le ${now} : ${JSON.stringify(w.game.resources)}`);
     assert.ok(food <= stockage(w.game), `Nourriture au-dessus du stockage le ${now}`);
@@ -87,6 +105,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   for (i = 0; i < jours; i++) {
     const day = addDays(debut, i);
     geste(openApp, {}, heure(day, 12));
+    if (imprevus) {
+      geste(advanceTime, {}, heure(day, 12));
+      // 'paie' : il règle chaque dégât dès qu'il le voit, s'il en a les moyens
+      if (imprevus === 'paie') for (const d of degatsActifs(w.game, heure(day, 12))) if (!refusReparer(w.game, { id: d.id }, heure(day, 12))) geste(reparer, { id: d.id }, heure(day, 12));
+    }
     for (let k = 0; k < rythme(i); k++) {
       if (habitudes) {
         const { id, task, domain, difficulty, length, priority } = liste[n];
@@ -99,7 +122,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     for (let guard = 0; guard < 20; guard++) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
       const mure = cultures.find((id) => !refusRecolter(w.game, w.ledger, id, soir));
-      if (mure) { geste(recolter, { id: mure }, soir); log.recoltes.push(day); continue; }
+      if (mure) {
+        const semeLe = w.game.parcelles.find((p) => p.id === mure)?.semeLe;
+        if (imprevus && semeLe) imp.gel += joursGeles(w.game, w.ledger, mure, semeLe, day);
+        geste(recolter, { id: mure }, soir); log.recoltes.push(day); continue;
+      }
       const g = bandeau ? prochainGeste(w.tasks, w.game, w.ledger, soir) : null;
       if (g && g.pas !== 'famille') {
         if (g.raison) break; // il attend d'avoir de quoi faire le geste proposé
@@ -427,3 +454,43 @@ test('(h) le marchand : ni Hameau retardé, ni plus de deux niveaux de plus en 1
     }
   }
 });
+
+// ───────── (i) les imprévus ─────────
+
+// Même profil, toutes les quêtes en Enfants : aucune ne règle un dégât (pire cas de 'attend'). Le domaine ne compte pas pour les niveaux.
+const enfants = (profil) => (n) => profil(n).map((q) => ({ ...q, domain: 'Enfants' }));
+
+test('(i) les imprévus : le premier niveau ne bouge que de quelques jours sur 16 semaines, qu’on paie ou qu’on attende', (t) => {
+  const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+  const resume = (l) => `bons ${JSON.stringify(l.imp.bon)}, mauvais ${JSON.stringify(l.imp.mauvais)}, gains ${f(l.imp.gains.energy)} É ${f(l.imp.gains.materials)} M ${f(l.imp.gains.food)} N, `
+    + `réglés ${l.imp.par.paiement} payés et ${l.imp.par.quete} par quête, payé ${f(l.imp.paye.energy)} É ${f(l.imp.paye.materials)} M, `
+    + `perdu ${f(l.imp.eolienne)} É d'éolienne, ${f(l.imp.ours)} N à l'ours, ${l.imp.gel} j de pousse au gel`;
+  for (const [nom, rythme, profil, habitudes, departs] of [
+    ['(g)', rythmeEssai, parDefaut, true, ['2026-10-23', '2026-10-25', '2026-08-15', '2026-06-01']],
+    ['(f)', regulier, quetes, false, ['2026-10-25', '2026-06-01']],
+  ]) {
+    for (const debut of departs) {
+      const sans = simuler(debut, 16 * 7, rythme, { profil, habitudes });
+      const paie = simuler(debut, 16 * 7, rythme, { profil, habitudes, imprevus: 'paie' });
+      const attend = simuler(debut, 16 * 7, rythme, { profil, habitudes, imprevus: 'attend' });
+      const pire = simuler(debut, 16 * 7, rythme, { profil: enfants(profil), habitudes, imprevus: 'attend' });
+      t.diagnostic(`${nom} ${debut} : 1er niveau j${sans.niveaux[0]} sans, j${paie.niveaux[0]} paie, j${attend.niveaux[0]} attend, j${pire.niveaux[0]} pire ; `
+        + `niveaux ${sans.niveaux.length} / ${paie.niveaux.length} / ${attend.niveaux.length} / ${pire.niveaux.length} ; Hameau j${sans.hameau} / j${paie.hameau} / j${attend.hameau} / j${pire.hameau}`);
+      t.diagnostic(`  paie : ${resume(paie)}`);
+      t.diagnostic(`  attend : ${resume(attend)}`);
+      t.diagnostic(`  pire : ${resume(pire)}`);
+      for (const [qui, l] of [['paie', paie], ['attend', attend], ['pire', pire]]) {
+        assert.ok(Math.abs(l.niveaux[0] - sans.niveaux[0]) <= 4, `${nom} ${debut}, ${qui} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]} sans imprévus`);
+        assert.ok(Math.abs(l.niveaux.length - sans.niveaux.length) <= 1, `${nom} ${debut}, ${qui} : ${l.niveaux.length} niveaux contre ${sans.niveaux.length}`);
+      }
+      // une panne laissée à elle-même coûte un peu plus que sa réparation : l'Énergie perdue, contre des Matériaux comptés au prix
+      // où le marchand les rachète (1 Énergie pièce) ; mesuré quand aucune quête ne la règle
+      if (pire.imp.mauvais.panne) {
+        const parPanne = pire.imp.eolienne / pire.imp.mauvais.panne;
+        t.diagnostic(`  panne laissée à elle-même : ${f(parPanne)} Énergie perdue en moyenne, contre ${IMPREVUS.mauvais.panne.reparer.materials} Matériaux pour la réparer`);
+        assert.ok(parPanne > IMPREVUS.mauvais.panne.reparer.materials, `${nom} ${debut} : ${parPanne} Énergie perdue par panne`);
+      }
+    }
+  }
+});
+

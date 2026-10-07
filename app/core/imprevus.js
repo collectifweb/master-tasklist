@@ -11,7 +11,10 @@
 // quête payée du bon domaine (reparerParQuete, appelée par quests.js), ou tout seul à `jusqua`, sans rien écrire. Il ne
 // retire jamais de ressource et ne touche jamais une tâche : l'éolienne ne produit plus, l'ours mange une part de la
 // récolte, le gel arrête la pousse (batiments.js lit ces effets).
-// Montants : valeurs de départ, réglées par la simulation (tests/core/simulation.test.mjs, joueur (i)).
+// Montants réglés par la simulation (tests/core/simulation.test.mjs, joueur (i), mesuré le 6 octobre 2026) : à 3 par bon
+// imprévu, le premier niveau de quartier bouge de 0 à 2 jours en 16 semaines aux six départs, qu'on paie ou qu'on attende ; à
+// 4 Énergie pour l'aurore, le départ du 1er juin du joueur (g) bascule du jour 42 au jour 23 (effet de seuil). Une panne
+// laissée à elle-même fait perdre 6,6 à 9 Énergie en moyenne, contre 4 Matériaux pour la réparer.
 // Cycle d'import avec quests.js et batiments.js : tout est lu à l'appel.
 import { Ctx } from './quests.js';
 import { gameDay, addDays, weekStart, daysBetween, isTruce, isDayString } from './time.js';
@@ -29,15 +32,15 @@ import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
  */
 export const IMPREVUS = {
   bons: {
-    aurore: { gain: { energy: 6 } },
-    peche: { gain: { food: 5 } },
-    trouvaille: { gain: { materials: 6 } },
+    aurore: { gain: { energy: 3 } },
+    peche: { gain: { food: 3 } },
+    trouvaille: { gain: { materials: 3 } },
     orignal: { gain: {} },
   },
   mauvais: {
-    panne: { quartier: 'atelier', reparer: { materials: 8 }, jours: 3 },
-    ours: { quartier: 'champs', reparer: { energy: 3 }, jours: 3, mange: 2 },
-    gel: { quartier: 'champs', reparer: { energy: 2 }, jours: 1, mois: [9, 10] },
+    panne: { quartier: 'atelier', reparer: { materials: 4 }, jours: 3 },
+    ours: { quartier: 'champs', reparer: { energy: 2 }, jours: 3, mange: 2 },
+    gel: { quartier: 'champs', reparer: { energy: 1 }, jours: 1, mois: [9, 10] },
   },
 };
 /** Reprise (bible §9) : après `absence` jours ou plus sans passage, `jours` jours sans mauvais imprévu (celui du retour compris). */
