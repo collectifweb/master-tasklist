@@ -694,7 +694,7 @@ Le lot contient trois choses : la neige sur l'île, la tempête annoncée d'avan
 
 ### Bilan du lot H
 - Livré : la neige sur l'île du 15 novembre au 30 avril ; les tempêtes annoncées trois jours d'avance, leur barre de trois crans et « Rentrer du bois » ; la tempête tenue (+6 Matériaux) ou le bâtiment enseveli et ses trois voies ; l'objectif d'hiver « Garder la serre allumée » (10 récoltes de serre) ; Fanal à chaque étape ; le scénario 38. En plus : la relecture a fait corriger six défauts du lot, et la série a mis au jour un défaut de synchronisation entre deux onglets du même navigateur (corrigé).
-- Reste ouvert, à trancher par Alex : « Remballer » le jour même la quête qui avait rempli la barre laisse la récompense de la tempête tenue. Limites connues : la fiche d'une serre ensevelie annonce « Mûr dans N jours travaillés » sans dire que la neige arrête la pousse ; « Semé le 3 déc.. » (point doublé, antérieur au lot) ; la bulle de Fanal recouvre la carte du bandeau déplié (antérieur) ; en hiver, les scénarios sans date fixe qui finissent les premiers pas verront la rangée de la tempête (voir `tasks/lessons.md`).
+- Tranché par Alex le 7 octobre au soir (« correct tel quel ») : « Remballer » le jour même la quête qui avait rempli la barre laisse la récompense de la tempête tenue. Limites connues : la fiche d'une serre ensevelie annonce « Mûr dans N jours travaillés » sans dire que la neige arrête la pousse ; « Semé le 3 déc.. » (point doublé, antérieur au lot) ; la bulle de Fanal recouvre la carte du bandeau déplié (antérieur) ; en hiver, les scénarios sans date fixe qui finissent les premiers pas verront la rangée de la tempête (voir `tasks/lessons.md`).
 - Suite : le lot de l'allure du village.
 
 ### Questions pour Alex
