@@ -131,11 +131,16 @@ Le jeu suit la date réelle. Quand il neige dehors, il neige à l'Orée.
 | Saison | Dates | Ce qui change | Objectif de saison |
 |---|---|---|---|
 | Automne | septembre à novembre | Récoltes, couleurs ; alerte du premier gel | Remplir le grenier pour l'hiver |
-| Hiver | décembre à mars (neige au sol du 15 novembre au 30 avril) | Le potager dort. Serre et poulailler seuls produisent ; la serre consomme de l'Énergie. Tempêtes de neige. Trêve des Fêtes du 21 décembre au 4 janvier : aucune alerte | Garder la serre allumée tout l'hiver |
+| Hiver | décembre à mars (neige au sol du 15 novembre au 30 avril) | Le potager dort. Serre et poulailler seuls produisent ; la serre consomme de l'Énergie. Tempêtes de neige. Trêve des Fêtes du 21 décembre au 4 janvier : aucune alerte | Garder la serre allumée : 10 récoltes de serre |
 | Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue ; semis en mai | Faire les sucres |
 | Été | juin à août | Pleine production ; mouches noires en juin ; fête de la Saint-Jean le 24 juin ; plus de visiteurs | Accueillir une nouvelle famille |
 
 Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : un décor unique, un permis, une famille qui s'installe.
+
+**L'hiver, tel qu'il est construit** (lot H, 7 octobre 2026, décisions d'Alex) :
+- du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
+- objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Sans serre, le bandeau dit comment en bâtir une. D'après la simulation (joueur (j)), il est atteint entre le 2 et le 31 janvier selon le joueur, pour un joueur qui récolte et ressème aussitôt ;
+- les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler, la tour de guet et le garage à chasse-neige viendront plus tard, quand le village approchera du rang Village.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
 
@@ -172,11 +177,13 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 
 | Bons | Mauvais (toujours réparables) |
 |---|---|
-| Aurore boréale : Énergie en plus | Tempête de neige : un bâtiment à déneiger (Énergie) |
-| Bonne pêche : Nourriture en plus | Gel précoce : une parcelle perdue jusqu'au lendemain |
-| Trouvaille en forêt : Matériaux en plus | Panne d'éolienne : à réparer (Matériaux) |
-| Un orignal traverse le village : rien, c'est juste beau | Un ours au potager : la prochaine récolte est réduite |
-| Visiteur surprise : une commande en plus | Mouches noires : les chantiers prennent un jour de plus |
+| Aurore boréale : Énergie en plus | Gel précoce : une parcelle perdue jusqu'au lendemain |
+| Bonne pêche : Nourriture en plus | Panne d'éolienne : à réparer (Matériaux) |
+| Trouvaille en forêt : Matériaux en plus | Un ours au potager : la prochaine récolte est réduite |
+| Un orignal traverse le village : rien, c'est juste beau | Mouches noires : les chantiers prennent un jour de plus |
+| Visiteur surprise : une commande en plus | |
+
+La tempête de neige n'est plus un imprévu : depuis le lot H, c'est une alerte annoncée d'avance (plus bas).
 
 **Pas de taxe pour l'instant** (décision d'Alex, 6 octobre) : aucun visiteur ni imprévu ne prélève de ressources. Laisser passer une commande continue de ne rien faire perdre.
 
@@ -194,9 +201,19 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 - trois façons de régler un dégât : payer, terminer une vraie quête du bon domaine (gratuit, la quête et son gain ne changent pas ; « Remballer » cette quête rouvre le dégât), ou attendre. Un dégât ne retire jamais une ressource déjà gagnée et ne touche jamais une tâche ;
 - à l'écran : l'aurore passe au-dessus de l'île, l'orignal traverse la route des Champs, la caisse de poissons attend au bout de la route du quai, la pile de bois près du grenier. Un dégât pose une marque braise (clé, patte, flocon) sur l'objet et se lit dans son nom ; la fiche le montre dans « Maintenant », avec son prix et les deux autres voies. Fanal raconte l'imprévu une fois par appareil.
 
-Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/core/simulation.test.mjs`, joueur (i)) : le premier niveau de quartier bouge de 0 à 2 jours aux six départs, qu'on paie ou qu'on attende. La tempête de neige et les alertes viennent au lot de l'hiver ; le visiteur surprise et les mouches noires ne sont pas dans cette première série.
+Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/core/simulation.test.mjs`, joueur (i)) : le premier niveau de quartier bouge de 0 à 2 jours aux six départs, qu'on paie ou qu'on attende. La tempête de neige est venue au lot de l'hiver, comme alerte (plus bas) ; le visiteur surprise et les mouches noires ne sont pas dans cette première série.
 
 **Les alertes météo** reprennent les « Avis » de la v1, comme les menaces qu'on voit venir dans Dune 2. Une tempête est annoncée quelques jours d'avance, avec une barre de préparation. Certains bâtiments aident à s'y préparer : la tour de guet prévient plus tôt, le garage à chasse-neige protège. Si l'alerte est tenue, on gagne une récompense ; sinon, un bâtiment est à réparer.
+
+**La tempête de neige, telle qu'elle est construite** (lot H, 7 octobre 2026, décisions d'Alex) :
+- de la première neige (15 novembre) à la fin de mars, une tempête tous les 7 à 14 jours, tirés au hasard d'après la date : tous les appareils voient la même, même hors ligne. Aucune pendant la trêve des Fêtes, ni annoncée pendant elle. Rien avant la fin des premiers pas. Hiver 2026-2027 : 11 tempêtes, du 25 novembre au 22 mars ; sur 20 hivers simulés, de 9 à 13 ;
+- elle est annoncée trois jours d'avance : le bandeau montre « Tempête dans 3 jours » et une barre de trois crans, un front de givre approche du bord de l'Atelier, Fanal la raconte ;
+- chaque jour travaillé pendant l'annonce (une vraie quête payée, n'importe laquelle) remplit un cran ; un cran manqué s'achète : « Rentrer du bois », 3 Matériaux ;
+- le jour même, barre pleine : tempête tenue, 6 Matériaux (la récompense attend jusqu'au dimanche). Sinon, si l'annonce a été vue et que l'app s'ouvre ce jour-là, un bâtiment est enseveli : une éolienne (elle ne donne plus son Énergie) ou une petite serre dont la culture pousse (elle ne pousse plus). Trois façons de le dégager, comme un dégât : « Déneiger », 2 Énergie ; une quête Terrain, gratuite (le potager dort, Terrain retrouve un usage l'hiver) ; ou attendre que la neige fonde, en 3 jours. Sinon, elle passe sans rien laisser ;
+- jamais à cause d'une absence ; une tempête qui tombe pendant les trois jours de reprise passe sans dégât (§9) ; le jour d'une tempête, aucun mauvais imprévu ; un bâtiment ne porte qu'un dégât à la fois, et s'il n'y a rien à ensevelir, la tempête passe ;
+- la tour de guet (prévenir plus tôt) et le garage à chasse-neige (protéger) viendront plus tard.
+
+Montants validés par Alex le 7 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (j)) : avec ou sans tempêtes, le premier niveau de quartier arrive à 0 ou 1 jour près.
 
 **Règles qui ne changent pas** (PRODUCT.md) :
 
@@ -218,7 +235,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 
 **Au retour d'une absence de 5 jours ou plus** :
 
-- trois jours de reprise, sans imprévu mauvais ; les alertes météo en cours sont repoussées d'autant ;
+- trois jours de reprise, sans imprévu mauvais ; une tempête qui tombe pendant ces trois jours passe sans dégât (lot H : plus simple et plus doux que de la repousser d'autant, comme prévu d'abord) ;
 - Fanal t'écrit une lettre de retour qui raconte ce qui s'est passé, sans reproche ;
 - la commande du visiteur en cours est ramenée à la taille « au ralenti ».
 

@@ -206,6 +206,10 @@ components:
     backgroundColor: "{colors.ember-wash}"
     textColor: "{colors.ink-soft}"
     rounded: "{rounded.md}"
+  bandeau-alerte:
+    backgroundColor: "{colors.frost-wash}"
+    textColor: "{colors.frost-ink}"
+    height: "54px"
 ---
 
 # Design System: La lisière rallumée
@@ -259,7 +263,7 @@ Palette de terre chaude : papier crème, encres vertes très sombres, sauge pour
 
 ### Tertiary
 - **Encre de cendre** (`ash-ink`) sur **lavis de cendre** (`ash-wash`) : quête archivée, fond des squelettes de chargement.
-- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne, rien d'autre (le front de givre du monde, en sommeil, en emprunte aussi les teintes : `world.css`). Le Permis n'en emprunte pas : il a sa propre famille, l'airelle.
+- **Encre de givre** (`frost-ink`) sur **lavis de givre** (`frost-wash`) : hors ligne et tempête de neige annoncée (rangée d'alerte du bandeau, lot H), rien d'autre ; le front de givre du monde, réveillé pendant l'annonce, en emprunte aussi les teintes (`world.css`). Le Permis n'en emprunte pas : il a sa propre famille, l'airelle.
 - **Encre d'airelle** (`airelle-ink`, `#6f3f62`) sur **lavis d'airelle** (`airelle-wash`, `#f5e6ee`) : réservée au Permis, comme le papier timbré de la Mairie. Elle teinte le compteur de la barre, la feuille d'aide du Permis et le « +1 » de l'annonce, jamais autre chose. Papier dessus : 7,7:1 ; lavis dessus : 6,8:1 (chiffres du commentaire de `tokens.css`, non recalculés ici).
 - **Braise** : `ember-ink` (texte et fond du bouton danger), `ember-face` (socle), `ember-wash` (fond de confirmation et d'erreur de synchronisation). `ember` seul n'est utilisé qu'en pictos et filets (`rgb(191 90 56 / .4–.45)`).
 
@@ -434,6 +438,10 @@ Marchand du quai (lot V). Quand il est là, un chaland solaire est amarré au qu
 
 Imprévus (lot I). Les bons se voient sur l'île le jour où ils arrivent, en décor sans toucher (`IMPREVU_SPOTS` dans `world/layout.js`, sur des cases que le décor laisse libres et qu'aucune plaque ne couvre) : l'**aurore** passe au-dessus du fond de l'île, trois rideaux effilés (chaque bord du bas, le plus clair, rejoint son bord du haut aux deux bouts, sans flanc vertical), dégradé de pousse vers verre solaire, un ourlet clair et des rais découpés à la forme du grand rideau ; elle est sous les objets (`z-index: 2`) et ondule de 8 px seulement avec le mouvement d'ambiance (immobile en mouvement réduit). L'**orignal** traverse la route des Champs devant le chalet du fond (corps brun, panache clair en larges palettes) ; la **caisse de poissons** attend au bout de la route du quai ; la **pile de bois** (six bûches et une hache) est rangée près du grenier. Un mauvais imprévu change le dessin de sa cible et y pose une **marque braise** : disque braise sur une pointe, filet papier, picto papier dessus (clé pour la panne, patte pour l'ours, flocon à six branches pour le gel ; `marque()` dans `world/models.js`, `.ow-mark-*` dans `world.css`) ; le nom de l'objet sur la carte dit le dégât en toutes lettres, la couleur n'est jamais seule. Éolienne en panne : rotor arrêté (plus de rotation, même éveillée), une pale cassée net et son bout tombé au pied, trappe ouverte. Parcelle : traces de pattes dans la terre, et une partie des plants revenus en pousses quand l'ours est passé sur une culture mûre ; voile de givre et points de glace sur les plants quand elle a gelé. Dans la fiche, le dégât s'ajoute à « Maintenant » (`.degat` dans `app.css`) : lavis braise et filet de braise (comme la confirmation d'une action risquée), titre en gras avec le picto du dégât en braise foncée (`i-cle`, `i-patte`, `i-flocon`, 22 px), ce que ça change en texte doux, puis le geste en bouton secondaire petit (« Réparer », « Chasser l'ours », « Couvrir la culture », le prix après un point médian, chiffres tabulaires) ; verrouillé, cadenas et raison du cœur dessous. Les deux autres voies suivent en petit, chacune avec son picto : le quartier de la quête qui règle ça, l'horloge pour « ça se règle tout seul ». Réglé aujourd'hui, le bloc devient une seule ligne cochée en sauge foncée sur lavis sauge, sans braise, à la même place.
 
+Hiver (lot H). Du 15 novembre au 30 avril, l'île est sous la neige, et rien ne bouge : c'est un jeu de couleurs (`data-neige` sur la racine du monde ; `NEIGE_SOL`, `NEIGE_DESSUS` et `NEIGE_NU` dans `world/palette.js`, les bords du lac dans `world.css`). Le sol passe au blanc à peine bleuté sur ses trois tons ; le dessus des toits, des feuillages et de la toile des serres prend la neige (`snow`, `#f2f4ee`) et leurs faces gardent leur couleur, comme une neige posée ; les érables nus passent au gris bleuté du givre (bruns, ils se lisaient comme des rochers) ; le bord du lac est pris par la glace, et les fleurs du terrain sont enfouies. Les chemins restent dégagés (Fanal déneige). Pendant l'annonce d'une tempête, le front de givre approche du bord de l'Atelier, au pied des serres, un peu plus chaque jour. Un bâtiment enseveli porte une congère (pentes continues, un seul polygone par face : en éclats, elle se lisait comme du papier plié) et la marque braise avec une pelle penchée (même disque que les dégâts du lot I ; `i-pelle` dans les pictos) ; l'éolienne a un chapeau de neige sur la nacelle et son rotor arrêté, la serre une épaisse couche sur ses panneaux et ses pots cachés.
+
+Dans le bandeau, une tempête annoncée ajoute une rangée pleine largeur sous les objectifs, à toutes les largeurs (`.bandeau-alerte`, 54 px au moins, `--bandeau-alerte-h`) : lavis de givre et filet de givre en haut ; le flocon dans un disque papier cerclé de givre ; le titre en encre (« Tempête dans 3 jours ») ; la barre de trois crans (14 × 8 px ; vide, un filet de givre ; plein, encre de givre), doublée du texte « 1 sur 3 » en encre de givre ; à droite, « Rentrer du bois » en bouton secondaire petit, le prix dessous en petit (chiffres tabulaires). Barre pleine : « Le village est prêt », sans bouton. Le jour même, les crans s'effacent : coche sur disque sauge pour une tempête tenue ; pelle sur disque braise et texte en braise foncée pour un bâtiment sous la neige, avec « Déneiger », qui ouvre sa fiche. Déplié en compact, la rangée ajoute une phrase d'aide en gris doux. Le haut de l'île et celui du panneau ouvert descendent de la hauteur de la rangée. Mesuré le 7 octobre pendant une alerte : bandeau de 102 px à 390 px de large, de 114 px à partir de 700 px. Contrastes sur le lavis de givre : encre de givre 5,3:1, braise foncée 5,1:1. La fiche d'un bâtiment enseveli reprend le bloc `.degat` du lot I (« Sous la neige », pelle, « Déneiger · 2 Énergie », une quête Terrain, la fonte). Dans « Cette saison », l'objectif d'hiver s'écrit « Serre : 3 récoltes sur 10 », ou « Bâtir une petite serre » quand le village n'en a pas.
+
 ### Boutons (3)
 Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), picto de 20 px, socle de 3 px.
 - **Principal** `.btn--primary` : sauge profonde, papier dessus. Un seul par vue.
@@ -512,7 +520,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - **Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.
 - **Don't** utiliser `ember` (4,2:1) pour du texte.
 - **Don't** couvrir un bouton avec une annonce ou une notification.
-- **Don't** mettre l'airelle ailleurs que sur le Permis, ni le givre ailleurs que sur le hors ligne.
+- **Don't** mettre l'airelle ailleurs que sur le Permis, ni le givre ailleurs que sur le hors ligne et la tempête annoncée.
 - **Don't** utiliser un fond sombre, un cyan néon ou du noir pur pour une ombre.
 - **Don't** ajouter une étiquette au-dessus d'un titre pour catégoriser ; la catégorie va dans la ligne de méta.
 - **Don't** montrer l'état seulement par la couleur.

@@ -87,6 +87,12 @@ Trois règles :
 | `imprevu.aurore` / `.peche` / `.trouvaille` / `.orignal` | Un bon imprévu arrive (lot I) : dit une fois par appareil, à l'ouverture où il arrive (après l'accueil, la lettre, le bilan et le mot du marchand, et après une réplique en cours), ou quand il arrive au premier passage du temps après une quête |
 | `imprevu.panne` / `.ours` / `.gel` | Un mauvais imprévu frappe (lot I), même moment. Rassure, ne chiffre rien : le prix et les jours sont dans la phrase lue et la fiche |
 | `imprevu.regle` | Un dégât est réglé : en payant (geste « Réparer », « Chasser l'ours », « Couvrir la culture »), ou par la quête payée du bon domaine, après `semaine.tenue` |
+| `tempete.annonce` | Une tempête de neige est annoncée (lot H) : dite une fois par tempête et par appareil, à la première ouverture pendant les trois jours d'annonce, après l'imprévu du jour. Rassure, ne chiffre rien : les jours, la barre et le prix sont dans le bandeau et la phrase lue |
+| `tempete.veille` | La veille, quand la barre n'est pas pleine et que l'annonce a été dite un autre jour. Aucun reproche |
+| `tempete.tenue` | Le jour même, la tempête est tenue (barre pleine) |
+| `tempete.neige` | Le jour même, la tempête a enseveli un bâtiment (éolienne ou petite serre). Même ton que `imprevu.panne` : ni prix ni nombre de jours |
+| `tempete.deneige` | Un bâtiment est déneigé : en payant (geste « Déneiger ») ou par une quête Terrain payée ; prend la place de `imprevu.regle` |
+| `saison.serre` | L'objectif d'hiver est atteint, à la récolte de serre qui le complète (geste « Récolter ») |
 | `famille.arrive` | Une famille s'installe dans un chalet (geste « Accueillir une famille ») |
 | `return.after_absence` | Première ouverture après 3 jours ou plus sans visite, le jour où le bonus de retour est versé (au plus une fois par 14 jours) |
 | `visit.end` | Écran « Tout est enregistré, à demain » |
@@ -97,7 +103,9 @@ Pas encore jouées par le code : `deadline.soon`, `deadline.passed`, `list.empt
 
 **Un seul imprévu raconté par ouverture** : le dernier inscrit au registre ce jour-là (le mauvais, quand un bon manqué arrive le même jour). La clé de l'imprévu raconté est gardée sur l'appareil (`oree.imprevu.v1`) : un rechargement ne le répète pas, un autre appareil le raconte à son tour.
 
-**Une seule réplique par action.** Quand plusieurs situations s'appliquent au même geste, la première de cette liste l'emporte : `permis.gagne`, `semaine.tenue`, `imprevu.regle`, `quest.done.big`, `quest.already_done`, puis `quest.done.medium` ou `quest.done.short`. La semaine tenue passe donc après le permis des jours : un seul mot de Fanal par geste, et le bonus reste annoncé à l'écran. À « Accueillir une famille », `permis.rang` prend la place de `famille.arrive` quand un nouveau rang donne un permis. Le permis de l'objectif de saison n'a pas de réplique. Une quête déjà récompensée ne joue aucune de ces situations.
+**La tempête, étape par étape** (lot H) : chaque étape est racontée une fois par tempête et par appareil (`oree.tempete.v1`, `annonceTempete` dans `js/main.js`) : l'annonce ; la veille (rien si la barre est pleine ; si l'app n'a pas été ouverte avant la veille, c'est l'annonce qui est dite ce jour-là) ; l'issue le jour même (`tempete.tenue` ou `tempete.neige` ; rien pour une tempête passée sans rien abîmer). Si une bulle de Fanal ou une feuille est ouverte, la réplique attend.
+
+**Une seule réplique par action.** Quand plusieurs situations s'appliquent au même geste, la première de cette liste l'emporte : `permis.gagne`, `semaine.tenue`, `imprevu.regle` (ou `tempete.deneige` pour la neige), `quest.done.big`, `quest.already_done`, puis `quest.done.medium` ou `quest.done.short`. La semaine tenue passe donc après le permis des jours : un seul mot de Fanal par geste, et le bonus reste annoncé à l'écran. À « Accueillir une famille », `permis.rang` prend la place de `famille.arrive` quand un nouveau rang donne un permis. Le permis de l'objectif d'automne n'a pas de réplique ; l'objectif d'hiver a la sienne (`saison.serre`), à la récolte qui le complète. Une quête déjà récompensée ne joue aucune de ces situations.
 
 ## Tirage sans répétition sur 7 jours
 
@@ -111,7 +119,7 @@ La même règle vaut pour chaque situation de `repliques.json` et pour chaque gr
 
 **Jamais deux fois de suite la même variante** (répliques seulement, lot R2). Avant le tirage de l'étape 4, si la dernière variante dite pour cette situation est encore parmi les candidates retenues et qu'il en reste au moins une autre, on la retire : même passé 7 jours, une situation qui revient chaque semaine (`semaine.tenue`) ne répète pas son dernier mot. L'identifiant de la dernière variante dite est gardé par situation, dans le même `oree.replies.v1`, sous la clé `>situation` (`js/content.js`). S'il n'y a qu'une seule variante candidate, elle joue : la règle ne bloque jamais une réplique.
 
-Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées le 6 octobre 2026, après le lot R2) ; `batiment.construit`, `famille.arrive`, `list.empty` et `semaine.tenue` en ont 4, `permis.gagne` et `permis.rang` en ont 5 depuis le lot R2, `marchand.arrive` aussi (lot V), et les huit situations `imprevu.*` (lot I, relues le 7 octobre 2026 : au plus 17 mots et 86 caractères, aucun chiffre, aucun reproche). Seule exception : `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
+Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées le 6 octobre 2026, après le lot R2) ; `batiment.construit`, `famille.arrive`, `list.empty` et `semaine.tenue` en ont 4, `permis.gagne` et `permis.rang` en ont 5 depuis le lot R2, `marchand.arrive` aussi (lot V), et les huit situations `imprevu.*` (lot I, relues le 7 octobre 2026 : au plus 17 mots et 86 caractères, aucun chiffre, aucun reproche) ; les six du lot H (`tempete.*` et `saison.serre`) en ont 5 (mesurées le 7 octobre 2026 : au plus 15 mots et 78 caractères, aucun chiffre). Seule exception : `quartier.monte` a six variantes, mais toutes filtrées par `quartier`, aucune sans filtre, et chacune ne joue qu'au niveau 1 de son quartier.
 
 ## `lettres.json`
 

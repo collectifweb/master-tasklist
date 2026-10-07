@@ -48,7 +48,7 @@ async function withV1(fn, { copy } = {}) {
   }
 }
 
-test('ancienne app : écriture sans version de client (ou < 5) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
+test('ancienne app : écriture sans version de client (ou < 6) refusée, code client_outdated, rien écrit ni retenu', () => withV1(async (s) => {
   const before = snapshot(s);
   const listing = readdirSync(s.dataDir).sort();
   const ops = [

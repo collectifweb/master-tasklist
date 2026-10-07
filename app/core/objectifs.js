@@ -33,7 +33,7 @@ export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
 /**
  * Objectif de chaque saison (récompense : { energy?, materials?, permis? }). L'automne : remplir le grenier ; l'hiver :
  * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février (10 : la simulation (j) les
- * place entre le 3 et le 31 janvier selon le joueur, mesuré le 7 octobre 2026). Le printemps et l'été s'affichent « à venir ».
+ * place entre le 2 et le 31 janvier selon le joueur, mesuré le 7 octobre 2026). Le printemps et l'été s'affichent « à venir ».
  */
 export const OBJECTIFS_SAISON = {
   automne: { id: 'grenier', recompense: { energy: 3, materials: 10, permis: 1 } },
