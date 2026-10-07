@@ -287,7 +287,7 @@ const at = (day, h = 15) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
         || (await L.said(pb)).map((x) => x.text).find((t) => /Déjà déneigé/.test(t));
       R.check('premier appareil : remis à jour, il dit pourquoi (« Déjà déneigé »)', !!pourquoi, String(pourquoi));
       f = await fiche(pb);
-      R.check('premier appareil : la fiche dit « Déneigée aujourd’hui. »', f.degat?.etat === 'fait' && f.degat.fait === 'Déneigée aujourd’hui.', JSON.stringify(f.degat));
+      R.check('premier appareil : la fiche dit « Bâtiment déneigé aujourd’hui. »', f.degat?.etat === 'fait' && f.degat.fait === 'Bâtiment déneigé aujourd’hui.', JSON.stringify(f.degat));
       await pb.evaluate(() => document.querySelector('#dlg-batiment [data-close]').click());
       await L.waitFor(() => pb.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
       await pb.waitForTimeout(400);

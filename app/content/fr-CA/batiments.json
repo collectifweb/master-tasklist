@@ -91,7 +91,7 @@
     "neige.effet.eolienne": "La tempête l’a ensevelie : elle ne donne plus son Énergie les jours où tu termines une quête.",
     "neige.effet.serre": "La tempête a chargé la toile : la culture ne pousse plus tant que la serre est sous la neige.",
     "neige.geste": "Déneiger",
-    "neige.fait": "Déneigée aujourd’hui.",
+    "neige.fait": "Bâtiment déneigé aujourd’hui.",
     "neige.seul.one": "Sinon, la neige fond demain.",
     "neige.seul.other": "Sinon, la neige fond dans {n} jours.",
     "geste.label": "{geste} pour {cout}",
