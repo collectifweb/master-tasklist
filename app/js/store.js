@@ -98,6 +98,7 @@ export class Store {
     this.listeners = {};
     this.sync = { state: 'saved', pending: 0, message: '', detail: '' };
     this.flushing = false;
+    this.refreshPending = false; // relecture demandée pendant un envoi : faite à la fin de l'envoi (flush)
     this.gen = 0;
     this.retryTimer = null;
     this.needsToken = false;
@@ -234,6 +235,10 @@ export class Store {
     } finally {
       this.flushing = false;
     }
+    // Un avis d'un autre onglet est arrivé pendant l'envoi : il a été mis de côté (refresh). File vide, on relit le
+    // serveur ; sinon (hors ligne, erreur), il attend le prochain envoi. Sans ça, un onglet qui attendait le verrou
+    // pendant qu'un autre envoyait sa file gardait l'ancienne partie.
+    if (this.refreshPending && !loadQueue().length) { this.refreshPending = false; this.refresh({ force: true }); }
   }
 
   dropHead(opId) {
@@ -396,7 +401,8 @@ export class Store {
   // ───────── Relecture régulière ─────────
   async refresh({ force = false } = {}) {
     if (this.lockLeft()) return;
-    if (this.flushing || loadQueue().length) { if (!this.flushing) this.flush(); return; }
+    if (this.flushing || loadQueue().length) { this.refreshPending = true; if (!this.flushing) this.flush(); return; }
+    this.refreshPending = false;
     const gen = this.gen;
     try {
       const resp = await api.get();
