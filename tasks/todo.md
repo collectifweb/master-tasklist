@@ -783,3 +783,5 @@ Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (impr
 5. **Quête proposée au ralenti** : la plus courte, dans la lettre du matin et dans la ligne « Aujourd'hui » du bandeau (recommandé) ? Ou dans la lettre seulement ? L'ordre de la Cote ne change pas (décision 7).
 6. **Tempêtes** : inchangées par l'allure (recommandé : la bible ne les y relie pas, et un bâtiment enseveli se dégage par une quête Terrain ou fond en 3 jours) ? Ou, au ralenti, deux crans au lieu de trois ? Pour mémoire, le joueur lent simulé au lot H (une quête un jour sur deux) a eu 8 serres ensevelies sur l'hiver sans se préparer.
 7. **Envoi** : directement en production dès que c'est prêt, comme les lots I et H ?
+
+**Réponses d'Alex (7 octobre, soir), première passe** : 1. seuils de la bible, d'accord ; 5. d'accord (lettre et bandeau) ; 6. tempêtes inchangées. Questions 2, 3 et 4 mal comprises : réexpliquées. Question 7 sans réponse.
