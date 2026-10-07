@@ -1,5 +1,5 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
-import { SORTS, gameDay, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage } from '../core/index.js';
+import { SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
@@ -55,7 +55,7 @@ const story = createStory({
   thumb: (id) => (world ? world.thumb(id) : ''),
   lightBandeau: () => bandeau.light(),
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
-  arrivee: () => annonceVisiteur(),
+  arrivee: () => { annonceVisiteur(); annonceImprevu(); },
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -128,15 +128,16 @@ function react(payload) {
   const reply = speech.react({ action, params, events, task, now: now || maintenant() });
   const replyText = reply ? ` ${reply.nom}\u00a0: ${reply.texte}` : '';
   const gains = gainList(s);
-  const objectifs = objectifsSay(events);
+  const objectifs = [objectifsSay(events), degatsSay(events)].filter(Boolean).join(' ');
 
   if (['completeQuest', 'createQuest', 'toggleStep', 'openApp', 'claimBonus', 'advanceTime', ...BAT_ACTIONS].includes(action) && aGagne(s)) { // même sans chiffre à montrer (gains arrondis à 0), l'annonce reste
     const head = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone) ? t('sr.quest.done', { quete: title })
       : action === 'createQuest' ? t('sr.added', { quete: title })
         : action === 'toggleStep' ? t('sr.step.done', { etape: ((task && task.steps) || []).find((x) => x.id === params.stepId)?.label || '', fait: (task.steps || []).filter((x) => x.done).length, total: (task.steps || []).length })
-          : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
+          : action === 'advanceTime' ? imprevuSay(events, now || maintenant())
+            : BAT_ACTIONS.includes(action) ? batimentSay(events) : '';
     const liveText = `${head}${objectifs ? ' ' + objectifs : ''} ${gains.length ? t('sr.gains', { liste: gains.join(', ') }) : ''}${replyText}`.trim();
-    announce.show(s, 'gain', { liveText: action === 'advanceTime' ? after(liveText) : remember(liveText) });
+    announce.show(s, 'gain', { liveText: remember(action === 'advanceTime' ? after(liveText) : liveText) }); // « Jour suivant » s'y ajoute
     return;
   }
   if (action === 'completeQuest' && s.noGain) {
@@ -158,8 +159,9 @@ function react(payload) {
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
   if (say) return announce.say(remember(say() + replyText));
-  const bat = batimentSay(events);
-  if (bat) announce.say(remember(bat + replyText));
+  // geste du village sans gain (réparer), ou passage du temps sans gain (orignal, mauvais imprévu)
+  const bat = [batimentSay(events), imprevuSay(events, now || maintenant())].filter(Boolean).join(' ');
+  if (bat) announce.say(remember(action === 'advanceTime' ? after(bat + replyText) : bat + replyText));
 }
 
 const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger'];
@@ -191,6 +193,35 @@ function batimentSay(events) {
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
     else if (e.type === 'quartier-monte') out.push(monteText(e));
     else if (e.type === 'echange') out.push(t('bat.sr.echange', { donne: ressource(e.donne).texte, recoit: ressource(e.recoit).texte }));
+    else if (e.type === 'reparation' && e.par === 'paiement') out.push(t(`bat.sr.reparation.${e.imprevu}`, { cout: coutText(e.cout) }));
+  }
+  return out.join(' ');
+}
+
+/** Phrase lue avec une quête payée (lot I) : elle règle aussi un dégât de son domaine, ou l'éolienne en panne n'a pas tourné. */
+function degatsSay(events) {
+  const out = [];
+  for (const e of events) {
+    if (e.type === 'reparation' && e.par === 'quete') out.push(t(`bat.sr.reparation.quete.${e.imprevu}`));
+    else if (e.type === 'eolienne-arretee') out.push(t('bat.sr.eolienne.arretee'));
+  }
+  return out.join(' ');
+}
+
+/**
+ * Phrase lue quand un imprévu arrive (lot I) : ce qui se passe et, pour un mauvais, ce que ça change, son prix et quand il
+ * se règle seul. Une bonne pêche plafonnée par la réserve le dit.
+ */
+function imprevuSay(events, now) {
+  const out = [];
+  const one = (n) => (n === 1 ? 'one' : 'other');
+  for (const e of events) {
+    if (e.type !== 'imprevu') continue;
+    if (e.nature === 'mauvais') {
+      const n = daysBetween(gameDay(now), e.jusqua);
+      out.push(t(`sr.imprevu.${e.imprevu}.${one(n)}`, { n, cout: coutText(IMPREVUS.mauvais[e.imprevu].reparer) }));
+    } else if (e.imprevu === 'peche' && entierGain(e.perdu) > 0) out.push(t(`sr.imprevu.peche.plein.${e.perdu < 2 ? 'one' : 'other'}`, { perdu: numGain(e.perdu) }));
+    else out.push(t(`sr.imprevu.${e.imprevu}`));
   }
   return out.join(' ');
 }
@@ -251,11 +282,12 @@ function run(action, params) {
     notice({ kind: 'info', text: err.message });
     return null;
   }
-  if (AFTER_TIME.has(action)) advanceTime();
+  // un imprévu peut arriver ici, la première fois que le temps passe après les premiers pas : Fanal le raconte
+  if (AFTER_TIME.has(action) && advanceTime()?.events.some((e) => e.type === 'imprevu')) annonceImprevu();
   return r;
 }
 function advanceTime() {
-  try { store.do('advanceTime', {}); } catch { /* état illisible : on réessaiera au prochain geste */ }
+  try { return store.do('advanceTime', {}); } catch { return null; /* état illisible : on réessaiera au prochain geste */ }
 }
 
 // ───────── Panneau ─────────
@@ -409,7 +441,11 @@ function spendBlocked(e, target, action) {
   if (ghost && dlg && Date.now() - (dlg._openedAt || 0) < SPEND_OPEN_MS) return true;
   return spent.key === spendKey(action, target) && Date.now() - spent.at < SPEND_AGAIN_MS;
 }
-const markSpent = (action, target) => { spent = { key: spendKey(action, target), at: Date.now() }; };
+const markSpent = (action, target) => {
+  spent = { key: spendKey(action, target), at: Date.now() };
+  const dlg = target.closest('dialog');
+  if (dlg) dlg._spentAt = spent.at; // sa feuille peut rapetisser : le second toucher tomberait au fond (sheets.js)
+};
 
 document.addEventListener('click', (e) => {
   const target = e.target.closest('button, [data-action], [data-close], input[data-action]');
@@ -566,6 +602,25 @@ function annonceVisiteur() {
   if (!$('#speech').hidden) { setTimeout(annonceVisiteur, 7500); return; } // Fanal finit d'abord sa phrase en cours
   noterVisite(c.game, c.now);
   const reply = pickReply('marchand.arrive', { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
+  if (!reply) return;
+  speech.showText(reply.nom, reply.texte);
+  announce.say(`${reply.nom}\u00a0: ${reply.texte}`);
+}
+
+// Un imprévu du jour (lot I) : Fanal le raconte une fois sur cet appareil, à l'ouverture où il arrive, après l'accueil, la
+// lettre, le bilan et le mot du marchand (il attend que la bulle en cours se ferme). Une seule réplique par ouverture : le
+// dernier imprévu inscrit aujourd'hui (le mauvais, quand un bon manqué arrive le même jour).
+const IMPREVU_KEY = 'oree.imprevu.v1';
+const imprevuVu = (key) => { try { return localStorage.getItem(IMPREVU_KEY) === key; } catch { return true; } };
+function annonceImprevu() {
+  if (!started || !store.view) return;
+  const c = ctx();
+  const today = gameDay(c.now);
+  const e = c.ledger.findLast((x) => x && x.type === 'imprevu' && x.day === today && typeof x.imprevu === 'string');
+  if (!e || imprevuVu(e.key)) return;
+  if (!$('#speech').hidden || document.querySelector('dialog[open]')) { setTimeout(annonceImprevu, 7500); return; }
+  try { localStorage.setItem(IMPREVU_KEY, e.key); } catch { /* sans stockage : pas d'annonce répétée */ }
+  const reply = pickReply(`imprevu.${e.imprevu}`, { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
   if (!reply) return;
   speech.showText(reply.nom, reply.texte);
   announce.say(`${reply.nom}\u00a0: ${reply.texte}`);

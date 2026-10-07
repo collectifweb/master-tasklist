@@ -17,6 +17,7 @@ export function cloneView(v) {
     reflets: new Set(v.reflets),
     refletAnchors: new Set(v.refletAnchors || []),
     batiments: (v.batiments || []).map((b) => ({ ...b })),
+    imprevus: new Set(v.imprevus || []),
   };
 }
 

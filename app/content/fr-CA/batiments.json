@@ -1,5 +1,5 @@
 {
-  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir{N}: la fiche du quai quand le marchand est là (core/visiteurs.js).",
+  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir{N}: la fiche du quai quand le marchand est là (core/visiteurs.js). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I).",
   "chalet": {
     "nom": "Chalet",
     "vide": "Chalet vide",
@@ -41,7 +41,8 @@
     "fait": "{n} Énergie de plus chaque jour où tu termines au moins une quête.",
     "geste": "Bâtir",
     "maintenant": "Elle tournera à ta première quête terminée aujourd’hui.",
-    "maintenant.fait": "Elle a tourné aujourd’hui : {n} Énergie de plus."
+    "maintenant.fait": "Elle a tourné aujourd’hui : {n} Énergie de plus.",
+    "maintenant.panne": "À l’arrêt pour l’instant : une pale est cassée."
   },
   "grenier": {
     "nom": "Grenier",
@@ -71,6 +72,26 @@
     "fait": "Fait",
     "fait.quand": "cette semaine"
   },
+  "degat": {
+    "panne.titre": "Panne d’éolienne",
+    "panne.effet": "Le vent a cassé une pale : elle ne donne plus son Énergie les jours où tu termines une quête.",
+    "panne.geste": "Réparer",
+    "panne.fait": "Réparée aujourd’hui.",
+    "ours.titre": "Un ours au potager",
+    "ours.effet": "Il goûte à la culture : la prochaine récolte donnera {n} Nourriture de moins.",
+    "ours.geste": "Chasser l’ours",
+    "ours.fait": "Ours chassé aujourd’hui.",
+    "ours.recolte": "L’ours est reparti avec sa part.",
+    "gel.titre": "Gel précoce",
+    "gel.effet": "La culture a gelé : la journée ne compte pas pour sa pousse.",
+    "gel.geste": "Couvrir la culture",
+    "gel.fait": "Culture couverte aujourd’hui.",
+    "geste.label": "{geste} pour {cout}",
+    "quete": "Ou termine une quête {domaine} : elle règle ça, gratuitement.",
+    "seul.one": "Sinon, ça se règle tout seul demain.",
+    "seul.other": "Sinon, ça se règle tout seul dans {n} jours.",
+    "fait.quete": "Réglé aujourd’hui par une quête {domaine}."
+  },
   "etat": {
     "libre": "à {geste}",
     "verrou": "verrouillé : {raison}",
@@ -83,7 +104,13 @@
     "chalet.other": "{n} habitants sur {max}",
     "debout": "debout",
     "quai.marchand.one": "le marchand est au quai, dernier jour",
-    "quai.marchand.other": "le marchand est au quai, encore {n} jours"
+    "quai.marchand.other": "le marchand est au quai, encore {n} jours",
+    "degat.panne.one": "en panne, repart seule demain",
+    "degat.panne.other": "en panne, repart seule dans {n} jours",
+    "degat.ours.one": "un ours rôde, il repart demain",
+    "degat.ours.other": "un ours rôde, il repart dans {n} jours",
+    "degat.gel.one": "gelée, dégèle demain",
+    "degat.gel.other": "gelée, dégèle dans {n} jours"
   },
   "fiche": {
     "quoi": "Ce que c’est",
@@ -113,7 +140,14 @@
     "famille": "Une famille s’installe. Le village compte {n} habitants.",
     "famille.one": "Une famille s’installe. Le village compte 1 habitant.",
     "rang": "Nouveau rang : {rang}.",
-    "echange": "Échange fait : {donne} contre {recoit}."
+    "echange": "Échange fait : {donne} contre {recoit}.",
+    "reparation.panne": "Éolienne réparée, pour {cout}.",
+    "reparation.ours": "Ours chassé, pour {cout}.",
+    "reparation.gel": "Culture couverte, pour {cout}.",
+    "reparation.quete.panne": "La quête répare aussi l’éolienne.",
+    "reparation.quete.ours": "La quête chasse aussi l’ours du potager.",
+    "reparation.quete.gel": "La quête couvre aussi la culture gelée.",
+    "eolienne.arretee": "L’éolienne en panne n’a pas tourné."
   },
   "plan": {
     "titre": "Bâtiments",

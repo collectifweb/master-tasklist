@@ -31,6 +31,7 @@ import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
+  IMPREVU_SPOTS,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -107,10 +108,16 @@ export function entitiesFor(v, tasks = []) {
     else if (!b.bati) Object.assign(e, { model: 'piquets', variant: `${slot.w}x${slot.h}` });
     else Object.assign(e, { model: b.type, variant: b.etat === 'bati' ? '' : b.etat });
     if (b.bati && LIGHT[e.model] && (b.type !== 'chalet' || b.occupants)) { e.light = LIGHT[e.model]; e.allume = !!v.veille; }
+    if (b.degat) e.degat = b.degat.type; // éolienne en panne, parcelle visitée par l'ours ou gelée : dessin et marque braise
     if (v.reflets?.has?.(b.id)) e.reluit = true;
     list.push(e);
   }
   for (const d of DECOR) list.push(d);
+  // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
+  for (const id of v.imprevus || []) {
+    const s = IMPREVU_SPOTS[id];
+    if (s) list.push({ id: `imprevu-${id}`, sector: sectorAt(Math.floor(s.r), Math.floor(s.c)), ...s });
+  }
   v.crates.forEach((cr, i) => {
     const [u, vv] = CRATE_SPOTS[i];
     const task = tasks.find((t) => t && t.id === cr.taskId);
@@ -138,6 +145,31 @@ function farForestURI() {
   }
   const svg = `<svg xmlns="${SVGNS}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d1}" fill="${BASE.far1}"/><path d="${d2}" fill="${BASE.far2}"/><rect y="${h - 3}" width="${w}" height="3" fill="${BASE.far2}"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+// ----------------------------------------------------------------------------- aurore boréale (lot I)
+// Imprévu heureux : des rubans verts dans le ciel, au-dessus du fond de l'île (px monde, le coin du fond est en 0, 0), le
+// jour où elle passe. Trois rideaux à lisière ondulée, ourlet clair et stries ; ils ondulent seulement avec le mouvement
+// d'ambiance (world.css), jamais en mouvement réduit. Sous les objets : les arbres du fond passent devant leur ourlet.
+const AURORE = { x: -300, y: -150, w: 600, h: 130 };
+function auroreSVG(n) {
+  // trois rideaux effilés : chaque bord du bas (le plus clair) rejoint son bord du haut aux deux bouts, sans flanc
+  // vertical ; les rais du grand rideau sont découpés à sa forme
+  const g = `ow-aur-${n}`, c = `ow-aur-c-${n}`;
+  const r1 = 'M30,98C110,72 200,110 300,92S480,62 570,82C540,52 470,28 390,36S230,40 150,42S62,64 30,98Z';
+  const r2 = 'M24,60C80,42 150,60 232,40C208,20 150,8 100,14S44,38 24,60Z';
+  const r3 = 'M372,52C430,38 510,54 588,30C560,12 492,2 442,10S392,32 372,52Z';
+  const streaks = Array.from({ length: 14 }, (_, k) => {
+    const x = 70 + k * 34, bas = 104 - Math.round(Math.sin(k * 1.3) * 6), haut = 30 + Math.round(Math.cos(k * 0.9) * 8);
+    return `M${x},${bas}V${haut}`;
+  }).join('');
+  return `<svg viewBox="0 0 ${AURORE.w} ${AURORE.h}" width="${AURORE.w}" height="${AURORE.h}" aria-hidden="true" focusable="false">`
+    + `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ow-aur-a" stop-opacity="0"/><stop offset=".6" class="ow-aur-a" stop-opacity=".3"/><stop offset="1" class="ow-aur-b" stop-opacity=".62"/></linearGradient>`
+    + `<clipPath id="${c}"><path d="${r1}"/></clipPath></defs>`
+    + `<g class="ow-aurore-r r2"><path d="${r2}" fill="url(#${g})"/><path d="M24,60C80,42 150,60 232,40" class="ow-aur-hem"/></g>`
+    + `<g class="ow-aurore-r r3"><path d="${r3}" fill="url(#${g})"/><path d="M372,52C430,38 510,54 588,30" class="ow-aur-hem"/></g>`
+    + `<g class="ow-aurore-r r1"><path d="${r1}" fill="url(#${g})"/><path d="${streaks}" class="ow-aur-streak" clip-path="url(#${c})"/>`
+    + `<path d="M30,98C110,72 200,110 300,92S480,62 570,82" class="ow-aur-hem"/></g></svg>`;
 }
 
 // ----------------------------------------------------------------------------- création
@@ -180,6 +212,10 @@ export function createWorld(container, options = {}) {
   const frontMove = frontHost.firstElementChild;
 
   const fxg = el('div', 'ow-fxg', { 'aria-hidden': 'true' });
+  const aurore = el('div', 'ow-aurore', { 'aria-hidden': 'true' });
+  aurore.hidden = true;
+  aurore.innerHTML = auroreSVG(id);
+  Object.assign(aurore.style, { left: AURORE.x + 'px', top: AURORE.y + 'px' });
 
   const shadows = el('div', 'ow-shadows', { 'aria-hidden': 'true' });
   const ents = el('div', 'ow-ents-root');
@@ -194,7 +230,7 @@ export function createWorld(container, options = {}) {
   }
   const lights = el('div', 'ow-lights', { 'aria-hidden': 'true' });
   const fxw = el('div', 'ow-fxw', { 'aria-hidden': 'true' });
-  stage.append(terrainHost, veils, fxg, shadows, ents, dusk, stars, lights, fxw);
+  stage.append(terrainHost, aurore, veils, fxg, shadows, ents, dusk, stars, lights, fxw);
   // le décor du terrain est purement visuel : seuls les boutons d'objets sont exposés
   terrainHost.setAttribute('aria-hidden', 'true');
 
@@ -416,6 +452,8 @@ export function createWorld(container, options = {}) {
 
   function apply(v, { quiet = false, enter = true } = {}) {
     applyFront(v);
+    const aur = !v.imprevus?.has?.('aurore');
+    if (aurore.hidden !== aur) aurore.hidden = aur;
     applyPlaques(v);
     const res = scene.sync(entitiesFor(v, tasks), { quiet });
     if (!quiet && enter) {

@@ -142,6 +142,16 @@
   <symbol id="i-fleche" viewBox="0 0 24 24">
     <path d="M4 12h15.5M14 6.5l5.5 5.5-5.5 5.5"/>
   </symbol>
+  <!-- Les dégâts des mauvais imprévus (lot I) : les mêmes tracés que les marques braise de l'île (world/models.js) -->
+  <symbol id="i-cle" viewBox="0 0 24 24">
+    <path d="M15.6 4.4a4.6 4.6 0 0 0-5 6.2l-6.2 6.2a1.9 1.9 0 0 0 2.7 2.7l6.2-6.2a4.6 4.6 0 0 0 6.2-5l-2.9 2.9-2.6-.5-.5-2.6z"/>
+  </symbol>
+  <symbol id="i-patte" viewBox="0 0 24 24">
+    <g fill="currentColor" stroke="none"><ellipse cx="12" cy="15.6" rx="4.4" ry="3.6"/><circle cx="6.4" cy="10.4" r="1.9"/><circle cx="9.7" cy="6.9" r="2"/><circle cx="14.3" cy="6.9" r="2"/><circle cx="17.6" cy="10.4" r="1.9"/></g>
+  </symbol>
+  <symbol id="i-flocon" viewBox="0 0 24 24">
+    <path d="M12 12L12.0 3.0M14.2 7.0L12.0 5.0L9.8 7.0M12 12L19.8 7.5M17.4 11.4L18.1 8.5L15.2 7.6M12 12L19.8 16.5M15.2 16.4L18.1 15.5L17.4 12.6M12 12L12.0 21.0M9.8 17.0L12.0 19.0L14.2 17.0M12 12L4.2 16.5M6.6 12.6L5.9 15.5L8.8 16.4M12 12L4.2 7.5M8.8 7.6L5.9 8.5L6.6 11.4"/>
+  </symbol>
 
   <!-- Système -->
   <symbol id="i-offline" viewBox="0 0 24 24">

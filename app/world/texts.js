@@ -83,11 +83,19 @@ export function batimentNom(t, b) {
 /**
  * Où en est un bâtiment (vue de view.js), en quelques mots : « à rebâtir », « verrouillé : Hameau : encore 2
  * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 », « le marchand est au quai, encore 5 jours »… Le
- * même texte sur la carte et dans la liste.
+ * même texte sur la carte et dans la liste. Un dégât (lot I) passe devant : « en panne, repart seule dans 2 jours », « un
+ * ours rôde, il repart demain · mûr, à récolter ».
  * Un chalet compte ses places dans b.places (École), 2 au départ.
  */
 export function batimentEtat(t, b) {
   if (!b.bati) return b.refus ? t('bat.etat.verrou', { raison: b.refus }) : t('bat.etat.libre', { geste: t(`bat.${b.type}.geste`).toLowerCase() });
+  const etat = etatDebout(t, b);
+  if (!b.degat) return etat;
+  const d = t(`bat.etat.degat.${b.degat.type}.${b.degat.joursRestants === 1 ? 'one' : 'other'}`, { n: b.degat.joursRestants });
+  return b.etat === 'bati' ? d : `${d} · ${etat}`;
+}
+
+function etatDebout(t, b) {
   if (b.etat === 'mure') return t('bat.etat.mure');
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');

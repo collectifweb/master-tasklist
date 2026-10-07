@@ -292,6 +292,97 @@
 }
 .bat-foot[hidden] { display: none; }
 
+/* Dégât d'un mauvais imprévu (lot I), dans « Maintenant » : lavis et filet de braise (la couleur des menaces, comme la
+   confirmation d'une action risquée), titre avec le picto du dégât, ce que ça change, puis le geste et son prix (secondaire,
+   protégé du double toucher), le cadenas et la raison du cœur s'il manque quelque chose, et les deux autres voies : une
+   quête du bon domaine (picto du quartier), ou attendre (horloge). Réglé aujourd'hui : la ligne cochée reste à sa place,
+   en sauge, sans braise. */
+.bat-body .degat {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid rgb(191 90 56 / 0.45);
+  border-radius: var(--r-lg);
+  background: var(--c-ember-wash);
+}
+.bat-body .degat p { margin: 0; }
+.degat-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-weight: var(--w-bold);
+  line-height: var(--lh-snug);
+}
+.degat-titre .icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--c-ember-ink);
+}
+.degat-effet {
+  font-size: var(--text-15);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.degat-go { margin-top: var(--sp-1); }
+.degat-prix {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.degat-prix::before {
+  content: "·";
+  margin-right: 6px;
+  color: var(--text-muted);
+}
+.degat-raison,
+.degat-voies li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.degat-raison { font-weight: var(--w-semibold); }
+.degat-raison .icon,
+.degat-voies .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.degat-voies {
+  display: grid;
+  gap: var(--sp-1);
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bat-body .degat[data-etat="fait"] {
+  padding-block: var(--sp-1);
+  border-color: transparent;
+  background: var(--c-sage-wash);
+}
+.degat-fait {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target);
+  font-weight: var(--w-bold);
+  line-height: 1.25;
+  color: var(--c-sage-deep);
+}
+.degat-fait .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
 /* Comptoir du marchand (lot V) : la fiche du quai quand il est là. Une ligne par offre, séparées par des filets (comme
    la carte en liste) : le troc, ce que tu donnes → ce que tu reçois (picto teinté de la ressource, doublé du nombre et du
    mot), puis « Échanger » (secondaire, aucune action principale ici), « Fait cette semaine » (coche, sauge), ou le

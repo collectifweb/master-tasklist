@@ -505,6 +505,8 @@ export function openVeille({ next, reply, saved, onClose }) {
   openSheet(dlg);
 }
 
+const FOND_APRES_GESTE_MS = 800; // le même délai que SPEND_AGAIN_MS (main.js)
+
 /**
  * Câblage commun : fermeture au fond, Échap animé, bouton data-close. Une feuille peut remplacer la fermeture
  * (`_dismiss` : la scène « passe » au lieu de finir). Chaque feuille porte ses régions lues (#live et #live-world sont
@@ -514,7 +516,9 @@ export function wireDialogs() {
   for (const d of $$('dialog.sheet')) {
     const dismiss = () => (d._dismiss ? d._dismiss() : closeSheet(d));
     d.addEventListener('cancel', (e) => { e.preventDefault(); dismiss(); });
-    d.addEventListener('click', (e) => { if (e.target === d) dismiss(); });
+    // au fond, sauf juste après un geste qui dépense (main.js) : la feuille centrée a pu rapetisser (un dégât réglé, une
+    // ligne cochée), et le second toucher d'un double toucher tombe alors à côté
+    d.addEventListener('click', (e) => { if (e.target === d && Date.now() - (d._spentAt || 0) >= FOND_APRES_GESTE_MS) dismiss(); });
     const regions = ['live', 'live-world'].map((id) => {
       const p = document.createElement('p');
       p.className = 'sr-only';

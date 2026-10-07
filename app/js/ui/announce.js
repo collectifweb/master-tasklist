@@ -6,7 +6,7 @@ import { topSheet } from './sheets.js';
 
 /** Somme les gains d'une action à partir de ses événements, et les permis tombés (jours travaillés, rang, saison). */
 export function summarize(events) {
-  const s = { energy: 0, materials: 0, food: 0, permis: 0, quartier: null, noGain: false, rewards: 0, tenue: false };
+  const s = { energy: 0, materials: 0, food: 0, permis: 0, quartier: null, noGain: false, rewards: 0, tenue: false, imprevu: null, plein: false };
   for (const e of events || []) {
     if (e.type === 'reward') {
       s.energy += e.energy || 0; s.materials += e.materials || 0; s.food += e.food || 0; // Nourriture : premiers pas
@@ -15,6 +15,8 @@ export function summarize(events) {
     } else if (e.type === 'permis') s.permis++;
     else if (e.type === 'semaine-tenue') s.tenue = true; // ses Matériaux sont déjà dans l'événement 'reward' (source 'semaine')
     else if (e.type === 'sans-gain') s.noGain = true;
+    // un bon imprévu qui rapporte (lot I) : son nom finit l'annonce, « réserve pleine » quand la pêche a été plafonnée
+    else if (e.type === 'imprevu' && e.nature === 'bon' && (e.energy || e.materials || e.food)) { s.imprevu = e.imprevu; s.plein = e.perdu > 0; }
   }
   s.energy = Math.round(s.energy * 10) / 10; s.materials = Math.round(s.materials * 10) / 10; s.food = Math.round(s.food * 10) / 10;
   return s;
@@ -78,6 +80,7 @@ export function createAnnounce(lane, live) {
         if (s.tenue) items.push(`<span class="announce-item announce-tail" data-semaine>${esc(t('announce.semaine'))}</span>`);
         // la semaine tenue prend la place du quartier (qui reste lisible sur la plaque du monde) : ni mot coupé, ni séparateur orphelin
         if (s.quartier && !s.tenue) items.push(`<span class="announce-item announce-tail" data-quartier="${esc(s.quartier)}">${esc(t('announce.quartier_to', { quartier: t(`quartier.${s.quartier}.name`) }))}</span>`);
+        else if (s.imprevu && !s.tenue) items.push(`<span class="announce-item announce-tail" data-imprevu="${esc(s.imprevu)}">${esc(t(`announce.imprevu.${s.imprevu}${s.plein ? '.plein' : ''}`))}</span>`);
         if (!items.length) return say(liveText);
       }
       // 4 gains et plus (ressources, permis, semaine tenue) : sans les points médians, pour que tout tienne à 320 px

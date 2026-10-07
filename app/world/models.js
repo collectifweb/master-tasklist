@@ -178,6 +178,24 @@ export function erable(seed = 1, m = 'maple') {
   return a.done();
 }
 
+// ---------------------------------------------------------------- marque d'un dégât (lot I)
+// Un mauvais imprévu (core/imprevus.js) marque le bâtiment touché : un disque braise posé sur une pointe, un picto clair
+// dedans, les mêmes tracés que design/icons.svg (grille de 24). La braise est la couleur des menaces (world.css :
+// .ow-mark-*, lue dans tokens.css) ; le picto la double, et le nom de l'objet sur la carte dit le dégât en toutes lettres.
+export const MARK_GLYPH = {
+  panne: '<path d="M15.6 4.4a4.6 4.6 0 0 0-5 6.2l-6.2 6.2a1.9 1.9 0 0 0 2.7 2.7l6.2-6.2a4.6 4.6 0 0 0 6.2-5l-2.9 2.9-2.6-.5-.5-2.6z"/>',
+  ours: '<ellipse cx="12" cy="15.6" rx="4.4" ry="3.6" class="ow-mark-fill"/><circle cx="6.4" cy="10.4" r="1.9" class="ow-mark-fill"/><circle cx="9.7" cy="6.9" r="2" class="ow-mark-fill"/><circle cx="14.3" cy="6.9" r="2" class="ow-mark-fill"/><circle cx="17.6" cy="10.4" r="1.9" class="ow-mark-fill"/>',
+  gel: '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><circle cx="12" cy="12" r="2.2" class="ow-mark-fill"/>',
+};
+/** (x, y) : la pointe, en px du dessin. */
+function marque(a, x, y, type) {
+  const r = 8.6, cy = y - 5 - r;
+  a.raw(`<g class="ow-mark" data-degat="${type}"><path class="ow-mark-pin" d="M${f(x - 4)},${f(cy + r - 2.4)}L${f(x)},${f(y)}L${f(x + 4)},${f(cy + r - 2.4)}Z"/>`
+    + `<circle class="ow-mark-disc" cx="${f(x)}" cy="${f(cy)}" r="${r}"/>`
+    + `<g class="ow-mark-glyph" transform="translate(${f(x - 6.6)} ${f(cy - 6.6)}) scale(.55)">${MARK_GLYPH[type] || ''}</g></g>`);
+  a.ext(x - r - 1, cy - r - 1); a.ext(x + r + 1, y + 1);
+}
+
 // ---------------------------------------------------------------- bâtiments du joueur (lot 4)
 // Chaque bâtiment a un état lisible par sa forme, pas seulement sa couleur : chalet vide aux fenêtres
 // condamnées, piquets et cordeau d'un chantier possible, panier posé au coin d'une culture mûre, vieux quai troué.
@@ -275,8 +293,18 @@ function plant(stade, x, y, crop) {
   return s + `<ellipse cx="${f(x + 3)}" cy="${f(y - 1.5)}" rx="5.4" ry="4.2" class="squash-l"/><path d="M${f(x + 3)},${f(y - 5.7)}A5.4,4.2 0 0 1 ${f(x + 3)},${f(y + 2.7)}Z" class="squash-r"/><path d="M${f(x + 3)},${f(y - 5.6)}v-2.2" class="k-woodd-l" stroke-width="1.3"/><ellipse cx="${f(x + 1.4)}" cy="${f(y - 3)}" rx="1.6" ry="1.1" class="squash-t"/>`;
 }
 
-/** Parcelle du potager, emprise 1,6 × 1,6 : terre bordée de planches, et la culture à son stade ('' = rien de semé). */
-export function parcelle(stade = '') {
+// Pattes d'ours sur la terre, dans le repère de la grille (le groupe à matrice de la parcelle) : un coussinet, quatre doigts.
+function pattes(list) {
+  return list.map(([u, v]) => `<ellipse cx="${u}" cy="${v}" rx=".07" ry=".055" class="soilf-t"/>`
+    + [[-0.07, -0.08], [-0.025, -0.11], [0.025, -0.11], [0.07, -0.08]].map(([du, dv]) => `<circle cx="${(u + du * 0.9).toFixed(3)}" cy="${(v + dv * 0.9).toFixed(3)}" r=".024" class="soilf-t"/>`).join('')).join('');
+}
+
+/**
+ * Parcelle du potager, emprise 1,6 × 1,6 : terre bordée de planches, et la culture à son stade ('' = rien de semé).
+ * degat (lot I) : 'ours' (des pattes dans la terre, des plants mangés, la marque braise) ou 'gel' (givre sur la terre et
+ * les feuilles, la marque).
+ */
+export function parcelle(stade = '', degat = '') {
   const a = new Art();
   const u0 = 0.1, v0 = 0.1, s = 1.4;
   for (const [x, y] of [[0, 0], [1.6, 0], [1.6, 1.6], [0, 1.6]]) a.ext(...P(x, y));
@@ -284,23 +312,29 @@ export function parcelle(stade = '') {
   let g = `<g transform="matrix(${HW},${HH},${-HW},${HH},0,0)" stroke-width=".02">`;
   g += `<rect x="${u0}" y="${v0}" width="${s}" height="${s}" class="soil-t" stroke="none"/>`;
   for (const pv of [0.38, 0.73, 1.08, 1.43]) g += `<path d="M${u0 + 0.1},${pv - 0.1}H${u0 + s - 0.1}" class="k-soilf-t" stroke-width=".07" stroke-linecap="round"/><path d="M${u0 + 0.1},${pv}H${u0 + s - 0.1}" class="k-soilr-t" stroke-width=".1" stroke-linecap="round"/>`;
+  if (degat === 'ours') g += pattes([[1.42, 0.62], [1.25, 0.86], [1.38, 1.12], [1.2, 1.36]]);
+  if (degat === 'gel') g += `<rect x="${u0}" y="${v0}" width="${s}" height="${s}" class="ice-t" stroke="none" opacity=".42"/>`;
   g += '</g>';
   // le dessus de terre est relevé de la hauteur de la bordure
   a.raw(`<g transform="translate(0 -2.2)">${g}</g>`);
   if (stade) {
     const grid = [0.42, 0.77, 1.12, 1.47].flatMap((v) => [0.45, 0.85, 1.25].map((u) => [u, v - 0.1]));
     grid.sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
-    for (const [u, v] of grid) {
+    grid.forEach(([u, v], k) => {
       const [x, y] = P(u, v, 2.2);
-      a.raw(plant(stade, x, y, (Math.round(u * 10) + Math.round(v * 10)) % 2 ? 'courge' : 'chou'));
+      // l'ours a goûté aux plants du bord de son passage : il n'en reste que les feuilles
+      const st = degat === 'ours' && stade === 'mure' && u > 1 && k % 2 ? 'pousse' : stade;
+      a.raw(plant(st, x, y, (Math.round(u * 10) + Math.round(v * 10)) % 2 ? 'courge' : 'chou'));
+      if (degat === 'gel') a.raw(`<circle cx="${f(x - 3.4)}" cy="${f(y - 4.6)}" r="1.1" class="ice-t"/><circle cx="${f(x + 2.6)}" cy="${f(y - 6.2)}" r=".9" class="ice-t"/><circle cx="${f(x + 0.4)}" cy="${f(y - 2.4)}" r=".8" class="ice-t"/>`);
       a.ext(x - 9, y - 14);
-    }
+    });
   }
   if (stade === 'mure') {
     const [bx, by] = P(1.62, 1.5);
     a.raw(panier(bx, by, 1.05));
     a.ext(bx - 12, by - 24); a.ext(bx + 12, by + 4);
   }
+  if (degat) { const [mx, my] = P(0.8, 0.8, 20); marque(a, mx, my, degat); }
   const r = a.done(2);
   r.shadow = null;
   return r;
@@ -345,23 +379,36 @@ export function serre(stade = '') {
   return a.done(2);
 }
 
-/** Éolienne, emprise 1 × 1 : mât, nacelle et rotor à trois pales (tourne quand l'île est éveillée). */
-export function eolienne() {
+/**
+ * Éolienne, emprise 1 × 1 : mât, nacelle et rotor à trois pales (tourne quand l'île est éveillée). degat 'panne' (lot I) :
+ * le rotor est arrêté, une pale cassée net, la trappe de la nacelle ouverte, et la marque braise au pied du mât.
+ */
+export function eolienne(degat = '') {
+  const panne = degat === 'panne';
   const a = new Art();
   a.box(0.3, 0.3, 0.4, 0.4, 0, 3, 'stoned', { rim: true });
   a.prism(0.5, 0.5, 0.07, 3, 62, 'metal', 6);
   a.box(0.42, 0.36, 0.16, 0.3, 64, 6, 'metal', { rim: true });
+  if (panne) a.poly([[0.58, 0.42, 65], [0.58, 0.56, 65], [0.58, 0.56, 69], [0.58, 0.42, 69]], 'wooddk-r'); // trappe ouverte
   const [hx, hy] = P(0.5, 0.68, 67);
   let blades = '';
   for (let k = 0; k < 3; k++) {
-    const t = (k / 3) * Math.PI * 2 - Math.PI / 2;
-    const c = Math.cos(t), s = Math.sin(t), L = 30, W = 3.2;
+    const t = (k / 3) * Math.PI * 2 - Math.PI / 2 + (panne ? 0.5 : 0);
+    const c = Math.cos(t), s = Math.sin(t), L = panne && k === 2 ? 12 : 30, W = 3.2;
     const tip = [hx + c * L, hy + s * L];
     const p1 = [hx - s * W, hy + c * W], p2 = [hx + c * L * 0.3 - s * W * 1.1, hy + s * L * 0.3 + c * W * 1.1];
-    blades += `<polygon points="${pts([p1, p2, tip, [hx + s * 1, hy - c * 1]])}" class="${k === 1 ? 'metal-r' : 'metal-l'}"/>`;
+    // pale cassée : un bout franc, en dents, au lieu de la pointe
+    const bout = panne && k === 2 ? [[tip[0] - s * 2.6, tip[1] + c * 2.6], [tip[0] + c * 2, tip[1] + s * 2], tip] : [tip];
+    blades += `<polygon points="${pts([p1, p2, ...bout, [hx + s * 1, hy - c * 1]])}" class="${k === 1 ? 'metal-r' : 'metal-l'}"/>`;
   }
-  a.raw(`<g class="ow-rotor" style="transform-origin:${f(hx)}px ${f(hy)}px">${blades}<circle cx="${f(hx)}" cy="${f(hy)}" r="3.2" class="tech-t"/></g>`);
+  a.raw(`<g${panne ? '' : ' class="ow-rotor"'} style="transform-origin:${f(hx)}px ${f(hy)}px">${blades}<circle cx="${f(hx)}" cy="${f(hy)}" r="3.2" class="tech-t"/></g>`);
   a.ext(hx - 31, hy - 31); a.ext(hx + 31, hy + 31);
+  if (panne) {
+    // le bout de pale tombé au pied du mât
+    a.poly([[0.74, 0.5, 0.6], [0.98, 0.62, 0.6], [0.98, 0.7, 0.6], [0.76, 0.58, 0.6]], 'metal-t');
+    const [mx, my] = P(0.22, 0.86, 8);
+    marque(a, mx, my, 'panne');
+  }
   a.castS(hx, hy, 67); a.cast(0.45, 0.45, 0); a.cast(0.55, 0.55, 0);
   return a.done(2);
 }
@@ -466,6 +513,84 @@ export function quai(etat = '') {
   return r;
 }
 
+// ---------------------------------------------------------------- imprévus heureux du jour (lot I)
+
+/** Orignal qui traverse la route, emprise 0,9 × 0,9 : il marche vers l'avant (+v), panache clair, pattes grises. */
+export function orignal() {
+  const a = new Art();
+  const u = 0.34, du = 0.22, v = 0.12, dv = 0.56, zb = 12, H = 10;
+  // pattes du fond, puis le corps, la bosse du garrot, les pattes de devant
+  for (const [pu, pv] of [[u + 0.04, v + 0.06], [u + du - 0.03, v + 0.06]]) a.seg([pu, pv, 0], [pu, pv, zb + 1], 'k-stoned-r', 2.4);
+  a.box(u, v, du, dv, zb, H, 'wooddk', { rim: true });
+  a.box(u + 0.02, v + dv - 0.2, du - 0.04, 0.18, zb + H, 3.2, 'wooddk', { rim: true });
+  for (const [pu, pv] of [[u + 0.04, v + dv - 0.08], [u + du - 0.03, v + dv - 0.08]]) a.seg([pu, pv, 0], [pu, pv, zb + 1], 'k-stoned-l', 2.4);
+  a.seg([u + du / 2, v, zb + H - 2], [u + du / 2, v - 0.06, zb + H - 5], 'k-wooddk-l', 1.6); // queue
+  // cou, tête basse au long museau, cloche sous la gorge
+  const hv = v + dv;
+  a.box(u + 0.05, hv - 0.04, du - 0.1, 0.16, zb + 5, 9, 'wooddk', { rim: true });
+  a.box(u + 0.06, hv + 0.1, du - 0.12, 0.2, zb + 3, 7, 'woodd', { rim: true });
+  a.seg([u + du / 2, hv + 0.06, zb + 4], [u + du / 2, hv + 0.08, zb - 1.5], 'k-wooddk-l', 1.8);
+  a.poly([[u + 0.08, hv + 0.3, zb + 4.6], [u + du - 0.08, hv + 0.3, zb + 4.6], [u + du - 0.08, hv + 0.3, zb + 6.4], [u + 0.08, hv + 0.3, zb + 6.4]], 'wooddk-l'); // naseaux
+  // panache : deux larges palettes claires de part et d'autre de la tête, à trois andouillers
+  const zt = zb + 13, av = hv + 0.05;
+  const palette = (s) => { // s = -1 : côté gauche, +1 : côté droit
+    const b = s < 0 ? u + 0.05 : u + du - 0.05;
+    const x = (d) => b + s * d;
+    return [[x(0), av, zt - 2], [x(0.3), av, zt], [x(0.36), av, zt + 7], [x(0.29), av, zt + 4.6], [x(0.26), av, zt + 9.5], [x(0.19), av, zt + 5.4], [x(0.14), av, zt + 9], [x(0.08), av, zt + 4], [x(0), av, zt + 2]];
+  };
+  a.poly(palette(-1), 'hay-l');
+  a.poly(palette(1), 'hay-r');
+  a.seg([u + 0.04, av + 0.02, zt - 3.4], [u + 0.04, av + 0.03, zt - 0.6], 'k-wooddk-l', 1.6); // oreilles
+  a.seg([u + du - 0.04, av + 0.02, zt - 3.4], [u + du - 0.04, av + 0.03, zt - 0.6], 'k-wooddk-r', 1.6);
+  return a.done(2);
+}
+
+// Bûche couchée le long de u, d'un bout à l'autre ; ses faces visibles (dessus, face +v), puis le bout coupé (face +u).
+function buche(a, u0, u1, vc, zc) {
+  const rv = 0.085, rz = 3.2, n = 8;
+  const ring = Array.from({ length: n }, (_, k) => { const t = (k / n) * Math.PI * 2; return [vc + Math.cos(t) * rv, zc + Math.sin(t) * rz, Math.cos(t), Math.sin(t)]; });
+  for (let k = 0; k < n; k++) {
+    const p = ring[k], q = ring[(k + 1) % n];
+    const nv = (p[2] + q[2]) / 2, nz = (p[3] + q[3]) / 2;
+    if (nv <= -0.2 && nz <= 0.2) continue; // côté du fond ou dessous
+    a.poly([[u0, p[0], p[1]], [u1, p[0], p[1]], [u1, q[0], q[1]], [u0, q[0], q[1]]], nz > 0.5 ? 'woodd-t' : 'woodd-l');
+  }
+  a.poly(ring.map(([vv, zz]) => [u1, vv, zz]), 'woodb-r');
+  a.poly(ring.map(([vv, zz]) => [u1, vc + (vv - vc) * 0.45, zc + (zz - zc) * 0.45]), 'hay-r', ' opacity=".7"'); // cerne du cœur
+}
+
+/** Trouvaille en forêt : pile de bûches à l'orée, emprise 0,85 × 0,6. */
+export function bois() {
+  const a = new Art();
+  for (const [vc, zc] of [[0.2, 3.2], [0.37, 3.2], [0.54, 3.2], [0.285, 9.1], [0.455, 9.1], [0.37, 15]]) buche(a, 0.08, 0.72, vc, zc);
+  a.cast(0.08, 0.1, 0); a.cast(0.72, 0.1, 0); a.cast(0.72, 0.62, 0); a.cast(0.08, 0.62, 0); a.cast(0.4, 0.37, 18);
+  // la hache plantée dans une bûche du dessus, manche vers le ciel
+  a.seg([0.62, 0.37, 18], [0.66, 0.42, 30], 'k-woodd-l', 1.7);
+  a.poly([[0.6, 0.34, 17], [0.64, 0.3, 17], [0.64, 0.3, 21], [0.6, 0.34, 21]], 'metal-r');
+  return a.done(2);
+}
+
+/** Bonne pêche : une caisse de poissons au bout de la route du quai, emprise 0,5 × 0,5, filet posé dessus. */
+export function poissons() {
+  const a = new Art();
+  const u = 0.05, v = 0.06, du = 0.4, dv = 0.36, H = 8;
+  a.box(u, v, du, dv, 0, H, 'woodb', { rim: true });
+  a.seg([u, v + dv, H * 0.5], [u + du, v + dv, H * 0.5], 'k-woodd-l', 0.7);
+  a.seg([u + du, v, H * 0.5], [u + du, v + dv, H * 0.5], 'k-woodd-r', 0.7);
+  // poissons tête-bêche dans la caisse : corps argent, dos de lac, queue fourchue
+  for (const [pu, pv, dir] of [[u + 0.12, v + 0.1, 1], [u + 0.22, v + 0.2, -1], [u + 0.14, v + 0.26, 1]]) {
+    const [x, y] = P(pu, pv, H + 1);
+    const w = 8 * dir;
+    a.raw(`<path d="M${f(x - w)},${f(y)}Q${f(x)},${f(y - 4)} ${f(x + w)},${f(y)}Q${f(x)},${f(y + 3.4)} ${f(x - w)},${f(y)}Z" class="waterl-t"/>`
+      + `<path d="M${f(x - w * 0.6)},${f(y - 1.4)}Q${f(x)},${f(y - 3.6)} ${f(x + w * 0.7)},${f(y - 0.8)}" class="k-waterd-l" stroke-width="1.1" fill="none"/>`
+      + `<path d="M${f(x - w)},${f(y)}l${f(-3.6 * dir)},-2.6v5.2z" class="waterd-l"/><circle cx="${f(x + w * 0.66)}" cy="${f(y - 0.6)}" r=".8" class="wooddk-t"/>`);
+    a.ext(x - 13, y - 5); a.ext(x + 13, y + 4);
+  }
+  // un coin de filet qui pend sur le flanc
+  a.raw(`<path d="${[0.1, 0.18, 0.26, 0.34].map((uu) => { const [x1, y1] = P(u + uu, v + dv, H); const [x2, y2] = P(u + uu + 0.04, v + dv, 2); return `M${f(x1)},${f(y1)}L${f(x2)},${f(y2)}`; }).join('')}" class="k-rope-l" stroke-width=".8" fill="none"/>`);
+  return a.done(2);
+}
+
 // ---------------------------------------------------------------- décor
 
 export function epinette(seed = 1, scale = 1) {
@@ -558,9 +683,12 @@ export function artFor(e) {
     case 'etabli': return etabli();
     case 'atelier': return atelier(e.variant === 'abime');
     case 'chalet': return chalet(e.variant || '');
-    case 'parcelle': return parcelle(e.variant || '');
+    case 'parcelle': return parcelle(e.variant || '', e.degat || '');
     case 'serre': return serre(e.variant || '');
-    case 'eolienne': return eolienne();
+    case 'eolienne': return eolienne(e.degat || '');
+    case 'orignal': return orignal();
+    case 'bois': return bois();
+    case 'poissons': return poissons();
     case 'grenier': return grenier();
     case 'quai': return quai(e.variant || '');
     case 'piquets': return piquets(e.w || 1, e.h || 1);

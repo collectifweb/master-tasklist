@@ -8,7 +8,7 @@ const ART = new Map();
 // px monde : 44 px à l'écran dès que les objets deviennent touchables (échelle ≥ 0,69, voir camera.js)
 const MIN_HIT = 64;
 function artKey(e) {
-  return [e.model, e.variant ?? '', e.seed ?? '', e.m ?? '', e.s ?? '', e.end ? 1 : ''].join('|');
+  return [e.model, e.variant ?? '', e.seed ?? '', e.m ?? '', e.s ?? '', e.end ? 1 : '', e.degat ?? ''].join('|');
 }
 function cachedArt(e) {
   const k = artKey(e);

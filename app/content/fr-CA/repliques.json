@@ -154,6 +154,94 @@
         {"id": "marchand.arrive.05", "voix": "fanal", "texte": "Le marchand est arrivé par le lac. J’ai serré l’amarre, par habitude."}
       ]
     },
+    "imprevu.aurore": {
+      "quand": "Bon imprévu (lot I) : une aurore boréale passe au-dessus de l’île. Dit une fois par appareil, à l’ouverture où il arrive, après l’accueil et le mot du marchand. Ni chiffre ni ressource : le gain est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.aurore.01", "voix": "fanal", "texte": "Une aurore en plein jour. Les panneaux solaires n’en reviennent pas."},
+        {"id": "imprevu.aurore.02", "voix": "fanal", "texte": "Des rubans verts au-dessus de la forêt. J’ai posé ma pelle pour regarder."},
+        {"id": "imprevu.aurore.03", "voix": "fanal", "texte": "Le ciel fait des vagues vertes. Les batteries du village ronronnent."},
+        {"id": "imprevu.aurore.04", "voix": "fanal", "texte": "Une aurore boréale! Mon fanal paraît bien pâle à côté."},
+        {"id": "imprevu.aurore.05", "voix": "fanal", "texte": "Lève les yeux une seconde. Le ciel danse au-dessus de l’Orée."}
+      ]
+    },
+    "imprevu.peche": {
+      "quand": "Bon imprévu (lot I) : bonne pêche, une caisse de poissons au bout de la route du quai. Même moment que imprevu.aurore. La réserve pleine se dit dans l’annonce, pas ici.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.peche.01", "voix": "fanal", "texte": "Le lac a été généreux. Une caisse pleine, et pas un hameçon de perdu."},
+        {"id": "imprevu.peche.02", "voix": "fanal", "texte": "Quelqu’un a eu la main heureuse au lac. Ça sent le poisson frais sur la route."},
+        {"id": "imprevu.peche.03", "voix": "fanal", "texte": "Des truites! Je les ai comptées deux fois, juste pour le plaisir."},
+        {"id": "imprevu.peche.04", "voix": "fanal", "texte": "Le lac nous fait un cadeau. On le prend, avec un merci."},
+        {"id": "imprevu.peche.05", "voix": "fanal", "texte": "Une caisse de poissons attend au bout de la route. Le quai a de la visite."}
+      ]
+    },
+    "imprevu.trouvaille": {
+      "quand": "Bon imprévu (lot I) : trouvaille en forêt, une pile de bois à l’orée. Même moment que imprevu.aurore.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.trouvaille.01", "voix": "fanal", "texte": "Une pile de bois sec à l’orée. Quelqu’un l’avait oubliée, on la ramasse."},
+        {"id": "imprevu.trouvaille.02", "voix": "fanal", "texte": "Trouvé en forêt : de belles bûches, bien cordées. La forêt nous dépanne."},
+        {"id": "imprevu.trouvaille.03", "voix": "fanal", "texte": "Le vent a couché un vieil arbre mort. Ça fera du bon bois."},
+        {"id": "imprevu.trouvaille.04", "voix": "fanal", "texte": "J’ai suivi un sentier en forêt. Au bout : une pile de bois, prête à servir."},
+        {"id": "imprevu.trouvaille.05", "voix": "fanal", "texte": "La lisière nous laisse du bois. On dit merci et on le rentre."}
+      ]
+    },
+    "imprevu.orignal": {
+      "quand": "Bon imprévu (lot I) : un orignal traverse le village. Il ne rapporte rien, c’est juste beau. Même moment que imprevu.aurore.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.orignal.01", "voix": "fanal", "texte": "Un orignal traverse la route des Champs. Personne ne bouge, c’est lui qui décide."},
+        {"id": "imprevu.orignal.02", "voix": "fanal", "texte": "Chut. Un orignal. Il passe, il regarde, il s’en va. C’est tout, et c’est beaucoup."},
+        {"id": "imprevu.orignal.03", "voix": "fanal", "texte": "Un orignal en visite! Il a regardé mon fanal, pas impressionné."},
+        {"id": "imprevu.orignal.04", "voix": "fanal", "texte": "Grosse bête, beau panache. L’orignal prend son temps, on fait pareil."},
+        {"id": "imprevu.orignal.05", "voix": "fanal", "texte": "Un orignal sur la route. Rien à faire, juste à regarder."}
+      ]
+    },
+    "imprevu.panne": {
+      "quand": "Mauvais imprévu (lot I) : panne d’éolienne. Même moment que imprevu.aurore. Rassure : tout se répare, rien ne presse, ni prix ni nombre de jours (ils sont dans la fiche et l’annonce).",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.panne.01", "voix": "fanal", "texte": "Une pale de l’éolienne a lâché. Rien de grave : elle se répare, ou elle attend."},
+        {"id": "imprevu.panne.02", "voix": "fanal", "texte": "L’éolienne s’est arrêtée. Le vent a forcé un peu fort. On s’en occupe quand ça te va."},
+        {"id": "imprevu.panne.03", "voix": "fanal", "texte": "Petite panne à l’éolienne. Une quête à la maison la remettrait en route, en passant."},
+        {"id": "imprevu.panne.04", "voix": "fanal", "texte": "L’éolienne fait la grève. Elle reprendra d’elle-même dans quelques jours, sinon avant."},
+        {"id": "imprevu.panne.05", "voix": "fanal", "texte": "Une pale cassée, ça arrive aux meilleures. Pas de presse."}
+      ]
+    },
+    "imprevu.ours": {
+      "quand": "Mauvais imprévu (lot I) : un ours au potager, sur une parcelle mûre. Même moment et même ton que imprevu.panne.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.ours.01", "voix": "fanal", "texte": "Un ours a trouvé le potager. Il a bon goût, faut lui donner ça."},
+        {"id": "imprevu.ours.02", "voix": "fanal", "texte": "Il y a un ours aux Champs. Il goûte à la récolte, puis il repartira."},
+        {"id": "imprevu.ours.03", "voix": "fanal", "texte": "Visite d’un ours au potager. Rien de cassé, juste un peu moins de légumes."},
+        {"id": "imprevu.ours.04", "voix": "fanal", "texte": "Un ours dans les courges. Je l’ai salué de loin, de très loin."},
+        {"id": "imprevu.ours.05", "voix": "fanal", "texte": "Un ours fait le tour du potager. Il connaît le chemin du bois."}
+      ]
+    },
+    "imprevu.gel": {
+      "quand": "Mauvais imprévu (lot I) : gel précoce sur une culture pas encore mûre (septembre et octobre). Même moment et même ton que imprevu.panne.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.gel.01", "voix": "fanal", "texte": "Gel précoce cette nuit. Les feuilles ont blanchi, la terre se repose une journée."},
+        {"id": "imprevu.gel.02", "voix": "fanal", "texte": "Un coup de froid sur le potager. Ça repousse demain, sans rancune."},
+        {"id": "imprevu.gel.03", "voix": "fanal", "texte": "Du givre sur les plants. Moi, j’ai l’habitude du froid. Eux, moins."},
+        {"id": "imprevu.gel.04", "voix": "fanal", "texte": "L’automne a mordu le potager. Une bâche, ou une journée de patience."},
+        {"id": "imprevu.gel.05", "voix": "fanal", "texte": "Les plants ont pris froid. Ils se remettent, c’est des durs."}
+      ]
+    },
+    "imprevu.regle": {
+      "quand": "Un dégât est réglé : réparé en payant (geste « Réparer », « Chasser l’ours », « Couvrir la culture »), ou par une quête payée du bon domaine (prend alors la place de quest.done.*, après permis.gagne et semaine.tenue). Lot I.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "imprevu.regle.01", "voix": "fanal", "texte": "Réglé. Le village reprend son souffle."},
+        {"id": "imprevu.regle.02", "voix": "fanal", "texte": "Voilà, c’est arrangé. Comme si de rien n’était."},
+        {"id": "imprevu.regle.03", "voix": "fanal", "texte": "Et hop, une affaire de réglée. J’ai tenu la lampe."},
+        {"id": "imprevu.regle.04", "voix": "fanal", "texte": "C’est fait. Je le note dans mon carnet des beaux coups."},
+        {"id": "imprevu.regle.05", "voix": "fanal", "texte": "Problème réglé, on passe à autre chose. J’aime ce rythme-là."}
+      ]
+    },
     "famille.arrive": {
       "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,

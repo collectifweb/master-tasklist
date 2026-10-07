@@ -11,6 +11,7 @@ export function situationFor(action, params, events, task) {
     if (has('sans-gain')) return null;
     if (events.some((e) => e.type === 'permis' && e.source === 'jours')) return 'permis.gagne';
     if (has('semaine-tenue')) return 'semaine.tenue';
+    if (has('reparation')) return 'imprevu.regle'; // la quête règle aussi un dégât de son domaine (lot I)
     if (lengthOf >= 6) return 'quest.done.big';
     if (events.some((e) => e.type === 'reward' && e.source === 'deja-faite')) return 'quest.already_done';
     return lengthOf >= 4 ? 'quest.done.medium' : 'quest.done.short';
@@ -26,6 +27,7 @@ export function situationFor(action, params, events, task) {
     case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
     // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
     case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;
+    case 'reparer': return 'imprevu.regle';
     default: return null;
   }
 }

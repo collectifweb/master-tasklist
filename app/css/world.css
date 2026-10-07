@@ -243,6 +243,32 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(1.2px); }
 }
+/* aurore boréale (imprévu heureux, lot I) : rubans verts au-dessus du fond de l'île, sous les objets ; ils ondulent
+   seulement quand l'île est éveillée, d'une distance multipliée par --motion */
+.ow-aurore { position: absolute; z-index: 2; pointer-events: none; }
+.ow-aurore[hidden] { display: none; }
+.ow-aurore svg { display: block; overflow: visible; }
+.ow-aur-a { stop-color: var(--sprout-t); }
+.ow-aur-b { stop-color: var(--glass-t); }
+.ow-aur-hem { fill: none; stroke: var(--glass-t); stroke-width: 1.6; stroke-linecap: round; opacity: 0.6; }
+.ow-aur-streak { fill: none; stroke: var(--waterl-t); stroke-width: 2.4; stroke-linecap: round; opacity: 0.22; }
+.ow-aurore-r {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: ow-aurore 12s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.ow-aurore-r.r2 { animation-duration: 15s; animation-delay: -5s; }
+.ow-aurore-r.r3 { animation-duration: 10s; animation-delay: -2s; }
+@keyframes ow-aurore {
+  0%, 100% { transform: translateX(0) skewX(0deg); }
+  50% { transform: translateX(calc(8px * var(--motion, 1))) skewX(calc(-4deg * var(--motion, 1))); }
+}
+/* marque d'un dégât (lot I) : disque braise sur sa pointe, picto papier ; le nom de l'objet dit le dégât en toutes lettres */
+.ow-mark-pin { fill: var(--c-ember-face); }
+.ow-mark-disc { fill: var(--c-ember); stroke: var(--c-paper); stroke-width: 1.4; }
+.ow-mark-glyph { fill: none; stroke: var(--c-paper); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ow-mark-glyph .ow-mark-fill { fill: var(--c-paper); stroke: none; }
 /* ombre du panier d'une culture mûre */
 .ow-basket-shadow { fill: rgb(66 43 25 / 0.18); stroke: none; }
 
@@ -501,7 +527,7 @@
 
 /* ---------------------------------------------------------------- ambiance : seulement après une activité,
    jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge) {
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-aurore-r) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }

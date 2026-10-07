@@ -99,8 +99,9 @@ export function createWorldPlan(container, options = {}) {
 
   function render(game, tasks = [], ledger = []) {
     const v = deriveView(game, tasks, { now: nowOf(), anchors: options.anchors, ledger });
-    // résumé : les caisses d'échéance (rien quand il n'y en a pas)
+    // résumé : les caisses d'échéance, puis l'imprévu heureux du jour que l'île montre (rien quand il n'y a ni l'un ni l'autre)
     const sum = v.crates.length ? [v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length })] : [];
+    for (const id of v.imprevus || []) sum.push(t(`monde.plan.imprevu.${id}`));
     const sk = sum.join('|');
     if (last.summary !== sk) {
       last.summary = sk;

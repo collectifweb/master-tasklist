@@ -147,6 +147,18 @@ export const CRATE_SPOTS = [[9.25, 5.5], [9.85, 5.5], [10.45, 5.5], [10.8, 6.45]
 /** Fanal, vieux robot de déneigement, sur la Place. */
 export const FANAL_HOME = [6.85, 6.55];
 
+/**
+ * Imprévus heureux du jour (lot I) : où l'île les montre, sur des cases que le décor laisse libres et qu'aucune plaque ne
+ * couvre. L'orignal traverse la route des Champs devant le chalet du fond, la caisse de poissons attend au bout de la route
+ * du quai, la pile de bois trouvée en forêt est rangée près du grenier (la lisière du fond est sous les plaques de
+ * l'École et du Garage, ou derrière le grenier). L'aurore n'a pas de case : elle passe dans le ciel (world.js).
+ */
+export const IMPREVU_SPOTS = {
+  orignal: { model: 'orignal', r: 5.35, c: 1.7, h: 0.9, w: 0.9 },
+  peche: { model: 'poissons', r: 11.0, c: 4.9, h: 0.5, w: 0.5 },
+  trouvaille: { model: 'bois', r: 3.15, c: 6.7, h: 0.6, w: 0.85 },
+};
+
 // ---------------------------------------------------------------- décor (arbres, buissons, rochers)
 // Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe.
 function isFree(u, v) {

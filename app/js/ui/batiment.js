@@ -7,10 +7,14 @@
 // Quand le marchand est au quai (core/visiteurs.js), la fiche du quai devient son comptoir : une ligne par offre, ce
 // que tu donnes → ce que tu reçois, et « Échanger » (bouton secondaire, data-geste="echanger"), le cadenas et la raison
 // du cœur, ou « Fait cette semaine ». Pas de geste principal : le pied de la fiche reste caché.
+// Un mauvais imprévu (core/imprevus.js, lot I) se lit dans « Maintenant » : ce qui s'est passé, ce que ça change, puis
+// « Réparer » (« Chasser l'ours », « Couvrir la culture ») et son prix, en bouton secondaire (data-geste="reparer"), ou le
+// cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
+// Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir.
 import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
-  recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger,
+  recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, degatDe, refusReparer,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -48,9 +52,41 @@ export function ressource(obj) {
   return { res: RES[k], n, nom, texte: `${n} ${nom}` };
 }
 
+const DEGAT_ICON = { panne: 'cle', ours: 'patte', gel: 'flocon' };
+const domaine = (type) => t(`quartier.${IMPREVUS.mauvais[type].quartier}.domain`);
+
+/**
+ * Dégât d'un mauvais imprévu sur ce bâtiment : en cours { id, type, titre, effet, geste, cout, label, raison, quete, seul,
+ * voie (picto du quartier de la quête qui le règle) }, réglé aujourd'hui { id, type, titre, fini }, ou null.
+ */
+function degatModel(game, id, now) {
+  const d = degatDe(game, id, now);
+  if (d) {
+    const def = IMPREVUS.mauvais[d.type];
+    const geste = t(`bat.degat.${d.type}.geste`);
+    const cout = coutText(def.reparer);
+    return {
+      id: d.id, type: d.type, fini: null,
+      titre: t(`bat.degat.${d.type}.titre`),
+      effet: t(`bat.degat.${d.type}.effet`, { n: IMPREVUS.mauvais.ours.mange }),
+      geste, cout, label: t('bat.degat.geste.label', { geste, cout }),
+      raison: refusReparer(game, { id: d.id }, now),
+      quete: t('bat.degat.quete', { domaine: domaine(d.type) }), voie: def.quartier,
+      seul: t(`bat.degat.seul.${d.joursRestants === 1 ? 'one' : 'other'}`, { n: d.joursRestants }),
+    };
+  }
+  const today = gameDay(now);
+  const f = (Array.isArray(game.degats) ? game.degats : []).find((x) => x && x.cible === id && x.fin === today && Object.hasOwn(IMPREVUS.mauvais, x.type));
+  if (!f) return null;
+  const fini = f.par === 'quete' ? t('bat.degat.fait.quete', { domaine: domaine(f.type) })
+    : f.par === 'recolte' ? t('bat.degat.ours.recolte') : t(`bat.degat.${f.type}.fait`);
+  return { id: f.id, type: f.type, titre: t(`bat.degat.${f.type}.titre`), fini };
+}
+
 /**
  * Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null,
- * comptoir: [{ id, donne, recoit, prise, raison }] | null } (comptoir : le quai debout, quand le marchand y est).
+ * comptoir: [{ id, donne, recoit, prise, raison }] | null, degat } (comptoir : le quai debout, quand le marchand y est ;
+ * degat : voir degatModel).
  */
 export function batimentModel(c, id) {
   const type = typeOf(id);
@@ -66,7 +102,7 @@ export function batimentModel(c, id) {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
       n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
     }),
-    maintenant: '', raison: null, geste: null, comptoir: null,
+    maintenant: '', raison: null, geste: null, comptoir: null, degat: bati ? degatModel(game, id, now) : null,
   };
   if (!bati) {
     m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
@@ -95,7 +131,8 @@ export function batimentModel(c, id) {
     m.raison = refusAccueillir(game);
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {
-    m.maintenant = eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
+    m.maintenant = degatDe(game, id, now) ? t('bat.eolienne.maintenant.panne')
+      : eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
   } else if (type === 'quai') {
     const v = visiteurDeLaSemaine(game, now);
     if (v) {
@@ -136,9 +173,22 @@ function comptoirHtml(offres) {
     <ul class="comptoir-offres" role="list">${offres.map(offreHtml).join('')}</ul></section>`;
 }
 
+// Le dégât dans « Maintenant » : titre et picto braise, ce que ça change, le geste et son prix (ou le cadenas et la raison),
+// les deux autres voies. Réglé : une ligne cochée, à la même place (un second toucher n'y trouve rien à refaire).
+function degatHtml(d) {
+  if (d.fini) return `<div class="degat" data-degat="${d.type}" data-etat="fait"><p class="degat-fait" id="degat-etat" tabindex="-1">${icon('check')}<span>${esc(d.fini)}</span></p></div>`;
+  return `<div class="degat" data-degat="${d.type}" data-etat="${d.raison ? 'verrou' : 'libre'}">
+    <p class="degat-titre">${icon(DEGAT_ICON[d.type])}<span>${esc(d.titre)}</span></p>
+    <p class="degat-effet">${esc(d.effet)}</p>
+    <button class="btn btn--small degat-go" type="button" data-action="bat-geste" data-geste="reparer"
+      data-params="${esc(JSON.stringify({ id: d.id }))}" aria-label="${esc(d.label)}"${d.raison ? ' aria-disabled="true" aria-describedby="degat-raison"' : ''}>${icon(d.raison ? 'lock' : DEGAT_ICON[d.type])}<span>${esc(d.geste)}</span><span class="degat-prix">${esc(d.cout)}</span></button>
+    ${d.raison ? `<p class="degat-raison" id="degat-raison">${icon('lock')}<span>${esc(d.raison)}</span></p>` : ''}
+    <ul class="degat-voies" role="list"><li>${icon(d.voie)}<span>${esc(d.quete)}</span></li><li>${icon('clock')}<span>${esc(d.seul)}</span></li></ul></div>`;
+}
+
 function bodyHtml(m) {
   const line = (k, html) => `<div class="help-line"><dt>${esc(t(`bat.fiche.${k}`))}</dt><dd>${html}</dd></div>`;
-  const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}`;
+  const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}${m.degat ? degatHtml(m.degat) : ''}`;
   return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.comptoir ? comptoirHtml(m.comptoir) : ''}`;
 }
 
@@ -178,12 +228,15 @@ function fill(dlg, m) {
   const th = $('.bat-thumb', dlg);
   setHtml(th, art || '');
   th.hidden = !art;
-  // une offre prise ou devenue impossible change de bouton : le focus reste sur sa ligne (bouton, ou « Fait cette semaine »)
+  // une offre prise ou devenue impossible change de bouton : le focus reste sur sa ligne (bouton, ou « Fait cette semaine ») ;
+  // de même pour un dégât réglé (bouton, ou la ligne cochée qui le remplace)
   const body = $('.bat-body', dlg);
   const offre = body.contains(document.activeElement) ? document.activeElement.closest('.offre')?.dataset.offre : null;
+  const degat = body.contains(document.activeElement) && !!document.activeElement.closest('.degat');
   setHtml(body, bodyHtml(m));
   const li = offre && !body.contains(document.activeElement) ? $(`.offre[data-offre="${offre}"]`, body) : null;
   if (li) ($('.offre-go', li) || $('.offre-fait', li))?.focus();
+  if (degat && !body.contains(document.activeElement)) ($('.degat-go', body) || $('.degat-fait', body))?.focus();
   const foot = $('.bat-foot', dlg);
   const had = foot.contains(document.activeElement);
   setHtml(foot, footHtml(m));
