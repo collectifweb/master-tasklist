@@ -24,7 +24,7 @@ import { figerBilans } from './recycling.js';
 import { produireEolienne, reprendreEolienne } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
-import { suivreImprevus, reparerParQuete } from './imprevus.js';
+import { suivreImprevus, reparerParQuete, rouvrirParQuete } from './imprevus.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -425,6 +425,7 @@ export function remballerQuest(tasks, game, ledger, params, now) {
   const reverse = buildReverseEntry(ctx.ledger, t.id, occ, now);
   ctx.append(reverse, 'reverse'); // −1 tâche au quartier (economy.js)
   reprendreEolienne(ctx, reverse.day); // le jour du gain redevient sans quête payée : l'éolienne rend son Énergie
+  rouvrirParQuete(ctx, t.id, reverse.day); // le dégât que cette quête avait réglé revient (imprevus.js)
   if (recurring) {
     const p = t.lastDone.prev;
     ctx.put({ ...t, ...p, status: 'todo', occurrence: occ, doneAt: null, lastDone: null });

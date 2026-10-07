@@ -51,8 +51,8 @@ async function call(method, payload) {
 /**
  * Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas, et un onglet resté
  * en version 3, qui achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue. Version 5 (imprévus, lot I) :
- * un geste mis en file hors ligne par la version 4 est recalculé avant l'envoi (une quête payée pendant une panne ne fait
- * pas tourner l'éolienne et la répare si elle est du bon domaine) ; l'API accepte encore la version 4 (MIN_CLIENT).
+ * l'API refuse la version 4, qui ferait tourner une éolienne en panne, récolterait sans la part de l'ours et effacerait la
+ * reprise ; son geste reste en file et l'onglet rechargé le recalcule avant l'envoi (`withoutStaleBodies`).
  */
 export const CLIENT_VERSION = 5;
 

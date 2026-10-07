@@ -6,9 +6,10 @@
 // ne frappe que le jour prévu, à l'ouverture, jamais à cause d'une absence. Rien avant la fin des premiers pas.
 // Chaque créneau tiré s'inscrit au registre sous imprevu:{jour prévu} (clé unique : deux appareils ne le paient jamais
 // deux fois) ; un bon y porte son gain. Un mauvais pose aussi un dégât dans la partie :
-//   game.degats = [{ id, type, cible, le, jusqua, semeLe? (gel), fin?, par? ('paiement' | 'quete' | 'recolte') }]
+//   game.degats = [{ id, type, cible, le, jusqua, semeLe? (gel), fin?, par? ('paiement' | 'quete' | 'recolte'), taskId? (quete) }]
 // Un dégât agit tant que le jour est avant `jusqua` et qu'il n'est pas fini ; il se règle en payant (reparer), par une
-// quête payée du bon domaine (reparerParQuete, appelée par quests.js), ou tout seul à `jusqua`, sans rien écrire. Il ne
+// quête payée du bon domaine (reparerParQuete, appelée par quests.js ; « Remballer » cette quête le rouvre), ou tout seul
+// à `jusqua`, sans rien écrire. Il ne
 // retire jamais de ressource et ne touche jamais une tâche : l'éolienne ne produit plus, l'ours mange une part de la
 // récolte, le gel arrête la pousse (batiments.js lit ces effets).
 // Montants réglés par la simulation (tests/core/simulation.test.mjs, joueur (i), mesuré le 6 octobre 2026) : à 3 par bon
@@ -162,8 +163,30 @@ export function reparerParQuete(ctx, task) {
   const regles = degatsDe(ctx.game).filter((d) => actif(d, ctx.day) && IMPREVUS.mauvais[d.type].quartier === q);
   if (!regles.length) return;
   const ids = new Set(regles.map((d) => d.id));
-  ctx.game = { ...ctx.game, degats: list(ctx.game.degats).map((d) => (ids.has(d.id) ? { ...d, fin: ctx.day, par: 'quete' } : d)) };
+  ctx.game = { ...ctx.game, degats: list(ctx.game.degats).map((d) => (ids.has(d.id) ? { ...d, fin: ctx.day, par: 'quete', taskId: task.id } : d)) };
   for (const d of regles) ctx.events.push({ type: 'reparation', degat: d.id, imprevu: d.type, cible: d.cible, par: 'quete', taskId: task.id });
+}
+
+/**
+ * « Remballer » la quête qui avait réglé un dégât le jour de son gain (remballerQuest, quests.js) : le dégât revient, comme
+ * le gain s'en va, s'il a encore de quoi agir (l'ours et le gel, sur la même culture en terre). Un dégât réglé en payant ou
+ * par une autre quête ne bouge pas. Événement { type: 'degat-rouvert', degat, imprevu, cible } par dégât rouvert.
+ */
+export function rouvrirParQuete(ctx, taskId, day) {
+  const terre = new Map(list(ctx.game.parcelles).map((p) => [p.id, p.semeLe]));
+  const encore = (d) => d.type === 'panne' || (terre.has(d.cible) && (d.type !== 'gel' || terre.get(d.cible) === d.semeLe));
+  const rouverts = degatsDe(ctx.game).filter((d) => d.par === 'quete' && d.taskId === taskId && d.fin === day && encore(d));
+  if (!rouverts.length) return;
+  const ids = new Set(rouverts.map((d) => d.id));
+  ctx.game = {
+    ...ctx.game,
+    degats: list(ctx.game.degats).map((d) => {
+      if (!ids.has(d.id)) return d;
+      const { fin, par, taskId: _quete, ...reste } = d;
+      return reste;
+    }),
+  };
+  for (const d of rouverts) ctx.events.push({ type: 'degat-rouvert', degat: d.id, imprevu: d.type, cible: d.cible });
 }
 
 // Cibles possibles d'un mauvais imprévu aujourd'hui : [{ type, cible, semeLe? }]. Un bâtiment ne porte qu'un dégât à la
@@ -184,10 +207,12 @@ function cibles(ctx) {
   return out;
 }
 
-// Un mauvais imprévu frappe, s'il le peut. Renvoie false sinon (le créneau devient un bon).
-function frapper(ctx, jour) {
-  if (isTruce(jour) || repriseLe(ctx.game, jour)) return false;
-  const possibles = cibles(ctx);
+// Un mauvais imprévu frappe, s'il le peut. Renvoie false sinon (le créneau devient un bon). Jamais un jour que la partie a
+// déjà dépassé (`seen` après lui : un passage du temps rejoué depuis une file hors ligne), ni un dégât qui serait encore là
+// quand la trêve commence.
+function frapper(ctx, jour, seen) {
+  if (isTruce(jour) || repriseLe(ctx.game, jour) || (isDayString(seen) && seen > jour)) return false;
+  const possibles = cibles(ctx).filter((c) => !isTruce(addDays(jour, IMPREVUS.mauvais[c.type].jours - 1)));
   if (!possibles.length) return false;
   const types = [...new Set(possibles.map((c) => c.type))];
   const type = types[tirage(`mauvais:${jour}`) % types.length];
@@ -237,7 +262,7 @@ export function suivreImprevus(ctx, seen) {
     if (c.jour > day || hasKey(ctx.ledger, cle(c.jour))) continue;
     if (c.nature === 'mauvais') {
       if (c.jour < day) continue; // jour manqué : un mauvais ne frappe jamais à cause d'une absence
-      if (frapper(ctx, c.jour)) continue;
+      if (frapper(ctx, c.jour, seen)) continue;
     }
     offrir(ctx, c.jour);
   }

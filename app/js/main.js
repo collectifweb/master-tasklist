@@ -148,7 +148,8 @@ function react(payload) {
     // l'écriture inverse de la quête, et celle de l'éolienne si le jour reste sans quête payée
     const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0) }), { energy: 0, materials: 0 });
     const list = [entierGain(e.energy) && `${numGain(e.energy)} ${t('resource.energy')}`, entierGain(e.materials) && `${numGain(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
-    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${replyText}` });
+    const rouverts = events.filter((e) => e.type === 'degat-rouvert').map((e) => ` ${t(`bat.sr.rouvert.${e.imprevu}`)}`).join('');
+    announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${rouverts}${replyText}` });
     return;
   }
   const say = {
@@ -188,7 +189,7 @@ function batimentSay(events) {
   for (const e of events) {
     if (e.type === 'construction') out.push(t('bat.sr.construction', { nom: nom(e.id), cout: coutText(e.cout) }));
     else if (e.type === 'semis') out.push(t('bat.sr.semis', { nom: nom(e.id), cout: coutText(e.cout) }));
-    else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }));
+    else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }) + (e.ours ? ` ${t('bat.sr.recolte.ours', { n: numGain(e.ours) })}` : ''));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
     else if (e.type === 'quartier-monte') out.push(monteText(e));
@@ -623,7 +624,7 @@ function annonceImprevu() {
   const reply = pickReply(`imprevu.${e.imprevu}`, { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
   if (!reply) return;
   speech.showText(reply.nom, reply.texte);
-  announce.say(`${reply.nom}\u00a0: ${reply.texte}`);
+  announce.say(remember(after(`${reply.nom}\u00a0: ${reply.texte}`))); // la phrase d'un geste ou du passage du temps juste lue est gardée, et « Jour suivant » s'ajoute
 }
 
 /** Toucher « Aujourd'hui » dans le bandeau : la fiche où se fait le geste proposé (bâtiment, quête), ou l'ajout. */
@@ -776,12 +777,14 @@ function tickDay() {
 
 // relecture régulière (30 s, page visible) et au retour sur la page
 setInterval(() => { if (started && document.visibilityState === 'visible') store.refresh(); }, POLL_MS);
-setInterval(() => { if (started) { tickDay(); renderAll(); } }, 60000); // durées « En cours depuis… », jour de jeu
+// le jour de jeu ne passe que page visible : un onglet caché pendant une absence ne fait pas passer le temps (lot I : pas de
+// mauvais imprévu ni de reprise effacée sans que le joueur soit là) ; au retour, visibilitychange s'en charge
+setInterval(() => { if (started) { if (document.visibilityState === 'visible') tickDay(); renderAll(); } }, 60000); // durées « En cours depuis… », jour de jeu
 document.addEventListener('visibilitychange', () => {
   if (!started || document.visibilityState !== 'visible') return;
   store.refresh({ force: true });
   if (gameDay(maintenant()) !== playedDay) tickDay();
-  else advanceTime(); // idempotente : ne fait rien si rien n'a bougé
+  else if (advanceTime()?.events.some((e) => e.type === 'imprevu')) annonceImprevu(); // idempotente : ne fait rien si rien n'a bougé
 });
 
 // Installation sur l'écran d'accueil : le service worker garde la coquille pour un lancement hors ligne

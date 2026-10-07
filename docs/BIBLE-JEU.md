@@ -183,7 +183,7 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 **Les imprévus, tels qu'ils sont construits** (lot I, 6 et 7 octobre 2026, décisions d'Alex) :
 - au plus deux par semaine (semaine de jeu, du lundi au dimanche), à des jours tirés d'après la date : tous les appareils voient le même, même hors ligne. Le premier est toujours bon, le second bon ou mauvais à pile ou face. Rien avant la fin des premiers pas ;
 - un bon imprévu rapporte 3 de sa ressource, une seule fois, même avec deux appareils (une clé par créneau au registre). L'aurore donne de l'Énergie, la pêche de la Nourriture (seulement s'il reste de la place dans la réserve, et jamais au-delà), la trouvaille des Matériaux, l'orignal rien. Un bon manqué attend jusqu'au dimanche ;
-- un mauvais imprévu frappe seulement le jour prévu, à l'ouverture : jamais à cause d'une absence, jamais pendant la trêve des Fêtes, jamais pendant les trois jours qui suivent un retour après cinq jours ou plus sans passage. S'il ne trouve rien à toucher, il devient un bon. Un bâtiment ne porte qu'un dégât à la fois ;
+- un mauvais imprévu frappe seulement le jour prévu, à l'ouverture : jamais à cause d'une absence, jamais pendant la trêve des Fêtes, ni un dégât qui serait encore là quand elle commence, jamais pendant les trois jours qui suivent un retour cinq jours ou plus après le dernier passage. S'il ne trouve rien à toucher, il devient un bon. Un bâtiment ne porte qu'un dégât à la fois ;
 
 | Dégât | Ce que ça change | Régler en payant | Régler par une quête | Seul en |
 |---|---|---|---|---|
@@ -191,7 +191,7 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 | Ours au potager (parcelle mûre, de mai à octobre) | la récolte faite pendant sa visite donne 2 Nourriture de moins | 2 Énergie | Terrain | 3 jours |
 | Gel précoce (culture pas mûre, septembre et octobre) | la journée du gel ne compte pas pour la pousse | 1 Énergie | Terrain | 1 jour |
 
-- trois façons de régler un dégât : payer, terminer une vraie quête du bon domaine (gratuit, la quête et son gain ne changent pas), ou attendre. Un dégât ne retire jamais une ressource déjà gagnée et ne touche jamais une tâche ;
+- trois façons de régler un dégât : payer, terminer une vraie quête du bon domaine (gratuit, la quête et son gain ne changent pas ; « Remballer » cette quête rouvre le dégât), ou attendre. Un dégât ne retire jamais une ressource déjà gagnée et ne touche jamais une tâche ;
 - à l'écran : l'aurore passe au-dessus de l'île, l'orignal traverse la route des Champs, la caisse de poissons attend au bout de la route du quai, la pile de bois près du grenier. Un dégât pose une marque braise (clé, patte, flocon) sur l'objet et se lit dans son nom ; la fiche le montre dans « Maintenant », avec son prix et les deux autres voies. Fanal raconte l'imprévu une fois par appareil.
 
 Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/core/simulation.test.mjs`, joueur (i)) : le premier niveau de quartier bouge de 0 à 2 jours aux six départs, qu'on paie ou qu'on attende. La tempête de neige et les alertes viennent au lot de l'hiver ; le visiteur surprise et les mouches noires ne sont pas dans cette première série.

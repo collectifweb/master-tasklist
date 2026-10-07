@@ -137,6 +137,7 @@
     "semis": "Semé : {nom}. {cout} dépensés.",
     "recolte": "Récolte : {n} Nourriture.",
     "recolte.perdu": "Récolte : {n} Nourriture. {perdu} n’ont pas tenu dans le stockage.",
+    "recolte.ours": "L’ours en a pris {n}.",
     "famille": "Une famille s’installe. Le village compte {n} habitants.",
     "famille.one": "Une famille s’installe. Le village compte 1 habitant.",
     "rang": "Nouveau rang : {rang}.",
@@ -147,6 +148,9 @@
     "reparation.quete.panne": "La quête répare aussi l’éolienne.",
     "reparation.quete.ours": "La quête chasse aussi l’ours du potager.",
     "reparation.quete.gel": "La quête couvre aussi la culture gelée.",
+    "rouvert.panne": "L’éolienne retombe en panne.",
+    "rouvert.ours": "L’ours revient au potager.",
+    "rouvert.gel": "La culture n’est plus couverte.",
     "eolienne.arretee": "L’éolienne en panne n’a pas tourné."
   },
   "plan": {

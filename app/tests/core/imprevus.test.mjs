@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import {
   IMPREVUS, calendrierImprevus, advanceTime, completeQuest, reparer, refusReparer, degatsActifs, degatDe, enReprise,
   recolter, etatCulture, construire, accueillir, semer, echanger, migrateState, PAS_IDS, stockage, addDays, weekStart,
-  isoWeekday, isTruce, EOLIENNE_ENERGIE, recolteDe,
+  isoWeekday, isTruce, EOLIENNE_ENERGIE, recolteDe, remballerQuest,
 } from '../../core/index.js';
 import { fresh, step, task } from './helpers.mjs';
 
@@ -433,4 +433,41 @@ test('un onglet d’avant les imprévus garde les dégâts et la reprise : relec
   ({ world: x } = step(x, semer, { id: 'serre-1' }, at(jour)));
   ({ world: x } = step(x, echanger, { offre: 'energie-materiaux' }, at(jour)));
   assert.deepEqual([x.game.degats, x.game.reprise], [degats, reprise]);
+});
+
+// Relecture du lot I (7 octobre) : trois trous trouvés, tests écrits avant le correctif.
+test('rejoué après coup : un passage du temps d’un jour que la partie a déjà dépassé ne fait frapper aucun mauvais', () => {
+  // un appareil hors ligne le jour du mauvais ; un autre passe le lendemain (le mauvais manqué ne frappe pas) ; le premier
+  // retrouve le réseau et son passage du temps est rejoué à l'instant du geste, sur la partie du serveur
+  const jour = mauvaisJour('2026-10-05');
+  let { world } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(addDays(jour, 1)));
+  assert.equal(world.game.lastSeenDay, addDays(jour, 1));
+  assert.deepEqual(degatsActifs(world.game, at(addDays(jour, 1))), []);
+  const { world: w2, r } = step(world, advanceTime, {}, at(jour));
+  assert.deepEqual(degatsActifs(w2.game, at(addDays(jour, 1))), [], 'aucun dégât posé après coup');
+  assert.ok(Object.hasOwn(IMPREVUS.bons, du(r, jour)?.imprevu), 'le créneau devient un bon, comme l’a vu l’appareil hors ligne');
+});
+
+test('trêve des Fêtes : un mauvais qui la toucherait avant de se régler seul ne frappe pas', () => {
+  const jour = creneau('2026-12-01', (x, i) => i === 1 && x.nature === 'mauvais' && !isTruce(x.jour) && isTruce(addDays(x.jour, IMPREVUS.mauvais.panne.jours - 1)));
+  const { world, r } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(jour));
+  assert.deepEqual(degatsActifs(world.game, at(jour)), []);
+  assert.ok(Object.hasOwn(IMPREVUS.bons, du(r, jour).imprevu), 'le mauvais devient un bon');
+});
+
+test('« Remballer » la quête qui a réparé : le dégât revient, comme le gain s’en va', () => {
+  const jour = mauvaisJour('2026-10-05');
+  const { world } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(jour));
+  const { world: w1 } = step(world, completeQuest, { id: 'q-maison' }, at(jour, 16));
+  assert.equal(degatDe(w1.game, 'eolienne-1', at(jour, 16)), null);
+  const { world: w2 } = step(w1, remballerQuest, { id: 'q-maison' }, at(jour, 17));
+  const d = degatDe(w2.game, 'eolienne-1', at(jour, 17));
+  assert.ok(d, 'la panne est de nouveau là');
+  assert.deepEqual([d.fin ?? null, d.par ?? null, d.jusqua], [null, null, addDays(jour, IMPREVUS.mauvais.panne.jours)]);
+  assert.equal(refusReparer(w2.game, { id: d.id }, at(jour, 17)), null, 'elle se répare de nouveau en payant');
+  // une réparation payée, elle, ne revient pas avec « Remballer » d'une autre quête
+  const { world: w3 } = step(w2, reparer, { id: d.id }, at(jour, 18));
+  const { world: w4 } = step(w3, completeQuest, { id: 'q-enfants' }, at(jour, 19));
+  const { world: w5 } = step(w4, remballerQuest, { id: 'q-enfants' }, at(jour, 20));
+  assert.equal(degatDe(w5.game, 'eolienne-1', at(jour, 20)), null);
 });

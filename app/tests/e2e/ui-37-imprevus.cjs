@@ -7,7 +7,8 @@
 //   - parcelle mûre et ours : un double toucher dont le second tombe sur « Récolter » (ouvert) ne fait que chasser l'ours ;
 //     la phrase lue le dit une fois, Fanal le salue, la fiche dit « Ours chassé aujourd'hui. » ; la récolte, ensuite, est
 //     entière ;
-//   - une quête Maison payée répare l'éolienne, gratuitement, et la phrase lue le dit ;
+//   - une quête Maison payée répare l'éolienne, gratuitement, et la phrase lue le dit ; « Remballer » cette quête rouvre la
+//     panne (la phrase lue le dit, la marque revient) ;
 //   - « Jour suivant » : le gel se règle seul, sans rien écrire ; marque, bloc de la fiche et objets du jour s'en vont.
 //   Partie B (semaine tirée par le calendrier : une aurore, puis une panne ; version d'essai) :
 //   - la veille, rien ; « Jour suivant » : l'aurore paraît, payée une fois au registre, racontée par Fanal une fois par
@@ -281,13 +282,30 @@ const at = (day, h = 14) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
       R.check('éolienne : « Réglé aujourd’hui par une quête Maison. »', f.degat?.etat === 'fait' && f.degat.fait === 'Réglé aujourd’hui par une quête Maison.', JSON.stringify(f.degat));
       await fermer(page);
 
+      // « Remballer » cette quête : la panne revient, comme le gain s'en va
+      await L.openPanel(page);
+      await page.locator('label.seg-option', { hasText: 'Faites' }).click();
+      await L.said(page, true);
+      await page.locator('#quest-list > li[data-task-id="a1"] [data-action="remballer"]').click();
+      await page.waitForSelector('#dlg-confirm[open]');
+      await page.click('#dlg-confirm [data-answer="yes"]');
+      const dRe = await L.waitFor(() => { const d = degat(srvA, `panne:${addDays(DA, -1)}`); return d && !d.fin ? d : null; }, 5000);
+      R.check('Remballer la quête : la panne revient, et les ressources d’avant la quête aussi', !!dRe && !dRe.par && !dRe.taskId && res(srvA.game()) === res(gQ), `${JSON.stringify(dRe)} ${res(gQ)} → ${res(srvA.game())}`);
+      const dRem = await L.waitFor(async () => { const d = await dits(page); return d.some((x) => x.includes('L’éolienne retombe en panne.')) ? d : null; }, 3000) || await dits(page);
+      R.check('Remballer la quête : la phrase lue dit « L’éolienne retombe en panne. »', dRem.some((x) => x.includes('L’éolienne retombe en panne.')), JSON.stringify(dRem));
+      await page.waitForSelector('#dlg-confirm:not([open])', { state: 'attached' });
+      await carte(page);
+      R.check('Remballer la quête : la marque revient sur l’éolienne', (await vus(page, [marque('eolienne-1')], tag < 700))[marque('eolienne-1')]);
+
       // « Jour suivant » : le gel se règle seul, sans rien écrire
       const gelAvant = JSON.stringify(degat(srvA, `gel:${DA}`));
       await jourSuivant(page, srvA, 1);
       await carte(page);
       await page.waitForTimeout(800);
-      const v1 = await vus(page, [marque('parcelle-2'), marque('eolienne-1'), objet('peche'), objet('trouvaille'), objet('orignal')], tag < 700);
-      R.check('lendemain : plus aucune marque, plus d’objets de la veille', Object.values(v1).every((x) => !x), JSON.stringify(v1));
+      const v1 = await vus(page, [marque('parcelle-2'), objet('peche'), objet('trouvaille'), objet('orignal')], tag < 700);
+      R.check('lendemain : plus de marque sur la parcelle gelée, plus d’objets de la veille', Object.values(v1).every((x) => !x), JSON.stringify(v1));
+      const nomL = sp(await nomCarte(page, 'eolienne-1'));
+      R.check('lendemain : la panne rouverte est toujours là, « repart seule demain »', /en panne, repart seule demain/.test(nomL), nomL);
       R.check('lendemain : le gel s’est réglé seul, sans rien écrire', JSON.stringify(degat(srvA, `gel:${DA}`)) === gelAvant && !imprevusAu(srvA).some((e) => e.day === addDays(DA, 1)), JSON.stringify(srvA.game().degats));
       f = await ouvrir(page, 'parcelle-2');
       R.check('lendemain : la fiche de la parcelle-2 n’a plus de bloc de dégât', f.open && !f.degat, JSON.stringify(f));
