@@ -48,8 +48,13 @@ async function call(method, payload) {
   return body;
 }
 
-/** Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas, et un onglet resté en version 3, qui achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue. */
-export const CLIENT_VERSION = 4;
+/**
+ * Version de l'app envoyée avec chaque écriture : l'API refuse l'ancienne app (v1), qui n'en envoie pas, et un onglet resté
+ * en version 3, qui achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue. Version 5 (imprévus, lot I) :
+ * un geste mis en file hors ligne par la version 4 est recalculé avant l'envoi (une quête payée pendant une panne ne fait
+ * pas tourner l'éolienne et la répare si elle est du bon domaine) ; l'API accepte encore la version 4 (MIN_CLIENT).
+ */
+export const CLIENT_VERSION = 5;
 
 export const api = {
   get: () => call('GET'),
