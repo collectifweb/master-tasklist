@@ -706,3 +706,80 @@ Le lot contient trois choses : la neige sur l'île, la tempête annoncée d'avan
 6. **Envoi** : directement en production, avant le 15 novembre, comme les imprévus ?
 
 **Réponses d'Alex (7 octobre)** : 1. plutôt de l'aléatoire, autour d'une semaine et demie : écart tiré entre 7 et 14 jours ; 2. la recommandation (crans par jour travaillé, cran manqué en Matériaux) ; 3. question mal posée par l'agent : retenu le plus simple, un nombre de récoltes de serre dans l'hiver (avec une seule serre, une récolte demande 5 jours travaillés : compter les semaines ou les récoltes revient presque au même) ; 4. et 5. « choisis » : une tempête pendant la reprise passe sans dégât ; tour de guet et chasse-neige plus tard ; 6. envoi direct en production dès que c'est prêt. Le tableau des montants est montré avant l'écran, comme au lot I. **Plan validé.**
+
+## Lot A — L'allure du village
+
+Référence : bible §9 (le jeu suit ton rythme), §8 (imprévus), §6 (objectifs de saison), §14 (semaines 9 à 12 : « réglage des allures selon ton usage réel ») ; `PRODUCT.md` ligne 43 (adapter le jeu au rythme d'usage, sans changer les prix ni ce que rapporte une tâche). **Statut : à valider par Alex.**
+
+Ce qui existe déjà (lu dans le code le 7 octobre) :
+- la reprise après une absence de 5 jours ou plus : trois jours sans mauvais imprévu, et une tempête qui tombe pendant ces jours passe sans dégât (`REPRISE`, `core/imprevus.js:54` ; lot H) ;
+- la lettre de retour de Fanal et le bonus de retour (+10 Énergie), après 3 jours ou plus sans ouvrir l'app, au plus une fois par 14 jours : 8 lettres sans reproche, qui ne racontent pas ce qui s'est passé dans le jeu (`core/letters.js:40`, `core/quests.js:481`, `content/fr-CA/lettres.json`) ;
+- deux imprévus par semaine pour tout le monde (`calendrierImprevus`, `core/imprevus.js:74`), lu à un seul endroit (`suivreImprevus`) ;
+- les objectifs de saison : remplir le grenier à l'automne, 10 récoltes de serre l'hiver (`OBJECTIFS_SAISON`, `core/objectifs.js:38`) ;
+- le bilan de la semaine : il s'ouvre seul le dimanche, et à la demande (`open-review`, `js/main.js:554`) ; les semaines finies y sont figées (`core/recycling.js`) ;
+- le marchand et ses quatre offres fixes ; aucun visiteur à commande encore, donc aucune commande à rapetisser ou à grossir ;
+- aucun grand chantier encore (bible §14 : semaines 9 à 12).
+
+Ton rythme, mesuré :
+- production (lu le 7 octobre à 18 h 27, sur place, en lecture seule, sans rien copier) : 4 quêtes payées, 1 le 5 octobre, 1 le 6, 2 le 7 ;
+- essai : 25 quêtes en 24 jours de jeu (comptes repris dans `tests/core/simulation.test.mjs:16`) ; avec « Jour suivant », ce ne sont pas des jours réels.
+
+Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (imprévus, objectif de saison, quête que Fanal propose), son affichage dans le bilan et la phrase de Fanal quand elle change. Hors du lot :
+- le second critère de la bible, les réserves : avec les grands chantiers, qui donneront de quoi dépenser (question 2) ;
+- la taille des commandes, et la commande ramenée à la taille « au ralenti » au retour : avec les visiteurs à commande ; le marchand garde ses offres (ce sont des prix) ;
+- les grands chantiers du plein régime : semaines 9 à 12 ;
+- une lettre de retour qui raconte ce qui s'est passé pendant l'absence : plus tard.
+
+### Ce que verra Alex
+- Dans le bilan de la semaine, une ligne « Allure : régulier (21 quêtes en 14 jours) », avec une petite marque à trois crans doublée du texte. Les semaines passées gardent la leur.
+- Le lundi où l'allure change, Fanal le dit une fois, sans reproche : le village ralentit avec toi, ou il prend de l'élan.
+- Au ralenti :
+  - un seul imprévu par semaine, toujours un bon ;
+  - un objectif de saison plus petit ;
+  - la lettre du matin et la ligne « Aujourd'hui » du bandeau proposent ta quête la plus courte, au lieu de la première de la Cote. L'ordre de la liste ne change pas.
+- Régulier : rien ne change par rapport à aujourd'hui.
+- Plein régime : quatre imprévus par semaine, deux bons et deux à pile ou face (en moyenne un mauvais par semaine, au plus deux, jamais le même jour). Les réparations gardent leur prix.
+- Jamais : un prix qui change (bâtiments, réparations, niveaux de quartier, offres du marchand), un gain de quête qui change, une tâche touchée.
+
+### Règles proposées
+- L'allure se calcule chaque lundi pour la semaine, d'après les quêtes payées les 14 jours d'avant (une quête remballée ne compte pas). La bible dit « chaque matin » ; le lundi suffit, puisqu'elle ne change que d'un cran par semaine et que les imprévus se tirent à la semaine.
+- Cible : moins de 14 quêtes en 14 jours, « au ralenti » ; plus de 70, « plein régime » ; entre les deux, « régulier » (seuils de la bible : moins d'une par jour, plus de cinq par jour). L'allure avance d'un cran au plus vers sa cible : du ralenti au plein régime, il faut deux semaines.
+- Départ à « régulier ». Tant que la partie a moins de 14 jours, elle y reste.
+- Une absence fait descendre l'allure d'un cran par semaine, jusqu'au ralenti. Au retour, le jeu est donc plus doux, en plus des trois jours de reprise.
+- Objectif de saison réduit au ralenti : sa cible suit l'allure de la semaine. Une fois atteint, il est payé une seule fois et le reste, même si l'allure remonte. Valeurs réglées par la simulation.
+- Les tempêtes ne changent pas avec l'allure (question 6).
+
+### Comment ça marche
+- `core/allure.js` (neuf) : l'allure d'une semaine se déduit du registre seul, comme la semaine tenue. Tous les appareils voient la même, même hors ligne ; rien de neuf n'est écrit dans la partie.
+- `calendrierImprevus` reçoit l'allure : au ralenti, il garde le premier créneau (toujours bon) ; régulier, il reste identique à aujourd'hui (un test le vérifie sur plusieurs années de dates) ; plein régime, il ajoute deux créneaux tirés à part, sur d'autres jours.
+- L'objectif de saison lit la cible de l'allure ; au ralenti, la lettre du matin et le bandeau lisent la quête la plus courte (à durée égale, la mieux placée dans la Cote).
+- Le bilan figé de chaque semaine garde son allure et sa raison ; un bilan figé avant le lot ne l'a pas, et rien ne s'affiche.
+- Un onglet resté en v2.3 tirerait deux imprévus par semaine quelle que soit l'allure : `CLIENT_VERSION` et `MIN_CLIENT` passent à 7, cache `oree-coquille-v14`. Tu recharges tes onglets à l'envoi.
+- Leçons à appliquer d'entrée : avant la série, chercher les scénarios dont le registre préparé ferait changer l'allure (donc le nombre d'imprévus) et ceux qui vérifient un montant exact ; un échec sans lien avec le lot se relance d'abord sur `v2.3`.
+
+### A1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `core/allure.js` et ses effets (imprévus, objectif de saison, quête proposée, bilan). Tests : la même allure sur deux appareils et hors ligne ; un cran par semaine au plus ; une quête remballée ne compte pas ; une absence descend d'un cran par semaine ; « régulier » donne exactement le calendrier d'aujourd'hui ; au ralenti, jamais de mauvais imprévu ; au plein régime, jamais deux mauvais le même jour ; aucun prix ni gain de quête ne change selon l'allure ; aucune tâche touchée.
+- [ ] `CLIENT_VERSION` et `MIN_CLIENT` à 7 ; `core/allure.js` dans la coquille hors ligne.
+- [ ] Simulation (k) : l'allure semaine par semaine de quatre joueurs (une quête un jour sur deux, rythme de l'essai, 2 ou 3 par jour, 6 par jour), la cible réduite de l'objectif de saison, l'effet sur le premier niveau de quartier ; **tableau montré à Alex avant A2**.
+
+### A2 — Écran [impeccable]
+- [ ] Bilan de la semaine : la ligne « Allure » et sa raison, la marque à trois crans ; les semaines passées.
+- [ ] Fanal : deux situations (le village ralentit, il prend de l'élan), 5 variantes chacune, grille « zéro culpabilité » ; une fois par changement et par appareil.
+- [ ] Scénario navigateur neuf (39) : un registre préparé pour chaque allure ; le bilan, la phrase de Fanal, le nombre d'imprévus de la semaine, la quête proposée au ralenti, deux appareils.
+
+### A3 — Vérification et documents
+- [ ] `node --test` ; série complète aux trois largeurs (code figé) ; `world-s3` et `world-perf`.
+- [ ] Relecture indépendante.
+- [ ] Bible §8 et §9 (règles telles que construites), `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md`, `CLAUDE.md`.
+
+### A4 — Envoi
+- [ ] Selon la réponse d'Alex à la question 7 : photo des données, étiquette `v2.4`, contrôles en lecture seule.
+
+### Questions pour Alex
+1. **Seuils** : ceux de la bible pour commencer, moins de 14 quêtes en 14 jours pour « au ralenti », plus de 70 pour « plein régime » (recommandé ; la bible prévoit de les régler sur ton usage réel aux semaines 9 à 12) ? Si tu gardes ton rythme de production (4 quêtes en 3 jours), tu serais « régulier », près de la limite du ralenti. Le joueur régulier simulé fait 2 ou 3 quêtes par jour : le plein régime en demande le double.
+2. **Réserves** : les laisser de côté jusqu'aux grands chantiers (recommandé) ? La bible passe en plein régime au-delà de trois fois le prix du plus gros bâtiment accessible. Au Hameau, c'est 30 Matériaux (`core/batiments.js:32`), donc 90 ; un niveau 2 de quartier en coûte 120. Économiser pour un niveau ferait donc monter l'allure, et les imprévus, sans rien de neuf à acheter.
+3. **Imprévus** : au ralenti, un seul par semaine, toujours bon ; au plein régime, quatre, deux bons et deux à pile ou face (recommandé) ?
+4. **Objectif de saison** : réduit au ralenti, à l'automne comme l'hiver, valeur réglée par la simulation (recommandé) ? Ou l'hiver seulement ?
+5. **Quête proposée au ralenti** : la plus courte, dans la lettre du matin et dans la ligne « Aujourd'hui » du bandeau (recommandé) ? Ou dans la lettre seulement ? L'ordre de la Cote ne change pas (décision 7).
+6. **Tempêtes** : inchangées par l'allure (recommandé : la bible ne les y relie pas, et un bâtiment enseveli se dégage par une quête Terrain ou fond en 3 jours) ? Ou, au ralenti, deux crans au lieu de trois ? Pour mémoire, le joueur lent simulé au lot H (une quête un jour sur deux) a eu 8 serres ensevelies sur l'hiver sans se préparer.
+7. **Envoi** : directement en production dès que c'est prêt, comme les lots I et H ?
