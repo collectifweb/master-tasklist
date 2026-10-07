@@ -8,10 +8,11 @@
 // L'hiver (lot H) : une tempête annoncée ajoute une rangée sous les objectifs, à toutes les largeurs (core/hiver.js,
 // alerteTempete) : les jours restants, la barre de trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix
 // (data-action="preparer", protégé du double toucher). Le jour même, l'issue : tenue, le bâtiment sous la neige (le bouton
-// ouvre sa fiche, data-action="tempete-voir") ou passée sans rien abîmer. L'objectif d'hiver compte les récoltes de serre ;
+// ouvre sa fiche, data-action="tempete-voir"), puis déneigé une fois le dégât réglé, ou passée sans rien abîmer. L'objectif d'hiver compte les récoltes de serre ;
 // sans serre, il dit d'en bâtir une.
 import {
   bandeau as lireBandeau, visiteurDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
+  degatsActifs,
 } from '../../core/index.js';
 import { t, tn } from '../content.js';
 import { $, esc, icon, setAttr, setHtml, setText, restart } from './dom.js';
@@ -45,11 +46,12 @@ function saisonText(s, sansSerre) {
   return t(`bandeau.saison.${s.objectif}`, { stock: numPossede(s.stock), max: numPossede(s.max) });
 }
 
-const ALERTE_ICON = { tenue: 'check', neige: 'pelle' };
+const ALERTE_ICON = { tenue: 'check', neige: 'pelle', deneige: 'check' };
 
 /**
  * La rangée de la tempête : { titre, crans, max, etat, aide, issue, go: { action, params, label, html, raison } | null },
- * ou null hors alerte. Le jour même, l'issue vient du registre (clé tempete:{jour}, core/hiver.js).
+ * ou null hors alerte. Le jour même, l'issue vient du registre (clé tempete:{jour}, core/hiver.js) ; un bâtiment enseveli
+ * puis déneigé (en payant ou par une quête) passe à « déneigé ».
  */
 function alerteModel(c) {
   const a = alerteTempete(c.tasks, c.game, c.ledger, c.now);
@@ -57,7 +59,7 @@ function alerteModel(c) {
   const m = {
     titre: t(`bandeau.tempete.titre.${a.joursRestants === 0 ? 'zero' : a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants }),
     crans: a.crans, max: a.max, etat: '', aide: '', issue: '', go: null,
-    label: t(`bandeau.tempete.crans.label${a.crans === 1 ? '' : '.other'}`, { n: a.crans, max: a.max }),
+    label: t(`bandeau.tempete.crans.label${a.crans <= 1 ? '' : '.other'}`, { n: a.crans, max: a.max }), // « 0 cran », comme fr-CA
   };
   if (a.joursRestants === 0) {
     const e = findEntry(c.ledger, `tempete:${a.jour}`);
@@ -65,6 +67,7 @@ function alerteModel(c) {
     if (!e) m.etat = t('bandeau.tempete.souffle');
     else if (e.resultat === 'tenue') m.etat = t('bandeau.tempete.tenue', { cout: coutText({ materials: e.materials }) });
     else if (e.resultat === 'passee') m.etat = t('bandeau.tempete.passee');
+    else if (!degatsActifs(c.game, c.now).some((d) => d.id === e.degat)) { m.issue = 'deneige'; m.etat = t('bandeau.tempete.deneige'); }
     else {
       const nom = t(`bat.${String(e.cible).replace(/-\d+$/, '')}.nom`);
       m.etat = t('bandeau.tempete.neige', { nom });

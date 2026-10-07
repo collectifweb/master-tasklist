@@ -207,7 +207,7 @@ function degatsSay(events) {
   const out = [];
   for (const e of events) {
     if (e.type === 'reparation' && e.par === 'quete') out.push(t(`bat.sr.reparation.quete.${e.imprevu}`));
-    else if (e.type === 'eolienne-arretee') out.push(t('bat.sr.eolienne.arretee'));
+    else if (e.type === 'eolienne-arretee') out.push(t(e.neige ? 'bat.sr.eolienne.arretee.neige' : 'bat.sr.eolienne.arretee'));
   }
   return out.join(' ');
 }

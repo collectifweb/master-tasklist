@@ -184,7 +184,8 @@ test('bâtiment enseveli : annonce vue, barre pas pleine, ouverture le jour mêm
   assert.deepEqual(issue(r).map((x) => [x.resultat, x.cible, x.degat, x.jusqua]), [['neige', 'eolienne-1', d.id, d.jusqua]]);
   const { r: r2 } = step(world, completeQuest, { id: 'q-enfants' }, at(j, 16));
   assert.equal(r2.entries.filter((x) => x.type === 'prod').length, 0, 'l’éolienne ensevelie ne tourne pas');
-  assert.deepEqual(r2.events.filter((x) => x.type === 'eolienne-arretee').map((x) => x.energy), [EOLIENNE_ENERGIE]);
+  // la phrase lue dit « ensevelie », pas « en panne »
+  assert.deepEqual(r2.events.filter((x) => x.type === 'eolienne-arretee').map((x) => [x.energy, x.neige]), [[EOLIENNE_ENERGIE, true]]);
 });
 
 test('serre ensevelie : une culture pas mûre ; les jours travaillés sous la neige ne comptent pas pour la pousse', () => {
@@ -375,4 +376,45 @@ test('une partie qui porte les clés de l’hiver les garde : relecture et geste
   ({ world: x } = step(x, semer, { id: 'serre-1' }, at(jour)));
   ({ world: x } = step(x, advanceTime, {}, at(jour, 16)));
   assert.deepEqual([x.game.degats, x.game.prepa, x.game.recoltesHiver], [degats, prepa, hiver]);
+});
+
+test('rentrer du bois : seulement les crans manqués, un de plus chaque jour d’annonce ; jamais pour une tempête déjà réglée (appareil hors ligne rejoué)', () => {
+  const j = tempete();
+  const [j3, j2, veille] = [addDays(j, -3), addDays(j, -2), addDays(j, -1)];
+  // premier jour de l'annonce : le cran du jour s'achète, pas celui du lendemain
+  const { world: w1 } = step(village(j3), preparer, { jour: j, n: 1 }, at(j3));
+  assert.equal(preparation(w1.game, w1.ledger, j, j3).crans, 1);
+  assert.equal(refusPreparer(w1.tasks, w1.game, w1.ledger, { jour: j, n: 2 }, at(j3)), 'Le prochain cran se gagne demain.');
+  assert.throws(() => step(w1, preparer, { jour: j, n: 2 }, at(j3)), { message: 'Le prochain cran se gagne demain.' });
+  assert.equal(w1.game.resources.materials, 50 - TEMPETE.cran.materials);
+  // le lendemain, un de plus
+  assert.equal(refusPreparer(w1.tasks, w1.game, w1.ledger, { jour: j, n: 2 }, at(j2)), null);
+  // un jour déjà travaillé ne s'achète pas
+  const w2 = village(j3, {}, [paye(j3)]);
+  assert.equal(refusPreparer(w2.tasks, w2.game, w2.ledger, { jour: j, n: 1 }, at(j3)), 'Le prochain cran se gagne demain.');
+  // la veille, tout ce qui manque
+  let v = village(veille);
+  for (const n of [1, 2, 3]) v = step(v, preparer, { jour: j, n }, at(veille)).world;
+  assert.equal(preparation(v.game, v.ledger, j, veille).crans, 3);
+  // la tempête réglée par un autre appareil : le cran rejoué « la veille » est refusé, rien de payé
+  const reglee = village(veille, { batiments: [...CHALETS, EOLIENNE] });
+  reglee.ledger.push({ key: `tempete:${j}`, at: at(j), day: j, type: 'tempete', tempete: j, resultat: 'neige', cible: 'eolienne-1', pe: 0, energy: 0, materials: 0 });
+  assert.equal(refusPreparer(reglee.tasks, reglee.game, reglee.ledger, { jour: j, n: 1 }, at(veille)), 'Cette tempête est déjà passée.');
+  assert.throws(() => step(reglee, preparer, { jour: j, n: 1 }, at(veille)), { message: 'Cette tempête est déjà passée.' });
+});
+
+test('premiers pas finis après la tempête : elle passe sans récompense (son alerte n’a jamais paru) ; finis avant, elle est tenue', () => {
+  const j = tempete((x) => !dimanche(x));
+  const lendemain = addDays(j, 1);
+  const w = village(lendemain, {}, prets(j));
+  w.game.premiersPas = { ...w.game.premiersPas, famille: lendemain };
+  w.game.lastSeenDay = addDays(j, -1);
+  const { world, r } = step(w, advanceTime, {}, at(lendemain));
+  assert.deepEqual([cle(r, j).resultat, cle(r, j).materials], ['passee', 0]);
+  assert.deepEqual(issue(r).map((x) => [x.resultat, x.raison]), [['passee', 'premiers-pas']]);
+  assert.equal(world.game.resources.materials, 50);
+  const avant = village(lendemain, {}, prets(j));
+  avant.game.premiersPas = { ...avant.game.premiersPas, famille: addDays(j, -1) };
+  avant.game.lastSeenDay = addDays(j, -1);
+  assert.equal(cle(step(avant, advanceTime, {}, at(lendemain)).r, j).resultat, 'tenue');
 });

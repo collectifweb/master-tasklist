@@ -5,17 +5,19 @@
 //   - l'annonce (J-3) : la rangée « Tempête dans 3 jours », « 0 sur 3 », « Rentrer du bois · 3 Matériaux » ; le front de
 //     givre paraît ; Fanal l'annonce une fois (et pas au rechargement), la phrase lue dit la barre et le prix ; la carte en
 //     liste le dit ;
-//   - un double toucher sur « Rentrer du bois » ne paie qu'un cran ; un second cran ensuite ; sans assez de Matériaux, le
-//     bouton est verrouillé et un toucher ne dépense rien, la raison est dite ; une quête payée remplit le dernier cran :
-//     « Le village est prêt » ;
-//   - « Jour suivant » jusqu'au jour même : le titre suit les jours, le front s'approche ; la tempête est tenue, payée une
-//     fois au registre (6 Matériaux), aucun dégât ; Fanal et la phrase lue le disent.
+//   - un double toucher sur « Rentrer du bois » ne paie qu'un cran ; seul un cran manqué s'achète : le cran du lendemain
+//     est verrouillé, un toucher ne dépense rien et la raison est dite ;
+//   - J-2 : le titre suit, le front s'approche, un second cran s'achète ; la veille : Fanal encourage (barre pas pleine),
+//     sans assez de Matériaux le bouton est verrouillé (rien de dépensé, raison dite), une quête payée remplit le dernier
+//     cran : « Le village est prêt » ;
+//   - le jour même : la tempête est tenue, payée une fois au registre (6 Matériaux), aucun dégât ; Fanal et la phrase lue
+//     le disent.
 //   Partie B (le jour d'une tempête vue mais pas préparée) :
 //   - un bâtiment est sous la neige : registre, dégât, marque braise, nom sur la carte, rangée « … sous la neige » ; Fanal
 //     et la carte en liste le disent ;
 //   - « Déneiger » de la rangée ouvre sa fiche : « Sous la neige », « Déneiger · 2 Énergie », la quête Terrain, la fonte ;
 //   - deux appareils : le second déneige au clavier (Fanal le salue), le premier, pas encore relu, aussi : payé une fois,
-//     le premier dit pourquoi.
+//     le premier dit pourquoi ; sa rangée passe à « Bâtiment déneigé ».
 //   Partie C (première largeur seulement) : absent pendant toute l'annonce, la tempête passe sans rien abîmer.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
@@ -189,32 +191,47 @@ const at = (day, h = 15) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
     a = await alerte(page);
     R.check('un cran rentré : « 1 sur 3 », un cran plein', a.ligne === '1 sur 3' && a.crans === 1, JSON.stringify(a));
     R.check('phrase lue : « Bois rentré, pour 3 Matériaux. Préparation : 1 sur 3. »', (await dits(page)).some((x) => x.startsWith('Bois rentré, pour 3 Matériaux. Préparation : 1 sur 3.')), JSON.stringify(await dits(page)));
+    // seul un cran manqué s'achète : celui de demain est verrouillé, un toucher ne dépense rien et dit pourquoi
+    a = await L.waitFor(async () => { const x = await alerte(page); return x.go?.off ? x : null; }, 3000) || await alerte(page);
+    R.check('J-3 : le cran de demain ne s’achète pas, « Rentrer du bois » verrouillé', a.go?.off === true && a.ligne === '1 sur 3', JSON.stringify(a));
+    await page.waitForTimeout(900);
+    await L.said(page, true);
+    await toucher(page, '.bandeau-alerte-go');
+    await page.waitForTimeout(800);
+    let note = await page.evaluate(() => { const n = document.getElementById('notice'); return n && !n.hidden ? n.textContent : ''; });
+    R.check('J-3 verrouillé : rien de dépensé, « Le prochain cran se gagne demain. » affiché et lu', srv.game().prepa.achetes === 1 && srv.game().resources.materials === g0.resources.materials - 3
+      && /Le prochain cran se gagne demain\./.test(note) && (await dits(page)).includes('Le prochain cran se gagne demain.'), `${note} / ${JSON.stringify(await dits(page))}`);
+
+    // J-2 : un cran de plus s'achète
+    await jourSuivant(page, srv, 2);
+    a = await alerte(page);
+    R.check('J-2 : « Tempête dans 2 jours », le front s’approche', a.titre === 'Tempête dans 2 jours' && !!a.front && a.front !== front3, JSON.stringify(a));
     await page.waitForTimeout(900);
     await toucher(page, '.bandeau-alerte-go');
     g = await L.waitFor(() => (srv.game().prepa?.achetes === 2 ? srv.game() : null), 4000) || srv.game();
     R.check('second cran : payé, « 2 sur 3 »', g.prepa?.achetes === 2 && g.resources.materials === g0.resources.materials - 6 && (await alerte(page)).ligne === '2 sur 3', `${res(g)} ${JSON.stringify(g.prepa)}`);
-    // plus assez de Matériaux : verrouillé, un toucher ne dépense rien et dit pourquoi
+
+    // la veille : barre pas pleine, Fanal encourage ; plus assez de Matériaux : verrouillé, un toucher ne dépense rien
+    await jourSuivant(page, srv, 3);
+    a = await alerte(page);
+    R.check('veille : « Tempête demain »', a.titre === 'Tempête demain', JSON.stringify(a));
+    const motV = await L.waitFor(async () => { const m = sp(await bulle(page)); return variantes('tempete.veille').includes(m) ? m : null; }, 12000);
+    R.check('veille : Fanal encourage (une variante de « tempete.veille »)', !!motV, String(await bulle(page)));
     a = await L.waitFor(async () => { const x = await alerte(page); return x.go?.off ? x : null; }, 3000) || await alerte(page);
     R.check('sans assez de Matériaux : « Rentrer du bois » verrouillé', a.go?.off === true, JSON.stringify(a.go));
     await page.waitForTimeout(900);
     await L.said(page, true);
     await toucher(page, '.bandeau-alerte-go');
     await page.waitForTimeout(800);
-    const note = await page.evaluate(() => { const n = document.getElementById('notice'); return n && !n.hidden ? n.textContent : ''; });
+    note = await page.evaluate(() => { const n = document.getElementById('notice'); return n && !n.hidden ? n.textContent : ''; });
     R.check('verrouillé : rien de dépensé, la raison est affichée et lue', srv.game().prepa.achetes === 2 && /Il manque 2 Matériaux\./.test(note) && (await dits(page)).includes('Il manque 2 Matériaux.'), `${note} / ${JSON.stringify(await dits(page))}`);
     // une quête payée remplit le dernier cran
-    R.check('annonce : une quête payée', !!(await fait(page, srv, addDays(J, -3))));
+    R.check('veille : une quête payée', !!(await fait(page, srv, addDays(J, -1))));
     a = await L.waitFor(async () => { const x = await alerte(page); return x.etat === 'pret' ? x : null; }, 4000) || await alerte(page);
     R.check('barre pleine : « Le village est prêt », trois crans, plus de bouton', a.ligne === 'Le village est prêt' && a.crans === 3 && !a.go, JSON.stringify(a));
     await shot(page, '38-prete');
 
-    // jusqu'au jour même
-    await jourSuivant(page, srv, 2);
-    a = await alerte(page);
-    R.check('J-2 : « Tempête dans 2 jours », le front s’approche', a.titre === 'Tempête dans 2 jours' && !!a.front && a.front !== front3, JSON.stringify(a));
-    await jourSuivant(page, srv, 3);
-    a = await alerte(page);
-    R.check('veille : « Tempête demain »', a.titre === 'Tempête demain', JSON.stringify(a));
+    // le jour même
     await L.said(page, true);
     const m0 = srv.game().resources.materials;
     await jourSuivant(page, srv, 4);
@@ -292,6 +309,8 @@ const at = (day, h = 15) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
       await L.waitFor(() => pb.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
       await pb.waitForTimeout(400);
       R.check('carte : plus de marque sur le bâtiment déneigé', !(await marque(pb, CIBLE)));
+      const aD = await L.waitFor(async () => { const x = await alerte(pb); return x.etat === 'deneige' ? x : null; }, 3000) || await alerte(pb);
+      R.check('rangée : « Bâtiment déneigé », plus de « Déneiger »', aD.ligne === 'Bâtiment déneigé' && !aD.go && aD.crans === 0, JSON.stringify(aD));
       await pb.close();
     } finally {
       srvB.stop();

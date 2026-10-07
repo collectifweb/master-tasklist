@@ -1071,8 +1071,8 @@
 
 /* Tempête annoncée (lot H) : une rangée sous les objectifs, à toutes les largeurs, posée sur un lavis de givre (le
    front qui approche sur la carte a les mêmes tons). Le picto (flocon) dans son disque, les jours restants, la barre de
-   trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix. Le jour même : l'issue, coche sauge (tenue)
-   ou pelle braise (un bâtiment sous la neige, la couleur des menaces), et le bouton qui ouvre sa fiche. Rien ne bouge. */
+   trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix. Le jour même : l'issue, coche sauge (tenue,
+   ou bâtiment déneigé) ou pelle braise (un bâtiment sous la neige, la couleur des menaces), et le bouton qui ouvre sa fiche. Rien ne bouge. */
 .bandeau-alerte {
   grid-column: 1 / -1;
   grid-row: 2;
@@ -1106,7 +1106,7 @@
   width: 18px;
   height: 18px;
 }
-.bandeau[data-alerte="tenue"] .bandeau-alerte-mark {
+.bandeau:is([data-alerte="tenue"], [data-alerte="deneige"]) .bandeau-alerte-mark {
   background: var(--c-sage-wash);
   box-shadow: inset 0 0 0 1.5px var(--c-sage);
   color: var(--c-sage-deep);
@@ -1162,6 +1162,7 @@
   box-shadow: none;
 }
 .bandeau[data-alerte="neige"] .bandeau-crans,
+.bandeau[data-alerte="deneige"] .bandeau-crans,
 .bandeau[data-alerte="passee"] .bandeau-crans,
 .bandeau[data-alerte="souffle"] .bandeau-crans {
   display: none;

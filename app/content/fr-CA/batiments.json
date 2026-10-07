@@ -164,7 +164,8 @@
     "rouvert.ours": "L’ours revient au potager.",
     "rouvert.gel": "La culture n’est plus couverte.",
     "rouvert.neige": "La neige retombe sur le bâtiment déneigé.",
-    "eolienne.arretee": "L’éolienne en panne n’a pas tourné."
+    "eolienne.arretee": "L’éolienne en panne n’a pas tourné.",
+    "eolienne.arretee.neige": "L’éolienne ensevelie n’a pas tourné."
   },
   "plan": {
     "titre": "Bâtiments",

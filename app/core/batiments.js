@@ -347,15 +347,17 @@ function cleLibre(ledger, base, depuis = 2) {
  * Production de l'éolienne, appelée par quests.js après une quête payée : la première du jour inscrit
  * prod:eolienne:{jour} au registre. Jamais deux fois en même temps : rien si l'Énergie du jour est déjà acquise. Si
  * elle a été reprise (Remballer), une nouvelle quête payée ce jour-là la reverse sous prod:eolienne:{jour}:2, :3…
- * Une éolienne en panne (imprevus.js) ne produit rien : à la première quête payée du jour, événement
- * { type: 'eolienne-arretee', energy } (ce qu'elle aurait donné).
+ * Une éolienne en panne ou sous la neige (imprevus.js) ne produit rien : à la première quête payée du jour, événement
+ * { type: 'eolienne-arretee', energy (ce qu'elle aurait donné), neige (vrai si toutes celles qui sont arrêtées sont sous la
+ * neige) }.
  */
 export function produireEolienne(ctx) {
   const eoliennes = batimentsDuVillage(ctx.game).filter((b) => b.type === 'eolienne');
   if (!eoliennes.length || eolienneDuJour(ctx.ledger, ctx.day) > 0) return;
-  const enPanne = eoliennes.filter((b) => degatDe(ctx.game, b.id, ctx.now)).length;
+  const arretees = eoliennes.map((b) => degatDe(ctx.game, b.id, ctx.now)).filter(Boolean);
+  const enPanne = arretees.length;
   if (enPanne && ctx.ledger.filter((e) => e.type === 'reward' && e.day === ctx.day).length === 1) {
-    ctx.events.push({ type: 'eolienne-arretee', energy: EOLIENNE_ENERGIE * enPanne });
+    ctx.events.push({ type: 'eolienne-arretee', energy: EOLIENNE_ENERGIE * enPanne, neige: arretees.every((d) => d.type === 'neige') });
   }
   const n = eoliennes.length - enPanne;
   if (!n) return;
