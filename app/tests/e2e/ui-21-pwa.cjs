@@ -62,7 +62,9 @@ L.runScenario('21. application installable et lancement hors ligne', async ({ R,
   // ───── service worker
   const reg = await page.evaluate(async () => {
     const r = await Promise.race([navigator.serviceWorker.ready, new Promise((res) => setTimeout(() => res(null), 8000))]);
-    return r && { scope: r.scope, script: r.active && r.active.scriptURL, state: r.active && r.active.state };
+    // « ready » arrive dès « activating » : on attend la fin de l'activation (ancien cache effacé, page prise en main)
+    if (r && r.active.state === 'activating') await Promise.race([new Promise((res) => r.active.addEventListener('statechange', res)), new Promise((res) => setTimeout(res, 8000))]);
+    return r &&{ scope: r.scope, script: r.active && r.active.scriptURL, state: r.active && r.active.state };
   });
   R.check('service worker enregistré et actif, portée = dossier de l’app', reg && reg.scope === srv.url && reg.script === srv.url + 'sw.js' && reg.state === 'activated', JSON.stringify(reg));
   R.check('il contrôle la page', await L.waitFor(() => page.evaluate(() => !!navigator.serviceWorker.controller), 5000));

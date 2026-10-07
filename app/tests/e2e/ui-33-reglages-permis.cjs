@@ -77,7 +77,10 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
     await L.closeWelcome(sp2);
     await settle(sp2);
     const b360 = await barre(sp2);
-    R.check('barre des ressources à 360 px, valeurs de départ (environ 207 Énergie, 170 Matériaux en nombres entiers, le bonus d’ouverture compris) : cinq puces, rien de coupé ni hors de la barre, pas de défilement', b360.n === 5 && !b360.hors.length && !b360.coupes.length && !b360.petits.length && !b360.defile && await sp2.evaluate(() => innerWidth) === 360 && /^20[67] Énergie$/.test(b360.texte.energie) && /^170 Matériaux$/.test(b360.texte.materiaux), JSON.stringify(b360));
+    // un bon imprévu tombé cette semaine (date réelle) s'ajoute au départ : 3 Énergie (aurore) ou 3 Matériaux (trouvaille)
+    const bonus = (k) => srv.ledger().filter((e) => e.type === 'imprevu').reduce((s, e) => s + (e[k] || 0), 0);
+    const [iE, iM] = [bonus('energy'), bonus('materials')];
+    R.check('barre des ressources à 360 px, valeurs de départ (environ 207 Énergie, 170 Matériaux en nombres entiers, le bonus d’ouverture et un bon imprévu de la semaine compris) : cinq puces, rien de coupé ni hors de la barre, pas de défilement', b360.n === 5 && !b360.hors.length && !b360.coupes.length && !b360.petits.length && !b360.defile && await sp2.evaluate(() => innerWidth) === 360 && [`${206 + iE} Énergie`, `${207 + iE} Énergie`].includes(b360.texte.energie) && b360.texte.materiaux === `${170 + iM} Matériaux`, JSON.stringify({ ...b360, imprevus: { energy: iE, materials: iM } }));
     const tailles = await sp2.evaluate(() => [...document.querySelectorAll('.hud .res-label')].map((l) => getComputedStyle(l).fontSize).join());
     R.check('barre à 360 px : les libellés gardent 12 px (le plus petit texte du contrat visuel)', new Set(tailles.split(',')).size === 1 && tailles.split(',')[0] === '12px', tailles);
     await sp2.screenshot({ path: `${L.SHOTS}/33-barre-360.png`, clip: { x: 0, y: 0, width: 360, height: 200 } });

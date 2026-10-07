@@ -124,4 +124,8 @@ L.runScenario('15. potager : chalet, semis, jours travaillés, récolte, famille
     ...L.quietState(core, MONDAY), resources: { energy: 10, materials: 40, food: 14 },
     premiersPas: Object.fromEntries(core.PAS_IDS.map((id) => [id, core.addDays(core.gameDay(MONDAY), -1)])),
   }),
+  // les deux imprévus de la semaine sont déjà passés (une pêche ou un ours changeraient les comptes) : le scénario 37 les suit
+  ledger: (core) => core.calendrierImprevus(ymd(0)).creneaux.map((c) => ({
+    key: `imprevu:${c.jour}`, at: MONDAY.toISOString(), day: ymd(0), type: 'imprevu', imprevu: 'orignal', pe: 0, energy: 0, materials: 0,
+  })),
 });

@@ -60,6 +60,8 @@ L.runScenario('35. Réglages et ajout ouverts avant la lecture de la partie', as
 
   // ───── Réglages ouverts avant la lecture : fermés ; après la lecture : 8, 2, 3
   const c = await pageRetenue(newPage, srv, opts);
+  // les textes arrivent par leur propre lecture : le joueur touche « Réglages » quand le bouton porte son nom
+  await c.page.waitForFunction(() => document.querySelector('[data-action="open-settings"] [data-t]').textContent.trim() !== '');
   await clic(c.page, '[data-action="open-settings"]');
   await c.page.waitForSelector('#dlg-settings[open]');
   await settle(c.page);
