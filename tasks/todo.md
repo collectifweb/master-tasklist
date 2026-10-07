@@ -620,7 +620,7 @@ Le lot contient les imprévus de tous les jours, bons et mauvais : leur dessin s
 
 ## Lot H — L'hiver : neige, tempêtes annoncées, objectif d'hiver
 
-Référence : bible §6 (saisons), §8 (alertes météo), §9 (reprise), §14 (semaines 5 et 6) ; `PRODUCT.md` (aléas récupérables) ; revue d'octobre, `docs/revue-2026-10/DIRECTIONS.md` (les Avis, lignes 1171 à 1180 ; « spirale de culpabilité », lignes 778 à 784) et `RECOMMANDATION.md` (lignes 111 à 116). **Statut : plan écrit le 7 octobre 2026, à valider par Alex.** À livrer avant la première neige du jeu, le 15 novembre, donc avant le 1er décembre.
+Référence : bible §6 (saisons), §8 (alertes météo), §9 (reprise), §14 (semaines 5 et 6) ; `PRODUCT.md` (aléas récupérables) ; revue d'octobre, `docs/revue-2026-10/DIRECTIONS.md` (les Avis, lignes 1171 à 1180 ; « spirale de culpabilité », lignes 778 à 784) et `RECOMMANDATION.md` (lignes 111 à 116). **Statut : validé par Alex le 7 octobre 2026** (réponses en fin de section ; règles mises à jour en conséquence). À livrer avant la première neige du jeu, le 15 novembre, donc avant le 1er décembre.
 
 Ce qui existe déjà (lu dans le code le 7 octobre) :
 - la neige au sol du 15 novembre au 30 avril (`isSnowSeason`, `core/time.js:152`) : elle ne sert qu'à choisir les lettres du matin ; l'île ne la montre pas ;
@@ -646,14 +646,14 @@ Le lot contient trois choses : la neige sur l'île, la tempête annoncée d'avan
 - Le jour de la tempête :
   - barre pleine : « Tempête tenue », une récompense en Matériaux, et Fanal le dit ;
   - sinon : un bâtiment est enseveli, avec une marque braise (une pelle) et le texte. La serre ensevelie ne pousse plus ; l'éolienne ensevelie ne produit plus. « Déneiger » coûte un peu d'Énergie ; une quête Terrain déneige gratuitement (le potager dort : Terrain retrouve un usage l'hiver) ; sinon, la neige fond seule en quelques jours.
-- Objectif d'hiver, « Garder la serre allumée » : récolter à la petite serre pendant 4 semaines différentes de l'hiver (décembre à février), pas forcément de suite. Récompense comme à l'automne : de l'Énergie, des Matériaux et un permis. Sans serre, le bandeau dit comment en avoir une.
+- Objectif d'hiver, « Garder la serre allumée » : un nombre de récoltes à la petite serre entre décembre et février (4 pour commencer, réglé par la simulation). Récompense comme à l'automne : de l'Énergie, des Matériaux et un permis. Sans serre, le bandeau dit comment en avoir une.
 - Jamais : une tâche touchée, des ressources retirées, un habitant ou un niveau perdu.
 
 ### Règles proposées
-- Au plus une tempête toutes les deux semaines, de la première neige (15 novembre) à la fin de mars. Aucune pendant la trêve des Fêtes, ni annoncée pour y tomber, ni un dégât qui serait encore là quand elle commence. Estimation, à mesurer dans la simulation : une dizaine de cycles de deux semaines, moins celui de la trêve.
+- Une tempête toutes les semaines et demie environ, au hasard : l'écart entre deux tempêtes est tiré entre 7 et 14 jours, de la première neige (15 novembre) à la fin de mars. Toujours au moins une semaine entre deux, donc une seule alerte à la fois. Aucune pendant la trêve des Fêtes, ni un dégât qui serait encore là quand elle commence. Nombre par hiver : à mesurer dans la simulation.
 - Le calendrier se déduit de la date, comme les imprévus : tous les appareils voient la même tempête, même hors ligne.
 - Une tempête ne frappe que si tu as vu son annonce : sans ouverture pendant les trois jours d'annonce, elle passe sans rien laisser. Le dégât ne tombe qu'à l'ouverture du jour même, comme un mauvais imprévu. La récompense d'une tempête tenue t'attend jusqu'au dimanche.
-- Après une absence de 5 jours ou plus (reprise de trois jours) : une tempête qui tombe pendant la reprise passe sans dégât. La bible dit « repoussée d'autant » ; ceci est plus simple et plus doux (question 4).
+- Après une absence de 5 jours ou plus (reprise de trois jours) : une tempête qui tombe pendant la reprise passe sans dégât. La bible disait « repoussée d'autant » ; ceci est plus simple et plus doux (choix laissé à l'agent par Alex, question 4).
 - Un jour de tempête, le second imprévu de la semaine ne peut pas être mauvais : jamais deux coups le même jour.
 - Un bâtiment ne porte qu'un dégât à la fois. La tempête choisit parmi les bâtiments libres où la neige change quelque chose (serre, éolienne). S'il n'y en a aucun, elle passe : de la neige partout, rien de cassé.
 - Montants (prix d'un cran, récompense de la tempête tenue, prix du déneigement, jours avant la fonte, récompense de l'objectif) : réglés par la simulation et montrés à Alex avant l'écran, comme au lot I. Cible : sur l'hiver, les tempêtes ne déplacent le premier niveau de quartier que de quelques jours, qu'on se prépare ou non.
@@ -662,13 +662,13 @@ Le lot contient trois choses : la neige sur l'île, la tempête annoncée d'avan
 - `core/hiver.js` (neuf), même forme que `core/imprevus.js` : tirage d'après la date (`hash` de `core/letters.js`), cycle de deux semaines, jour de la tempête, annonce trois jours avant.
 - La barre se lit au registre : jours travaillés de la fenêtre (`joursTravailles`), plus les crans achetés (clé `prepa:{jour}:{n}` : un paiement par cran, jamais deux avec deux appareils).
 - Le résultat s'écrit au passage du temps (`advanceTime`) sous une clé unique `tempete:{jour}` : la récompense, ou un dégât `neige` dans `game.degats`. Ce dégât reprend les trois voies des imprévus (`reparer`, `reparerParQuete`, guérison seule) ; il arrête la pousse de la serre (comme le gel) et la production de l'éolienne (comme la panne).
-- L'objectif d'hiver s'ajoute à `OBJECTIFS_SAISON` ; les semaines se comptent au registre (récoltes de serre).
+- L'objectif d'hiver s'ajoute à `OBJECTIFS_SAISON` ; les récoltes de serre se comptent au registre.
 - Île : palette de neige pendant `isSnowSeason`, front de givre réveillé par `v.avis`, marque « pelle » ; mouvement réduit respecté.
 - Nouveau type de dégât : un onglet resté en v2.2 laisserait produire une éolienne ensevelie. `CLIENT_VERSION` et `MIN_CLIENT` passent à 6 ; Alex recharge ses onglets à l'envoi (leçon du lot I).
 - Leçons à appliquer d'entrée : avant la série, chercher les scénarios qui vérifient un montant exact entre novembre et mars (un événement daté change leurs comptes) ; un échec sans lien avec le lot se relance sur l'étiquette précédente.
 
 ### H1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `core/hiver.js` : calendrier des tempêtes, barre, résultat, dégât `neige`, objectif d'hiver. Tests : jamais de tempête pendant la trêve ni la reprise ; jamais à cause d'une absence ; une tempête non vue ne laisse rien ; un cran payé une seule fois avec deux appareils ; la tempête tenue payée une seule fois ; jamais deux coups le même jour ; aucune tâche touchée ; aucune ressource retirée ; une quête Terrain déneige et « Remballer » rouvre ; l'objectif compte des semaines, pas une série.
+- [ ] `core/hiver.js` : calendrier des tempêtes, barre, résultat, dégât `neige`, objectif d'hiver. Tests : jamais de tempête pendant la trêve ni la reprise ; jamais à cause d'une absence ; une tempête non vue ne laisse rien ; un cran payé une seule fois avec deux appareils ; la tempête tenue payée une seule fois ; jamais deux coups le même jour ; aucune tâche touchée ; aucune ressource retirée ; une quête Terrain déneige et « Remballer » rouvre ; l'écart entre deux tempêtes reste entre 7 et 14 jours ; l'objectif compte les récoltes de serre de l'hiver seulement.
 - [ ] Simulation : montants et durées ; **tableau montré à Alex avant H2**, avec un départ au campement le 7 octobre (comme la partie en production).
 
 ### H2 — Écran [impeccable]
@@ -692,3 +692,5 @@ Le lot contient trois choses : la neige sur l'île, la tempête annoncée d'avan
 4. **Reprise** : une tempête qui tombe pendant les trois jours de reprise passe sans dégât (recommandé, plus simple) ? Ou elle est repoussée de trois jours, comme le dit la bible ?
 5. **Tour de guet et chasse-neige** : plus tard, quand le village approchera du rang Village (recommandé) ? Ou la tour de guet dès ce lot ?
 6. **Envoi** : directement en production, avant le 15 novembre, comme les imprévus ?
+
+**Réponses d'Alex (7 octobre)** : 1. plutôt de l'aléatoire, autour d'une semaine et demie : écart tiré entre 7 et 14 jours ; 2. la recommandation (crans par jour travaillé, cran manqué en Matériaux) ; 3. question mal posée par l'agent : retenu le plus simple, un nombre de récoltes de serre dans l'hiver (avec une seule serre, une récolte demande 5 jours travaillés : compter les semaines ou les récoltes revient presque au même) ; 4. et 5. « choisis » : une tempête pendant la reprise passe sans dégât ; tour de guet et chasse-neige plus tard ; 6. envoi direct en production dès que c'est prêt. Le tableau des montants est montré avant l'écran, comme au lot I. **Plan validé.**
