@@ -263,9 +263,8 @@ test('(c) une année entière à trois quêtes par jour : aucun stock négatif, 
 test('(d) en suivant le bandeau : les cinq premiers pas sans impasse, la première famille vers le 6e jour', () => {
   for (const debut of ['2026-10-25', '2026-12-15']) {
     const log = simuler(debut, 30, regulier, { bandeau: true });
-    assert.deepEqual(Object.keys(log.pas), PAS_IDS, `${debut} : premiers pas ${JSON.stringify(log.pas)}`);
-    // dans l'ordre : chaque pas le même jour que le précédent ou après
-    for (let k = 1; k < PAS_IDS.length; k++) assert.ok(log.pas[PAS_IDS[k]] >= log.pas[PAS_IDS[k - 1]], `${debut} : ${JSON.stringify(log.pas)}`);
+    // les cinq atteints ; un pas se coche dès qu'il est vrai, même avant son tour (7 octobre 2026) : l'ordre n'est plus vérifié
+    assert.deepEqual(Object.keys(log.pas).sort(), [...PAS_IDS].sort(), `${debut} : premiers pas ${JSON.stringify(log.pas)}`);
     // un coup de pouce, pas un cadeau : ni le premier soir, ni plus tard que le 7e jour
     assert.ok(log.premiereFamille >= 5 && log.premiereFamille <= 7, `${debut} : première famille au jour ${log.premiereFamille}`);
     assert.equal(log.pas.famille, log.premiereFamille);
@@ -273,7 +272,7 @@ test('(d) en suivant le bandeau : les cinq premiers pas sans impasse, la premiè
   // à une quête par jour aussi, le bandeau ne mène jamais à une impasse
   for (const debut of ['2026-10-25', '2026-12-15']) {
     const log = simuler(debut, 30, () => 1, { bandeau: true });
-    assert.deepEqual(Object.keys(log.pas), PAS_IDS, `${debut}, une quête par jour : ${JSON.stringify(log.pas)}`);
+    assert.deepEqual(Object.keys(log.pas).sort(), [...PAS_IDS].sort(), `${debut}, une quête par jour : ${JSON.stringify(log.pas)}`);
     assert.ok(log.premiereFamille <= 12, `${debut}, une quête par jour : première famille au jour ${log.premiereFamille}`);
   }
 });

@@ -5,7 +5,7 @@ import {
   remballerQuest, archiveQuest, unarchiveQuest, deleteQuest, claimBonus, openApp, newTaskId,
   questPe, normalizeTask, rewardKey, hydrateLedger,
 } from '../../core/index.js';
-import { T0, task, fresh, step, plusHours, sum } from './helpers.mjs';
+import { T0, task, fresh, step, plusHours, sum, avantLeChalet } from './helpers.mjs';
 
 const kinds = (r) => r.ops.map((o) => o.type);
 
@@ -18,6 +18,7 @@ test('newTaskId : dérivé de l’instant, jamais deux fois le même', () => {
 
 test('createQuest : tâche normalisée, opération task.upsert, aucun gain', () => {
   const w = fresh();
+  avantLeChalet(w.game);
   const { world, r } = step(w, createQuest, { task: '  Laver   l’auto ', domain: 'Véhicule', priority: 7, length: 3, difficulty: 2, deadline: '2026-10-10', notes: 'n' }, T0);
   const t = world.tasks[0];
   assert.equal(t.task, 'Laver l’auto');
@@ -51,6 +52,7 @@ test('createQuest : étapes et récurrence initialisées', () => {
 
 test('ajout complet : +1 ⚡, deux fois par jour', () => {
   let w = fresh();
+  avantLeChalet(w.game);
   const e = [];
   for (let i = 0; i < 3; i++) {
     const s = step(w, createQuest, { task: 'Quête ' + i, complete: true });
@@ -63,6 +65,7 @@ test('ajout complet : +1 ⚡, deux fois par jour', () => {
 
 test('supprimer dans les 24 h reprend le bonus d’ajout complet', () => {
   let w = fresh();
+  avantLeChalet(w.game);
   const id = 'z1';
   w = step(w, createQuest, { id, task: 'Éphémère', complete: true }).world;
   assert.equal(w.game.resources.energy, 11);
@@ -139,6 +142,7 @@ test('toggleStep : refus sur une quête terminée ou une étape inconnue', () =>
 
 test('completeQuest : gain, +1 tâche au quartier, opérations pour l’API', () => {
   const w = fresh([task({ priority: 6, length: 1, difficulty: 1 })]);
+  avantLeChalet(w.game);
   const { world, r } = step(w, completeQuest, { id: 't1', gameRevision: 7 });
   assert.equal(world.tasks[0].status, 'done');
   assert.equal(world.tasks[0].doneAt, '2026-10-06T14:00:00.000Z');
@@ -191,6 +195,7 @@ test('terminer, rouvrir puis terminer de nouveau rapporte 0', () => {
 
 test('remballer dans les 24 h annule le gain', () => {
   let w = fresh([task({ priority: 8, length: 5, difficulty: 4, steps: [{ id: 's1', label: 'a', done: false }] })]);
+  avantLeChalet(w.game);
   w = step(w, toggleStep, { id: 't1', stepId: 's1' }).world;
   w = step(w, completeQuest, { id: 't1' }).world;
   assert.ok(sum(w.ledger, (e) => e.pe) > 0);
@@ -262,6 +267,7 @@ test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45
 
 test('aucun plafond de stock : tout le gain entre, même avec de grosses réserves', () => {
   const w = fresh([task({ priority: 10, length: 10, difficulty: 10 })]);
+  avantLeChalet(w.game);
   w.game.resources = { energy: 400, materials: 900, food: 5 };
   const s = step(w, completeQuest, { id: 't1' }); // 67 PE, dont 56 comptés : +16,8 ⚡ et +28 ▣, plus le « Bon fil » (+2 ⚡)
   assert.deepEqual(s.world.game.resources, { energy: 418.8, materials: 928, food: 5 });
@@ -500,6 +506,7 @@ test('remballer une quête récurrente ne renvoie que les champs rétablis', () 
 test('createQuest utilise params.id (UUID de l’interface) ; newTaskId reste le repli', () => {
   const uuid = '3f2b8c1e-5a4d-4c1e-9b7a-0d2e6f8a1b3c';
   const w = fresh();
+  avantLeChalet(w.game);
   const a = createQuest(w.tasks, w.game, w.ledger, { id: uuid, task: 'x' }, T0);
   assert.equal(a.tasks[0].id, uuid);
   assert.equal(upsert(a)[0].id, uuid);
@@ -511,7 +518,7 @@ test('createQuest utilise params.id (UUID de l’interface) ; newTaskId reste le
 
 test('registre ancien : une occurrence déjà versée il y a plus de 60 jours rapporte 0 et ne se remballe pas', () => {
   const ledger = hydrateLedger([], ['reward:t1:1']);
-  const w = { tasks: [task({ status: 'done' })], game: fresh().game, ledger };
+  const w = { tasks: [task({ status: 'done' })], game: avantLeChalet(fresh().game), ledger };
   assert.throws(() => remballerQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0), /Trop tard/);
   const re = step({ ...w, tasks: [task()] }, completeQuest, { id: 't1' });
   assert.deepEqual(re.r.entries, []);

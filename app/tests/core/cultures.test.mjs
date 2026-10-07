@@ -7,13 +7,14 @@ import {
   CULTURE, SEMIS, CHAUFFAGE, STOCKAGE, GRENIER_STOCKAGE, semer, recolter, refusSemer, refusRecolter, etatCulture,
   coutSemis, stockage, joursTravailles, completeQuest, remballerQuest, jourSuivant,
 } from '../../core/index.js';
-import { fresh, step, task } from './helpers.mjs';
+import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
 const at = (day, h = 14) => `${day}T${String(h).padStart(2, '0')}:00:00Z`; // 10 h à Montréal en été, 9 h l'hiver
 const MAI = '2026-06-10';
 const monde = (day = MAI, over = {}) => {
   const w = fresh([], at(day));
   w.game.resources = { energy: 40, materials: 40, food: 0 };
+  avantLeChalet(w.game);
   Object.assign(w.game, over);
   w.tasks = Array.from({ length: 12 }, (_, k) => task({ id: `q${k}`, created: '2026-01-01' }));
   return w;

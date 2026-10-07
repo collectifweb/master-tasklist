@@ -1,6 +1,6 @@
-// Premiers pas (bible §11, lot 5) : cinq quêtes d'initiation qui appartiennent au jeu, jamais à la liste. Elles se
-// suivent dans l'ordre ; chaque pas est un constat sur l'état (bâtiments, liste, registre), donc un pas déjà vrai quand
-// il devient le pas courant est validé tout de suite. Chacun est atteint une seule fois et verse un coup de pouce au
+// Premiers pas (bible §11, lot 5) : cinq quêtes d'initiation qui appartiennent au jeu, jamais à la liste. Le bandeau les
+// propose dans l'ordre ; chaque pas est un constat sur l'état (bâtiments, liste, registre), coché dès qu'il est vrai,
+// même avant son tour (demande d'Alex, 7 octobre 2026). Chacun est atteint une seule fois et verse un coup de pouce au
 // registre sous une clé unique (pas:{id}) : rejouer, recharger ou migrer ne repaie jamais.
 // Titres fictifs génériques, aucune donnée réelle.
 import test from 'node:test';
@@ -83,23 +83,45 @@ test('le coup de pouce est versé au registre et à l’état : Énergie, Matér
   assert.equal(world.game.resources.materials, 20 - 15 + (rec.materials || 0));
 });
 
-test('un pas déjà vrai quand il devient le pas courant est validé tout de suite (partie avec une liste déjà faite)', () => {
+test('un pas fait avant son tour se coche tout de suite ; le bandeau propose toujours le premier qui reste', () => {
   const tasks = [task({ id: 'a', status: 'done' }), task({ id: 'b' })];
   const w = fresh(tasks, at(OCT));
-  // rien n'est validé avant le chalet : les pas se suivent dans l'ordre
-  assert.deepEqual(step(w, advanceTime, {}, at(OCT)).r.entries, []);
-  const { world, r } = step(w, construire, { type: 'chalet' }, at(OCT));
-  assert.deepEqual(pasDu(r.entries).map((e) => e.key), ['pas:chalet', 'pas:tache', 'pas:terminer']);
+  const s1 = step(w, advanceTime, {}, at(OCT));
+  assert.deepEqual(pasDu(s1.r.entries).map((e) => e.key), ['pas:tache', 'pas:terminer']);
+  assert.equal(etatPremiersPas(s1.world.tasks, s1.world.game, s1.world.ledger).courant, 'chalet');
+  assert.equal(prochainGeste(s1.world.tasks, s1.world.game, s1.world.ledger, at(OCT)).geste, 'construire');
+  const { world, r } = step(s1.world, construire, { type: 'chalet' }, at(OCT));
+  assert.deepEqual(pasDu(r.entries).map((e) => e.key), ['pas:chalet']);
   assert.equal(etatPremiersPas(world.tasks, world.game, world.ledger).courant, 'semer');
   assert.deepEqual(taskOps(r), []);
 });
 
-test('ordre : semer avant le chalet ne valide pas « semer » ; il l’est quand il devient courant, si c’est encore en terre', () => {
+test('semer avant le chalet coche « semer » tout de suite ; la récolte ne le reprend pas', () => {
   let w = fresh([task({ id: 'a', status: 'done' })], at(OCT));
-  w = step(w, semer, { id: 'parcelle-1' }, at(OCT)).world;
-  assert.equal(w.game.premiersPas.semer, undefined);
-  const { r } = step(w, construire, { type: 'chalet' }, at(OCT, 15));
-  assert.deepEqual(pasDu(r.entries).map((e) => e.key), ['pas:chalet', 'pas:tache', 'pas:terminer', 'pas:semer']);
+  const s = step(w, semer, { id: 'parcelle-1' }, at(OCT));
+  assert.deepEqual(pasDu(s.r.entries).map((e) => e.key), ['pas:tache', 'pas:terminer', 'pas:semer']);
+  assert.equal(s.world.game.premiersPas.semer, OCT);
+  const { r } = step(s.world, construire, { type: 'chalet' }, at(OCT, 15));
+  assert.deepEqual(pasDu(r.entries).map((e) => e.key), ['pas:chalet']);
+});
+
+test('partie convertie sans chalet ni Matériaux pour lui : les pas déjà faits se cochent et paient, le chalet reste à faire', () => {
+  const tasks = [task({ id: 'a', status: 'done' }), task({ id: 'b', status: 'done' }), task({ id: 'c' })];
+  const w = fresh(tasks, at(OCT));
+  w.game.resources = { energy: 19.2, materials: 6, food: 5 };
+  w.game.batiments = [{ id: 'atelier-1', type: 'atelier' }, { id: 'parcelle-2', type: 'parcelle' }, { id: 'parcelle-3', type: 'parcelle' }];
+  w.game.parcelles = ['parcelle-1', 'parcelle-2', 'parcelle-3'].map((id) => ({ id, semeLe: OCT }));
+  const { world, r } = step(w, advanceTime, {}, at('2026-10-08'));
+  assert.deepEqual(pasDu(r.entries).map((e) => e.key), ['pas:tache', 'pas:terminer', 'pas:semer']);
+  assert.deepEqual(world.game.resources, { energy: 21.2, materials: 11, food: 11 });
+  const etat = etatPremiersPas(world.tasks, world.game, world.ledger);
+  assert.equal(etat.courant, 'chalet');
+  assert.equal(etat.faits, 3);
+  const g = prochainGeste(world.tasks, world.game, world.ledger, at('2026-10-08'));
+  assert.equal(g.geste, 'construire');
+  assert.ok(g.raison, 'le bandeau dit ce qui manque pour le chalet');
+  assert.ok(!r.entries.some((e) => e.type === 'imprevu'), 'rien avant la fin des cinq pas');
+  assert.deepEqual(step(world, advanceTime, {}, at('2026-10-08')).r.ops, []);
 });
 
 test('jamais deux fois : rejouer, recharger (registre hydraté), perdre la mémoire de l’état, migrer', () => {

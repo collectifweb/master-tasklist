@@ -6,7 +6,7 @@ import {
   migrateState, createInitialState, isV1State, convertQueueV1, withoutRetiredGestures, migrateGame, isV1Entry, remballerQuest, completeQuest,
   toggleStep, passageLetter, markLetterShown,
 } from '../../core/index.js';
-import { task, step } from './helpers.mjs';
+import { task, step, avantLeChalet } from './helpers.mjs';
 
 const NOW = '2026-10-21T14:00:00Z';
 const V1 = {
@@ -48,7 +48,7 @@ test('remballer dans les 24 h une quête payée en v1 : la tâche quitte son qua
   const at = '2026-10-21T10:00:00.000Z';
   const ledger = [v1Reward('b', at, 'archives')];
   const tasks = [task({ id: 'b', domain: 'Administratif', status: 'done', doneAt: at })];
-  const game = migrateState(structuredClone(V1), NOW, { tasks, ledger });
+  const game = avantLeChalet(migrateState(structuredClone(V1), NOW, { tasks, ledger }));
   assert.deepEqual([game.quartiers.mairie, game.resources.energy, game.resources.materials], [1, 10, 20]);
   const s = step({ tasks, game, ledger }, remballerQuest, { id: 'b' }, NOW);
   const e = s.r.entries[0];
@@ -67,7 +67,7 @@ test('remballer dans les 24 h une quête payée en v1 : la tâche quitte son qua
 test('remballer un gain mêlé (étape cochée en v1, quête finie en v2) : seule la part v2 est reprise', () => {
   const tasks = [task({ id: 'c', domain: 'Maison', steps: [{ id: 's1', label: 'Première étape', done: true }, { id: 's2', label: 'Deuxième étape', done: false }] })];
   const ledger = [v1Step('c', 's1', '2026-10-21T09:00:00.000Z', 'atelier')];
-  const game = migrateState(structuredClone(V1), NOW, { tasks, ledger });
+  const game = avantLeChalet(migrateState(structuredClone(V1), NOW, { tasks, ledger }));
   const done = step({ tasks, game, ledger }, completeQuest, { id: 'c' }, NOW);
   const paid = done.r.entries.filter((x) => x.type === 'reward' || x.type === 'bonus');
   const gained = { energy: paid.reduce((s, x) => s + x.energy, 0), materials: paid.reduce((s, x) => s + x.materials, 0) };
@@ -82,7 +82,7 @@ test('remballer un gain mêlé (étape cochée en v1, quête finie en v2) : seul
 
 test('remballer une quête payée en v2 reprend toujours ses gains', () => {
   const tasks = [task({ id: 'd' })];
-  const done = step({ tasks, game: createInitialState(NOW), ledger: [] }, completeQuest, { id: 'd' }, NOW);
+  const done = step({ tasks, game: avantLeChalet(createInitialState(NOW)), ledger: [] }, completeQuest, { id: 'd' }, NOW);
   assert.ok(done.world.game.resources.energy > 10);
   const back = step(done.world, remballerQuest, { id: 'd' }, NOW);
   assert.equal(back.world.game.resources.energy, 10);

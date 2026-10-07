@@ -3,12 +3,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EOLIENNE_ENERGIE, completeQuest, remballerQuest, createQuest, reopenQuest } from '../../core/index.js';
-import { fresh, step, task } from './helpers.mjs';
+import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
 const at = (day, h = 14) => `${day}T${String(h).padStart(2, '0')}:00:00Z`;
 const D = '2026-10-06';
 const monde = (eolienne = true) => {
   const w = fresh(Array.from({ length: 4 }, (_, k) => task({ id: `q${k}`, created: '2026-10-01' })), at(D));
+  avantLeChalet(w.game);
   w.game.habitants = 3;
   if (eolienne) w.game.batiments = [{ id: 'atelier-1', type: 'atelier' }, { id: 'eolienne-1', type: 'eolienne' }];
   return w;

@@ -47,9 +47,9 @@ test('premiers pas par l’API : tasks.json identique octet par octet, coups de 
   const t = await geste(s, advanceTime, {}, LATER, 'temps');
   assert.equal(t.res.status, 200);
   assert.ok(!t.r.entries.some((e) => e.key.startsWith('pas:')));
-  // semer : pas encore valable (« terminer » d'abord) ; la liste ne bouge toujours pas
+  // semer : coché tout de suite, même avant « terminer » (un pas se coche dès qu'il est vrai) ; la liste ne bouge toujours pas
   const se = await geste(s, semer, { id: 'parcelle-1' }, LATER, 'semer');
   assert.equal(se.res.status, 200);
-  assert.deepEqual(await pasKeys(s), ['pas:chalet', 'pas:tache']);
+  assert.deepEqual(await pasKeys(s), ['pas:chalet', 'pas:tache', 'pas:semer']);
   assert.equal(s.readTasksRaw(), avant);
 }));

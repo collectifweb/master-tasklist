@@ -281,7 +281,7 @@ On ne commence pas avec une liste vide. Le village démarre avec un petit stock 
 4. Semer ta première parcelle (l'hiver, dans la petite serre).
 5. Accueillir ta première famille.
 
-Chacune enseigne un geste et donne un petit coup de pouce. Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
+Chacune enseigne un geste et donne un petit coup de pouce. Le bandeau les propose dans cet ordre, mais chacune se coche dès qu'elle est faite, même avant son tour (demande d'Alex, 7 octobre 2026 : sans les Matériaux du chalet, les autres pas déjà faits restaient vides). Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
 
 ## 12. Hermes, l'auteur du village
 

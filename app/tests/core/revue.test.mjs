@@ -7,7 +7,7 @@ import {
   normalizeTask, normalizeTasks, dayOnly, daysUntil, isValidDay, addMonths, orderByCote, bonusPe, questPe,
   hydrateLedger, cote,
 } from '../../core/index.js';
-import { T0, task, fresh, step, plusHours, sum } from './helpers.mjs';
+import { T0, task, fresh, step, plusHours, sum, avantLeChalet } from './helpers.mjs';
 
 const upsert = (r) => r.ops.filter((o) => o.type === 'task.upsert').map((o) => o.task);
 const refuse = (fn, w, params, now = T0, motif) =>
@@ -33,12 +33,14 @@ test('récurrence : « Fait » répété le même jour de jeu est refusé, sans 
 
 test('récurrence : terminer avant le début de la période de l’occurrence est refusé ; au début, c’est permis', () => {
   const w = fresh([hebdo({ deadline: '2026-10-20' })]); // période : du 13 au 20 octobre
+  avantLeChalet(w.game);
   refuse(completeQuest, w, { id: 'r1' }, T0, /Trop tôt .* 2026-10-13/);
   const ok = step(w, completeQuest, { id: 'r1' }, '2026-10-13T14:00:00Z');
   assert.equal(ok.world.tasks[0].deadline, '2026-10-27');
   assert.equal(ok.r.entries.filter((e) => e.type === 'reward').length, 1);
   // sans échéance : jamais « trop tôt »
   const sans = fresh([hebdo({ deadline: null })]);
+  avantLeChalet(sans.game);
   assert.equal(step(sans, completeQuest, { id: 'r1' }).r.entries.length, 1);
 });
 
@@ -253,6 +255,7 @@ test('claimBonus n’accepte que plan, plan-honore et ajout', () => {
 // 13
 test('remballer annule exactement le gain : sans plafond de stock, rien n’est parti ailleurs', () => {
   const w = fresh([task({ id: 's', priority: 10, length: 10, difficulty: 10 })]);
+  avantLeChalet(w.game);
   w.game.resources = { energy: 40, materials: 150, food: 5 };
   let s = step(w, completeQuest, { id: 's' });
   assert.deepEqual(s.world.game.resources, { energy: 58.8, materials: 178, food: 5 }); // 67 PE dont 56 comptés : +16,8 ⚡ +28 ▣ et « Bon fil » +2 ⚡

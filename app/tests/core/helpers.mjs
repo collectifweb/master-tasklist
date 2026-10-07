@@ -17,6 +17,17 @@ export function fresh(tasks = [], now = T0) {
   return { tasks, game: createInitialState(now), ledger: [] };
 }
 
+/**
+ * Partie où seul le chalet reste à faire parmi les premiers pas (tâche, terminer, semer et famille notés la veille de T0).
+ * Depuis le 7 octobre 2026, un pas se coche dès qu'il est vrai, même avant son tour (objectifs.js) : un test qui vérifie
+ * autre chose sur une partie sans chalet garde ainsi ses montants d'avant, sans coup de pouce de pas. Le chalet reste le
+ * pas courant : ni imprévu ni tempête, comme avant. Modifie `game` et le renvoie.
+ */
+export function avantLeChalet(game) {
+  game.premiersPas = { tache: '2026-10-05', terminer: '2026-10-05', semer: '2026-10-05', famille: '2026-10-05' };
+  return game;
+}
+
 /** Applique un résultat de quests.js à un « monde » { tasks, game, ledger }. */
 export function step(world, fn, params, now = T0) {
   const r = fn(world.tasks, world.game, world.ledger, { gameRevision: null, ...params }, now);

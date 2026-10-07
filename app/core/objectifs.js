@@ -1,7 +1,7 @@
 // Objectifs du village (bible §10 et §11, lot 5) : les cinq premiers pas, l'objectif de la saison et le bandeau.
-// Les premiers pas appartiennent au jeu, jamais à la liste : rien n'est écrit dans les tâches. Ils se suivent dans
-// l'ordre, et chaque pas est un constat sur l'état (bâtiments, liste, registre) : un pas déjà vrai quand il devient le
-// pas courant est validé tout de suite. Chacun verse une seule fois un coup de pouce au registre sous pas:{id} ;
+// Les premiers pas appartiennent au jeu, jamais à la liste : rien n'est écrit dans les tâches. Le bandeau les propose
+// dans l'ordre, et chaque pas est un constat sur l'état (bâtiments, liste, registre), coché dès qu'il est vrai, même
+// avant son tour (demande d'Alex, 7 octobre 2026). Chacun verse une seule fois un coup de pouce au registre sous pas:{id} ;
 // l'objectif de saison, sous saison:{saison-année}. Clés uniques : rejouer, recharger ou migrer ne repaie jamais.
 // Les gestes de batiments.js et quests.js appellent suivreObjectifs(ctx) à la fin de leur travail.
 import { gameDay, weekStart } from './time.js';
@@ -187,7 +187,7 @@ function suivrePremiersPas(ctx) {
       ctx.game = { ...ctx.game, premiersPas: { ...notes, [p.id]: typeof deja.day === 'string' ? deja.day : ctx.day } };
       continue;
     }
-    if (!CONSTATS[p.id](ctx.tasks, ctx.game, ctx.ledger)) return; // les pas se suivent : on s'arrête au premier pas à faire
+    if (!CONSTATS[p.id](ctx.tasks, ctx.game, ctx.ledger)) continue; // un pas pas encore fait n'empêche pas de cocher les suivants
     ctx.game = { ...ctx.game, premiersPas: { ...notes, [p.id]: ctx.day } };
     const r = p.hiver && !potagerOuvert(ctx.day) ? p.hiver : p.recompense;
     // la Nourriture ne dépasse jamais le stockage : ce qui ne tient pas n'est pas inscrit
@@ -207,7 +207,7 @@ function suivreSaison(ctx) {
   if (r.permis) annoncerPermisDeSaison(ctx);
 }
 
-/** Valide ce qui est devenu vrai : les premiers pas dans l'ordre, puis l'objectif de la saison. */
+/** Valide ce qui est devenu vrai : les premiers pas (chacun dès qu'il est vrai), puis l'objectif de la saison. */
 export function suivreObjectifs(ctx) {
   suivrePremiersPas(ctx);
   suivreSaison(ctx);
