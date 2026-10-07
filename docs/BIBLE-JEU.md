@@ -180,6 +180,22 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 
 **Pas de taxe pour l'instant** (décision d'Alex, 6 octobre) : aucun visiteur ni imprévu ne prélève de ressources. Laisser passer une commande continue de ne rien faire perdre.
 
+**Les imprévus, tels qu'ils sont construits** (lot I, 6 et 7 octobre 2026, décisions d'Alex) :
+- au plus deux par semaine (semaine de jeu, du lundi au dimanche), à des jours tirés d'après la date : tous les appareils voient le même, même hors ligne. Le premier est toujours bon, le second bon ou mauvais à pile ou face. Rien avant la fin des premiers pas ;
+- un bon imprévu rapporte 3 de sa ressource, une seule fois, même avec deux appareils (une clé par créneau au registre). L'aurore donne de l'Énergie, la pêche de la Nourriture (seulement s'il reste de la place dans la réserve, et jamais au-delà), la trouvaille des Matériaux, l'orignal rien. Un bon manqué attend jusqu'au dimanche ;
+- un mauvais imprévu frappe seulement le jour prévu, à l'ouverture : jamais à cause d'une absence, jamais pendant la trêve des Fêtes, jamais pendant les trois jours qui suivent un retour après cinq jours ou plus sans passage. S'il ne trouve rien à toucher, il devient un bon. Un bâtiment ne porte qu'un dégât à la fois ;
+
+| Dégât | Ce que ça change | Régler en payant | Régler par une quête | Seul en |
+|---|---|---|---|---|
+| Panne d'éolienne | elle ne donne plus son Énergie les jours de quête | 4 Matériaux | Maison | 3 jours |
+| Ours au potager (parcelle mûre, de mai à octobre) | la récolte faite pendant sa visite donne 2 Nourriture de moins | 2 Énergie | Terrain | 3 jours |
+| Gel précoce (culture pas mûre, septembre et octobre) | la journée du gel ne compte pas pour la pousse | 1 Énergie | Terrain | 1 jour |
+
+- trois façons de régler un dégât : payer, terminer une vraie quête du bon domaine (gratuit, la quête et son gain ne changent pas), ou attendre. Un dégât ne retire jamais une ressource déjà gagnée et ne touche jamais une tâche ;
+- à l'écran : l'aurore passe au-dessus de l'île, l'orignal traverse la route des Champs, la caisse de poissons attend au bout de la route du quai, la pile de bois près du grenier. Un dégât pose une marque braise (clé, patte, flocon) sur l'objet et se lit dans son nom ; la fiche le montre dans « Maintenant », avec son prix et les deux autres voies. Fanal raconte l'imprévu une fois par appareil.
+
+Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/core/simulation.test.mjs`, joueur (i)) : le premier niveau de quartier bouge de 0 à 2 jours aux six départs, qu'on paie ou qu'on attende. La tempête de neige et les alertes viennent au lot de l'hiver ; le visiteur surprise et les mouches noires ne sont pas dans cette première série.
+
 **Les alertes météo** reprennent les « Avis » de la v1, comme les menaces qu'on voit venir dans Dune 2. Une tempête est annoncée quelques jours d'avance, avec une barre de préparation. Certains bâtiments aident à s'y préparer : la tour de guet prévient plus tôt, le garage à chasse-neige protège. Si l'alerte est tenue, on gagne une récompense ; sinon, un bâtiment est à réparer.
 
 **Règles qui ne changent pas** (PRODUCT.md) :
