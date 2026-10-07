@@ -26,8 +26,11 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   const reason = (await page.textContent('#fil-quest .fil-reason > span')).trim();
   R.check('raison courte présente', reason.length > 3, reason);
   R.check('le bouton « Fait » porte le texte Fait', /Fait/.test(await page.textContent('#fil-quest [data-action="complete"]')));
+  // la liste a déjà des quêtes : le pas « Ajouter ta première vraie tâche » se coche à l'ouverture (+2 Énergie, depuis le
+  // 7 octobre 2026 un pas se coche même avant son tour) ; le compteur défile encore un instant : on attend sa valeur finale
+  await L.waitFor(async () => (await L.resValue(page, 'energie')) === 13, 3000);
   const vals = await Promise.all(['energie', 'materiaux', 'nourriture', 'habitants'].map((n) => L.resValue(page, n)));
-  R.check('ressources affichées (Énergie 11 = 10 + bonus d’ouverture, 20 Matériaux, 5 Nourriture, 0 Habitant)', vals[0] === 11 && vals[1] === 20 && vals[2] === 5 && vals[3] === 0, JSON.stringify(vals));
+  R.check('ressources affichées (Énergie 13 = 10 + bonus d’ouverture + coup de pouce du pas « tâche », 20 Matériaux, 5 Nourriture, 0 Habitant)', vals[0] === 13 && vals[1] === 20 && vals[2] === 5 && vals[3] === 0, JSON.stringify(vals));
   // l'écran est mis à jour avant la fin de l'écriture : on attend qu'elle arrive au registre
   await L.waitFor(() => srv.ledger().some((e) => e.bonus === 'ouverture'), 3000);
   const led = srv.ledger();

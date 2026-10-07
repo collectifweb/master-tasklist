@@ -20,7 +20,7 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   const tasks = srv.readTasks();
   R.check('les deux quêtes sont terminées dans tasks.json (aucune perte)', tasks.find((t) => t.id === idA).status === 'done' && tasks.find((t) => t.id === idB).status === 'done');
   const g = srv.game();
-  const sum = 10 + led.filter((e) => e.type === 'reward' || e.type === 'bonus').reduce((s, e) => s + (e.energy || 0), 0); // 10 = Énergie de départ
+  const sum = 10 + led.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'pas').reduce((s, e) => s + (e.energy || 0), 0); // 10 = Énergie de départ
   R.check('l’état du jeu est cohérent avec le registre (Énergie)', Math.abs(g.resources.energy - Math.round(sum * 10) / 10) < 0.11, `${g.resources.energy} vs ${sum}`);
   await a.waitForTimeout(1200);
   const stateA = await a.evaluate(() => document.querySelectorAll('#quest-list > li').length);
@@ -38,7 +38,7 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   R.check('même quête dans deux onglets : un seul gain', led2.filter((e) => e.key === `reward:${id}:1`).length === 1, String(led2.filter((e) => e.key === `reward:${id}:1`).length));
   R.check('même quête : une seule entrée par clé dans tout le registre', new Set(led2.map((e) => e.key)).size === led2.length);
   const g2 = srv.game();
-  const sum2 = 10 + led2.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step').reduce((s, e) => s + (e.energy || 0), 0);
+  const sum2 = 10 + led2.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step' || e.type === 'pas').reduce((s, e) => s + (e.energy || 0), 0);
   R.check('état du jeu toujours cohérent (aucun gain en double)', Math.abs(g2.resources.energy - Math.round(sum2 * 10) / 10) < 0.11, `${g2.resources.energy} vs ${sum2}`);
 
   // deux appareils (stockage séparé) : le 2e agit sur une vue périmée (la quête est déjà terminée côté serveur)
@@ -60,7 +60,7 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   R.check('appareil périmé : file d’attente vide', await dev2.evaluate(() => JSON.parse(localStorage.getItem('oree.queue.v2') || '[]').length) === 0);
   const gx = srv.game();
   const ledx = srv.ledger();
-  const sumx = 10 + ledx.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step').reduce((s, e) => s + (e.energy || 0), 0);
+  const sumx = 10 + ledx.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step' || e.type === 'pas').reduce((s, e) => s + (e.energy || 0), 0);
   R.check('état du jeu toujours cohérent après le conflit', Math.abs(gx.resources.energy - Math.round(sumx * 10) / 10) < 0.11, `${gx.resources.energy} vs ${sumx}`);
   // une quête différente sur l'appareil périmé : conflit de jeu résolu par recalcul, rien de perdu
   await dev1.locator(`#quest-list > li[data-task-id="example-006"] [data-action="complete"]`).click();
@@ -70,7 +70,7 @@ L.runScenario('7. deux onglets', async ({ R, srv, browser, size, newPage, shot }
   const led4 = srv.ledger();
   R.check('conflit de jeu : les deux gains sont là, une fois chacun', led4.filter((e) => e.key === 'reward:example-006:1').length === 1 && led4.filter((e) => e.key === 'reward:example-007:1').length === 1);
   const gy = srv.game();
-  const sumy = 10 + led4.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step').reduce((s, e) => s + (e.energy || 0), 0);
+  const sumy = 10 + led4.filter((e) => e.type === 'reward' || e.type === 'bonus' || e.type === 'step' || e.type === 'pas').reduce((s, e) => s + (e.energy || 0), 0);
   R.check('conflit de jeu : état cohérent avec le registre', Math.abs(gy.resources.energy - Math.round(sumy * 10) / 10) < 0.11, `${gy.resources.energy} vs ${sumy}`);
   await shot(a, '07-onglet-a');
   R.check('aucune erreur console dans le 2e onglet', b.errors.length === 0, b.errors.join(' | '));

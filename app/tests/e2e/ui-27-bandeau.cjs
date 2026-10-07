@@ -57,7 +57,8 @@ L.runScenario('27. bandeau d’objectifs : visible, lisible, compact à 390, sui
   let b = await lire(page);
   R.check('visible et allumé, sous la voie d’annonce, dans l’écran', b.lit === 'true' && b.visibles.includes('.bandeau-today') && b.sousAnnonce && b.sousHud && b.dansEcran, JSON.stringify(b.rect));
   R.check('titre de la région pour les lecteurs d’écran : « Objectifs »', b.titre === 'Objectifs', b.titre);
-  R.check('contenu : Aujourd’hui « Rebâtis un chalet », premiers pas 0 sur 5, grenier 5 sur 20, prochain rang Hameau', b.today === 'Rebâtis un chalet' && b.semaine === 'Premiers pas : 0 sur 5' && b.saison === 'Grenier : 5 sur 20' && b.rangNom === 'Hameau' && b.rang === 'encore 3 habitants', JSON.stringify(b));
+  // la liste a déjà des quêtes : « Ajouter ta première vraie tâche » est coché dès l'ouverture (un pas se coche même avant son tour)
+  R.check('contenu : Aujourd’hui « Rebâtis un chalet », premiers pas 1 sur 5, grenier 5 sur 20, prochain rang Hameau', b.today === 'Rebâtis un chalet' && b.semaine === 'Premiers pas : 1 sur 5' && b.saison === 'Grenier : 5 sur 20' && b.rangNom === 'Hameau' && b.rang === 'encore 3 habitants', JSON.stringify(b));
   R.check('« Aujourd’hui » se lit en entier : « Aujourd’hui : Rebâtis un chalet »', b.label === 'Aujourd’hui : Rebâtis un chalet', b.label);
   R.check('la barre du rang est doublée par le texte « encore 3 habitants »', b.barre && b.rang === 'encore 3 habitants');
   R.check('aucun texte coupé, aucune police sous 12 px', !b.coupes.length && !b.petits.length, JSON.stringify([b.coupes, b.petits]));
@@ -77,7 +78,7 @@ L.runScenario('27. bandeau d’objectifs : visible, lisible, compact à 390, sui
     await page.waitForTimeout(350);
     b = await lire(page);
     R.check('390 déplié : les quatre objectifs, aria-expanded vrai', b.open && b.expanded === 'true' && b.visibles.join() === '.bandeau-today,.bandeau-semaine,.bandeau-saison,.bandeau-rang,.bandeau-more', JSON.stringify(b.visibles));
-    R.check('390 déplié : les cinq premiers pas, le premier « maintenant », sans texte coupé ni défilement', b.pas.length === 5 && b.pas[0].now && !b.pas.some((p) => p.fait) && !b.coupes.length && !b.deborde && b.dansEcran, JSON.stringify([b.pas, b.coupes]));
+    R.check('390 déplié : les cinq premiers pas, le premier « maintenant », seul « Ajouter ta première vraie tâche » coché, sans texte coupé ni défilement', b.pas.length === 5 && b.pas[0].now && b.pas.filter((p) => p.fait).length === 1 && b.pas[1].fait && !b.coupes.length && !b.deborde && b.dansEcran, JSON.stringify([b.pas, b.coupes]));
     await shot(page, '27-bandeau-deplie');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(250);

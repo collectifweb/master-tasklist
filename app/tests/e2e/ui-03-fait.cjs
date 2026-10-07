@@ -8,6 +8,11 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   const compact = size[0] < 700;
   const snap = async () => ({ e: await L.resValue(page, 'energie'), m: await L.resValue(page, 'materiaux'), f: await L.resValue(page, 'nourriture'), h: await L.resValue(page, 'habitants') });
   const quartiers = () => ({ ...(srv.game()?.quartiers || {}) });
+  // l'ouverture paie son bonus et, la liste ayant déjà des quêtes, le pas « Ajouter ta première vraie tâche » : on attend
+  // qu'ils soient au registre et que le compteur ait fini de défiler avant la photo de départ
+  await L.waitFor(() => srv.ledger().some((e) => e.bonus === 'ouverture') && srv.ledger().some((e) => e.key === 'pas:tache'), 5000);
+  const e0 = 10 + srv.ledger().reduce((s, e) => s + (e.energy || 0), 0); // 10 = Énergie de départ
+  await L.waitFor(async () => (await L.resValue(page, 'energie')) === e0, 3000);
   const s0 = await snap();
   const title = (await page.textContent('#fil-quest .fil-title')).trim();
   const id = await page.getAttribute('#fil-quest', 'data-task-id');
@@ -67,7 +72,12 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   await page.click('#dlg-confirm [data-answer="yes"]');
   await page.waitForTimeout(800);
   const s2 = await snap();
-  R.check('Remballer : Énergie, Matériaux, Nourriture et Habitants reviennent', s2.e === s0.e && s2.m === s0.m && s2.f === s0.f && s2.h === s0.h, JSON.stringify({ s0, s2 }));
+  // la première quête payée a coché le pas « Terminer une vraie tâche » : son coup de pouce reste au Remballer (un pas
+  // atteint n'est jamais repris ; depuis le 7 octobre 2026, il se coche même avant le chalet)
+  const pasTerminer = srv.ledger().filter((e) => e.key === 'pas:terminer');
+  R.check('le pas « terminer » est payé une seule fois', pasTerminer.length === 1, JSON.stringify(pasTerminer));
+  const mPas = pasTerminer[0]?.materials ?? 0;
+  R.check('Remballer : Énergie, Nourriture et Habitants reviennent ; les Matériaux aussi, sauf le coup de pouce du pas « terminer »', s2.e === s0.e && s2.m === s0.m + mPas && s2.f === s0.f && s2.h === s0.h, JSON.stringify({ s0, s2, mPas }));
   R.check('Remballer : le quartier revient à son compte', (quartiers()[q] || 0) === (q0[q] || 0), JSON.stringify({ q0, q2: quartiers() }));
   R.check('Remballer : une écriture reverse au registre', srv.ledger().filter((e) => e.key === `reverse:${id}:1`).length === 1);
   R.check('Remballer : tasks.json revient à « todo »', srv.readTasks().find((t) => t.id === id).status === 'todo');
