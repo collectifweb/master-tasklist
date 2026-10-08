@@ -118,7 +118,7 @@ test('bandeau, partie neuve : aujourd’hui = premier pas, cette semaine = premi
   const b = bandeau(w.tasks, w.game, w.ledger, at(OCT));
   assert.deepEqual(b.aujourdhui, { kind: 'pas', pas: 'chalet', geste: 'construire', cible: 'chalet-1', raison: null });
   assert.deepEqual(b.semaine, { kind: 'pas', faits: 0, total: 5, courant: 'chalet', pas: PAS_IDS.map((id) => ({ id, fait: null })) });
-  assert.deepEqual(b.saison, { id: 'automne', cle: 'automne-2026', objectif: 'grenier', atteint: false, stock: 5, max: STOCKAGE });
+  assert.deepEqual(b.saison, { id: 'automne', cle: 'automne-2026', objectif: 'grenier', atteint: false, stock: 5, max: STOCKAGE, ralenti: false });
   assert.deepEqual(b.rang, { habitants: 0, nom: 'Campement', suivant: 'Hameau', min: 0, cible: 3, encore: 3, part: 0 });
 });
 
@@ -139,7 +139,7 @@ test('bandeau, après les cinq pas : la quête n° 1, et le compte vrai de la se
 test('bandeau, hiver : l’objectif « Garder la serre allumée » (lot H), compté sans rien bloquer ; le printemps est « à venir »', () => {
   const w = fresh([], at('2026-12-10'));
   const b = bandeau(w.tasks, w.game, w.ledger, at('2026-12-10'));
-  assert.deepEqual(b.saison, { id: 'hiver', cle: 'hiver-2026', objectif: 'serre', atteint: false, stock: 0, max: OBJECTIFS_SAISON.hiver.recoltes });
+  assert.deepEqual(b.saison, { id: 'hiver', cle: 'hiver-2026', objectif: 'serre', atteint: false, stock: 0, max: OBJECTIFS_SAISON.hiver.recoltes, ralenti: false });
   const p = bandeau(w.tasks, w.game, w.ledger, at('2027-04-10'));
   assert.deepEqual(p.saison, { id: 'printemps', cle: 'printemps-2027', objectif: null, atteint: false, aVenir: true });
 });

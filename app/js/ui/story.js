@@ -310,7 +310,7 @@ export function createStory(app) {
     const passageToday = [...(content.lettres?.passage ?? []), ...(content.lettres?.conversion ?? [])]
       .some((l) => (c.game.letters ?? {})[l.id] === today);
     if (content.lettres && c.game.startDay !== today && !passageToday) {
-      const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null });
+      const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null, ledger: c.ledger });
       if (letter && !letter.seen) { welcoming = true; openLetter(letter, next); return; }
     }
     const r = readReview();

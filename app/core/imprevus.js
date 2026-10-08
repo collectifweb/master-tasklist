@@ -1,6 +1,8 @@
 // Imprévus, première série (bible §8 et §9, lot I, plan validé par Alex le 6 octobre 2026 au soir).
 // Calendrier : au plus deux par semaine (semaine de jeu, lundi au dimanche), à des jours tirés au sort d'après la date,
 // le premier toujours bon, le second bon ou mauvais à pile ou face. Tous les appareils voient le même, même hors ligne.
+// L'allure de la semaine (allure.js, lot A) change leur nombre : au ralenti, le seul bon ; plein régime, deux de plus (un
+// bon, un à pile ou face), sur deux autres jours.
 // Ce qui arrive se décide le jour même, selon ce que le village possède ; un mauvais qui ne peut pas frapper (rien à
 // toucher, reprise après une absence, trêve des Fêtes) devient un bon. Un bon manqué attend jusqu'au dimanche ; un mauvais
 // ne frappe que le jour prévu, à l'ouverture, jamais à cause d'une absence. Rien avant la fin des premiers pas.
@@ -26,6 +28,7 @@ import { quartierOfTask } from './domains.js';
 import { batimentsDuVillage, etatCulture, joursTravailles, stockage, potagerOuvert, manque } from './batiments.js';
 import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 import { estJourDeTempete } from './hiver.js';
+import { allureDe } from './allure.js';
 
 /**
  * Catalogue. bons : gain { energy?, materials?, food? } (la Nourriture ne dépasse jamais la réserve). mauvais : quartier
@@ -68,22 +71,34 @@ export function tirage(s) {
 }
 
 /**
- * Calendrier de la semaine qui contient `day` : { semaine (lundi), creneaux: [{ jour, nature: 'bon' }, { jour, nature:
- * 'bon' | 'mauvais' }] }, deux jours distincts dans l'ordre. Lecture pure de la date.
+ * Calendrier de la semaine qui contient `day`, à l'allure donnée (allure.js) : { semaine (lundi), creneaux: [{ jour, nature:
+ * 'bon' | 'mauvais' }] }, des jours distincts dans l'ordre. Régulier : deux créneaux, le premier bon, le second à pile ou
+ * face. Au ralenti : le premier seul. Plein régime : ces deux-là, plus deux tirés à part sur deux des cinq autres jours (le
+ * premier bon, le second à pile ou face). Lecture pure de la date.
  */
-export function calendrierImprevus(day) {
+export function calendrierImprevus(day, allure = 'regulier') {
   const semaine = weekStart(day);
   const h = tirage(`imprevus:${semaine}`);
   const a = h % 7;
   const b = (a + 1 + (Math.floor(h / 7) % 6)) % 7;
   const mauvais = Math.floor(h / 42) % 2 === 1;
-  return {
-    semaine,
-    creneaux: [
-      { jour: addDays(semaine, Math.min(a, b)), nature: 'bon' },
-      { jour: addDays(semaine, Math.max(a, b)), nature: mauvais ? 'mauvais' : 'bon' },
-    ],
-  };
+  const creneaux = [
+    { jour: addDays(semaine, Math.min(a, b)), nature: 'bon' },
+    { jour: addDays(semaine, Math.max(a, b)), nature: mauvais ? 'mauvais' : 'bon' },
+  ];
+  if (allure === 'ralenti') return { semaine, creneaux: creneaux.slice(0, 1) };
+  if (allure === 'plein') {
+    const libres = [0, 1, 2, 3, 4, 5, 6].filter((k) => k !== a && k !== b);
+    const p = tirage(`imprevus-plein:${semaine}`);
+    const c = libres[p % 5];
+    const d = libres.filter((k) => k !== c)[Math.floor(p / 5) % 4];
+    creneaux.push(
+      { jour: addDays(semaine, Math.min(c, d)), nature: 'bon' },
+      { jour: addDays(semaine, Math.max(c, d)), nature: Math.floor(p / 20) % 2 === 1 ? 'mauvais' : 'bon' },
+    );
+    creneaux.sort((x, y) => (x.jour < y.jour ? -1 : 1));
+  }
+  return { semaine, creneaux };
 }
 
 // Dégâts lisibles de la partie (un dégât abîmé est ignoré).
@@ -270,7 +285,7 @@ export function suivreImprevus(ctx, seen) {
   }
   ranger(ctx);
   if (etatPremiersPas(ctx.tasks, ctx.game, ctx.ledger).courant) return;
-  for (const c of calendrierImprevus(day).creneaux) {
+  for (const c of calendrierImprevus(day, allureDe(ctx.game, ctx.ledger, day).niveau).creneaux) {
     if (c.jour > day || hasKey(ctx.ledger, cle(c.jour))) continue;
     if (c.nature === 'mauvais') {
       if (c.jour < day) continue; // jour manqué : un mauvais ne frappe jamais à cause d'une absence

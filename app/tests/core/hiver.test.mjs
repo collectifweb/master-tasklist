@@ -340,6 +340,9 @@ test('objectif d’hiver : les récoltes de la petite serre de décembre à fév
     return step(x, recolter, { id }, at(day));
   };
   let w = village('2026-11-20', { batiments: [...CHALETS, ATELIER, SERRE] });
+  // deux quêtes payées par jour tout l'hiver : l'allure reste « régulier », la cible est la pleine (le ralenti et sa cible
+  // réduite sont vérifiés dans allure.test.mjs)
+  w = { ...w, ledger: [...w.ledger, ...Array.from({ length: 110 }, (_, k) => addDays('2026-11-20', k)).flatMap((d) => [paye(d, 'r1'), paye(d, 'r2')])] };
   ({ world: w } = recolte(w, 'serre-1', '2026-11-20'));
   assert.equal(recoltesHiver(w.game, 'hiver-2026'), 0, 'novembre : pas encore l’hiver');
   ({ world: w } = recolte(w, 'parcelle-1', '2026-12-02'));

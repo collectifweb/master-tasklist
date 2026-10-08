@@ -54,8 +54,9 @@ async function call(method, payload) {
  * l'API refuse la version 4, qui ferait tourner une éolienne en panne, récolterait sans la part de l'ours et effacerait la
  * reprise ; son geste reste en file et l'onglet rechargé le recalcule avant l'envoi (`withoutStaleBodies`). Version 6 (hiver,
  * lot H) : l'API refuse la version 5, qui ferait tourner une éolienne ensevelie et effacerait la neige des tempêtes.
+ * Version 7 (allure, lot A) : l'API refuse la version 6, qui tirerait deux imprévus par semaine quelle que soit l'allure.
  */
-export const CLIENT_VERSION = 6;
+export const CLIENT_VERSION = 7;
 
 export const api = {
   get: () => call('GET'),

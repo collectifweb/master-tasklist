@@ -3,6 +3,7 @@
 import { Ctx } from './quests.js';
 import { gameDay, daysBetween, isSnowSeason } from './time.js';
 import { topCards } from './cote.js';
+import { allureDe, plusCourte } from './allure.js';
 
 export const LETTER_REPEAT_DAYS = 7;
 
@@ -38,14 +39,17 @@ export function hash(s) {
 
 /**
  * Lettre du jour : `retour` si le bonus de retour a été donné aujourd'hui (openApp, après 3 jours ou plus),
- * sinon `matin` avec {quete} = la quête n° 1 (topCards), ou `matinSansQuete` s'il n'y a aucune quête ouverte.
- * options : { prenom } (réglage facultatif). Renvoie { id, kind, lignes, questId, seen } ou null ; `seen: true` si la
- * lettre du jour a déjà été montrée (c'est alors la même). L'interface note la lettre montrée par markLetterShown.
+ * sinon `matin` avec {quete} = la quête n° 1 (topCards) ou, au ralenti, la plus courte (plusCourte, allure.js), ou
+ * `matinSansQuete` s'il n'y a aucune quête ouverte.
+ * options : { prenom } (réglage facultatif), { ledger } (le registre, pour l'allure ; sans lui, la quête n° 1). Renvoie
+ * { id, kind, lignes, questId, seen } ou null ; `seen: true` si la lettre du jour a déjà été montrée (c'est alors la même).
+ * L'interface note la lettre montrée par markLetterShown.
  */
-export function morningLetter(lettres, tasks, game, now, { prenom } = {}) {
+export function morningLetter(lettres, tasks, game, now, { prenom, ledger } = {}) {
   const today = gameDay(now);
   const shown = game.letters ?? {};
-  const first = topCards(tasks, now).first;
+  const ralenti = Array.isArray(ledger) && allureDe(game, ledger, today).niveau === 'ralenti';
+  const first = ralenti ? plusCourte(tasks, now) : topCards(tasks, now).first;
   const kind = game.lastReturnDay === today ? 'retour' : first ? 'matin' : 'matinSansQuete';
   const vars = { prenom: prenom || null, quete: first ? first.task : null };
   const period = periodOf(today);
