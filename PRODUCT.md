@@ -49,6 +49,18 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - L’hébergement actuel est un environnement web LiteSpeed/PHP avec fichiers statiques et endpoint d’écriture PHP. Une évolution technique doit préserver un déploiement fiable sur cet environnement ou fournir une migration explicitement vérifiée.
 - Le produit n’est pas multiutilisateur à ce stade.
 
+## Horizons (pas pour maintenant)
+
+Noté le 8 octobre 2026, à la demande d’Alex. Aucun lot n’est prévu : c’est une direction possible, de la plus proche à la plus lointaine.
+
+1. **Un petit site public.** N’importe qui pourrait utiliser l’app sans créer de compte : ses tâches et sa partie restent dans son appareil, rien ne part sur un serveur.
+2. **Plus tard, un code de synchronisation**, pour qui veut la même partie sur plusieurs appareils.
+3. **Plus loin, des applications natives** Android et iOS.
+
+Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `app/api/api.php`, le 8 octobre 2026) : les règles du jeu vivent dans `core/`, en JavaScript pur, et l’interface ne calcule rien elle-même ; le serveur ne fait que garder les tâches, la partie et le registre, par quatre opérations (`task.upsert`, `task.delete`, `ledger.append`, `game.set`). Piste, pas encore éprouvée : remplacer l’API par un stockage dans l’appareil qui fait ces quatre opérations. Le jeu ne dépend pas d’Hermes (bible §11).
+
+À prévoir dès le premier site : un navigateur peut effacer les données d’un site. Safari le fait pour un site resté sept jours sans visite (règle de WebKit annoncée en 2020) ; une app ajoutée à l’écran d’accueil en serait exemptée, sans engagement récent d’Apple. D’où une sauvegarde à télécharger et à recharger, dès le départ.
+
 ## Brand Commitments
 
 - Nom de travail existant: « Quêtes du foyer ».

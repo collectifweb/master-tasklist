@@ -315,6 +315,8 @@ On ne commence pas avec une liste vide. Le village démarre avec un petit stock 
 
 Chacune enseigne un geste et donne un petit coup de pouce. Le bandeau les propose dans cet ordre, mais chacune se coche dès qu'elle est faite, même avant son tour (demande d'Alex, 7 octobre 2026 : sans les Matériaux du chalet, les autres pas déjà faits restaient vides). Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
 
+La version publique (un site sans compte, les données gardées dans l'appareil, puis un code de synchronisation, puis des applications natives) est notée dans `PRODUCT.md`, section « Horizons ». Rien n'est prévu dans les lots.
+
 ## 12. Hermes, l'auteur du village
 
 **Deux semaines d'avance.** Hermes garde toujours deux chroniques prêtes sur le serveur : celle de la semaine qui vient et celle d'après. Chaque dimanche soir (tâche planifiée), il :
