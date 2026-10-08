@@ -929,7 +929,7 @@ Le lot contient trois visiteurs à commande (convoi, famille du Sud, scientifiqu
 
 ## Lot E — L'île vivante
 
-Référence : bible §10 (« chaque habitant va et vient à son métier, la fumée sort des cheminées, l'éolienne tourne. L'animation tourne en continu tant que l'app est ouverte. Un réglage « économie de batterie » la remet au repos, et le mouvement réduit est respecté »), §14 (semaines 3 et 4) ; retour d'essai n° 8 d'Alex (« Voir les habitants bouger »). Choisi par Alex le 8 octobre 2026 parmi les lots proposés (« Choisis le lot que tu préfères »). **Statut : à valider par Alex.**
+Référence : bible §10 (« chaque habitant va et vient à son métier, la fumée sort des cheminées, l'éolienne tourne. L'animation tourne en continu tant que l'app est ouverte. Un réglage « économie de batterie » la remet au repos, et le mouvement réduit est respecté »), §14 (semaines 3 et 4) ; retour d'essai n° 8 d'Alex (« Voir les habitants bouger »). Choisi par Alex le 8 octobre 2026 parmi les lots proposés (« Choisis le lot que tu préfères »). **Statut : validé par Alex le 8 octobre 2026** (réponses en fin de section).
 
 Ce qui existe déjà (lu dans le code le 8 octobre) :
 - la fumée des chalets habités et le rotor de l'éolienne (`world/models.js:272`, `:455`), le chaland et les bateaux qui tanguent, l'aurore : des animations CSS qui ne jouent que sous `.ow[data-ambient="on"]`, hors mouvement réduit, onglet caché ou île hors de l'écran (`css/world.css:539`) ;
@@ -983,3 +983,5 @@ Le lot contient les habitants qui vont à leur travail et en reviennent, le rég
 1. **Quand l'île bouge** : vivante par défaut tant que l'app est ouverte et à l'écran, avec « Économie de batterie » pour revenir au comportement d'aujourd'hui (recommandé, c'est la bible) ? Au repos par défaut, avec un réglage pour la rendre vivante ? Ou comme aujourd'hui, sans réglage (les habitants ne marchent que 9 s après un geste) ?
 2. **Toucher un habitant** : rien, ce sont des figurants (recommandé : une cible qui bouge est difficile à toucher) ? Ou une petite fiche (« Habitant, jardinier aux Champs ») ?
 3. **Envoi** : direct en production si tout est vert, comme les lots I, H, A et C ?
+
+**Réponses d'Alex (8 octobre)** : 1. vivante par défaut, avec « Économie de batterie » ; 2. rien, ce sont des figurants ; 3. envoi direct si tout est vert. **Plan validé.**
