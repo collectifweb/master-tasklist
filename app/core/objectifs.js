@@ -36,7 +36,11 @@ export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
  * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février (10 : la simulation (j) les
  * place entre le 2 et le 31 janvier selon le joueur, mesuré le 7 octobre 2026). Le printemps et l'été s'affichent « à venir ».
  * Au ralenti (allure.js, lot A), la cible est réduite, la récompense la même : `partRalenti` du grenier à l'automne,
- * `recoltesRalenti` récoltes l'hiver. Valeurs provisoires, réglées par la simulation (k).
+ * `recoltesRalenti` récoltes l'hiver. Réglées par la simulation (k), mesuré le 7 octobre 2026 : à 6 récoltes, le joueur à
+ * une quête tous les quatre jours atteint l'objectif d'hiver le 25 janvier (départ du 1er juillet) ou le 24 février (départ
+ * du 7 octobre) ; à 10, jamais. À une quête par semaine, il n'en fait que 2 à 4. À l'automne, le grenier se remplit
+ * d'ordinaire avant que l'allure puisse descendre ; à moitié, le joueur très lent parti l'été l'atteint le 1er septembre au
+ * lieu du 19.
  */
 export const OBJECTIFS_SAISON = {
   automne: { id: 'grenier', partRalenti: 0.5, recompense: { energy: 3, materials: 10, permis: 1 } },
