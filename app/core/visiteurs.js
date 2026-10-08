@@ -8,6 +8,7 @@
 // seule écriture au registre possible. La partie garde les offres prises de la semaine dans
 // game.visite = { semaine: lundi, prises: [id] } ; une visite d'une autre semaine ne compte plus.
 // Aucun aller-retour ne rapporte (un test le vérifie), et le marchand ne vend aucun permis.
+// L'échange du jour (lot T, 8 octobre 2026) : il rachète aussi, une fois par jour, des Matériaux en trop (ECHANGE_DU_JOUR).
 // Les visiteurs à commande (lot C, décisions d'Alex du 7 octobre 2026 au soir) : le marchand reste chaque semaine et, à
 // côté, un visiteur à commande accoste du lundi au dimanche, chacun son tour (convoi, famille du Sud, scientifique). Il
 // demande quelques ressources et laisse quelque chose d'unique : des Matériaux, une famille qui s'installe, ou 1 permis
@@ -43,8 +44,20 @@ export const MARCHAND = {
   ],
 };
 
+/**
+ * L'échange du jour (lot T, décisions d'Alex du 8 octobre 2026) : en plus de ses quatre offres de la semaine, le marchand
+ * rachète chaque jour de jeu 20 Matériaux contre 10 Énergie, moins bien que son offre de la semaine. Il laisse toujours
+ * `garde` Matériaux au village : mesuré dans tests/core/simulation.test.mjs, joueur (m), un joueur qui échange chaque soir
+ * sans compter perd des niveaux ou remplit son village plus tard en dessous de 150 ; à 150, personne ne recule. Le jour de
+ * l'échange est noté dans game.echangeDuJour, pas dans game.visite, qu'un onglet d'avant le lot T réécrit en entier à
+ * chaque échange de la semaine.
+ */
+export const ECHANGE_DU_JOUR = { id: 'materiaux-energie-jour', donne: { materials: 20 }, recoit: { energy: 10 }, garde: { materials: 150 } };
+
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const offreDe = (id) => (typeof id === 'string' ? MARCHAND.offres.find((o) => o.id === id) ?? null : null);
+// Jour du dernier échange du jour (une marque abîmée n'en est pas une).
+const jourEchange = (game) => (isDayString(game.echangeDuJour) ? game.echangeDuJour : null);
 
 // Offres déjà prises pendant la visite de la semaine de `lundi` (une visite d'une autre semaine, ou abîmée, n'en a aucune).
 function prisesDe(game, lundi) {
@@ -55,7 +68,8 @@ function prisesDe(game, lundi) {
 
 /**
  * Le visiteur de la semaine, ou null sans quai : { id, semaine (lundi), depart (dimanche), joursRestants (aujourd'hui
- * compris : 7 le lundi, 1 le dimanche), offres: [{ id, donne, recoit, prise }] }. Lecture pure.
+ * compris : 7 le lundi, 1 le dimanche), offres: [{ id, donne, recoit, prise }], duJour: { id, donne, recoit, garde,
+ * prise } (l'échange du jour, pris aujourd'hui ou non) }. Lecture pure.
  */
 export function visiteurDeLaSemaine(game, now) {
   if (!compte(game, 'quai')) return null;
@@ -66,6 +80,7 @@ export function visiteurDeLaSemaine(game, now) {
   return {
     id: MARCHAND.id, semaine, depart, joursRestants: daysBetween(day, depart) + 1,
     offres: MARCHAND.offres.map((o) => ({ ...o, prise: prises.includes(o.id) })),
+    duJour: { ...ECHANGE_DU_JOUR, prise: jourEchange(game) === day },
   };
 }
 
@@ -73,10 +88,21 @@ export function visiteurDeLaSemaine(game, now) {
  * Pourquoi on ne peut pas prendre cette offre maintenant (ou null). Ordre : quai, semaine passée, offre, déjà prise,
  * manque, réserve. Semaine passée : un échange fait hors ligne la semaine d'avant, rejoué après qu'un autre appareil a
  * déjà échangé cette semaine, effacerait la visite de la semaine (game.visite n'en garde qu'une).
+ * L'échange du jour a son ordre : quai, jour passé (même raison, avec game.echangeDuJour), déjà fait aujourd'hui, manque
+ * (les Matériaux laissés au village compris).
  */
 export function refusEchanger(game, params, now) {
   const v = visiteurDeLaSemaine(game, now);
   if (!v) return 'Il faut d’abord rebâtir le quai.';
+  if (params?.offre === ECHANGE_DU_JOUR.id) {
+    const fait = jourEchange(game);
+    const day = gameDay(now);
+    if (fait && fait > day) return 'Le marchand a déjà racheté depuis\u00a0: cet échange date d’un jour passé.';
+    if (fait === day) return 'Déjà fait aujourd’hui\u00a0: le marchand rachète de nouveau demain.';
+    const { donne, garde } = ECHANGE_DU_JOUR;
+    const m = manque(game, { materials: donne.materials + garde.materials });
+    return m ? `${m} Le marchand en laisse toujours ${garde.materials} au village pour les chantiers.` : null;
+  }
   if (isObj(game.visite) && typeof game.visite.semaine === 'string' && game.visite.semaine > v.semaine) return 'Le marchand est reparti : cet échange date d’une semaine passée.';
   const o = offreDe(params?.offre);
   if (!o) return 'Offre inconnue.';
@@ -99,17 +125,22 @@ export function refusEchanger(game, params, now) {
   return null;
 }
 
-/** Prend une offre du visiteur. params : { offre }. Événement { type: 'echange', visiteur, offre, donne, recoit }. */
+/**
+ * Prend une offre du visiteur, ou l'échange du jour. params : { offre }. Événement { type: 'echange', visiteur, offre,
+ * donne, recoit }. Une offre de la semaine est notée dans game.visite, l'échange du jour dans game.echangeDuJour.
+ */
 export function echanger(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
   const refus = refusEchanger(ctx.game, params, now);
   if (refus) throw new Error(refus);
-  const o = offreDe(params.offre);
+  const duJour = params.offre === ECHANGE_DU_JOUR.id;
+  const o = duJour ? ECHANGE_DU_JOUR : offreDe(params.offre);
   const semaine = weekStart(ctx.day);
   const g = structuredClone(ctx.game);
   for (const [k, n] of Object.entries(o.donne)) g.resources[k] = round1(g.resources[k] - n);
   for (const [k, n] of Object.entries(o.recoit)) g.resources[k] = round1(g.resources[k] + n);
-  g.visite = { semaine, prises: [...prisesDe(g, semaine), o.id] };
+  if (duJour) g.echangeDuJour = ctx.day;
+  else g.visite = { semaine, prises: [...prisesDe(g, semaine), o.id] };
   ctx.game = g;
   ctx.events.push({ type: 'echange', visiteur: MARCHAND.id, offre: o.id, donne: { ...o.donne }, recoit: { ...o.recoit } });
   suivreObjectifs(ctx); // de la Nourriture reçue peut remplir le grenier de l'objectif d'automne
