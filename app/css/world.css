@@ -539,7 +539,7 @@
    nom, durée et décalage en variables posées sur l'entité. La profondeur n'est pas animée ici (un z-index animé recalcule
    les styles de toute l'île à chaque image) : le monde la recopie quatre fois par seconde (scene.habDepths). Pas et bras
    se balancent en boucle courte. Rien à toucher : l'entité est un div sans pointeur. En mouvement réduit, aucune
-   animation : chaque habitant reste visible à son poste, à la profondeur du poste. */
+   animation : chaque habitant reste visible à sa place près du poste, à la profondeur de cette place. */
 .ow-hab-pas { position: absolute; inset: 0; transform-origin: 10px 29px; animation: var(--hab-p, none) var(--hab-d, 1s) linear var(--hab-t, 0s) infinite paused; }
 .ow-hab-bob { position: absolute; inset: 0; transform-origin: 10px 29px; animation: ow-hab-pas 0.56s ease-in-out var(--hab-b, 0s) infinite paused; }
 .ow-hab-bras { transform-box: view-box; transform-origin: 2.9px -15.2px; animation: ow-hab-geste 1.12s ease-in-out var(--hab-b, 0s) infinite paused; }

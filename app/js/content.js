@@ -35,11 +35,13 @@ export function setPrenom(v) {
 
 // ───────── Économie de batterie (réglage facultatif, gardé sur l'appareil) : l'île ne s'anime qu'après un geste ─────────
 const BATTERIE_KEY = 'oree.batterie.v1';
+let batterieSansStockage = false; // sans stockage : le réglage tient en mémoire jusqu'au rechargement
 export function economieBatterie() {
-  try { return localStorage.getItem(BATTERIE_KEY) === '1'; } catch { return false; }
+  try { return localStorage.getItem(BATTERIE_KEY) === '1'; } catch { return batterieSansStockage; }
 }
 export function setEconomieBatterie(v) {
-  try { if (v) localStorage.setItem(BATTERIE_KEY, '1'); else localStorage.removeItem(BATTERIE_KEY); } catch { /* sans stockage : valable jusqu'au rechargement */ }
+  batterieSansStockage = !!v;
+  try { if (v) localStorage.setItem(BATTERIE_KEY, '1'); else localStorage.removeItem(BATTERIE_KEY); } catch { /* voir batterieSansStockage */ }
   return !!v;
 }
 

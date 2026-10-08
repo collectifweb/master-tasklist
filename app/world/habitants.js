@@ -170,8 +170,9 @@ const ORDRE_DECALAGE = 0.6180339887; // suite de Weyl : tous différents, bien r
 
 /**
  * Promeneurs de l'île, d'après la vue (world/view.js : batiments, today). Un par habitant logé, au plus
- * MAX_PROMENEURS, dans l'ordre des chalets. decalage : place dans le cycle, entre 0 et 1, pour que les départs
- * ne tombent jamais ensemble.
+ * MAX_PROMENEURS, dans l'ordre des chalets. Plusieurs habitants au même lieu : chacun sa place près du poste
+ * (placesAutour). decalage : place dans le cycle, entre 0 et 1, tous différents ; les durées des tours diffèrent,
+ * deux départs peuvent donc coïncider de temps en temps.
  */
 export function promeneurs(view) {
   const bats = Array.isArray(view?.batiments) ? view.batiments : [];
@@ -184,17 +185,63 @@ export function promeneurs(view) {
   }
   if (!lieux.length) lieux.push({ id: 'place', poste: POSTE_PLACE });
   const out = [];
+  const pris = new Map(); // lieu → places déjà données
+  const PLACE = { id: 'place', poste: POSTE_PLACE };
+  // chemin vers la prochaine place libre du lieu (null : lieu plein, ou aucune place atteignable) ; serrer : une fois
+  // le lieu plein, reprendre ses places depuis la première
+  const vers = (porte, lieu, serrer = false) => {
+    const places = placesAutour(lieu.poste);
+    const q0 = pris.get(lieu.id) ?? 0;
+    for (let q = q0; q < (serrer ? q0 + places.length : places.length); q++) {
+      pris.set(lieu.id, q + 1);
+      const c = chemin(porte, places[q % places.length]);
+      if (c) return c;
+    }
+    return null;
+  };
   for (const b of bats) {
     if (b.type !== 'chalet' || !debout(b)) continue;
     const porte = PORTES.chalet[Number(b.id.split('-')[1]) - 1];
     for (let k = 0; k < (b.occupants || 0) && out.length < MAX_PROMENEURS; k++) {
       const n = out.length;
-      const lieu = lieux[n % lieux.length];
-      const c = chemin(porte, lieu.poste);
+      // son lieu ; s'il est plein, le suivant qui a de la place, puis la Place ; tout plein : on se serre au sien
+      const r = n % lieux.length;
+      const ordre = [...lieux.slice(r), ...lieux.slice(0, r), PLACE];
+      let lieu = null, c = null;
+      for (const l of ordre) if ((c = vers(porte, l))) { lieu = l; break; }
+      if (!c && (c = vers(porte, lieux[r], true))) lieu = lieux[r];
       if (!c) continue;
       out.push({ id: `habitant-${n + 1}`, chalet: b.id, lieu: lieu.id, chemin: c, decalage: Math.round(((n * ORDRE_DECALAGE) % 1) * 1000) / 1000 });
     }
   }
+  return out;
+}
+
+// Places autour d'un poste, la plus proche d'abord : libres (aucun pied, aucun mur), visibles (aucun dessin devant),
+// loin de Fanal, dans un rayon de RAYON cases, et assez loin l'une de l'autre à l'écran pour que deux figurines ne se
+// recouvrent pas (ECART_X px de côté, ou ECART_Y px de haut). Le poste lui-même vient en premier s'il est libre et
+// visible. Assez pour 15 habitants sur la Place. Mémorisé par poste.
+const RAYON = 2.2, LOIN_DE_FANAL = 0.6;
+export const ECART_X = 12, ECART_Y = 26;
+const aPart = (a, b) => { const [xa, ya] = P(...a), [xb, yb] = P(...b); return Math.abs(xa - xb) >= ECART_X || Math.abs(ya - yb) >= ECART_Y; };
+const PLACES = new Map();
+export function placesAutour(p) {
+  const k = `${p}`;
+  if (PLACES.has(k)) return PLACES.get(k);
+  const libre = (u, v) => !bloque(u, v) && !cachee(u, v) && dist([u, v], FANAL_HOME) >= LOIN_DE_FANAL;
+  const cand = [];
+  const n = Math.ceil(RAYON / PAS);
+  for (let i = -n; i <= n; i++) {
+    for (let j = -n; j <= n; j++) {
+      const u = Math.round((p[0] + i * PAS) * 100) / 100, v = Math.round((p[1] + j * PAS) * 100) / 100;
+      const d = dist([u, v], p);
+      if (d > 0 && d <= RAYON && libre(u, v)) cand.push([d, u, v]);
+    }
+  }
+  cand.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  const out = libre(...p) ? [p] : [];
+  for (const [, u, v] of cand) if (out.every((q) => aPart(q, [u, v]))) out.push([u, v]);
+  PLACES.set(k, out);
   return out;
 }
 

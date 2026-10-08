@@ -111,7 +111,7 @@ export function createStory(app) {
     const v = setPrenom(form.elements.prenom.value);
     const avantBatterie = economieBatterie();
     const batterie = setEconomieBatterie(form.elements.batterie.checked);
-    if (batterie !== avantBatterie) app.setEconomie(batterie);
+    app.setEconomie(batterie); // même sans changement : un autre onglet a pu cocher la case sans que ce monde-ci le sache
     const link = $('#dlg-letter[open] .letter-prenom .link-btn');
     if (link) link.textContent = v ? t('letter.prenom.change', { prenom: v }) : t('letter.prenom.add');
     closeSheet($('#dlg-settings'));

@@ -475,6 +475,7 @@ export function createWorld(container, options = {}) {
     if (aurore.hidden !== aur) aurore.hidden = aur;
     applyPlaques(v);
     const res = scene.sync(entitiesFor(v, tasks), { quiet });
+    if (!habTimer) scene.habDepths(); // île immobile : une figurine neuve ou un trajet changé reste à la bonne profondeur
     if (!quiet && enter) {
       for (const eid of res.added) {
         const n = scene.get(eid);
@@ -716,18 +717,16 @@ export function createWorld(container, options = {}) {
     if (!economie) return;
     ambientTimer = win.setTimeout(() => { if (!destroyed && !playing) { root.dataset.ambient = 'off'; syncHab(); } }, ms);
   }
-  // Profondeur des habitants : minuterie tant que l'île vit hors mouvement réduit (pas d'image demandée), arrêtée
-  // sinon ; un dernier passage cale chaque figurine où elle s'est arrêtée (ou à son poste, en mouvement réduit).
+  // Profondeur des habitants : minuterie tant que leurs animations tournent (île vivante, hors mouvement réduit, onglet
+  // caché ou île hors de l'écran ; pas d'image demandée), arrêtée sinon. À l'arrêt, un dernier passage cale chaque
+  // figurine où elle s'est arrêtée (ou à son poste, en mouvement réduit) ; au départ, un premier passage la recale.
   let habTimer = 0;
   function syncHab() {
-    const vit = !destroyed && !reduced && root.dataset.ambient === 'on';
-    if (vit && !habTimer) {
-      habTimer = win.setInterval(() => { if (!root.hasAttribute('data-cache') && !root.hasAttribute('data-hors-vue')) scene.habDepths(); }, HAB_MS);
-    } else if (!vit && habTimer) {
-      win.clearInterval(habTimer);
-      habTimer = 0;
-    }
-    if (!vit && !destroyed) scene.habDepths();
+    const vit = !destroyed && !reduced && root.dataset.ambient === 'on' && !root.hasAttribute('data-cache') && !root.hasAttribute('data-hors-vue');
+    if (vit === !!habTimer) return;
+    if (vit) habTimer = win.setInterval(() => scene.habDepths(), HAB_MS);
+    else { win.clearInterval(habTimer); habTimer = 0; }
+    if (!destroyed) scene.habDepths();
   }
   function clearVeille() {
     if (!shown || !shown.veille) return;
@@ -745,6 +744,7 @@ export function createWorld(container, options = {}) {
     root.dataset.mouvement = reduced ? 'reduit' : 'complet';
     fx.reduced = reduced;
     syncHab();
+    if (!habTimer) scene.habDepths(); // île immobile : chaque figurine à son poste (réduit) ou là où elle s'est arrêtée
   }
   syncMotion();
   mq?.addEventListener?.('change', syncMotion);
@@ -915,9 +915,10 @@ export function createWorld(container, options = {}) {
   ctlRo.observe(ctlProbe);
   const io =win.IntersectionObserver ? new win.IntersectionObserver((list) => {
     for (const e of list) root.toggleAttribute('data-hors-vue', !e.isIntersecting);
+    syncHab();
   }) : null;
   io?.observe(root);
-  const onVis = () => root.toggleAttribute('data-cache', doc.hidden);
+  const onVis = () => { root.toggleAttribute('data-cache', doc.hidden); syncHab(); };
   doc.addEventListener('visibilitychange', onVis);
 
   // ---------------------------------------------------------------------------- jeu des événements

@@ -38,14 +38,23 @@ const surUnPied = ([u, v]) => [...LANDMARKS, ...DECOR].find((e) => e.model !== '
 const surLaCloture = ([u, v]) => u > 0 && u < 4 && v > 7.45 && v < 7.85;
 // figurine (16 × 30 px monde, pieds en bas) cachée par le dessin d'un bâtiment posé devant elle
 function cacheeParUnBatiment([u, v]) {
+  return cacheePar(MURS.map((s) => ({ ...s, model: s.type })), [u, v]);
+}
+// … ou par n'importe quel dessin debout devant elle : bâtiments, repères (lanternes) et décors (arbres, rochers)
+const DESSINS = [...MURS.map((s) => ({ ...s, model: s.type })), ...[...LANDMARKS, ...DECOR].map((e) => ({ ...e, h: e.h || 1, w: e.w || 1 }))];
+const cacheeParUnDessin = (pt) => cacheePar(DESSINS, pt);
+function cacheePar(liste, [u, v]) {
   const [x, y] = P(u, v);
-  return MURS.find((s) => {
+  return liste.find((s) => {
     if (s.r + s.h + s.c + s.w <= u + v + 1.05) return false;
-    const a = artFor({ ...s, model: s.type });
+    const a = artFor(s);
     const [bx, by] = P(s.c, s.r);
     return x + 8 > bx + a.x && x - 8 < bx + a.x + a.w && y > by + a.y && y - 30 < by + a.y + a.h && y < by + a.y + a.h;
   });
 }
+// rayon dans lequel un habitant prend sa place autour du poste de son lieu (world/habitants.js)
+const AUTOUR = 2.2;
+const posteDe = (lieu) => (lieu === 'place' ? POSTE_PLACE : POSTES[lieu.split('-')[0]][Number(lieu.split('-')[1]) - 1]);
 
 test('sans habitant logé, personne ne marche', () => {
   assert.deepEqual(promeneurs(vue(ETE, { 'chalet-1': 0, ...TOUT })), []);
@@ -84,7 +93,7 @@ test('de novembre à avril, le potager dort : ses jardiniers vont ailleurs', () 
 test('sans lieu de travail bâti, les habitants vont sur la Place', () => {
   const p = promeneurs(vue(ETE, { 'chalet-1': 2 }));
   assert.deepEqual(p.map((x) => x.lieu), ['place', 'place']);
-  assert.deepEqual(p[0].chemin.at(-1), POSTE_PLACE);
+  for (const x of p) assert.ok(dist(x.chemin.at(-1), POSTE_PLACE) <= AUTOUR, x.id);
   // l'hiver, avec le potager seul
   assert.deepEqual(promeneurs(vue(HIVER, { 'chalet-1': 1, 'parcelle-1': 0 })).map((x) => x.lieu), ['place']);
 });
@@ -98,9 +107,8 @@ test('chaque chemin part de la porte du chalet, finit au poste, et ne traverse r
   for (const v of vues) {
     for (const p of promeneurs(v)) {
       const porte = PORTES.chalet[Number(p.chalet.split('-')[1]) - 1];
-      const poste = p.lieu === 'place' ? POSTE_PLACE : POSTES[p.lieu.split('-')[0]][Number(p.lieu.split('-')[1]) - 1];
       assert.deepEqual(p.chemin[0], porte, p.id);
-      assert.deepEqual(p.chemin.at(-1), poste, p.id);
+      assert.ok(dist(p.chemin.at(-1), posteDe(p.lieu)) <= AUTOUR, `${p.id} : fini à ${p.chemin.at(-1)}, loin du poste de ${p.lieu}`);
       for (const pt of echantillons(p.chemin)) {
         const quoi = `${p.chalet} → ${p.lieu}, en ${pt.map((x) => x.toFixed(2))}`;
         assert.ok(pt[0] >= 0.2 && pt[1] >= 0.2 && pt[0] <= N - 0.2 && pt[1] <= N - 0.2, `${quoi} : hors de l'île`);
@@ -123,7 +131,37 @@ test('portes et postes se voient : aucun bâtiment ne les cache', () => {
   assert.equal(cacheeParUnBatiment(POSTE_PLACE)?.type, undefined, 'poste de la Place');
 });
 
-test('les départs ne tombent jamais ensemble, et tout se refait à l\'identique', () => {
+test('plusieurs habitants au même lieu : chacun sa place près du poste, visible, sans se recouvrir', () => {
+  const plein = { 'chalet-1': 5, 'chalet-2': 5, 'chalet-3': 5 };
+  const cas = [
+    ['été, tout bâti', vue(ETE, { ...plein, ...TOUT })],
+    ['hiver, potager seul : tout le monde sur la Place', vue(HIVER, { ...plein, 'parcelle-1': 0 })],
+    ['un seul atelier', vue(ETE, { ...plein, 'atelier-1': 0 })],
+  ];
+  for (const [nom, v] of cas) {
+    const p = promeneurs(v);
+    assert.equal(p.length, 15, `${nom} : personne n'est laissé chez lui`);
+    const fins = p.map((x) => x.chemin.at(-1));
+    // le premier d'un lieu va au poste même quand rien ne le cache
+    for (const x of p) {
+      const premier = p.find((y) => y.lieu === x.lieu) === x;
+      if (premier && !cacheeParUnDessin(posteDe(x.lieu))) assert.deepEqual(x.chemin.at(-1), posteDe(x.lieu), `${nom} : ${x.id}`);
+    }
+    for (const [i, f] of fins.entries()) {
+      assert.equal(cacheeParUnDessin(f)?.id ?? cacheeParUnDessin(f)?.type, undefined, `${nom} : ${p[i].id} caché en ${f}`);
+      assert.equal(dansUnMur(f)?.type, undefined, `${nom} : ${p[i].id} dans un bâtiment`);
+      assert.equal(surUnPied(f)?.id, undefined, `${nom} : ${p[i].id} sur un pied`);
+      // deux figurines d'un même lieu : 12 px de côté ou 26 px de haut à l'écran, au moins
+      for (let j = 0; j < i; j++) {
+        if (p[j].lieu !== p[i].lieu) continue;
+        const [xa, ya] = P(...f), [xb, yb] = P(...fins[j]);
+        assert.ok(Math.abs(xa - xb) >= 12 || Math.abs(ya - yb) >= 26, `${nom} : ${p[i].id} recouvre ${p[j].id}`);
+      }
+    }
+  }
+});
+
+test('les décalages sont tous différents, et tout se refait à l\'identique', () => {
   const v = vue(ETE, { 'chalet-1': 5, 'chalet-2': 5, 'chalet-3': 5, ...TOUT });
   const p = promeneurs(v);
   const d = p.map((x) => x.decalage);

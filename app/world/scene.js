@@ -257,6 +257,7 @@ export class Scene {
 
   select(id) {
     for (const n of this.nodes.values()) {
+      if (n.hz) continue; // un habitant ne se sélectionne pas ; sa profondeur, c'est habDepths
       const sel = n.id === id;
       if (n.last.sel === sel) continue;
       n.last.sel = sel;
