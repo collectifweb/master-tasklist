@@ -100,14 +100,14 @@ function ancienCalendrier(day, tirage) {
   return { semaine, creneaux: [{ jour: addDays(semaine, Math.min(a, b)), nature: 'bon' }, { jour: addDays(semaine, Math.max(a, b)), nature: mauvais ? 'mauvais' : 'bon' }] };
 }
 
-test('calendrier : « régulier » est exactement celui d’avant ; au ralenti, le seul bon ; plein régime, quatre jours distincts', async () => {
+test('calendrier : « régulier » est exactement celui d’avant ; au ralenti, les deux mêmes jours, tous deux bons ; plein régime, quatre jours distincts', async () => {
   const { tirage } = await import('../../core/imprevus.js');
   let mauvaisPlein = 0;
   for (const l of lundis('2026-01-05', 520)) {
     assert.deepEqual(calendrierImprevus(l), ancienCalendrier(l, tirage), l);
     assert.deepEqual(calendrierImprevus(l, 'regulier'), ancienCalendrier(l, tirage), l);
     const ralenti = calendrierImprevus(addDays(l, 3), 'ralenti');
-    assert.deepEqual(ralenti.creneaux, [ancienCalendrier(l, tirage).creneaux[0]]);
+    assert.deepEqual(ralenti.creneaux, ancienCalendrier(l, tirage).creneaux.map((c) => ({ ...c, nature: 'bon' })));
     const plein = calendrierImprevus(addDays(l, 5), 'plein').creneaux;
     assert.equal(plein.length, 4);
     assert.equal(new Set(plein.map((c) => c.jour)).size, 4, `${l} : quatre jours distincts`);
@@ -146,12 +146,12 @@ function semaine(lundi, ledger) {
   return tires;
 }
 
-test('au ralenti : un seul imprévu par semaine, jamais mauvais ; plein régime : jusqu’à quatre, jamais deux le même jour', () => {
+test('au ralenti : deux imprévus par semaine, jamais mauvais (aucun cadeau en moins) ; plein régime : jusqu’à quatre, jamais deux le même jour', () => {
   let pleinMauvais = 0, pleinTotal = 0;
   for (const l of lundis('2027-04-05', 40)) { // avril à décembre : hors des tempêtes (sauf la trêve, sans effet ici)
     const lent = semaine(l, []);
     assert.equal(allureDe(village(l, []).game, [], l).niveau, 'ralenti');
-    assert.ok(lent.length <= 1, `${l} : ${lent.length}`);
+    assert.equal(lent.length, 2, `${l} : ${lent.length}`);
     assert.ok(lent.every((e) => !e.cible), `${l} : un mauvais au ralenti`);
     // plein régime : 100 quêtes sur chacune des deux fenêtres qui précèdent ce lundi
     const vite = [...quetes(addDays(l, -7), 100, 'a'), ...quetes(l, 100, 'b')];

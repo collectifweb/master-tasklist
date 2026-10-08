@@ -1,8 +1,9 @@
 // Imprévus, première série (bible §8 et §9, lot I, plan validé par Alex le 6 octobre 2026 au soir).
 // Calendrier : au plus deux par semaine (semaine de jeu, lundi au dimanche), à des jours tirés au sort d'après la date,
 // le premier toujours bon, le second bon ou mauvais à pile ou face. Tous les appareils voient le même, même hors ligne.
-// L'allure de la semaine (allure.js, lot A) change leur nombre : au ralenti, le seul bon ; plein régime, deux de plus (un
-// bon, un à pile ou face), sur deux autres jours.
+// L'allure de la semaine (allure.js, lot A) les change : au ralenti, les deux sont bons (décision d'Alex du 7 octobre au
+// soir : en garder un seul ôtait au joueur lent la moitié de ses cadeaux) ; plein régime, deux de plus (un bon, un à pile ou
+// face), sur deux autres jours.
 // Ce qui arrive se décide le jour même, selon ce que le village possède ; un mauvais qui ne peut pas frapper (rien à
 // toucher, reprise après une absence, trêve des Fêtes) devient un bon. Un bon manqué attend jusqu'au dimanche ; un mauvais
 // ne frappe que le jour prévu, à l'ouverture, jamais à cause d'une absence. Rien avant la fin des premiers pas.
@@ -73,7 +74,7 @@ export function tirage(s) {
 /**
  * Calendrier de la semaine qui contient `day`, à l'allure donnée (allure.js) : { semaine (lundi), creneaux: [{ jour, nature:
  * 'bon' | 'mauvais' }] }, des jours distincts dans l'ordre. Régulier : deux créneaux, le premier bon, le second à pile ou
- * face. Au ralenti : le premier seul. Plein régime : ces deux-là, plus deux tirés à part sur deux des cinq autres jours (le
+ * face. Au ralenti : les mêmes, tous deux bons. Plein régime : ces deux-là, plus deux tirés à part sur deux des cinq autres jours (le
  * premier bon, le second à pile ou face). Lecture pure de la date.
  */
 export function calendrierImprevus(day, allure = 'regulier') {
@@ -86,7 +87,7 @@ export function calendrierImprevus(day, allure = 'regulier') {
     { jour: addDays(semaine, Math.min(a, b)), nature: 'bon' },
     { jour: addDays(semaine, Math.max(a, b)), nature: mauvais ? 'mauvais' : 'bon' },
   ];
-  if (allure === 'ralenti') return { semaine, creneaux: creneaux.slice(0, 1) };
+  if (allure === 'ralenti') return { semaine, creneaux: creneaux.map((c) => ({ ...c, nature: 'bon' })) };
   if (allure === 'plein') {
     const libres = [0, 1, 2, 3, 4, 5, 6].filter((k) => k !== a && k !== b);
     const p = tirage(`imprevus-plein:${semaine}`);

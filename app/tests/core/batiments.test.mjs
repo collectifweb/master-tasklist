@@ -75,7 +75,7 @@ test('refus : il manque des ressources, avec le nombre exact (« Il manque 4 Mat
   assert.equal(w.game.resources.materials, BATIMENTS.chalet.cout.materials - 0.4);
 });
 
-test('refus : la Nourriture manquante pour une famille s’écrit vers le haut, le stock plein vers le bas', () => {
+test('refus : la Nourriture manquante pour une famille s’écrit vers le haut ; réserve pleine, la récolte n’est plus refusée', () => {
   const w = riche({ habitants: 0, batiments: [{ id: 'chalet-1', type: 'chalet' }] });
   w.game.resources = { energy: 0, materials: 0, food: 0.4 };
   const prix = prixFamille(w.game);
@@ -85,7 +85,7 @@ test('refus : la Nourriture manquante pour une famille s’écrit vers le haut, 
   const max = stockage(w.game);
   w.game.resources.food = max;
   w.game.parcelles = [{ id: 'parcelle-1', semeLe: '2026-06-01' }];
-  assert.match(refusRecolter(w.game, [], 'parcelle-1', '2026-11-02T14:00:00Z'), new RegExp(`\\(${max} sur ${max}\\)`));
+  assert.equal(refusRecolter(w.game, [], 'parcelle-1', '2026-11-02T14:00:00Z'), null); // ce qui ne tient pas est perdu (cultures.test.mjs)
 });
 
 test('refus : rang requis (« Hameau : encore 2 habitants. »), puis « encore 1 habitant »', () => {

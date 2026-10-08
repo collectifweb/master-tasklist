@@ -206,9 +206,7 @@ export function refusRecolter(game, ledger, id, now) {
   const st = etatCulture(game, ledger, id, now);
   if (!st.semee) return 'Rien n’est semé ici.';
   if (!st.mure) return `Pas encore mûr\u00a0: encore ${st.reste} jour${st.reste > 1 ? 's' : ''} travaillé${st.reste > 1 ? 's' : ''}.`;
-  const max = stockage(game);
-  if (game.resources.food >= max) return `Le stockage est plein (${entierBas(game.resources.food)} sur ${max}). Accueille une famille, ou bâtis un grenier au hameau.`;
-  return null;
+  return null; // réserve pleine : la récolte se fait quand même, ce qui ne tient pas est perdu (recolter)
 }
 
 /** Pourquoi on ne peut pas accueillir une famille maintenant (ou null). */
@@ -275,7 +273,9 @@ export function semer(tasks, game, ledger, params, now) {
 
 /**
  * Récolte une culture mûre : +Nourriture, plafonnée par le stockage (`perdu` : ce qui n'a pas tenu, dit au joueur).
- * Stockage déjà plein : refusé, la culture attend en terre. Un ours en visite (imprevus.js) prend sa part et repart.
+ * Réserve déjà pleine : la récolte se fait quand même, tout est perdu et la place se libère (décision d'Alex du 7 octobre
+ * 2026 au soir : un village plein ne pouvait plus atteindre l'objectif d'hiver ; la fiche prévient avant le geste). Un ours
+ * en visite (imprevus.js) prend sa part et repart.
  * Événement { type: 'recolte', id, lieu, nourriture, perdu, stock, max, ours? (Nourriture prise par l'ours) }.
  */
 export function recolter(tasks, game, ledger, params, now) {

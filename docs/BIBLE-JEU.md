@@ -139,7 +139,7 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
 
 **L'hiver, tel qu'il est construit** (lot H, 7 octobre 2026, décisions d'Alex) :
 - du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
-- objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Sans serre, le bandeau dit comment en bâtir une. D'après la simulation (joueur (j)), il est atteint entre le 2 et le 31 janvier selon le joueur, pour un joueur qui récolte et ressème aussitôt ;
+- objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
 - les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler, la tour de guet et le garage à chasse-neige viendront plus tard, quand le village approchera du rang Village.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.

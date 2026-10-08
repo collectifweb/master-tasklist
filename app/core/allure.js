@@ -5,7 +5,7 @@
 // que la partie a moins de 14 jours au lundi. Seules les quêtes comptent (décision d'Alex) : le second critère de la bible,
 // les réserves, viendra avec les grands chantiers, qui donneront de quoi dépenser.
 // Lecture pure du registre et du jour de départ de la partie (game.startDay) : tous les appareils voient la même, même hors
-// ligne, et rien n'est écrit dans la partie. Ce qu'elle change : le nombre d'imprévus de la semaine (imprevus.js), la cible
+// ligne, et rien n'est écrit dans la partie. Ce qu'elle change : les imprévus de la semaine (imprevus.js), la cible
 // de l'objectif de saison (objectifs.js), la quête que proposent la lettre du matin et le bandeau au ralenti (plusCourte).
 // Jamais un prix, une réparation, un niveau, ni ce que rapporte une quête.
 import { weekStart, addDays, daysBetween, isDayString } from './time.js';

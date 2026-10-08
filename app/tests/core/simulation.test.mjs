@@ -55,7 +55,7 @@ import {
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
   tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
-  allureDe, ALLURE, daysBetween, weekStart,
+  allureDe, ALLURE, daysBetween, weekStart, saisonDe,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -163,7 +163,10 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     }
     for (let guard = 0; guard < 20; guard++) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
-      const mure = cultures.find((id) => !refusRecolter(w.game, w.ledger, id, soir));
+      // réserve pleine (la récolte n'est plus refusée depuis le lot A) : il ne récolte que la serre l'hiver, pour l'objectif ;
+      // le reste attend en terre, comme avant
+      const place = stockage(w.game) - w.game.resources.food;
+      const mure = cultures.find((id) => !refusRecolter(w.game, w.ledger, id, soir) && (place >= 1 || (id.startsWith('serre') && saisonDe(day).id === 'hiver')));
       if (mure) {
         const semeLe = w.game.parcelles.find((p) => p.id === mure)?.semeLe;
         if (imprevus && semeLe) {
@@ -541,7 +544,7 @@ test('(i) les imprévus : le premier niveau ne bouge que de quelques jours sur 1
 // (j) Rythme lent : une quête un jour sur deux.
 const lent = (i) => (i % 2 ? 0 : 1);
 
-test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint, mais pas avant Noël', (t) => {
+test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint dans l’hiver, pas avant Noël au rythme de l’essai ou plus lent', (t) => {
   const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
   const resume = (l) => { const h = l.hiver; return `tempêtes ${JSON.stringify(h.issues)} (sans dégât : ${JSON.stringify(h.raisons)}), ensevelis ${JSON.stringify(h.cibles)}, `
     + `${h.crans} crans achetés (${h.coutCrans} M), récompenses ${h.recompense} M, déneigés ${h.deneige.paiement} payés (${h.deneige.energie} É) et ${h.deneige.quete} par quête, `
@@ -570,9 +573,12 @@ test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau 
         if (sans.niveaux[0] === undefined) assert.ok(l.niveaux.length <= 1, `${nom} ${debut}, ${qui}`);
         else assert.ok(Math.abs(l.niveaux[0] - sans.niveaux[0]) <= 4, `${nom} ${debut}, ${qui} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]} sans tempête`);
         assert.ok(Math.abs(l.niveaux.length - sans.niveaux.length) <= 1, `${nom} ${debut}, ${qui} : ${l.niveaux.length} niveaux contre ${sans.niveaux.length}`);
-        // « Garder la serre allumée » : atteint dans l'hiver, sans tomber dès décembre
+        // « Garder la serre allumée » : atteint dans l'hiver ; au rythme de l'essai ou plus lent, pas dès décembre. Le joueur
+        // (f), avec deux serres et des jours de pousse raccourcis par ses niveaux, l'atteint dès le 18 décembre depuis que la
+        // réserve pleine ne bloque plus la récolte (lot A ; avant, elle l'arrêtait jusqu'au 20 janvier)
         const jour = l.hiver.objectif && addDays(debut, l.hiver.objectif - 1);
-        assert.ok(jour && jour >= '2026-12-25' && jour <= '2027-02-28', `${nom} ${debut}, ${qui} : objectif d'hiver le ${jour}`);
+        const debutMin = nom === '(f)' ? '2026-12-01' : '2026-12-25';
+        assert.ok(jour && jour >= debutMin && jour <= '2027-02-28', `${nom} ${debut}, ${qui} : objectif d'hiver le ${jour}`);
       }
     }
   }
@@ -595,7 +601,7 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
   const sansAllure = (f) => { const avant = { ...ALLURE }; ALLURE.ralenti = -1; ALLURE.plein = Infinity; try { return f(); } finally { Object.assign(ALLURE, avant); } };
   // date de la k-e récolte de l'hiver (décembre à février : celles de la serre)
   const kieme = (l) => { const r = l.recoltes.filter((d) => d >= '2026-12-01' && d <= '2027-02-28'); return [4, 6, 8, 10].map((k) => `${k}e ${r[k - 1]?.slice(5) ?? 'jamais'}`).join(', '); };
-  const plafond = { ralenti: [1, 0], regulier: [2, 1], plein: [4, 2] }; // imprévus par semaine, dont mauvais
+  const plafond = { ralenti: [2, 0], regulier: [2, 1], plein: [4, 2] }; // imprévus par semaine, dont mauvais
   for (const [nom, rythme, profil, habitudes, motif] of [
     ['(très lent) 1 quête tous les 4 jours', tresLent, quetes, false, /^g{3}r+$/],
     ['(lent) 1 quête un jour sur deux', lent, quetes, false, /^g{3}r+$/],
@@ -603,9 +609,9 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
     ['(f) 2 ou 3 par jour', regulier, quetes, false, /^g+$/],
     ['(rapide) 6 par jour', rapide, (n) => quetes(n * 3), false, /^g{3}P+$/],
   ]) {
-    // départ d'été : le joueur vend au marchand la Nourriture qui ne tient plus dans sa réserve pleine (sans quoi la serre ne
-    // se récolte plus l'hiver : 0 à 6 récoltes pour (lent), (g), (f) et (rapide), mesuré le 7 octobre 2026) ; départ d'aujourd'hui : sans marchand
-    for (const [debut, marchand] of [['2026-07-01', 'avise'], ['2026-10-07', false]]) {
+    // départ d'été : avant que la réserve pleine cesse de bloquer la récolte (lot A), la serre ne se récoltait plus l'hiver
+    // dans un village plein (0 à 6 récoltes pour (lent), (g), (f) et (rapide), mesuré le 7 octobre 2026)
+    for (const [debut, marchand] of [['2026-07-01', false], ['2026-10-07', false]]) {
       const jours = daysBetween(debut, '2027-03-01'); // jusqu'à la fin de l'hiver
       const options = { profil, habitudes, imprevus: 'attend', hiver: 'quetes', marchand };
       const avec = simuler(debut, jours, rythme, options);
@@ -631,12 +637,11 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
       // une partie qui reste régulière est exactement celle d'avant l'allure
       const trace = (l) => ({ imp: l.imp, objectifs: l.objectifs, niveaux: l.niveaux, hameau: l.hameau, familles: l.familles, recoltes: l.recoltes });
       if (!suite.includes('r') && !suite.includes('P')) assert.deepEqual(trace(avec), trace(sans), qui);
-      // le premier niveau ne bouge que de quelques jours (mesuré : pas du tout), le nombre de niveaux d'un au plus ; au
-      // ralenti, voir le test suivant
-      if (!suite.includes('r')) {
-        if (sans.niveaux[0] !== undefined) assert.ok(Math.abs(avec.niveaux[0] - sans.niveaux[0]) <= 4, `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
-        assert.ok(Math.abs(avec.niveaux.length - sans.niveaux.length) <= 1, `${qui} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
-      }
+      // le premier niveau ne bouge que de quelques jours, le nombre de niveaux d'un au plus. Au ralenti, les deux imprévus
+      // restent, tous deux bons (décision d'Alex du 7 octobre au soir) : avec un seul, le joueur très lent parti le 1er
+      // juillet avait son premier niveau au jour 85 au lieu de 57, mesuré le même soir
+      if (sans.niveaux[0] !== undefined) assert.ok(Math.abs(avec.niveaux[0] - sans.niveaux[0]) <= 4, `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
+      assert.ok(Math.abs(avec.niveaux.length - sans.niveaux.length) <= 1, `${qui} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
       // au ralenti, l'objectif réduit n'arrive jamais plus tard, et celui d'hiver est atteint avant la fin de l'hiver
       for (const cle of ['automne-2026', 'hiver-2026']) if (avec.objectifs[cle] && sans.objectifs[cle]) assert.ok(avec.objectifs[cle] <= sans.objectifs[cle], `${qui}, ${cle}`);
       if (suite.endsWith('r')) assert.ok(avec.objectifs['hiver-2026'], `${qui} : objectif d'hiver réduit pas atteint`);
@@ -644,20 +649,3 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
   }
 });
 
-// Au ralenti, un seul imprévu par semaine : le joueur lent perd aussi le second créneau, presque toujours bon pour lui (un
-// mauvais sans rien à toucher devient bon). Mesuré le 7 octobre 2026 : le joueur très lent parti le 1er juillet a son premier
-// niveau au jour 85 au lieu de 57 ; parti le 7 octobre, au jour 53 au lieu de 49. Garder les deux créneaux, tous deux bons,
-// le ramène aux jours 57 et 49. Décision d'Alex attendue (tasks/todo.md, lot A).
-test('(k) au ralenti, le premier niveau ne recule que de quelques jours', { todo: 'jour 85 contre 57 pour le joueur très lent parti le 1er juillet : décision d’Alex attendue' }, () => {
-  const sansAllure = (f) => { const avant = { ...ALLURE }; ALLURE.ralenti = -1; ALLURE.plein = Infinity; try { return f(); } finally { Object.assign(ALLURE, avant); } };
-  for (const rythme of [tresLent, lent]) {
-    for (const [debut, marchand] of [['2026-07-01', 'avise'], ['2026-10-07', false]]) {
-      const options = { profil: quetes, imprevus: 'attend', hiver: 'quetes', marchand };
-      const jours = daysBetween(debut, '2027-03-01');
-      const avec = simuler(debut, jours, rythme, options);
-      const sans = sansAllure(() => simuler(debut, jours, rythme, options));
-      assert.ok(Math.abs(avec.niveaux[0] - sans.niveaux[0]) <= 4, `départ ${debut} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
-      assert.ok(Math.abs(avec.niveaux.length - sans.niveaux.length) <= 1, `départ ${debut} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
-    }
-  }
-});

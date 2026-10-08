@@ -92,7 +92,7 @@ test('récolter : +Nourriture, la parcelle se libère ; pas avant d’être mûr
   assert.equal(refusRecolter(world.game, world.ledger, 'parcelle-1', at(day, 20)), 'Rien n’est semé ici.');
 });
 
-test('récolte plafonnée par le stockage ; stockage plein : la culture attend, sans perte', () => {
+test('récolte plafonnée par le stockage ; réserve pleine : on récolte quand même, rien n’entre, la place se libère', () => {
   let w = monde(MAI, { parcelles: [{ id: 'parcelle-1', semeLe: '2026-05-01' }] });
   for (let k = 1; k <= CULTURE.jours; k++) w = travaille(w, plusJours('2026-05-01', k));
   w.game.resources.food = STOCKAGE - 1;
@@ -100,9 +100,14 @@ test('récolte plafonnée par le stockage ; stockage plein : la culture attend, 
   assert.equal(world.game.resources.food, STOCKAGE);
   assert.equal(r.events[0].nourriture, 1);
   assert.equal(r.events[0].perdu, CULTURE.recolte - 1);
+  // réserve pleine (décision d'Alex du 7 octobre au soir) : la récolte n'est plus refusée ; tout est perdu, la parcelle se libère
   w.game.resources.food = STOCKAGE;
-  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI)), `Le stockage est plein (${STOCKAGE} sur ${STOCKAGE}). Accueille une famille, ou bâtis un grenier au hameau.`);
-  assert.equal(etatCulture(w.game, w.ledger, 'parcelle-1', at(MAI)).mure, true); // elle reste mûre en terre
+  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI)), null);
+  const plein = step(w, recolter, { id: 'parcelle-1' }, at(MAI));
+  assert.equal(plein.world.game.resources.food, STOCKAGE);
+  assert.deepEqual([plein.r.events[0].nourriture, plein.r.events[0].perdu], [0, CULTURE.recolte]);
+  assert.deepEqual(plein.world.game.parcelles, []);
+  assert.equal(refusSemer(plein.world.game, plein.world.ledger, 'parcelle-1', at(MAI)), null);
 });
 
 test('le grenier augmente le stockage : la même récolte entre en entier', () => {

@@ -33,12 +33,14 @@ export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
 
 /**
  * Objectif de chaque saison (récompense : { energy?, materials?, permis? }). L'automne : remplir le grenier ; l'hiver :
- * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février (10 : la simulation (j) les
- * place entre le 2 et le 31 janvier selon le joueur, mesuré le 7 octobre 2026). Le printemps et l'été s'affichent « à venir ».
+ * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février (10 : simulations (j) et (k),
+ * mesuré le 7 octobre 2026 au soir, réserve pleine sans effet sur la récolte : du 12 au 31 janvier au rythme de l'essai, le
+ * 19 janvier à une quête un jour sur deux, du 13 décembre au 2 janvier à deux ou trois par jour, avec deux serres et des
+ * jours de pousse raccourcis par les niveaux). Le printemps et l'été s'affichent « à venir ».
  * Au ralenti (allure.js, lot A), la cible est réduite, la récompense la même : `partRalenti` du grenier à l'automne,
- * `recoltesRalenti` récoltes l'hiver. Réglées par la simulation (k), mesuré le 7 octobre 2026 : à 6 récoltes, le joueur à
- * une quête tous les quatre jours atteint l'objectif d'hiver le 25 janvier (départ du 1er juillet) ou le 24 février (départ
- * du 7 octobre) ; à 10, jamais. À une quête par semaine, il n'en fait que 2 à 4. À l'automne, le grenier se remplit
+ * `recoltesRalenti` récoltes l'hiver. Réglées par la simulation (k), mesuré le 7 octobre 2026 au soir : à 6 récoltes, le
+ * joueur à une quête tous les quatre jours atteint l'objectif d'hiver le 29 janvier (départ du 1er juillet) ou le 20 février
+ * (départ du 7 octobre, où il n'en fait jamais 10). À une quête par semaine, 2 à 4 récoltes. À l'automne, le grenier se remplit
  * d'ordinaire avant que l'allure puisse descendre ; à moitié, le joueur très lent parti l'été l'atteint le 1er septembre au
  * lieu du 19.
  */
