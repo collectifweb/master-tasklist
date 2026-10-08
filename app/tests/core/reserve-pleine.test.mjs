@@ -62,3 +62,29 @@ test('la fiche prévient avant le geste : place pour tout, pour une part, ou ré
   const automne = (() => { const w = hiver('2026-10-20'); return batimentModel({ game: w.game, ledger: w.ledger, now: at('2026-10-20') }, 'serre-1'); })();
   assert.equal(nb(automne.maintenant), `C’est mûr : ${n} Nourriture, mais la réserve est pleine (${max} sur ${max}) : tout serait perdu. Récolter libère la place pour semer.`);
 });
+
+test('réserve au-dessus du stockage (cas anormal) : la récolte n’en retire jamais, tout est perdu', () => {
+  const w = hiver('2027-01-12');
+  const max = stockage(w.game);
+  w.game.resources.food = max + 5;
+  const { world, r } = step(w, recolter, { id: 'serre-1' }, at('2027-01-12'));
+  const e = r.events.find((x) => x.type === 'recolte');
+  assert.equal(e.nourriture, 0);
+  assert.equal(e.perdu, recolteDe(w.game, 'serre'));
+  assert.equal(world.game.resources.food, max + 5);
+});
+
+test('la fiche compte la part de l’ours avant de dire ce qui serait perdu', () => {
+  const day = '2026-10-20';
+  const w = hiver(day);
+  w.game.batiments = [...w.game.batiments, { id: 'parcelle-1', type: 'parcelle' }];
+  w.game.parcelles = [{ id: 'parcelle-1', semeLe: addDays(day, -10) }];
+  w.game.degats = [{ id: `ours:${day}`, type: 'ours', cible: 'parcelle-1', le: day, jusqua: addDays(day, 3) }];
+  const n = recolteDe(w.game, 'potager');
+  w.game.resources.food = stockage(w.game) - (n - 2); // la place exacte de ce que l'ours laisse
+  const f = batimentModel({ game: w.game, ledger: w.ledger, now: at(day) }, 'parcelle-1');
+  assert.equal(nb(f.maintenant), `C’est mûr : ${n} Nourriture à récolter.`); // et non « n’a de place que pour »
+  const { r } = step(w, recolter, { id: 'parcelle-1' }, at(day));
+  const e = r.events.find((x) => x.type === 'recolte');
+  assert.deepEqual([e.nourriture, e.perdu, e.ours], [n - 2, 0, 2]);
+});

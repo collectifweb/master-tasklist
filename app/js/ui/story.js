@@ -143,7 +143,7 @@ export function createStory(app) {
   /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), allure, quêtes et heures. */
   function weekHtml(b) {
     const pips = Array.from({ length: 7 }, (_, i) => `<span class="review-pip${i < b.joursTravailles ? ' is-on' : ''}"></span>`).join('');
-    const allure = aAllure(b) ? `<span class="review-allure-court">${cransHtml(b.allure.niveau)}${esc(allureMot(b.allure))}</span>` : '';
+    const allure = aAllure(b) ? `<span class="sr-only">. </span><span class="review-allure-court">${cransHtml(b.allure.niveau)}${esc(allureMot(b.allure))}</span>` : '';
     return `<div class="why-line"><dt><span class="review-week-dates">${esc(t('review.week', { debut: shortDate(b.semaine.start), fin: shortDate(b.semaine.end) }))}</span><small><span class="review-pips" aria-hidden="true">${pips}</span>${esc(tn('review.past.days', b.joursTravailles, { n: b.joursTravailles }))}${allure}</small>${tenueHtml(b, 'small')}</dt><dd>${esc(tn('review.domain.quests', b.quetes, { n: b.quetes }))}<small>${esc(t('review.domain.hours', { h: num(b.heures) }))}</small></dd></div>`;
   }
   /** Semaines passées, la plus récente en haut : les PAST_SHOWN dernières, puis les autres dans un bloc replié. */

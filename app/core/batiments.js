@@ -287,7 +287,7 @@ export function recolter(tasks, game, ledger, params, now) {
   const lieu = lieuDe(params.id);
   const { mange, degats } = degatsALaRecolte(g, params.id, recolteDe(g, lieu), now);
   const recolte = recolteDe(g, lieu) - mange;
-  const nourriture = round1(Math.min(recolte, max - g.resources.food));
+  const nourriture = round1(Math.max(0, Math.min(recolte, max - g.resources.food))); // jamais négative, même au-dessus du stockage
   g.resources.food = round1(g.resources.food + nourriture);
   g.parcelles = list(g.parcelles).filter((p) => p.id !== params.id);
   if (Array.isArray(g.degats)) g.degats = degats;

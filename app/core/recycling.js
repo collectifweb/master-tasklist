@@ -1,13 +1,19 @@
 // Jour du recyclage (dimanche) : bilan informatif de la semaine et quêtes ouvertes depuis plus de 60 jours, à garder
 // ou à archiver (l'archivage passe par archiveQuest de quests.js) ; bilans des semaines passées, figés par advanceTime
 // (quests.js) avec figerBilans. Rien n'est modifié ici.
-import { gameDay, weekStart, weekEnd, isoWeekday, isDayString } from './time.js';
+import { gameDay, weekStart, weekEnd, isoWeekday, isDayString, daysBetween } from './time.js';
 import { estimatedMinutes, taskAgeDays } from './cote.js';
 import { QUARTIERS, PLACE_ID } from './domains.js';
 import { reverseKey, quartierOfEntry, findEntry, semaineKey } from './ledger.js';
 import { allureDe } from './allure.js';
 
 export const RECYCLE_AGE_DAYS = 60;
+// Un bilan ne porte son allure que s'il est fait au plus 19 jours après le lundi de sa semaine. Le registre du client n'est
+// complet que sur 60 jours (api.php, LEDGER_DAYS) ; l'allure demande la fenêtre de 14 jours d'avant le lundi, plus jusqu'à
+// trois semaines pour que l'allure rejouée sur un registre tronqué rejoigne la vraie : 60 - 14 - 21 - 6 (lundi) = 19.
+// Au-delà (bilan figé au retour d'une longue absence), rien plutôt qu'une allure fausse gardée pour toujours. Mesuré par la
+// relecture du lot A : figée 55 jours après, une semaine à 42 quêtes en 14 jours se lisait « au ralenti, 9 ».
+export const ALLURE_BILAN_JOURS = 19;
 export const BILANS_MAX = 104; // deux ans de bilans figés gardés dans la partie
 
 const hours = (min) => Math.round(min / 6) / 10;
@@ -23,8 +29,9 @@ const hours = (min) => Math.round(min / 6) / 10;
  * il demande de mesurer le temps passé dans le jeu, que rien ne mesure encore. `tenue` : vrai si la semaine a payé le
  * bonus « semaine tenue » (clé semaine:{lundi} au registre, quartiers.js) ; un bilan figé avant ce champ ne l'a pas.
  * `tenueMateriaux` (seulement quand `tenue` est vrai et que l'entrée du registre porte son montant) : les Matériaux payés
- * cette semaine-là, qui ne suivent pas un changement ultérieur de SEMAINE_TENUE. `allure` : { niveau, quetes } de la
- * semaine (allure.js, lot A) ; un bilan figé avant ce champ ne l'a pas.
+ * cette semaine-là, qui ne suivent pas un changement ultérieur de SEMAINE_TENUE. `allure` : { niveau, quetes } de la
+ * semaine (allure.js, lot A) ; un bilan figé avant ce champ ne l'a pas, ni un bilan fait plus de ALLURE_BILAN_JOURS
+ * jours après le lundi de sa semaine.
  */
 export function weeklyReview(tasks, game, ledger, now) {
   const today = gameDay(now);
@@ -84,12 +91,12 @@ function bilanSemaine(tasks, game, ledger, start, now) {
     .map((d) => ({ ...d, heures: hours(d.minutes) }))
     .sort((a, b) => b.minutes - a.minutes || a.quartier.localeCompare(b.quartier));
   const tenue = findEntry(ledger, semaineKey(start));
-  const allure = allureDe(game, ledger, start);
+  const allure = daysBetween(start, gameDay(now)) <= ALLURE_BILAN_JOURS ? allureDe(game, ledger, start) : null;
   return {
     semaine: { start, end },
     quetes, heures: hours(minutes), domaines,
     joursTravailles: jours.size,
-    allure: { niveau: allure.niveau, quetes: allure.quetes },
+    ...(allure ? { allure: { niveau: allure.niveau, quetes: allure.quetes } } : {}),
     tenue: tenue !== null,
     ...(tenue && Number.isFinite(tenue.materials) ? { tenueMateriaux: tenue.materials } : {}),
   };

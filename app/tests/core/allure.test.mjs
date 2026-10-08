@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import {
   ALLURE, allureDe, plusCourte, calendrierImprevus, advanceTime, completeQuest, reparer, objectifSaison, bandeau,
   morningLetter, weeklyReview, figerBilans, listQuests, OBJECTIFS_SAISON, PAS_IDS, addDays, weekStart, stockageBase,
-  recolter, degatsActifs, IMPREVUS, construire, BATIMENTS,
+  recolter, degatsActifs, IMPREVUS, construire, BATIMENTS, ALLURE_BILAN_JOURS, daysBetween,
 } from '../../core/index.js';
 import { fresh, step, task } from './helpers.mjs';
 
@@ -255,4 +255,24 @@ test('bilan : l’allure de la semaine et sa raison ; un bilan figé garde la si
   // partie trop jeune : l'allure est là, sans compte
   const jeune = partie(LUNDI);
   assert.deepEqual(weeklyReview([], jeune, [], at(LUNDI)).allure, { niveau: 'regulier', quetes: null });
+});
+
+test('bilan figé longtemps après sa semaine : sans allure plutôt qu’une fausse (registre complet sur 60 jours seulement)', () => {
+  const game = { ...partie(), bilans: [] };
+  const mercredi = addDays(LUNDI, 2);
+  const l = [];
+  for (let d = DEPART; d <= mercredi; d = addDays(d, 1)) for (let k = 0; k < 3; k++) l.push(paye(d, `t-${d}-${k}`));
+  // le registre tel que le serveur l'envoie ce jour-là : au-delà de 60 jours, la clé seule
+  const vu = (jour) => l.map((e) => (daysBetween(e.day, jour) > 60 ? { key: e.key } : e));
+  const fige = (jour) => figerBilans([], game, vu(jour), at(jour)).find((x) => x.semaine.start === LUNDI);
+  // retour 55 jours plus tard : la fenêtre est hors du registre complet ; rejouée, elle donnerait une allure fausse
+  const tard = addDays(mercredi, 55);
+  assert.notDeepEqual(allureDe(game, vu(tard), LUNDI).niveau, allureDe(game, l, LUNDI).niveau);
+  const b1 = fige(tard);
+  assert.equal(b1.quetes, 9);
+  assert.equal(Object.hasOwn(b1, 'allure'), false);
+  // retour à la limite : l'allure est écrite, juste
+  const b2 = fige(addDays(LUNDI, ALLURE_BILAN_JOURS));
+  assert.deepEqual(b2.allure, { niveau: 'regulier', quetes: 42 });
+  assert.equal(Object.hasOwn(fige(addDays(LUNDI, ALLURE_BILAN_JOURS + 1)), 'allure'), false);
 });

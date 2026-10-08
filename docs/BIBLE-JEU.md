@@ -139,7 +139,7 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
 
 **L'hiver, tel qu'il est construit** (lot H, 7 octobre 2026, décisions d'Alex) :
 - du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
-- objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
+- objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Au ralenti (§9), 6 récoltes suffisent, et le grenier à moitié à l'automne. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
 - les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler, la tour de guet et le garage à chasse-neige viendront plus tard, quand le village approchera du rang Village.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
@@ -173,7 +173,7 @@ Taux validés par Alex le 6 octobre, après une simulation (`tests/core/simulati
 
 ## 8. Les imprévus, bons et mauvais
 
-Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière (de un à quatre selon l'allure, §9).
+Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière (deux, tous bons, au ralenti ; jusqu'à quatre au plein régime : §9).
 
 | Bons | Mauvais (toujours réparables) |
 |---|---|
@@ -239,7 +239,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - Fanal t'écrit une lettre de retour qui raconte ce qui s'est passé, sans reproche ;
 - la commande du visiteur en cours est ramenée à la taille « au ralenti ».
 
-**Au ralenti** : au plus un imprévu par semaine, plutôt un bon ; des commandes petites ; un objectif de saison réduit ; Fanal met en avant tes quêtes les plus courtes.
+**Au ralenti** : au plus un imprévu par semaine, plutôt un bon ; des commandes petites ; un objectif de saison réduit ; Fanal met en avant tes quêtes les plus courtes. (Construit autrement : voir plus bas.)
 
 **Régulier** : les règles de base de cette bible.
 
@@ -251,6 +251,19 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - les niveaux de quartier, qui coûtent cher (voir §4).
 
 **Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, le prix d'un niveau de quartier, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
+
+**L'allure, telle qu'elle est construite** (lot A, 7 octobre 2026, décisions d'Alex) :
+- elle se calcule chaque lundi pour la semaine (du lundi au dimanche), d'après les quêtes payées les 14 jours d'avant ; une quête remballée ne compte pas. Moins de 14, la cible est « au ralenti » ; plus de 70, « plein régime » ; entre les deux, « régulier ». L'allure avance d'un cran au plus par semaine vers sa cible : du ralenti au plein régime, il faut deux semaines ;
+- départ à « régulier », où elle reste tant que la partie a moins de 14 jours au lundi. Une absence la fait descendre d'un cran par semaine, sans que l'app soit ouverte ;
+- seules les quêtes comptent (décision d'Alex) : les réserves viendront avec les grands chantiers, qui donneront de quoi dépenser ;
+- elle se lit dans le registre et le jour de départ de la partie : tous les appareils voient la même, même hors ligne, et rien de neuf n'est écrit ;
+- au ralenti : les deux imprévus de la semaine restent, tous deux bons (la simulation (k) a montré qu'en garder un seul retirait au joueur lent la moitié de ses cadeaux ; choix laissé par Alex le 7 octobre au soir) ; l'objectif de saison est réduit, avec la même récompense (§6) : une fois atteint, il est payé une fois et le reste ; la lettre du matin et la ligne « Aujourd'hui » du bandeau proposent la quête la plus courte (à durée égale, la mieux placée dans la Cote), sans changer l'ordre de la liste ;
+- régulier : les règles de base (§8) ;
+- plein régime : deux créneaux d'imprévu de plus, sur deux autres jours de la semaine, le premier bon, le second à pile ou face. Quatre au plus, deux mauvais au plus, jamais deux le même jour ; les réparations gardent leur prix ;
+- les tempêtes ne changent pas avec l'allure ; la taille des commandes attendra les visiteurs à commande, et les grands chantiers les semaines 9 à 12 ;
+- à l'écran : le bilan de la semaine montre « Allure : au ralenti (3 quêtes en 14 jours) », une marque de trois barres doublée du texte, et ce que l'allure change. Chaque semaine passée garde la sienne ; un bilan figé avant le lot n'en a pas. La semaine où l'allure change d'un cran, Fanal le dit une fois par appareil, sans reproche : le village ralentit avec toi, ou il prend de l'élan (cinq variantes chacune).
+
+Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre) : au rythme de l'essai, l'allure reste régulière et rien ne change ; à six quêtes par jour, elle passe au plein régime (132 imprévus au lieu de 68 du 1er juillet au 1er mars) ; le joueur à une quête tous les quatre jours atteint l'objectif d'hiver réduit le 29 janvier au lieu du 18 février (départ du 1er juillet), le 20 février au lieu de jamais (départ du 7 octobre).
 
 **Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes en tient compte quand il révise la semaine qui vient (§12). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
 

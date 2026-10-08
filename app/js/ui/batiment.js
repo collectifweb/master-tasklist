@@ -16,7 +16,7 @@ import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
-  saisonDe,
+  saisonDe, degatsALaRecolte,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -128,11 +128,12 @@ export function batimentModel(c, id) {
       // la réserve pleine ne bloque plus la récolte : la fiche dit d'avance ce qui serait perdu (l'hiver, la serre compte
       // quand même pour son objectif)
       const n = recolteDe(game, def.culture);
+      const tient = n - degatsALaRecolte(game, id, n, now).mange; // un ours en visite prend sa part avant le stockage
       const place = stockage(game) - game.resources.food;
       const serreHiver = def.culture === 'serre' && saisonDe(gameDay(now)).id === 'hiver';
       m.maintenant = entierGain(place) <= 0
         ? t(`bat.fiche.mure.plein${serreHiver ? '.hiver' : ''}`, { n: numGain(n), stock: numPossede(game.resources.food), max: numPossede(stockage(game)), objectif: t('bandeau.saison.serre.titre') })
-        : place < n ? t('bat.fiche.mure.place', { n: numGain(n), place: numGain(place) }) : t('bat.fiche.mure', { n: numGain(n) });
+        : place < tient ? t('bat.fiche.mure.place', { n: numGain(n), place: numGain(place) }) : t('bat.fiche.mure', { n: numGain(n) });
       m.raison = refusRecolter(game, ledger, id, now);
       m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter') };
     }
