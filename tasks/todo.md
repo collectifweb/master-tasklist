@@ -926,3 +926,60 @@ Le lot contient trois visiteurs à commande (convoi, famille du Sud, scientifiqu
 4. **Envoi** : direct en production si tout est vert, comme les lots I, H et A (recommandé) ? Ou tout prêt, envoi au matin ?
 
 **Réponses d'Alex (7 octobre, vers 23 h 30)** : 1. les deux chaque semaine ; 2. les trois, à tour de rôle ; 3. petite au ralenti, grosse au plein régime ; 4. envoi direct si tout est vert. « Bosse en parfaite autonomie », topo au matin. **Plan validé.**
+
+## Lot E — L'île vivante
+
+Référence : bible §10 (« chaque habitant va et vient à son métier, la fumée sort des cheminées, l'éolienne tourne. L'animation tourne en continu tant que l'app est ouverte. Un réglage « économie de batterie » la remet au repos, et le mouvement réduit est respecté »), §14 (semaines 3 et 4) ; retour d'essai n° 8 d'Alex (« Voir les habitants bouger »). Choisi par Alex le 8 octobre 2026 parmi les lots proposés (« Choisis le lot que tu préfères »). **Statut : à valider par Alex.**
+
+Ce qui existe déjà (lu dans le code le 8 octobre) :
+- la fumée des chalets habités et le rotor de l'éolienne (`world/models.js:272`, `:455`), le chaland et les bateaux qui tanguent, l'aurore : des animations CSS qui ne jouent que sous `.ow[data-ambient="on"]`, hors mouvement réduit, onglet caché ou île hors de l'écran (`css/world.css:539`) ;
+- l'île « respire » 9 s après chaque geste, puis s'immobilise (`AMBIENT_MS = 9000`, `world/world.js:51`). C'est voulu et vérifié : `world-s3` exige 0 `requestAnimationFrame` et 0 animation en cours après 12 s de repos (`tests/e2e/world-s3.cjs:278`), `world-perf` mesure le repos, `ui-12` attend `data-ambient="off"`. Ça vient de la revue d'octobre (batterie). **La bible demande l'inverse : c'est la question 1 ;**
+- une seule boucle d'animation en JavaScript (`world/ticker.js`), qui s'arrête d'elle-même au repos ;
+- un seul personnage, Fanal, immobile sur la Place (`FANAL_HOME`, `world/layout.js`), dessiné par `characterSVG()` ; profondeur d'un personnage : `u + v + 1,05` (`world/scene.js:22`) ;
+- deux routes qui se croisent sur la Place (`ROADS`, u = 6 et v = 6), les emplacements des bâtiments (`EMPLACEMENTS`), les habitants logés par chalet dans l'ordre (`world/view.js:31`) ;
+- au plus 15 habitants : 3 chalets (`core/batiments.js:28`), 2 places chacun, jusqu'à 5 avec l'École au niveau 3 (`core/quartiers.js:39`) ;
+- des réglages gardés sur l'appareil (`oree.prenom.v1` et autres) ; la fiche Réglages (`js/ui/story.js:61`).
+
+Le lot contient les habitants qui vont à leur travail et en reviennent, le réglage « Économie de batterie », le mouvement réduit, et les tests qui gardent la batterie sous contrôle. Hors du lot : les habitants qui rentrent quand l'île passe en veille (« Tout est enregistré, à demain »), une ligne « qui travaille ici » dans les fiches des bâtiments, les visiteurs qui descendent au quai, Fanal qui se déplace.
+
+### Ce que verra Alex
+- Chaque habitant est une petite figurine, plus petite que Fanal, chacune avec ses couleurs. Il sort de son chalet, suit les routes jusqu'à son lieu de travail (potager, serre, atelier, éolienne, grenier, quai), y travaille un moment, puis rentre. Les départs sont décalés : jamais tout le monde en même temps.
+- L'hiver, le potager dort : ses jardiniers vont à la serre ou à l'atelier. Sans aucun lieu de travail bâti, les habitants vont sur la Place, près de Fanal. Sans habitant, personne ne marche.
+- Dans Réglages, « Économie de batterie », propre à chaque appareil : l'île revient au comportement d'aujourd'hui (elle bouge 9 s après un geste, puis s'arrête).
+- En mouvement réduit : chaque habitant reste immobile à son poste, rien ne marche.
+- Jamais : un habitant qui empêche de toucher un bâtiment, une ressource qui change, une écriture dans la partie ou dans les tâches.
+
+### Règles proposées
+- Le métier d'un habitant se déduit de l'état (bâtiments bâtis, habitants, saison) : le même sur tous les appareils, rien n'est écrit.
+- Les lieux de travail sont servis dans un ordre fixe, un habitant par lieu, puis on recommence au premier.
+- Le trajet suit les routes : de la porte du chalet à la route la plus proche, par la Place, puis de la route au lieu de travail.
+
+### Comment ça marche
+- `world/habitants.js` (logique pure, sans DOM) : à partir de la vue de l'île, la liste des promeneurs `{ id, chalet, lieu, chemin, decalage }`. Testé par `node --test` (fichier dans `tests/core/` pour que la commande habituelle le lance).
+- Chaque habitant est une entité « personnage » de la scène, animée en CSS (images clés générées pour son chemin : position et profondeur), sous le même interrupteur que la fumée et le rotor (`css/world.css:539`). Aucun calcul image par image en JavaScript : le compteur de `requestAnimationFrame` reste à 0, même quand l'île vit. Aucun pointeur : `pointer-events: none`, rien à toucher, rien lu par le lecteur d'écran.
+- L'interrupteur d'ambiance reste allumé tant que l'économie de batterie est coupée ; il retombe, comme aujourd'hui, quand l'onglet est caché ou l'île hors de l'écran.
+- Rien ne change dans `core/`, l'API, la partie ni `CLIENT_VERSION`. Le cache passe à `oree-coquille-v17`.
+- Leçons à appliquer d'entrée : tout objet près d'un autre se regarde à l'écran aux trois largeurs (un habitant derrière un bâtiment disparaît) ; un changement d'affichage partagé (l'ambiance) se valide par la série complète ; un échec sans lien avec le lot se relance d'abord sur `v2.5`.
+
+### E1 — Métiers et chemins (logique pure, tests écrits d'abord et vus en échec)
+- [ ] Tests : aucun habitant, aucun promeneur ; un promeneur par habitant, au plus 15 ; ordre des lieux ; potager l'hiver ; aucun lieu bâti, la Place ; chemins sur les routes, sans traverser un bâtiment ; décalages tous différents ; même entrée, même résultat.
+
+### E2 — Écran [impeccable]
+- [ ] Figurine de l'habitant (couleurs de la palette, jamais la braise), marche, geste de travail ; profondeur juste le long du trajet ; regardée aux trois largeurs, devant et derrière chaque bâtiment.
+- [ ] Réglage « Économie de batterie » dans Réglages (gardé sur l'appareil), texte dans `content/fr-CA/`, typographie de `app/content/README.md`.
+- [ ] Mouvement réduit : immobiles à leur poste.
+
+### E3 — Vérification et documents
+- [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
+- [ ] Scénario neuf `ui-41-ile-vivante.cjs` aux trois largeurs : autant de figurines que d'habitants ; elles bougent quand l'île vit, immobiles en mouvement réduit ; économie de batterie : 0 animation en cours après 12 s ; onglet caché : tout s'arrête ; un toucher sur un bâtiment traverse une figurine ; aucun défilement horizontal.
+- [ ] `world-s3`, `world-perf` et `ui-12` adaptés : le repos se vérifie avec l'économie de batterie ; l'île vivante se mesure à 15 habitants (images par seconde, animations en cours, 0 `requestAnimationFrame`).
+- [ ] Série complète sur code figé ; relecture indépendante par un agent Opus en lecture seule.
+- [ ] Documents : bible §10, `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md`, `CLAUDE.md`, leçons.
+
+### E4 — Envoi
+- [ ] Photo des données sur le serveur, étiquette `v2.6`, `.claude/outils/deploy-prod.sh v2.6`, comparaison des fichiers en ligne avec l'étiquette.
+
+### Questions pour Alex
+1. **Quand l'île bouge** : vivante par défaut tant que l'app est ouverte et à l'écran, avec « Économie de batterie » pour revenir au comportement d'aujourd'hui (recommandé, c'est la bible) ? Au repos par défaut, avec un réglage pour la rendre vivante ? Ou comme aujourd'hui, sans réglage (les habitants ne marchent que 9 s après un geste) ?
+2. **Toucher un habitant** : rien, ce sont des figurants (recommandé : une cible qui bouge est difficile à toucher) ? Ou une petite fiche (« Habitant, jardinier aux Champs ») ?
+3. **Envoi** : direct en production si tout est vert, comme les lots I, H, A et C ?
