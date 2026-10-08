@@ -821,3 +821,73 @@ Constat d'Alex : le premier pas est de rebâtir un chalet ; sans les Matériaux,
 - *Série complète sur 6f00e21 (cache `oree-coquille-v14`) : 31 scénarios réussis sur 35. Les 4 échecs viennent tous de la nouvelle règle, sur des parties neuves dont la liste a déjà des quêtes (le pas « tâche » se coche à l'ouverture) : le 1 attendait 11 Énergie (13 maintenant ; à 1280, lu pendant que le compteur défilait), le 3 voulait retrouver tous ses Matériaux au Remballer (le coup de pouce du pas « terminer » reste, règle des premiers pas), le 7 additionnait le registre sans les coups de pouce des pas (écart de 2 Énergie exactement : la partie était juste, le calcul du test incomplet), le 27 attendait « 0 sur 5 ». Scénarios ajustés, sans toucher à l'app ; le 1 et le 3 attendent la valeur finale du compteur. Relancés seuls : 1 (48 vérifications), 3 (78, trois essais sur trois), 7 (69), 27 (68), tous réussis.*
 - [x] Envoi : à demander à Alex (seul tout de suite, ou avec le lot A).
 - *Alex : « Tout balance tout » (compris : envoyer tout de suite). Envoyé le 7 octobre vers 21 h 12 : étiquette `v2.3.1` = af25b73 (l'app y est identique au commit testé fd62d54 : seul `CLAUDE.md` diffère), poussée avec la branche. Photo de la production `api/data/backups/avant-v2.3.1-20261007-211139/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques). `deploy-prod.sh v2.3.1` : app 200, API sans code 401, avec code 200, données 403, config vide, cache `oree-coquille-v14`, bac à sable inactif. Après l'envoi : 85 fichiers en ligne identiques à l'étiquette (le 86e est `api/config.php`, jamais envoyé) ; les 4 fichiers de données inchangés depuis la photo. Pas regardé : l'app ouverte en production (l'ouvrir écrirait dans la partie d'Alex). Attendu d'après le test qui reproduit sa partie, pas observé : à la prochaine ouverture, « tâche », « terminer » et « semer » se cochent (+2 Énergie, +5 Matériaux, +6 Nourriture) ; il restera 4 Matériaux à gagner pour le chalet. Retour arrière : `deploy-prod.sh v2.3`.*
+
+## Lot C — Les visiteurs à commande
+
+Référence : bible §7 (visiteurs et commandes, catalogue), §9 (l'allure telle qu'elle est construite ; « la commande du visiteur en cours est ramenée à la taille « au ralenti » »), §10 (bandeau « Cette semaine »), §14 (semaines 3 et 4), §15 (décisions 16, 17, 21 et 24) ; `PRODUCT.md` ligne 43 (plus de débouchés à rythme soutenu, sans changer le prix de l'existant ni ce que rapporte une tâche). **Statut : validé par Alex le 7 octobre 2026 vers 23 h 30** (quatre questions posées avant qu'il parte, réponses en fin de section ; « Bosse en parfaite autonomie », topo au matin).
+
+Ce qui existe déjà (lu dans le code le 7 octobre au soir) :
+- le marchand (`core/visiteurs.js`) : il se déduit de la date et du quai bâti (`visiteurDeLaSemaine`), au quai du lundi au dimanche ; quatre offres fixes, chacune une fois par semaine, notées dans `game.visite` ; rien au registre ; la décision 24 le fait revenir « chaque semaine tant qu'il est le seul visiteur » ;
+- à l'écran : le chaland solaire au quai (`world/models.js`, `world/view.js` : `b.visiteur`), la fiche du quai en comptoir (`js/ui/batiment.js`), la ligne « Le marchand est au quai, encore N jours » dans « Cette semaine » (`js/ui/bandeau.js`), le mot de Fanal une fois par semaine et par appareil (`annonceVisiteur`, `js/main.js`, `oree.visite.v1`) ;
+- l'allure de la semaine (`allureDe`, `core/allure.js`), lue sans rien écrire ; la reprise après une absence de 5 jours ou plus (`game.reprise = { du, au }`, posée par `suivreImprevus`) ;
+- accueillir une famille coûte `prixFamille` Nourriture (18 au départ, la Mairie la baisse) et demande une place libre dans un chalet (`refusAccueillir`, `core/batiments.js`) ; un nouveau rang donne son permis (`permisDeRang`) ;
+- un permis passe toujours par le registre (`applyEntry` l'ajoute à `game.permis.dispo`) ; l'API accepte toute clé neuve au registre et refuse une clé en double (`duplicate_key`) ;
+- aucun décor encore : le colporteur attend.
+
+Le lot contient trois visiteurs à commande (convoi, famille du Sud, scientifique), leur commande et sa taille selon l'allure, la commande ramenée au ralenti au retour d'une absence, leur bateau au quai, la fiche, le bandeau, la carte en liste et la voix de Fanal. Hors du lot : le colporteur (décors), la conteuse et le violoneux, le « visiteur surprise » des imprévus, la chronique d'Hermes (semaines 7 et 8), une ligne de commande au bilan de la semaine.
+
+### Ce que verra Alex
+- Le quai rebâti, le marchand reste chaque semaine avec ses quatre offres. À côté, un visiteur à commande accoste chaque lundi et reste jusqu'au dimanche : le convoi, puis la famille du Sud, puis la scientifique, chacun son tour (une semaine sur trois chacun).
+- Chacun dit ce qu'il demande et ce qu'il laisse :
+  1. le convoi demande de l'Énergie et de la Nourriture, il laisse un gros lot de Matériaux ;
+  2. la famille du Sud demande de la Nourriture et de l'Énergie, et s'installe : un habitant de plus, sans payer la Nourriture d'accueil, s'il y a une place libre dans un chalet ;
+  3. la scientifique demande de l'Énergie et des Matériaux, elle laisse 1 permis.
+- Une seule livraison par semaine, en un geste « Livrer ». Une commande impossible reste visible avec sa raison (il manque N Énergie, aucune place libre, déjà livrée). Ne pas livrer ne fait rien perdre : le visiteur repart le dimanche soir, le suivant arrive le lundi.
+- La taille suit l'allure de la semaine : au ralenti, environ la moitié ; au plein régime, environ une fois et demie ; la récompense ne change pas. Revenu d'une absence de 5 jours ou plus, la commande de la semaine passe à la taille « au ralenti », et la fiche le dit sans reproche.
+- Sur l'île, le bateau du visiteur est amarré à côté du chaland du marchand. « Cette semaine » dit la commande (« Le convoi attend sa commande, encore N jours »), puis « Commande livrée ». Fanal annonce le visiteur une fois par semaine et par appareil, et dit merci à la livraison.
+- Jamais : un prix qui change (bâtiments, réparations, niveaux de quartier, offres du marchand), un gain de quête qui change, une tâche touchée, une ressource prise sans geste, plus d'un permis par visiteur.
+
+### Règles proposées
+- Le visiteur de la semaine se déduit de la date (rang de la semaine depuis un lundi fixe, modulo 3) et du quai : tous les appareils voient le même, même hors ligne, rien n'est écrit pour qu'il vienne.
+- Commandes de départ, à la taille « régulier », à régler par la simulation : convoi 15 Énergie et 10 Nourriture contre 30 Matériaux ; famille du Sud 10 Nourriture et 10 Énergie contre un habitant ; scientifique 30 Énergie et 15 Matériaux contre 1 permis. Au ralenti, la moitié (arrondie au-dessus) ; au plein régime, une fois et demie (arrondie).
+- Taille « au ralenti » quand l'allure de la semaine est au ralenti, ou quand une reprise a commencé dans la semaine (`game.reprise.du` entre le lundi et le dimanche).
+- La famille du Sud fait monter le rang comme une famille accueillie : un nouveau rang donne son permis (`permis:rang`), comme le marchand peut mener à l'objectif d'automne. Le visiteur, lui, n'en donne aucun.
+- Cible de la simulation : livrer chaque commande payable ne déplace le premier niveau de quartier que de quelques jours, n'achète pas plus de deux niveaux de plus en 16 semaines, et le joueur le plus lent en livre au moins une sur trois.
+
+### Comment ça marche
+- `core/visiteurs.js` grandit : `VISITEURS` (les trois, leur commande « régulier », ce qu'ils laissent), `commandeDeLaSemaine(game, ledger, now)` (visiteur, taille, demande, récompense, jours restants, livrée ou non ; lecture pure), `refusLivrer` et le geste `livrer`.
+- `livrer` : un `game.set` (ressources données ; pour la famille, l'habitant) et une entrée au registre `commande:{lundi}` (`type: 'commande'`, `visiteur`, `taille`, et le gain : Matériaux du convoi, permis de la scientifique). La clé est unique : deux appareils ne livrent jamais deux fois ; un double toucher trouve la clé et est refusé. Rien dans `tasks.json`.
+- Un geste rejoué hors ligne se recalcule à son heure : la commande de sa semaine, à la taille de ce jour-là ; déjà livrée ailleurs, il est refusé avec sa raison (leçon du lot H).
+- Accueillir garde sa règle ; le petit morceau qui ajoute l'habitant et donne le permis de rang est partagé avec `livrer`.
+- Un onglet resté sur la v2.4 ne voit pas les commandes et ne peut pas en livrer ; il ne touche ni à la clé du registre ni à la partie d'une façon qui casserait la règle. `CLIENT_VERSION` et `MIN_CLIENT` devraient donc rester à 7 (à confirmer par la relecture). Le cache passe à `oree-coquille-v16`.
+- Leçons à appliquer d'entrée : avant la série, chercher les scénarios qui bâtissent le quai (le 36 d'abord) et ceux qui lisent « Cette semaine » ou le mot de Fanal ; un échec sans lien avec le lot se relance d'abord sur `v2.4` ; un chiffre de la simulation se relance avant d'être écrit.
+
+### C1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `tests/core/commandes.test.mjs` puis le code. Tests : rotation des trois visiteurs, la même sur deux appareils ; rien sans quai ; quai bâti en milieu de semaine ; une livraison par semaine (clé unique, double toucher) ; manque ; famille sans place libre ; taille au ralenti et au plein régime, récompense identique ; reprise dans la semaine → taille « au ralenti » ; la famille qui fait monter le rang donne le permis de rang, la scientifique un seul permis ; ne pas livrer ne change rien ; aucune tâche touchée ; geste d'une semaine passée rejoué après coup ; le marchand inchangé ; aucun prix ni gain de quête ne bouge.
+
+### C2 — Simulation
+- [ ] Simulation (l) dans `tests/core/simulation.test.mjs` : cinq joueurs (du très lent au rapide), départs du 1er juillet et du 7 octobre (leçon du lot A), qui livrent dès qu'ils peuvent ou jamais. Tableau : commandes livrées sur offertes, premier niveau, niveaux en 16 semaines, Hameau, village plein. **Montrer le tableau à Alex au matin** (il a laissé les montants à la simulation).
+
+### C3 — Écran [impeccable]
+- [ ] Bateau du visiteur au quai, à côté du chaland (un dessin par visiteur), touchable, mouvement réduit respecté.
+- [ ] Fiche du quai : la commande au-dessus du comptoir (qui, ce qu'il demande, ce qu'il laisse, « Livrer » ou la raison, « Commande livrée ») ; « Cette semaine » du bandeau ; carte en liste ; phrase lue ; Fanal (arrivée de chaque visiteur et livraison, 5 variantes chacune).
+- [ ] Textes dans `content/fr-CA/`, typographie de `app/content/README.md`.
+- [ ] Scénario navigateur neuf, `ui-40-commandes.cjs`, aux trois largeurs : arrivée, livraison, double toucher qui ne livre qu'une fois, commande impossible et sa raison, taille au ralenti, retour d'absence, deux appareils, départ du dimanche avec « Jour suivant ». Captures regardées.
+
+### C4 — Vérification et documents
+- [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
+- [ ] Avant la série : chercher les anciens scénarios que les commandes changent (le 36 d'abord).
+- [ ] Série complète sur code figé (`run-ui.sh`, environ 36 minutes, rien de modifié dans `app/` pendant qu'elle tourne) ; `world-s3` et `world-perf`.
+- [ ] Relecture indépendante par un agent Opus en lecture seule.
+- [ ] Documents : bible (§7, §9, §10, §15), `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md`, `CLAUDE.md`, leçons.
+
+### C5 — Envoi
+- [ ] Photo des données sur le serveur (comme en A4), étiquette `v2.5`, `.claude/outils/deploy-prod.sh v2.5`, comparaison des fichiers en ligne avec l'étiquette. Si `CLIENT_VERSION` et `MIN_CLIENT` montent, le dire à Alex (recharger ses onglets).
+
+### Questions pour Alex
+1. **Le quai** : le marchand et le visiteur à commande ensemble chaque semaine (recommandé), tour à tour, ou le visiteur chaque semaine et le marchand une sur deux ?
+2. **Récompenses** : les trois à tour de rôle, convoi (Matériaux), famille du Sud (un habitant, s'il y a une place), scientifique (1 permis), montants réglés par la simulation et montrés au matin (recommandé) ? Ou sans la famille pour l'instant ?
+3. **Taille** : petite au ralenti, grosse au plein régime, même récompense ; ramenée au ralenti au retour d'une absence (recommandé) ? Ou petite au ralenti seulement ?
+4. **Envoi** : direct en production si tout est vert, comme les lots I, H et A (recommandé) ? Ou tout prêt, envoi au matin ?
+
+**Réponses d'Alex (7 octobre, vers 23 h 30)** : 1. les deux chaque semaine ; 2. les trois, à tour de rôle ; 3. petite au ralenti, grosse au plein régime ; 4. envoi direct si tout est vert. « Bosse en parfaite autonomie », topo au matin. **Plan validé.**
