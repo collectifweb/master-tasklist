@@ -4,6 +4,7 @@
 //   world.render(game, tasks, ledger); // met à jour ce qui a changé (différence par identifiant) ; ledger : cultures
 //   world.play(events);          // joue les événements du cœur, dans l'ordre ; sautables
 //   world.setReducedMotion(true | false | null);  // null : suivre le système et <html data-motion>
+//   world.setEconomie(true | false); // économie de batterie (options.economie au départ) : l'île ne vit que 9 s après un geste
 //   world.focusSector('champs'); // cadre un quartier
 //   world.focusEntity('chalet-2'); // cadre un objet (bâtiment, emplacement, repère), quai compris, et le nomme
 //   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
@@ -38,6 +39,7 @@ import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.
 import { Scene } from './scene.js';
 import { artFor, QUAI_MARCHAND_H, QUAI_BATEAU_W } from './models.js';
 import { createTicker, createBus } from './ticker.js';
+import { promeneurs, trajet } from './habitants.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
 import { makeTexts, batimentNom, batimentEtat } from './texts.js';
@@ -48,7 +50,8 @@ export { createWorldPlan } from './plan.js';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const LIGHT = { lanterne: 'lantern', etabli: 'lamp', chalet: 'window', grenier: 'window' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
-const AMBIENT_MS = 9000; // l'île respire quelques secondes après chaque activité, puis s'immobilise
+const HAB_MS = 250; // l'île vivante : profondeur des habitants recopiée quatre fois par seconde (scene.habDepths)
+const AMBIENT_MS = 9000; // en économie de batterie, l'île respire quelques secondes après chaque activité, puis s'immobilise
 const FRONT_FAR = 1.8; // recul du front de givre à l'annonce d'une tempête (cases), jusqu'au rivage le jour même
 let uid = 0;
 
@@ -130,8 +133,16 @@ export function entitiesFor(v, tasks = []) {
   // Fanal sur la Place
   const fanal = { id: 'fanal', kind: 'char', who: 'fanal', sector: 'place', u: FANAL_HOME[0], v: FANAL_HOME[1], interactive: true, light: 'fanal', allume: true };
   list.push(fanal);
+  // habitants au travail (lot E) : posés à leur poste ; leur trajet est une animation, allumée avec l'ambiance
+  for (const p of promeneurs(v)) {
+    const [u, vv] = p.chemin.at(-1);
+    const n = Number(p.id.slice('habitant-'.length)) - 1;
+    list.push({ id: p.id, kind: 'hab', sector: sectorAt(Math.floor(vv), Math.floor(u)), u, v: vv, n, outil: OUTIL[p.lieu.split('-')[0]] ?? '', trajet: trajet(p), decalage: p.decalage });
+  }
   return list;
 }
+/** Outil que porte un habitant, selon son lieu de travail (dessins : habitantSVG, world/models.js). */
+const OUTIL = { parcelle: 'panier', serre: 'arrosoir', atelier: 'marteau', grenier: 'sac' };
 
 // ----------------------------------------------------------------------------- décor lointain
 function farForestURI() {
@@ -299,6 +310,9 @@ export function createWorld(container, options = {}) {
   let destroyed = false;
   let first = true;
   let ambientTimer = 0;
+  // « Économie de batterie » (Réglages, lot E) : sans elle, l'île reste vivante tant qu'elle est à l'écran (l'onglet
+  // caché, l'île hors de l'écran et le mouvement réduit la figent toujours, world.css) ; avec elle, comme avant le lot E
+  let economie = !!options.economie;
   let suppressClick = false;
   const plaqueEls = {};
   const plaqueLast = {};
@@ -697,8 +711,23 @@ export function createWorld(container, options = {}) {
   function wake(ms = AMBIENT_MS) {
     if (destroyed) return;
     if (root.dataset.ambient !== 'on') root.dataset.ambient = 'on';
+    syncHab();
     win.clearTimeout(ambientTimer);
-    ambientTimer = win.setTimeout(() => { if (!destroyed && !playing) root.dataset.ambient = 'off'; }, ms);
+    if (!economie) return;
+    ambientTimer = win.setTimeout(() => { if (!destroyed && !playing) { root.dataset.ambient = 'off'; syncHab(); } }, ms);
+  }
+  // Profondeur des habitants : minuterie tant que l'île vit hors mouvement réduit (pas d'image demandée), arrêtée
+  // sinon ; un dernier passage cale chaque figurine où elle s'est arrêtée (ou à son poste, en mouvement réduit).
+  let habTimer = 0;
+  function syncHab() {
+    const vit = !destroyed && !reduced && root.dataset.ambient === 'on';
+    if (vit && !habTimer) {
+      habTimer = win.setInterval(() => { if (!root.hasAttribute('data-cache') && !root.hasAttribute('data-hors-vue')) scene.habDepths(); }, HAB_MS);
+    } else if (!vit && habTimer) {
+      win.clearInterval(habTimer);
+      habTimer = 0;
+    }
+    if (!vit && !destroyed) scene.habDepths();
   }
   function clearVeille() {
     if (!shown || !shown.veille) return;
@@ -715,6 +744,7 @@ export function createWorld(container, options = {}) {
     reduced = forced !== null ? forced : m === 'reduce' ? true : m === 'full' ? false : !!(mq && mq.matches);
     root.dataset.mouvement = reduced ? 'reduit' : 'complet';
     fx.reduced = reduced;
+    syncHab();
   }
   syncMotion();
   mq?.addEventListener?.('change', syncMotion);
@@ -922,6 +952,7 @@ export function createWorld(container, options = {}) {
     playing++;
     root.dataset.joue = '1';
     root.dataset.ambient = 'on';
+    syncHab();
     skipBtn.hidden = false;
     placeSkip();
     win.setTimeout(placeSkip, 320); // un panneau qui s'ouvre en glissant peut le recouvrir après coup
@@ -989,6 +1020,9 @@ export function createWorld(container, options = {}) {
     },
     /** true : mouvement réduit ; false : complet ; null : suivre le système et <html data-motion>. */
     setReducedMotion(v) { forced = v === null || v === undefined ? null : !!v; syncMotion(); },
+    /** true : économie de batterie (l'île ne bouge que quelques secondes après un geste) ; false : île vivante. */
+    setEconomie(v) { economie = !!v; wake(); },
+    get economie() { return economie; },
     focusSector,
     focusEntity,
     /** Le panneau des quêtes est montré (true) ou caché (false) : état du bouton « Quêtes ». */
@@ -1006,6 +1040,7 @@ export function createWorld(container, options = {}) {
       fx.skip();
       ticker.stop();
       win.clearTimeout(ambientTimer);
+      win.clearInterval(habTimer);
       root.removeEventListener('click', onClick);
       root.removeEventListener('keydown', onKey);
       root.removeEventListener('focusin', onFocusIn);

@@ -2,7 +2,7 @@
 // à jour (attributs, profondeur, contenu quand son modèle change). Jamais de innerHTML global : les
 // animations en cours et l'état d'interaction survivent à chaque rendu.
 import { P, f, pts, hull } from './iso.js';
-import { artFor, characterSVG } from './models.js';
+import { artFor, characterSVG, habitantSVG } from './models.js';
 
 const ART = new Map();
 // px monde : 44 px à l'écran dès que les objets deviennent touchables (échelle ≥ 0,69, voir camera.js)
@@ -19,12 +19,46 @@ function cachedArt(e) {
 
 /** Profondeur de tri (coin avant de l'emprise). Le sol passe sous tout ce qui est debout. */
 export function depthOf(e) {
-  if (e.kind === 'char') return e.u + e.v + 1.05;
+  if (e.kind === 'char' || e.kind === 'hab') return e.u + e.v + 1.05;
   return e.r + (e.h || 1) + e.c + (e.w || 1);
 }
 export function zOf(e) {
   if (e.ground) return 10 + Math.round(depthOf(e));
   return 100 + Math.round(depthOf(e) * 10) + (e.bias || 0);
+}
+
+// Nom des images clés d'un trajet : la même route et le même poste donnent le même nom (une seule règle).
+function habName(e) {
+  let h = 2166136261;
+  for (const ch of `${e.u},${e.v}|${e.trajet.duree}|${e.trajet.images.map((i) => `${i.t},${i.u},${i.v},${i.o}`).join(';')}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return `ow-hab-${(h >>> 0).toString(36)}`;
+}
+
+function habKeyframes(name, e) {
+  const [X0, Y0] = P(e.u, e.v);
+  const ims = e.trajet.images;
+  const pct = (t) => `${(Math.min(1, t) * 100).toFixed(3)}%`;
+  const sensDe = (a, b) => { const [xa] = P(a.u, a.v), [xb] = P(b.u, b.v); return xb > xa + 0.01 ? 1 : xb < xa - 0.01 ? -1 : 0; };
+  let p = '';
+  // dès la porte, tourné vers où il va
+  let sens = ims.map((im, i) => ims[i + 1] && sensDe(im, ims[i + 1])).find(Boolean) || 1;
+  ims.forEach((im, i) => {
+    const [x, y] = P(im.u, im.v);
+    const pose = (s) => `transform:translate(${f(x - X0)}px,${f(y - Y0)}px) scaleX(${s});opacity:${im.o}`;
+    p += `${pct(im.t)}{${pose(sens)}}`;
+    const nxt = ims[i + 1] && sensDe(im, ims[i + 1]);
+    if (nxt && nxt !== sens) { sens = nxt; p += `${pct(im.t + 0.0001)}{${pose(sens)}}`; }
+  });
+  return `@keyframes ${name}-p{${p}}`;
+}
+
+// Profondeur le long du trajet : [avancement 0..1, z-index] à chaque image du trajet, interpolée comme le ferait le CSS.
+const habDepthTable = (e) => e.trajet.images.map((im) => [Math.min(1, im.t), zOf({ kind: 'hab', u: im.u, v: im.v })]);
+function depthAt(table, p) {
+  let i = 0;
+  while (i < table.length - 2 && table[i + 1][0] < p) i++;
+  const [t0, z0] = table[i], [t1, z1] = table[i + 1] || table[i];
+  return Math.round(t1 > t0 ? z0 + ((z1 - z0) * Math.min(1, Math.max(0, (p - t0) / (t1 - t0)))) : z1);
 }
 
 export class Scene {
@@ -67,7 +101,7 @@ export class Scene {
   create(e) {
     const interactive = !!e.interactive;
     const el = document.createElement(interactive ? 'button' : 'div');
-    el.className = `ow-ent m-${e.kind === 'char' ? e.who : e.model ?? e.kind}${e.ground ? ' is-ground' : ''}${interactive ? ' is-btn' : ''}`;
+    el.className = `ow-ent m-${e.kind === 'char' ? e.who : e.kind === 'hab' ? 'hab' : e.model ?? e.kind}${e.ground ? ' is-ground' : ''}${interactive ? ' is-btn' : ''}`;
     el.dataset.id = e.id;
     if (interactive) { el.type = 'button'; el.tabIndex = -1; } else el.setAttribute('aria-hidden', 'true');
     const n = { id: e.id, el, e: null, key: null, shadow: null, halo: null, last: {} };
@@ -82,6 +116,20 @@ export class Scene {
     const el = n.el;
     if (e.kind === 'char') {
       el.innerHTML = `<div class="ow-char-bob">${characterSVG()}</div><svg class="ow-hitbox" viewBox="-32 -60 64 66" width="64" height="66" aria-hidden="true"><ellipse class="ow-hit" cx="0" cy="-26" rx="32" ry="32"/></svg>`;
+      n.art = null;
+      return;
+    }
+    if (e.kind === 'hab') {
+      // trajet en animation CSS (images clés générées, voir habKeyframes) : le monde l'allume avec l'ambiance ; la
+      // profondeur suit l'avancement de cette animation (habDepths)
+      const name = this.keyframes(e);
+      const s = n.el.style;
+      n.hz = habDepthTable(e);
+      s.setProperty('--hab-p', `${name}-p`);
+      s.setProperty('--hab-d', `${e.trajet.duree}s`);
+      s.setProperty('--hab-t', `${-Math.round(e.decalage * e.trajet.duree * 100) / 100}s`);
+      s.setProperty('--hab-b', `${-((e.n * 0.37) % 1).toFixed(2)}s`);
+      n.el.innerHTML = `<div class="ow-hab-pas"><div class="ow-hab-bob">${habitantSVG(e.n, e.outil)}</div></div>`;
       n.art = null;
       return;
     }
@@ -145,7 +193,11 @@ export class Scene {
   }
 
   place(n, e) {
-    if (e.kind === 'char') {
+    if (e.kind === 'hab') {
+      const [X, Y] = P(e.u, e.v);
+      n.X = X; n.Y = Y;
+      Object.assign(n.el.style, { left: f(X - 10) + 'px', top: f(Y - 29) + 'px', width: '20px', height: '32px' });
+    } else if (e.kind === 'char') {
       const [X, Y] = P(e.u, e.v);
       n.X = X; n.Y = Y;
       const box = [-32, -60, 64, 66];
@@ -168,12 +220,12 @@ export class Scene {
     const prev = n.e;
     let changed = false;
     if (first || prev.r !== e.r || prev.c !== e.c || prev.u !== e.u || prev.v !== e.v) { this.place(n, e); changed = !first; }
-    const key = e.kind === 'char' ? `char|${e.who}` : `${artKey(e)}|${e.interactive ? 1 : 0}`;
+    const key = e.kind === 'char' ? `char|${e.who}` : e.kind === 'hab' ? `hab|${e.n}|${e.outil}|${habName(e)}|${e.decalage}` : `${artKey(e)}|${e.interactive ? 1 : 0}`;
     if (key !== n.key) { this.draw(n, e); n.key = key; changed = changed || !first; }
     if (!first && prev.sector !== e.sector) this.L.groups[e.sector].appendChild(n.el);
     if (!first && prev.model !== e.model && e.model) { n.el.classList.remove(`m-${prev.model}`); n.el.classList.add(`m-${e.model}`); }
     const z = zOf(e) + (n.last.sel ? 3000 : 0);
-    if (n.last.z !== z) { n.el.style.zIndex = z; n.last.z = z; }
+    if (n.last.z !== z) { n.el.style.zIndex = z; n.last.z = z; n.last.hz = z; }
     const label = e.interactive && this.hooks.label ? this.hooks.label(e) : null;
     if (label && n.last.label !== label) { n.el.setAttribute('aria-label', label); n.last.label = label; }
     for (const [attr, val] of [['allume', e.allume], ['reluit', e.reluit]]) {
@@ -211,8 +263,45 @@ export class Scene {
       n.el.classList.toggle('is-sel', sel);
       if (n.e.interactive) n.el.setAttribute('aria-pressed', String(sel));
       const z = zOf(n.e) + (sel ? 3000 : 0);
-      n.el.style.zIndex = z; n.last.z = z;
+      n.el.style.zIndex = z; n.last.z = z; n.last.hz = z;
     }
+  }
+
+  /**
+   * Profondeur de chaque habitant à l'endroit de son trajet où en est son animation CSS (le monde l'appelle quatre fois
+   * par seconde quand l'île vit : une animation CSS du z-index recalculerait les styles de toute l'île à chaque image).
+   * Sans animation (mouvement réduit), la profondeur du poste.
+   */
+  habDepths() {
+    // toutes les lectures, puis toutes les écritures : une écriture entre deux lectures forcerait un recalcul à chacune
+    const lus = [];
+    for (const n of this.nodes.values()) {
+      if (!n.hz) continue;
+      const a = n.el.firstElementChild?.getAnimations()[0];
+      const p = a ? a.effect.getComputedTiming().progress : null;
+      lus.push([n, p == null ? zOf(n.e) : depthAt(n.hz, p)]);
+    }
+    for (const [n, z] of lus) if (n.last.hz !== z) { n.el.style.zIndex = z; n.last.hz = z; }
+  }
+
+  /**
+   * Images clés du trajet d'un habitant (world/habitants.js, trajet) : la position, le sens et l'opacité de sa
+   * figurine, en px monde depuis le poste (la profondeur, elle, est posée par habDepths). Le sens change d'un coup
+   * à chaque tournant (deux images à 0,01 % d'écart). Une feuille de style par scène, réécrite quand un trajet change.
+   */
+  keyframes(e) {
+    const name = habName(e);
+    this.kf ??= new Map();
+    if (!this.kf.has(name)) {
+      this.kf.set(name, habKeyframes(name, e));
+      if (!this.kfEl) {
+        this.kfEl = document.createElement('style');
+        this.kfEl.dataset.owHabitants = '';
+        (this.L.groups.place.parentNode || document.head).appendChild(this.kfEl);
+      }
+      this.kfEl.textContent = [...this.kf.values()].join('\n');
+    }
+    return name;
   }
 
   /** Point du monde (px) au centre visuel d'une entité, à une hauteur donnée de sa boîte (0 = pied, 1 = sommet). */

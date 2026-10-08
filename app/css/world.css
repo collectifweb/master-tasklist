@@ -534,9 +534,31 @@
 .ow-front-floe { fill: var(--c-frost-wash); stroke: var(--c-frost); stroke-width: 1; }
 .ow-front-flake path { fill: none; stroke: var(--c-frost-ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---------------------------------------------------------------- ambiance : seulement après une activité,
-   jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r) {
+/* ---------------------------------------------------------------- habitants au travail (lot E)
+   Trajet : une animation générée par trajet (scene.js, habKeyframes), la position, le sens et l'opacité sur .ow-hab-pas ;
+   nom, durée et décalage en variables posées sur l'entité. La profondeur n'est pas animée ici (un z-index animé recalcule
+   les styles de toute l'île à chaque image) : le monde la recopie quatre fois par seconde (scene.habDepths). Pas et bras
+   se balancent en boucle courte. Rien à toucher : l'entité est un div sans pointeur. En mouvement réduit, aucune
+   animation : chaque habitant reste visible à son poste, à la profondeur du poste. */
+.ow-hab-pas { position: absolute; inset: 0; transform-origin: 10px 29px; animation: var(--hab-p, none) var(--hab-d, 1s) linear var(--hab-t, 0s) infinite paused; }
+.ow-hab-bob { position: absolute; inset: 0; transform-origin: 10px 29px; animation: ow-hab-pas 0.56s ease-in-out var(--hab-b, 0s) infinite paused; }
+.ow-hab-bras { transform-box: view-box; transform-origin: 2.9px -15.2px; animation: ow-hab-geste 1.12s ease-in-out var(--hab-b, 0s) infinite paused; }
+@keyframes ow-hab-pas {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.9px); }
+}
+@keyframes ow-hab-geste {
+  0%, 100% { transform: rotate(12deg); }
+  50% { transform: rotate(-22deg); }
+}
+.ow[data-neige] .ow-hab-ete,
+.ow:not([data-neige]) .ow-hab-hiver { display: none; }
+.ow[data-mouvement="reduit"] :is(.ow-hab-pas, .ow-hab-bob, .ow-hab-bras) { animation: none; }
+
+/* ---------------------------------------------------------------- ambiance : allumée tant que l'île est à l'écran, ou
+   seulement après une activité en économie de batterie (lot E) ; jamais en mouvement réduit, onglet caché ou monde hors
+   de l'écran (aucune image calculée alors) */
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r, .ow-hab-pas, .ow-hab-bob, .ow-hab-bras) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }

@@ -850,6 +850,52 @@ export function characterSVG() {
 </svg>`;
 }
 
+// ---------------------------------------------------------------- habitants au travail (lot E)
+// Plus petits que Fanal, tournés vers la droite (la scène les retourne), pieds en (0, 0), boîte -10..10 × -29..3.
+// Couleurs de la palette du monde, jamais la braise, l'airelle (Permis) ni le givre (hors ligne, tempête) ; côté gauche
+// éclairé, côté droit dans l'ombre, comme les bâtiments. Casquette du printemps à l'automne, tuque à pompon et foulard
+// l'hiver (world.css, sous data-neige). Le bras avant porte l'outil du métier et se balance (marche comme travail).
+const HAB = {
+  vestes: [['#718c5d', '#56795c'], ['#58a9a4', '#2d7473'], ['#cf9446', '#a8722f'], ['#dcc58e', '#b9a26a'], ['#8a5a3a', '#64412e'], ['#87a65b', '#5d8150']],
+  bonnets: [['#f3c879', '#d9a94f'], ['#58a9a4', '#2d7473'], ['#eef2e2', '#cfd6c2'], ['#e8a542', '#c0812a'], ['#718c5d', '#56795c'], ['#fbf2d9', '#ddd0ae']],
+  pantalons: ['#4f5848', '#64412e', '#2f6c71'],
+  peaux: [['#f0cfa8', '#d9b088'], ['#d9a77a', '#bf8c5f'], ['#b07a52', '#93603d'], ['#7d4f35', '#643d28']],
+};
+const OUTILS = {
+  // potager : un panier de récolte (chaque outil pend sous la main, en (4.6, -9.7))
+  panier: '<g transform="translate(-.7 2.6)"><path d="M3.1,-10.6 Q5.3,-14.2 7.5,-10.6" fill="none" stroke="#8a5a3a" stroke-width=".7"/><circle cx="4.3" cy="-10.9" r="1.2" fill="#e8a542"/><circle cx="6.3" cy="-11" r="1.1" fill="#87a65b"/><path d="M2.6,-10.6h5.4l-.8,3.4h-3.8z" fill="#e3bb7c"/><path d="M5.3,-10.6h2.7l-.8,3.4h-1.9z" fill="#c99a5e"/></g>',
+  // serre : un arrosoir
+  arrosoir: '<g transform="translate(-1 2.9)"><path d="M3.8,-11.6 Q5.6,-14.2 7.4,-11.6" fill="none" stroke="#2f6c71" stroke-width=".8"/><path d="M7.2,-10.4 L10,-12.8" stroke="#58a9a4" stroke-width="1.1" stroke-linecap="round"/><rect x="3.2" y="-11.6" width="4.6" height="3.8" rx=".7" fill="#58a9a4"/><rect x="5.5" y="-11.6" width="2.3" height="3.8" rx=".5" fill="#2d7473"/></g>',
+  // atelier : un marteau
+  marteau: '<path d="M4.4,-9.4 L6.9,-14.6" stroke="#8a5a3a" stroke-width="1.2" stroke-linecap="round"/><path d="M5.4,-15.8 L8.8,-14.3 L8.2,-12.9 L4.8,-14.4 Z" fill="#b2a58a"/><path d="M7.1,-15 L8.8,-14.3 L8.2,-12.9 L6.5,-13.6 Z" fill="#8f8570"/>',
+  // grenier : un sac de grain
+  sac: '<g transform="translate(-1 3.6)"><path d="M3,-8.8 Q2.5,-12.7 4.6,-13.5 L6.6,-13.5 Q8.6,-12.7 8,-8.8 Q5.5,-8 3,-8.8 Z" fill="#e8d29f"/><path d="M5.6,-13.5 L6.6,-13.5 Q8.6,-12.7 8,-8.8 Q6.9,-8.5 5.6,-8.5 Z" fill="#c7a776"/><path d="M4.2,-13.4 H7" stroke="#8a5a3a" stroke-width=".8" stroke-linecap="round"/></g>',
+};
+
+/** Figurine d'un habitant : n (0, 1, 2…) choisit ses couleurs, outil son métier ('' : mains vides). */
+export function habitantSVG(n = 0, outil = '') {
+  const [vt, vr] = HAB.vestes[n % HAB.vestes.length];
+  const [bt, br] = HAB.bonnets[(n * 2 + 3) % HAB.bonnets.length];
+  const pant = HAB.pantalons[n % HAB.pantalons.length];
+  const [pt, pr] = HAB.peaux[(n * 3 + 1) % HAB.peaux.length];
+  const boot = C.dark;
+  return `<svg class="ow-hab" viewBox="-10 -29 20 32" width="20" height="32" aria-hidden="true" focusable="false">
+<ellipse cx="0" cy="0" rx="5.2" ry="2" class="ow-sprite-shadow"/>
+<path d="M-2.9,-15.2 L-4,-9.8" stroke="${vr}" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M-1.6,-1 L-1.7,-7.6 M1.6,-1 L1.7,-7.6" stroke="${pant}" stroke-width="2.3" stroke-linecap="round"/>
+<path d="M-2.7,-.9h1.9M.9,-.9h2.2" stroke="${boot}" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M-4.2,-7.2 L-3.5,-16.6 Q0,-18 3.5,-16.6 L4.2,-7.2 Z" fill="${vt}"/>
+<path d="M0,-17.3 Q2.2,-17.2 3.5,-16.6 L4.2,-7.2 L0,-7.2 Z" fill="${vr}"/>
+<g class="ow-hab-hiver"><path d="M-3,-17.5 Q.3,-16 3.6,-17.5 L3.4,-15.9 Q.3,-14.7 -2.8,-15.9 Z" fill="${bt}"/><path d="M2.3,-16 L3.3,-12.7 L1.6,-12.9 Z" fill="${br}"/></g>
+<circle cx=".3" cy="-20.4" r="3.2" fill="${pt}"/>
+<path d="M.3,-23.6 A3.2,3.2 0 0 1 .3,-17.2 Z" fill="${pr}" opacity=".55"/>
+<circle cx="3.4" cy="-20" r=".9" fill="${pr}"/>
+<g class="ow-hab-ete"><path d="M-3.2,-21.5 Q-3,-24.7 .3,-24.8 Q3.6,-24.7 3.8,-21.5 Z" fill="${bt}"/><path d="M3.2,-21.7 L6.5,-21.1 L3.4,-20.6 Z" fill="${br}"/></g>
+<g class="ow-hab-hiver"><path d="M-3.4,-21 Q-3.4,-25.9 .3,-26.1 Q4,-25.9 4,-21 Z" fill="${bt}"/><rect x="-3.6" y="-21.9" width="7.8" height="1.8" rx=".7" fill="${br}"/><circle cx=".3" cy="-26.6" r="1.4" fill="${br}"/></g>
+<g class="ow-hab-bras"><path d="M2.9,-15.2 L4.6,-9.7" stroke="${vr}" stroke-width="1.9" stroke-linecap="round"/>${OUTILS[outil] ?? ''}</g>
+</svg>`;
+}
+
 // ---------------------------------------------------------------- registre des modèles
 
 /** Construit l'art d'une entité (voir scene.js). Mis en cache par clé : un même modèle n'est dessiné qu'une fois. */

@@ -2,7 +2,8 @@
 // Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
 //
 //   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion,
-//                               controls, panelId });
+//                               economie, controls, panelId });
+//   economie : économie de batterie au départ (l'île ne s'anime qu'après un geste) ; w.setEconomie(bool) la change
 //   onSelect({ type: 'sector' | 'object' | 'landmark' | 'batiment', id, sector?, taskId? }) : sector est le quartier touché.
 //   controls = { build, quests, plan } : boutons « Construire », « Quêtes » et « Carte en liste » de la carte ;
 //   panelId : l'élément que « Quêtes » montre ou cache (aria-controls).
@@ -11,7 +12,7 @@
 //   w.batiments(game, ledger) → emplacements de l'île dans l'ordre du cœur ; w.focusEntity(id) cadre l'un d'eux
 //   w.setQuestsShown(bool) → état du bouton « Quêtes »
 //   w.plan(conteneur, { onFocusSector, onQuartier, onBatiment }) → { render, focus, destroy }
-export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion, controls, panelId }) {
+export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion, economie, controls, panelId }) {
   let mod, view;
   try {
     [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
@@ -22,7 +23,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
   try {
     const texts = content.ui;
     const anchors = content.ancres;
-    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now, controls, panelId });
+    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now, economie, controls, panelId });
     world.setReducedMotion(reducedMotion());
     container.hidden = false;
     slot.dataset.world = 'live';
@@ -36,6 +37,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
       render: safe(world.render),
       play: safe(world.play, Promise.resolve()),
       setReducedMotion: safe(world.setReducedMotion),
+      setEconomie: safe(world.setEconomie),
       focusSector: safe(world.focusSector),
       focusEntity: safe(world.focusEntity),
       setQuestsShown: safe(world.setQuestsShown),

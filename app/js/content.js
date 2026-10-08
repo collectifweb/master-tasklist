@@ -33,6 +33,16 @@ export function setPrenom(v) {
   return s;
 }
 
+// ───────── Économie de batterie (réglage facultatif, gardé sur l'appareil) : l'île ne s'anime qu'après un geste ─────────
+const BATTERIE_KEY = 'oree.batterie.v1';
+export function economieBatterie() {
+  try { return localStorage.getItem(BATTERIE_KEY) === '1'; } catch { return false; }
+}
+export function setEconomieBatterie(v) {
+  try { if (v) localStorage.setItem(BATTERIE_KEY, '1'); else localStorage.removeItem(BATTERIE_KEY); } catch { /* sans stockage : valable jusqu'au rechargement */ }
+  return !!v;
+}
+
 /** Remplace {nom} ; renvoie null si un gabarit n'a pas de valeur (jamais d'accolade affichée). */
 export function fillStrict(text, vars = {}) {
   let ok = true;

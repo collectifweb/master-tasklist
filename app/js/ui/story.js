@@ -3,7 +3,7 @@
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
 import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE, objectifSaison } from '../../core/index.js';
-import { t, tn, content, prenom, setPrenom } from '../content.js';
+import { t, tn, content, prenom, setPrenom, economieBatterie, setEconomieBatterie } from '../content.js';
 import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
 import { num, numGain, shortDate, durationText } from './format.js';
@@ -58,7 +58,7 @@ export function createStory(app) {
     whenClosed(dlg, onDone);
   }
 
-  // ───────── Réglages : prénom facultatif (sur l'appareil), quête par défaut (dans la partie) ─────────
+  // ───────── Réglages : prénom facultatif et économie de batterie (sur l'appareil), quête par défaut (dans la partie) ─────────
   let queteOuverte = null; // valeurs montrées à l'ouverture : seul un geste sur « + » ou « − » les fait partir au serveur
   function openSettings() {
     const dlg = $('#dlg-settings');
@@ -77,6 +77,7 @@ export function createStory(app) {
           <input class="input" id="set-prenom" name="prenom" type="text" maxlength="40" autocomplete="given-name" autocapitalize="words" enterkeyhint="done" value="${esc(prenom())}" aria-describedby="set-prenom-hint">
           <p class="field-hint" id="set-prenom-hint">${esc(t('settings.prenom.hint'))}</p>
         </div>
+        <label class="check-row"><input type="checkbox" name="batterie"${economieBatterie() ? ' checked' : ''}><span>${esc(t('settings.batterie'))}<small>${esc(t('settings.batterie.hint'))}</small></span></label>
         <fieldset class="field set-quete" aria-describedby="set-quete-hint">
           <legend class="field-label">${esc(t('settings.quete'))}</legend>
           <p class="field-hint" id="set-quete-hint">${esc(t('settings.quete.hint'))}${charge ? '' : ` ${esc(t('settings.quete.attente'))}`}</p>
@@ -108,12 +109,19 @@ export function createStory(app) {
     }
     const avantPrenom = prenom();
     const v = setPrenom(form.elements.prenom.value);
+    const avantBatterie = economieBatterie();
+    const batterie = setEconomieBatterie(form.elements.batterie.checked);
+    if (batterie !== avantBatterie) app.setEconomie(batterie);
     const link = $('#dlg-letter[open] .letter-prenom .link-btn');
     if (link) link.textContent = v ? t('letter.prenom.change', { prenom: v }) : t('letter.prenom.add');
     closeSheet($('#dlg-settings'));
     const dit = v ? t('settings.saved', { prenom: v }) : t('settings.saved.none');
     const diteQuete = t('settings.saved.quete', { p: quete.priority, d: durationText(quete.length), e: quete.difficulty });
-    app.announce(!change ? dit : v === avantPrenom ? diteQuete : `${dit} ${diteQuete}`);
+    const dits = [];
+    if (v !== avantPrenom || (!change && batterie === avantBatterie)) dits.push(dit); // rien de changé : le prénom confirme
+    if (change) dits.push(diteQuete);
+    if (batterie !== avantBatterie) dits.push(t(batterie ? 'settings.saved.batterie' : 'settings.saved.vivante'));
+    app.announce(dits.join(' '));
   }
 
   // ───────── Bilan de la semaine ─────────

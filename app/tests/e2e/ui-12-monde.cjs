@@ -81,7 +81,8 @@ L.runScenario('12. monde : fil de lumière, impact, plaque de quartier, repos', 
   await page.waitForTimeout(2000);
   const r2 = await page.evaluate(() => window.__raf);
   R.check('0 requestAnimationFrame après 12 s d’inactivité', r2 === r1, `${r1} → ${r2}`);
-  R.check('le monde est au repos (data-ambient=off, plus de bouton « Passer »)', await page.evaluate(() => document.querySelector('.ow').dataset.ambient === 'off' && document.querySelector('.ow-skip').hidden));
+  // île vivante par défaut (lot E) : l'ambiance reste en marche, en CSS seulement ; l'économie de batterie est vérifiée par le n° 41
+  R.check('le monde est au repos (plus de bouton « Passer »), l’île vivante (data-ambient=on)', await page.evaluate(() => document.querySelector('.ow').dataset.ambient === 'on' && document.querySelector('.ow-skip').hidden));
 
   // toucher un quartier sur la carte : sa fiche s'ouvre ; « Voir les quêtes » ouvre le panneau filtré sur lui
   await page.click('.ow-plaque[data-sector="champs"]');

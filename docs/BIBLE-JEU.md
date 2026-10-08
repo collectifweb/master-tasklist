@@ -294,6 +294,12 @@ Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq 
   - **Cette saison** : l'objectif saisonnier ;
   - **Prochain rang** : une barre.
 - **Une île vivante** : chaque habitant va et vient à son métier, la fumée sort des cheminées, l'éolienne tourne. L'animation tourne en continu tant que l'app est ouverte. Un réglage « économie de batterie » la remet au repos, et le mouvement réduit est respecté.
+
+  **L'île vivante, telle qu'elle est construite** (lot E, 8 octobre 2026, décisions d'Alex) :
+  - vivante par défaut, tant que l'app est ouverte et l'île à l'écran ; « Économie de batterie », dans Réglages et propre à chaque appareil, la remet au comportement d'avant (l'île bouge 9 s après un geste, puis s'arrête) ;
+  - chaque habitant logé sort de son chalet, suit les routes jusqu'à son lieu de travail, y reste un moment, puis rentre ; départs décalés ;
+  - lieux de travail servis à tour de rôle : potager (de mai à octobre, quand il produit), serre, atelier, grenier ; sans aucun, la Place. L'éolienne et le quai n'en sont pas encore (l'éolienne est entourée de décor, le quai est sous le rebord de l'île) ;
+  - les habitants sont des figurants : rien à toucher ; en mouvement réduit, chacun reste immobile à son poste. Rien n'est écrit dans la partie ni dans les tâches.
 - **Les fiches à trois lignes** pour tout ce qui se touche.
 - **Menus renommés** :
   - « Finir la visite » disparaît : la visite se termine d'elle-même ;

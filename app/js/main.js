@@ -6,7 +6,7 @@ import {
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
 import { maintenant, decalage, enEssai } from './horloge.js';
-import { loadContent, t, tn, content, pickReply, replyVars } from './content.js';
+import { loadContent, t, tn, content, pickReply, replyVars, economieBatterie } from './content.js';
 import { $, $$, esc, reducedMotion, setText, inlineSprite, restart } from './ui/dom.js';
 import { createHud } from './ui/hud.js';
 import { createAnnounce, createVoice, summarize, gainList, aGagne } from './ui/announce.js';
@@ -56,6 +56,7 @@ const story = createStory({
   announce: (text) => announce.say(text),
   focusHome,
   thumb: (id) => (world ? world.thumb(id) : ''),
+  setEconomie: (v) => { if (world) world.setEconomie(v); },
   lightBandeau: () => bandeau.light(),
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
   arrivee: () => { annonceAllure(); annonceVisiteur(); annonceImprevu(); annonceTempete(); },
@@ -842,7 +843,7 @@ async function start() {
   playedDay = gameDay(maintenant());
   initWorld({
     container: $('#world-live'), slot: $('.world-slot'), content,
-    now: maintenant, reducedMotion,
+    now: maintenant, reducedMotion, economie: economieBatterie(),
     announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,

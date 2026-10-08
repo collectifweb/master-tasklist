@@ -268,14 +268,16 @@ async function tap(page, id) { const p = await hitPoint(page, id); if (p) { awai
     check(`${tag} le saut termine en moins de 400 ms`, r.skipMs < 400, r.skipMs);
     await page.evaluate(() => { document.querySelector('[data-demo="panel"]').click(); });
 
-    // ---- au repos : aucune image demandée après 12 s, aucune animation en cours
+    // ---- au repos, en économie de batterie : aucune image demandée après 12 s, aucune animation en cours (l'île vivante,
+    //      réglage par défaut, garde ses boucles CSS : vérifiée par ui-41)
+    await page.evaluate(() => window.__world.setEconomie(true));
     await page.waitForTimeout(12000);
     r.idle = await page.evaluate(async () => {
       const r0 = window.__raf;
       await new Promise((res) => setTimeout(res, 2000));
       return { raf: window.__raf - r0, running: document.getAnimations().filter((a) => a.playState === 'running').length };
     });
-    check(`${tag} au repos : 0 requestAnimationFrame après 12 s`, r.idle.raf === 0 && r.idle.running === 0, r.idle);
+    check(`${tag} au repos (économie de batterie) : 0 requestAnimationFrame et 0 animation après 12 s`, r.idle.raf === 0 && r.idle.running === 0, r.idle);
     r.errors = errors;
     check(`${tag} aucune erreur console`, !errors.length, errors);
     report[tag] = r;

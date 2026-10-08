@@ -76,7 +76,10 @@ async function idleFrames(page, ms = 2000) {
     const { page, errors } = await open(nav, w, h);
     const v = { layout: await layoutChecks(page) };
     await page.screenshot({ path: `${OUT}/${w}-repos.png` });
-    // l'ambiance s'arrête d'elle-même (9 s après la dernière activité) : on attend, puis 2 s sans activité
+    // île vivante (par défaut) : l'ambiance tourne en CSS, sans image demandée ; en économie de batterie, elle s'arrête
+    // d'elle-même 9 s après la dernière activité : on attend, puis 2 s sans activité
+    v.vivante = await idleFrames(page, 2000);
+    await page.evaluate(() => window.__world.setEconomie(true));
     await page.waitForTimeout(9600);
     v.idle = await idleFrames(page, 2000);
     v.errors = errors;

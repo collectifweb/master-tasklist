@@ -171,7 +171,7 @@ Un objet plat `clé → texte`. Les clés sont stables, en anglais minuscule ave
 | `monde` | La carte : région, commandes (Construire, Quêtes, Vue, Rapprocher, Éloigner, Toute l'île, Carte en liste), plaques de quartier (`monde.niveau.court`, « niv. 2 »), noms des objets, carte en liste (quêtes à faire par quartier : `monde.quetes.*` ; bouton « Ouvrir la fiche » : `monde.plan.open*`) |
 | `help`, `res` | Aide des cinq puces de la barre (Énergie, Matériaux, Nourriture, Habitants, Permis : `help.permis.*`) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue, celle du Permis le nombre de jours par permis (gabarits, voir plus haut) |
 | `essai` | Version d'essai : texte du décalage de date et bouton « Jour suivant » |
-| `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom ; « Quête par défaut » : `settings.quete`, `settings.quete.hint`, `settings.quete.attente` pour la feuille ouverte avant la lecture de la partie, `settings.saved.quete`) |
+| `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom ; « Quête par défaut » : `settings.quete`, `settings.quete.hint`, `settings.quete.attente` pour la feuille ouverte avant la lecture de la partie, `settings.saved.quete` ; « Économie de batterie », lot E : `settings.batterie`, `settings.batterie.hint`, et l'annonce de l'enregistrement, `settings.saved.batterie` quand elle est cochée, `settings.saved.vivante` quand elle est décochée) |
 
 Durée correspond au champ `length` d'une tâche, Effort au champ `difficulty`.
 
