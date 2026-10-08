@@ -12,11 +12,14 @@
 // cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
 // Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir. La neige d'une tempête (core/hiver.js, lot H)
 // est un dégât du même genre : « Déneiger », une quête Terrain, ou la neige qui fond.
+// Le visiteur à commande (lot C) a son bloc au-dessus du comptoir : qui il est, ce qu'il demande, ce qu'il laisse, la
+// taille de la commande quand elle n'est pas « régulière », puis « Livrer » (la seule action principale de la fiche,
+// data-geste="livrer"), le cadenas et la raison du cœur, ou « Commande livrée ».
 import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
-  saisonDe, degatsALaRecolte,
+  saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -54,6 +57,12 @@ export function ressource(obj) {
   return { res: RES[k], n, nom, texte: `${n} ${nom}` };
 }
 
+/** « 12 Nourriture », « 15 Matériaux et 6 Nourriture » : une demande de visiteur, dans l'ordre de la barre du haut. */
+export function ressourcesText(obj) {
+  const parts = ['energy', 'materials', 'food'].filter((k) => obj[k] > 0).map((k) => ressource({ [k]: obj[k] }).texte);
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}` : parts.join('');
+}
+
 const DEGAT_ICON = { panne: 'cle', ours: 'patte', gel: 'flocon', neige: 'pelle' };
 const domaine = (type) => t(`quartier.${DEGATS[type].quartier}.domain`);
 
@@ -89,8 +98,8 @@ function degatModel(game, id, now) {
 
 /**
  * Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null,
- * comptoir: [{ id, donne, recoit, prise, raison }] | null, degat } (comptoir : le quai debout, quand le marchand y est ;
- * degat : voir degatModel).
+ * comptoir: [{ id, donne, recoit, prise, raison }] | null, commande, degat } (comptoir : le quai debout, quand le marchand
+ * y est ; commande : voir commandeModel ; degat : voir degatModel).
  */
 export function batimentModel(c, id) {
   const type = typeOf(id);
@@ -106,7 +115,7 @@ export function batimentModel(c, id) {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
       n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
     }),
-    maintenant: '', raison: null, geste: null, comptoir: null, degat: bati ? degatModel(game, id, now) : null,
+    maintenant: '', raison: null, geste: null, comptoir: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };
   if (!bati) {
     m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
@@ -155,12 +164,34 @@ export function batimentModel(c, id) {
         raison: o.prise ? null : refusEchanger(game, { offre: o.id }, now),
       }));
     }
+    m.commande = commandeModel(game, ledger, now);
   } else if (type === 'grenier') {
     m.maintenant = t('bat.grenier.maintenant', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) });
   } else {
     m.maintenant = t(`bat.${type}.maintenant`);
   }
   return m;
+}
+
+/**
+ * Le visiteur à commande de la semaine dans la fiche du quai, ou null : { id, nom, qui, jours, demande: [ressource],
+ * recoit: { res, n, nom, note }, taille (phrase, ou null à l'allure régulière), livree, raison, label }.
+ */
+function commandeModel(game, ledger, now) {
+  const c = commandeDeLaSemaine(game, ledger, now);
+  if (!c) return null;
+  const [res, n] = Object.entries(c.recoit)[0];
+  const recoit = res === 'materials' ? { ...ressource({ materials: n }), note: null }
+    : { res, n, nom: t(`bat.commande.recoit.${res}`), note: res === 'habitants' ? t('bat.commande.recoit.habitants.note') : null };
+  return {
+    id: c.id, nom: t(`bat.commande.${c.id}.nom`), qui: t(`bat.commande.${c.id}.qui`),
+    jours: t(`bat.commande.jours.${c.joursRestants === 1 ? 'one' : 'other'}`, { n: c.joursRestants }),
+    demande: ['energy', 'materials', 'food'].filter((k) => c.demande[k] > 0).map((k) => ressource({ [k]: c.demande[k] })),
+    recoit, livree: c.livree,
+    taille: c.allegee ? t('bat.commande.taille.allegee') : c.taille === 'regulier' ? null : t(`bat.commande.taille.${c.taille}`),
+    raison: c.livree ? null : refusLivrer(game, ledger, {}, now),
+    label: t('bat.commande.geste.label', { demande: ressourcesText(c.demande), au: t(`bat.commande.${c.id}.au`) }),
+  };
 }
 
 const GESTE_ICON = { construire: 'chantier', semer: 'champs', recolter: 'nourriture', accueillir: 'habitants' };
@@ -186,6 +217,28 @@ function comptoirHtml(offres) {
     <ul class="comptoir-offres" role="list">${offres.map(offreHtml).join('')}</ul></section>`;
 }
 
+// Le visiteur à commande, au-dessus du comptoir : son nom et ses jours, qui il est, « Demande » et « Laisse » (picto teinté
+// de la ressource, nombre, mot), la taille quand elle n'est pas régulière, puis « Livrer » (principal) ou, verrouillé, le
+// cadenas et la raison du cœur ; livrée, une ligne cochée à la même place.
+function commandeHtml(c) {
+  const etat = c.livree ? 'fait' : c.raison ? 'verrou' : 'libre';
+  const action = c.livree
+    ? `<p class="commande-fait" id="commande-etat" tabindex="-1">${icon('check')}<span>${esc(t('bat.commande.fait'))} <small>${esc(t(`bat.commande.${c.id}.fait`))}</small></span></p>`
+    : `<button class="btn btn--block ${c.raison ? '' : 'btn--primary '}commande-go" type="button" data-action="bat-geste" data-geste="livrer" data-params="{}"
+      aria-label="${esc(c.label)}"${c.raison ? ' aria-disabled="true" aria-describedby="commande-raison"' : ''}>${icon(c.raison ? 'lock' : 'fleche')}<span>${esc(t('bat.commande.geste'))}</span></button>
+      ${c.raison ? `<p class="commande-raison" id="commande-raison">${icon('lock')}<span>${esc(c.raison)}</span></p>` : ''}`;
+  return `<section class="commande" data-visiteur="${c.id}" data-etat="${etat}" aria-labelledby="commande-t">
+    <h3 class="commande-titre" id="commande-t">${icon('note')}<span>${esc(c.nom)}</span><small class="commande-jours">${esc(c.jours)}</small></h3>
+    <p class="commande-qui">${esc(c.qui)}</p>
+    <dl class="commande-troc">
+      <div><dt>${esc(t('bat.commande.demande'))}</dt><dd>${c.demande.map((r, i) => (i ? `<span class="commande-plus"><span class="commande-et" aria-hidden="true">+</span><span class="sr-only"> ${esc(t('bat.commande.et'))} </span>${resHtml(r)}</span>` : resHtml(r))).join('')}</dd></div>
+      <div><dt>${esc(t('bat.commande.laisse'))}</dt><dd>${resHtml(c.recoit)}${c.recoit.note ? `<small class="commande-note">${esc(c.recoit.note)}</small>` : ''}</dd></div>
+    </dl>
+    ${c.taille ? `<p class="commande-taille">${esc(c.taille)}</p>` : ''}
+    ${action}
+    <p class="commande-regle">${esc(t('bat.commande.regle'))}</p></section>`;
+}
+
 // Le dégât dans « Maintenant » : titre et picto braise, ce que ça change, le geste et son prix (ou le cadenas et la raison),
 // les deux autres voies. Réglé : une ligne cochée, à la même place (un second toucher n'y trouve rien à refaire).
 function degatHtml(d) {
@@ -202,7 +255,7 @@ function degatHtml(d) {
 function bodyHtml(m) {
   const line = (k, html) => `<div class="help-line"><dt>${esc(t(`bat.fiche.${k}`))}</dt><dd>${html}</dd></div>`;
   const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}${m.degat ? degatHtml(m.degat) : ''}`;
-  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.comptoir ? comptoirHtml(m.comptoir) : ''}`;
+  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.commande ? commandeHtml(m.commande) : ''}${m.comptoir ? comptoirHtml(m.comptoir) : ''}`;
 }
 
 function footHtml(m) {
@@ -242,14 +295,16 @@ function fill(dlg, m) {
   setHtml(th, art || '');
   th.hidden = !art;
   // une offre prise ou devenue impossible change de bouton : le focus reste sur sa ligne (bouton, ou « Fait cette semaine ») ;
-  // de même pour un dégât réglé (bouton, ou la ligne cochée qui le remplace)
+  // de même pour un dégât réglé ou une commande livrée (bouton, ou la ligne cochée qui le remplace)
   const body = $('.bat-body', dlg);
   const offre = body.contains(document.activeElement) ? document.activeElement.closest('.offre')?.dataset.offre : null;
   const degat = body.contains(document.activeElement) && !!document.activeElement.closest('.degat');
+  const commande = body.contains(document.activeElement) && !!document.activeElement.closest('.commande');
   setHtml(body, bodyHtml(m));
   const li = offre && !body.contains(document.activeElement) ? $(`.offre[data-offre="${offre}"]`, body) : null;
   if (li) ($('.offre-go', li) || $('.offre-fait', li))?.focus();
   if (degat && !body.contains(document.activeElement)) ($('.degat-go', body) || $('.degat-fait', body))?.focus();
+  if (commande && !body.contains(document.activeElement)) ($('.commande-go', body) || $('.commande-fait', body))?.focus();
   const foot = $('.bat-foot', dlg);
   const had = foot.contains(document.activeElement);
   setHtml(foot, footHtml(m));

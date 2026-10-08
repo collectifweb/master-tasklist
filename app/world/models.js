@@ -542,12 +542,127 @@ function chaland(a) {
   a.raw('</g>');
 }
 
+/** Largeur (en cases) de l'emprise du quai quand un visiteur à commande y est amarré : son bateau est dans la zone de toucher. */
+export const QUAI_BATEAU_W = 1.9;
+
+// Bateaux des visiteurs à commande (lot C), amarrés au bout du quai, dans le prolongement du chaland, la proue vers +u.
+// Dessinés avec le quai, après le chaland (ils sont devant lui). Coque : flanc +v à mi-ombre, proue à l'ombre, pont cerné
+// d'un plat-bord, un listel sur le flanc. Zone u 1,12 à 1,84, v 1,1 à 1,44 : à l'écart de la plaque du quartier.
+const B0 = { u: 1.12, v: 1.1, L: 0.72, W: 0.34 };
+function coque(a, H, m, pont, listel) {
+  const { u: u0, v: v0, L, W } = B0;
+  const u1 = u0 + L, ub = u1 - 0.18, v1 = v0 + W, vm = v0 + W / 2, i = 0.035;
+  a.poly([[u0, v1, -1], [ub, v1, -1], [ub, v1, H], [u0, v1, H]], `${m}-l`);
+  a.poly([[ub, v1, -1], [u1, vm, -1], [u1, vm, H], [ub, v1, H]], `${m}-r`);
+  a.poly([[u0, v0, H], [ub, v0, H], [u1, vm, H], [ub, v1, H], [u0, v1, H]], `${m}-t rim`);
+  a.poly([[u0 + i, v0 + i, H + 0.3], [ub, v0 + i, H + 0.3], [u1 - 2 * i, vm, H + 0.3], [ub, v1 - i, H + 0.3], [u0 + i, v1 - i, H + 0.3]], `${pont}-t`);
+  a.seg([u0, v1, H - 2], [ub, v1, H - 2], `k-${listel}-l`, 1.2);
+  a.seg([ub, v1, H - 2], [u1, vm, H - 2], `k-${listel}-r`, 1.2);
+}
+// fanion au bout d'un mât court, à la proue (il flotte vers +u, comme celui du chaland)
+function fanion(a, H, m) {
+  const mu = B0.u + B0.L - 0.13, mv = B0.v + B0.W / 2;
+  a.seg([mu, mv, H], [mu, mv, H + 20], 'k-wooddk-r', 1.1);
+  a.poly([[mu, mv, H + 20], [mu + 0.2, mv, H + 17.5], [mu, mv, H + 15]], `${m}-l`);
+}
+// paniers de Nourriture à bord : la commande livrée (s : distance depuis la poupe)
+function paniers(a, z, s) {
+  const u = B0.u + s, v = B0.v;
+  a.prism(u + 0.05, v + 0.1, 0.055, z, 5, 'hay', 7, { rim: true, cast: false });
+  a.prism(u + 0.06, v + 0.24, 0.055, z, 4.5, 'hay', 7, { rim: true, cast: false });
+  a.prism(u + 0.17, v + 0.17, 0.055, z, 5, 'hay', 7, { rim: true, cast: false });
+  a.prism(u + 0.17, v + 0.17, 0.032, z + 5, 2.5, 'squash', 6, { cast: false });
+}
+
+// Le convoi : remorqueur vert, timonerie crème à la poupe, deux piles de bois d'œuvre sanglées sur le pont.
+function convoi(a, livree) {
+  const H = 5, z = H + 0.3, u = B0.u, v = B0.v;
+  coque(a, H, 'roofb', 'woodd', 'woodb');
+  a.box(u + 0.04, v + 0.06, 0.18, 0.22, z, 10, 'metal', { cast: false });
+  rectU(a, u + 0.22, v + 0.09, v + 0.25, z + 5, z + 8.5, 'win');
+  rectV(a, v + 0.28, u + 0.07, u + 0.19, z + 5, z + 8.5, 'win');
+  a.box(u + 0.02, v + 0.04, 0.22, 0.26, z + 10, 1.6, 'roofb', { rim: true, cast: false });
+  a.prism(u + 0.09, v + 0.12, 0.03, z + 11.6, 5, 'wooddk', 6, { cast: false }); // cheminée
+  if (livree) paniers(a, z, 0.27);
+  else {
+    for (const [s0, ds, t0, dt, h] of [[0.26, 0.17, 0.06, 0.22, 7], [0.45, 0.11, 0.09, 0.16, 5]]) {
+      a.box(u + s0, v + t0, ds, dt, z, h, 'woodb', { rim: true, cast: false });
+      for (let k = 1.6; k < h; k += 1.8) a.seg([u + s0, v + t0 + dt, z + k], [u + s0 + ds, v + t0 + dt, z + k], 'k-woodd-l', 0.5, ' opacity=".55"');
+      a.seg([u + s0 + ds / 2, v + t0, z + h], [u + s0 + ds / 2, v + t0 + dt, z + h], 'k-amber-t', 1); // sangle
+      a.seg([u + s0 + ds / 2, v + t0 + dt, z], [u + s0 + ds / 2, v + t0 + dt, z + h], 'k-amber-l', 1);
+    }
+  }
+  fanion(a, H, 'amber');
+}
+
+// La famille du Sud : voilier crème, voile ferlée sur la bôme ; à bord, des malles, une valise et une plante en pot.
+// Livrée, la famille a débarqué : le pont est vide.
+function famille(a, livree) {
+  const H = 4.5, z = H + 0.3, u = B0.u, v = B0.v, vm = v + B0.W / 2;
+  coque(a, H, 'metal', 'woodb', 'roof');
+  if (!livree) {
+    a.box(u + 0.25, v + 0.07, 0.1, 0.12, z, 5.5, 'woodd', { rim: true, cast: false }); // malle
+    a.seg([u + 0.35, v + 0.07, z + 2.5], [u + 0.35, v + 0.19, z + 2.5], 'k-gold-r', 0.9);
+    a.box(u + 0.26, v + 0.2, 0.09, 0.1, z, 4, 'amber', { rim: true, cast: false }); // seconde malle
+    a.box(u + 0.44, v + 0.1, 0.13, 0.07, z, 3.5, 'roofb', { rim: true, cast: false }); // valise
+    a.prism(u + 0.5, v + 0.24, 0.035, z, 3.5, 'soil', 6, { cast: false }); // plante en pot
+    ball(a, ...P(u + 0.5, v + 0.24, z + 7), 4.2, 'leaf', rng(7));
+  }
+  // mât, bôme vers la poupe et voile ferlée dessus, étai jusqu'à la proue, flamme verte en tête
+  const mu = u + 0.4;
+  a.seg([mu, vm, z], [mu, vm, 38], 'k-wooddk-r', 1.3);
+  a.seg([mu, vm, z + 9], [u + 0.08, vm, z + 11], 'k-wooddk-l', 1.1);
+  a.poly([[mu - 0.02, vm + 0.02, z + 9.5], [u + 0.12, vm + 0.02, z + 11.5], [u + 0.12, vm + 0.02, z + 13.5], [mu - 0.02, vm + 0.02, z + 12]], 'canvas-l rim');
+  a.seg([mu, vm, 38], [u + B0.L - 0.04, vm, H], 'k-rope-t', 0.6, ' opacity=".8"');
+  a.poly([[mu, vm, 38], [mu + 0.16, vm, 36], [mu, vm, 34]], 'roof-l');
+}
+
+// La scientifique : vedette blanche, cabine vitrée coiffée d'un panneau solaire, mât d'instruments (anémomètre, girouette),
+// et à la poupe un portique d'où pend une sonde jaune. Livrée : des paniers sur la plage avant.
+function scientifique(a, livree) {
+  const H = 5, z = H + 0.3, u = B0.u, v = B0.v;
+  coque(a, H, 'metal', 'stone', 'tech');
+  // portique de prélèvement, à la poupe
+  const p0 = u + 0.05;
+  a.seg([p0, v + 0.05, z], [p0, v + 0.05, z + 13], 'k-wooddk-r', 1.2);
+  a.seg([p0, v + 0.29, z], [p0, v + 0.29, z + 13], 'k-wooddk-l', 1.2);
+  a.seg([p0, v + 0.05, z + 13], [p0, v + 0.29, z + 13], 'k-wooddk-l', 1.4);
+  a.seg([p0, v + 0.17, z + 13], [p0, v + 0.17, z + 5], 'k-rope-t', 0.7);
+  a.prism(p0, v + 0.17, 0.035, z + 2, 3, 'gold', 6, { rim: true, cast: false }); // sonde
+  // cabine vitrée
+  const c0 = u + 0.13, cv0 = v + 0.05, du = 0.26, dv = 0.24;
+  a.box(c0, cv0, du, dv, z, 9, 'metal', { cast: false });
+  rectU(a, c0 + du, cv0 + 0.03, cv0 + dv - 0.03, z + 4.5, z + 8, 'glass-r');
+  rectV(a, cv0 + dv, c0 + 0.03, c0 + du - 0.03, z + 4.5, z + 8, 'glass-l');
+  a.box(c0 - 0.02, cv0 - 0.02, du + 0.04, dv + 0.04, z + 9, 1.2, 'metal', { cast: false });
+  a.poly([[c0, cv0, z + 10.6], [c0 + du, cv0, z + 10.6], [c0 + du, cv0 + dv, z + 10.6], [c0, cv0 + dv, z + 10.6]], 'panel-t');
+  a.seg([c0, cv0 + dv / 2, z + 10.7], [c0 + du, cv0 + dv / 2, z + 10.7], 'k-glass-t', 0.6, ' opacity=".7"');
+  // mât d'instruments : anémomètre à trois coupelles, girouette
+  const mu = c0 + 0.05, mv = cv0 + 0.05, zm = 34;
+  a.seg([mu, mv, z + 10.6], [mu, mv, zm], 'k-metal-r', 1.2);
+  const [ax, ay] = P(mu, mv, zm);
+  a.raw(`<path d="M${f(ax - 5)},${f(ay + 1)}h10M${f(ax)},${f(ay - 3)}v4" class="k-metal-r" stroke-width=".9"/>`);
+  for (const dx of [-5, 5]) a.raw(`<circle cx="${f(ax + dx)}" cy="${f(ay + 1)}" r="1.5" class="tech-l"/>`);
+  a.raw(`<circle cx="${f(ax)}" cy="${f(ay - 3)}" r="1.5" class="tech-t"/>`);
+  a.ext(ax - 7, ay - 5);
+  a.seg([mu, mv, zm - 6], [mu + 0.14, mv, zm - 6], 'k-metal-r', 0.9); // girouette
+  a.poly([[mu + 0.1, mv, zm - 4.5], [mu + 0.16, mv, zm - 6], [mu + 0.1, mv, zm - 7.5]], 'metal-l');
+  if (livree) paniers(a, z, 0.4);
+  else a.box(u + 0.43, v + 0.1, 0.11, 0.14, z, 3.5, 'tech', { rim: true, cast: false }); // glacière d'échantillons
+}
+
+const BATEAUX = { convoi, famille, scientifique };
+
 /**
  * Quai, emprise 1 × 0,9, posé sur le lac. etat : 'vieux' (planches manquantes, poteaux cassés), neuf, ou 'marchand'
- * (neuf, le chaland du marchand amarré au large ; l'entité prend alors QUAI_MARCHAND_H de profondeur).
+ * (neuf, le chaland du marchand amarré au large ; l'entité prend alors QUAI_MARCHAND_H de profondeur). Avec un visiteur à
+ * commande : 'marchand+convoi', 'marchand+famille+livree'… (son bateau dans le prolongement du chaland ; l'entité prend
+ * alors QUAI_BATEAU_W de largeur).
  */
 export function quai(etat = '') {
-  const vieux = etat === 'vieux';
+  const [base, visiteur, livree] = String(etat).split('+');
+  const vieux = base === 'vieux';
+  const bateau = Object.hasOwn(BATEAUX, visiteur ?? '') ? BATEAUX[visiteur] : null;
   const a = new Art();
   const posts = [[0.08, 0.1, 6], [0.88, 0.1, vieux ? 3 : 6], [0.08, 0.86, vieux ? 2 : 6], [0.88, 0.86, 6]];
   for (const [u, v, h] of posts) a.box(u - 0.04, v - 0.04, 0.08, 0.08, -4, h + 4, 'woodd', { cast: false });
@@ -559,11 +674,18 @@ export function quai(etat = '') {
     a.box(0, 0.02, 0.96, 0.9, 1.5, 2.5, 'woodb', { rim: true, cast: false });
     for (let vv = 0.17; vv < 0.9; vv += 0.15) a.seg([0, vv, 4], [0.96, vv, 4], 'k-woodd-t', 0.6, ' opacity=".55"');
     a.prism(0.82, 0.74, 0.06, 4, 7, 'woodd', 6, { rim: true }); // bitte d'amarrage
-    if (etat === 'marchand') {
+    if (base === 'marchand') {
       chaland(a);
       a.seg([0.82, 0.74, 9], [0.74, 1.04, 6], 'k-rope-t', 1); // amarres, hors du groupe qui se balance
       a.seg([0.08, 0.86, 10], [0.04, 1.04, 6], 'k-rope-t', 1);
     } else a.seg([0.82, 0.74, 9], [0.5, 1.15, 0], 'k-rope-t', 1);
+    if (bateau) {
+      // à contretemps du chaland, pour que les deux ne se balancent pas d'un bloc ; l'amarre part du poteau du coin
+      a.raw('<g class="ow-bateau" style="animation-delay:-2.1s">');
+      bateau(a, livree === 'livree');
+      a.raw('</g>');
+      a.seg([0.88, 0.86, 10], [1.16, 1.14, 5.5], 'k-rope-t', 1);
+    }
   }
   const r = a.done(2);
   r.shadow = null;

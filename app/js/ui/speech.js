@@ -27,6 +27,12 @@ export function situationFor(action, params, events, task) {
     // le quai rebâti : le marchand accoste aussitôt, Fanal l'annonce à la place du mot de chantier
     case 'construire': return events.some((e) => e.type === 'construction' && String(e.id).startsWith('quai')) ? 'marchand.arrive' : 'batiment.construit';
     case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
+    // la commande livrée (lot C) : le merci de son visiteur, ou le nouveau rang quand la famille du Sud le fait monter
+    case 'livrer': {
+      const c = events.find((e) => e.type === 'commande');
+      if (!c) return null;
+      return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : `commande.livree.${c.visiteur}`;
+    }
     // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
     case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;
     case 'reparer': return regle();

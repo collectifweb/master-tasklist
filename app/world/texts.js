@@ -82,7 +82,8 @@ export function batimentNom(t, b) {
 
 /**
  * Où en est un bâtiment (vue de view.js), en quelques mots : « à rebâtir », « verrouillé : Hameau : encore 2
- * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 », « le marchand est au quai, encore 5 jours »… Le
+ * habitants. », « mûr dans 3 jours travaillés », « 1 habitant sur 2 », « le marchand est au quai, encore 5 jours · le convoi
+ * attend sa commande »… Le
  * même texte sur la carte et dans la liste. Un dégât (lot I) passe devant : « en panne, repart seule dans 2 jours », « un
  * ours rôde, il repart demain · mûr, à récolter ».
  * Un chalet compte ses places dans b.places (École), 2 au départ.
@@ -100,7 +101,10 @@ function etatDebout(t, b) {
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
   if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
-  if (b.type === 'quai' && b.visiteur) return t(`bat.etat.quai.${b.visiteur.id}.${b.visiteur.joursRestants === 1 ? 'one' : 'other'}`, { n: b.visiteur.joursRestants });
+  if (b.type === 'quai' && b.visiteur) {
+    const marchand = t(`bat.etat.quai.${b.visiteur.id}.${b.visiteur.joursRestants === 1 ? 'one' : 'other'}`, { n: b.visiteur.joursRestants });
+    return b.commande ? `${marchand} · ${t(`bat.etat.quai.${b.commande.livree ? 'livree' : 'commande'}.${b.commande.id}`)}` : marchand;
+  }
   return t('bat.etat.debout');
 }
 

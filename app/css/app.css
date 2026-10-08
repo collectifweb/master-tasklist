@@ -383,6 +383,139 @@
   height: 18px;
 }
 
+/* Commande du visiteur (lot C), au-dessus du comptoir, sous le même filet : titre avec la caisse en sauge et les jours
+   restants en petit à droite ; qui il est ; deux lignes « Demande » / « Laisse » (le terme à gauche, les puces du comptoir
+   à droite, « + » gris entre deux ressources) ; la taille de la semaine en note quand elle n'est pas régulière ; « Livrer »,
+   seule action principale de la fiche, sur toute la largeur, ou à plat avec le cadenas et la raison du cœur ; livrée, la
+   ligne cochée en sauge foncée à la même place ; la règle (jamais obligatoire) en petit pour finir. */
+.commande {
+  display: grid;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-line);
+}
+.commande p { margin: 0; }
+.commande-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  line-height: var(--lh-snug);
+}
+.commande-titre .icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--c-sage-deep);
+}
+.commande-jours {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.commande-qui {
+  font-size: var(--text-14);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.commande-troc {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--c-line);
+}
+.commande-troc > div {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--target);
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.commande-troc dt {
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+}
+.commande-troc dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  min-width: 0;
+  margin: 0;
+}
+.commande-note {
+  flex-basis: 100%;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.commande-plus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.commande-et {
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+.commande-taille {
+  font-size: var(--text-14);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.commande-go { margin-top: var(--sp-1); }
+.commande-raison {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.commande-raison .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.commande-fait {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target);
+  font-weight: var(--w-bold);
+  line-height: 1.25;
+  color: var(--c-sage-deep);
+}
+.commande-fait .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.commande-fait small {
+  display: block;
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.commande[data-etat="fait"] .commande-troc dd { color: var(--text-soft); }
+.commande-regle {
+  font-size: var(--text-12);
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+
 /* Comptoir du marchand (lot V) : la fiche du quai quand il est là. Une ligne par offre, séparées par des filets (comme
    la carte en liste) : le troc, ce que tu donnes → ce que tu reçois (picto teinté de la ressource, doublé du nombre et du
    mot), puis « Échanger » (secondaire, aucune action principale ici), « Fait cette semaine » (coche, sauge), ou le
@@ -457,6 +590,8 @@
 .offre-res[data-res="energie"] .icon { color: var(--res-energie); }
 .offre-res[data-res="materiaux"] .icon { color: var(--res-materiaux); }
 .offre-res[data-res="nourriture"] .icon { color: var(--res-nourriture); }
+.offre-res[data-res="habitants"] .icon { color: var(--res-habitants); }
+.offre-res[data-res="permis"] .icon { color: var(--res-permis); }
 .offre-fleche {
   flex: none;
   width: 16px;

@@ -241,8 +241,10 @@
   animation-play-state: paused;
 }
 @keyframes ow-rotor { to { transform: rotate(360deg); } }
-/* chaland du marchand amarré au quai : il se balance d'un pixel sur l'eau, seulement quand l'île est éveillée */
-.ow-barge {
+/* chaland du marchand et bateau du visiteur à commande amarrés au quai : ils se balancent d'un pixel sur l'eau,
+   seulement quand l'île est éveillée */
+.ow-barge,
+.ow-bateau {
   animation: ow-barge 4.2s ease-in-out infinite;
   animation-play-state: paused;
 }
@@ -534,7 +536,7 @@
 
 /* ---------------------------------------------------------------- ambiance : seulement après une activité,
    jamais en mouvement réduit, onglet caché ou monde hors de l'écran (aucune image calculée au repos) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-aurore-r) {
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }

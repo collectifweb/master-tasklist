@@ -3,15 +3,17 @@
 // En compact, la rangée montre Aujourd'hui et le prochain rang ; « Voir tous les objectifs » la déplie en carte.
 // À partir de 700 px, les quatre sont sur la rangée. Couleur toujours doublée : la barre du rang a son texte, un pas
 // fait a sa coche et le mot « fait » pour les lecteurs d'écran.
-// Cette semaine (bible §10, « la commande du visiteur ») : quand le marchand est au quai, sa ligne prend la place du
-// compte des quêtes et ouvre son comptoir (data-action="visiteur-go") ; le compte passe dans la carte dépliée.
+// Cette semaine (bible §10, « la commande du visiteur ») : le quai rebâti, la ligne du visiteur à commande (lot C) prend
+// la place du compte des quêtes (« Commande au quai, encore 3 jours », puis « Commande livrée au convoi », coché)
+// et ouvre la fiche du quai (data-action="visiteur-go"), où sont sa commande et le comptoir du marchand ; le compte passe
+// dans la carte dépliée.
 // L'hiver (lot H) : une tempête annoncée ajoute une rangée sous les objectifs, à toutes les largeurs (core/hiver.js,
 // alerteTempete) : les jours restants, la barre de trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix
 // (data-action="preparer", protégé du double toucher). Le jour même, l'issue : tenue, le bâtiment sous la neige (le bouton
 // ouvre sa fiche, data-action="tempete-voir"), puis déneigé une fois le dégât réglé, ou passée sans rien abîmer. L'objectif d'hiver compte les récoltes de serre ;
 // sans serre, il dit d'en bâtir une.
 import {
-  bandeau as lireBandeau, visiteurDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
+  bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
   degatsActifs,
 } from '../../core/index.js';
 import { t, tn } from '../content.js';
@@ -119,11 +121,13 @@ export function createBandeau(root) {
     q('.bandeau-raison').hidden = !a.raison;
     setAttr(q('.bandeau-today'), 'data-kind', b.aujourdhui.kind);
 
-    const v = b.semaine.kind === 'semaine' ? visiteurDeLaSemaine(c.game, c.now) : null;
+    const v = b.semaine.kind === 'semaine' ? commandeDeLaSemaine(c.game, c.ledger, c.now) : null;
     setText(q('#bandeau-semaine'), semaineText(b.semaine));
     q('#bandeau-semaine').hidden = !!v;
     q('.bandeau-visiteur').hidden = !v;
-    setText(q('#bandeau-visiteur'), v ? tn('bandeau.visiteur', v.joursRestants) : '');
+    setText(q('#bandeau-visiteur'), !v ? '' : v.livree ? t(`bandeau.commande.livree.${v.id}`) : tn('bandeau.commande', v.joursRestants));
+    setAttr(q('.bandeau-visiteur'), 'data-livree', v?.livree ? 'true' : null);
+    setAttr(q('.bandeau-visiteur use'), 'href', `design/icons.svg#i-${v?.livree ? 'check' : 'barque'}`);
     const sd = q('.bandeau-semaine-detail');
     sd.hidden = !v;
     setText(sd, v ? semaineText(b.semaine) : '');

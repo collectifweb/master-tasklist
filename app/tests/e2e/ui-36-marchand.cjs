@@ -3,15 +3,18 @@
 //   accoster le marchand aussitôt : Fanal l'annonce (une variante de « marchand.arrive », lue avec la construction), le
 //   chaland est sur la carte, et l'annonce ne revient pas au rechargement.
 //   Partie B (même samedi, quai bâti, version d'essai) :
-//   - arrivée : Fanal l'annonce une fois sur l'appareil ; chaland dans le dessin du quai, au repos en mouvement réduit ;
-//   - « Cette semaine » : « Le marchand est au quai, encore 2 jours », qui ouvre le comptoir ; le compte des quêtes dessous ;
+//   - arrivée : Fanal annonce une fois sur l'appareil le visiteur à commande de la semaine (lot C : le marchand, là chaque
+//     semaine, n'est annoncé qu'au quai rebâti) ; chaland dans le dessin du quai, au repos en mouvement réduit ;
+//   - « Cette semaine » : « Commande au quai, encore 2 jours » (lot C), qui ouvre la fiche du quai et son comptoir ; le
+//     compte des quêtes dessous ;
 //   - comptoir : quatre offres, raisons du cœur (réserve pleine, manque), boutons de 44 px, rien ne déborde ;
 //   - un geste verrouillé ne dépense rien ; un double toucher n'échange qu'une fois ; au clavier, le focus reste sur la
 //     ligne ; la phrase lue dit l'échange ;
 //   - deux appareils : le second prend une offre, le premier (pas encore relu) la reprend : le serveur refuse, l'appareil se
 //     remet à jour et dit pourquoi ; l'offre n'est payée qu'une fois ;
-//   - carte en liste : le quai dit que le marchand est là et ouvre le comptoir ;
-//   - « Jour suivant » : dimanche, dernier jour ; lundi, le marchand revient, offres de nouveau ouvertes, Fanal l'annonce.
+//   - carte en liste : le quai dit que le marchand est là (et la commande du visiteur) et ouvre le comptoir ;
+//   - « Jour suivant » : dimanche, dernier jour ; lundi, le marchand revient, offres de nouveau ouvertes, Fanal annonce le
+//     visiteur à commande de la nouvelle semaine.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -35,6 +38,9 @@ const TASKS = [
 ];
 const REPLIQUES = JSON.parse(fs.readFileSync(path.join(L.REPO, 'app', 'content', 'fr-CA', 'repliques.json'), 'utf8'));
 const ARRIVEE = REPLIQUES.situations['marchand.arrive'].variantes.map((v) => v.texte);
+// lot C : le mot de la semaine est celui du visiteur à commande (convoi, famille du Sud ou scientifique, selon la semaine)
+const VISITEUR = (id) => REPLIQUES.situations[`commande.arrive.${id}`].variantes.map((v) => v.texte);
+const BAT = JSON.parse(fs.readFileSync(path.join(L.REPO, 'app', 'content', 'fr-CA', 'batiments.json'), 'utf8'));
 
 function village(core, { quai }) {
   const g = L.quietState(core, SAMEDI);
@@ -95,6 +101,8 @@ const res = (g) => JSON.stringify(g.resources);
 
 (async () => {
   const core = await import(require('node:url').pathToFileURL(path.join(L.REPO, 'app', 'core', 'index.js')).href);
+  const v0 = core.commandeDeLaSemaine(village(core, { quai: true }), [], SAMEDI.toISOString()).id;
+  const v1 = core.commandeDeLaSemaine(village(core, { quai: true }), [], `${LUNDI_SUIVANT}T14:00:00Z`).id;
 
   await L.runScenario('36. le marchand au quai', async ({ R, srv, newPage, shot, tag }) => {
     const compact = tag < 700;
@@ -131,7 +139,8 @@ const res = (g) => JSON.stringify(g.resources);
       await L.ready(p0);
       await L.closeWelcome(p0, 1500);
       await p0.waitForTimeout(1500);
-      R.check('rechargement : Fanal ne répète pas l’arrivée', !ARRIVEE.includes(await bulle(p0)), String(await bulle(p0)));
+      const b0r = await bulle(p0);
+      R.check('rechargement : Fanal ne répète pas l’arrivée, ni n’annonce le visiteur de la semaine', !ARRIVEE.includes(b0r) && !VISITEUR(v0).includes(b0r), String(b0r));
       // toucher le chaland sur la carte (vue de départ) ouvre la fiche du quai et son comptoir
       const pb = await p0.evaluate(() => {
         const r = document.querySelector('.ow-ent[data-id="quai-1"] .ow-barge').getBoundingClientRect();
@@ -155,12 +164,12 @@ const res = (g) => JSON.stringify(g.resources);
     await L.ready(page);
     await L.closeWelcome(page, 1500);
     const arrivee = await L.waitFor(() => bulle(page), 5000);
-    R.check('arrivée : Fanal annonce le marchand à la première visite de sa semaine', ARRIVEE.includes(arrivee), String(arrivee));
+    R.check('arrivée : Fanal annonce le visiteur à commande de la semaine à la première visite', VISITEUR(v0).includes(arrivee), String(arrivee));
     R.check('arrivée : son mot est lu (« Fanal : … »)', (await L.said(page)).some((x) => sp(x.text) === `Fanal : ${sp(arrivee)}`), JSON.stringify(await L.said(page)));
 
     if (compact) { await page.click('.bandeau-more'); await page.waitForTimeout(300); } // en compact, le compte est dans la carte dépliée
     const b1 = await bandeauVisiteur(page);
-    R.check('« Cette semaine » : « Le marchand est au quai, encore 2 jours », le compte des quêtes visible dessous', b1.shown && b1.text === 'Le marchand est au quai, encore 2 jours' && !b1.compte && /quête/.test(b1.detail) && b1.detailVu, JSON.stringify(b1));
+    R.check('« Cette semaine » : « Commande au quai, encore 2 jours », le compte des quêtes visible dessous', b1.shown && b1.text === 'Commande au quai, encore 2 jours' && !b1.compte && /quête/.test(b1.detail) && b1.detailVu, JSON.stringify(b1));
     let c = await ouvrirParBandeau(page, compact);
     R.check('bandeau : sa ligne ouvre la fiche du quai', c.id === 'quai-1', c.id);
     R.check('fiche : « Maintenant » dit jusqu’à quand', c.now === 'Le marchand est au quai jusqu’à dimanche : encore 2 jours.', c.now);
@@ -253,7 +262,8 @@ const res = (g) => JSON.stringify(g.resources);
     await L.openPlan(page);
     await page.waitForSelector('#dlg-plan[open]');
     const ligne = await page.evaluate(() => { const b = document.querySelector('#dlg-plan [data-bat="quai-1"]'); const li = b.closest('.ow-plan-bat'); return li.querySelector('.ow-plan-bat-etat').textContent.replace(/ /g, ' '); });
-    R.check('carte en liste : le quai dit « Le marchand est au quai, encore 2 jours »', ligne === 'Le marchand est au quai, encore 2 jours', ligne);
+    const attendu = `Le marchand est au quai, encore 2 jours · ${BAT.etat[`quai.commande.${v0}`]}`;
+    R.check(`carte en liste : le quai dit « ${attendu} »`, sp(ligne) === attendu, ligne);
     await page.click('#dlg-plan [data-bat="quai-1"]');
     c = await L.waitFor(async () => { const x = await comptoir(page); return x.open && x.offres.length === 4 ? x : null; }, 4000);
     R.check('carte en liste : son bouton ouvre le comptoir', !!c);
@@ -264,7 +274,7 @@ const res = (g) => JSON.stringify(g.resources);
     // ───── dimanche : dernier jour ; lundi : il revient
     await jourSuivant(page, srv, 1);
     const b2 = await bandeauVisiteur(page);
-    R.check('dimanche : « Le marchand est au quai, dernier jour »', b2.text === 'Le marchand est au quai, dernier jour', JSON.stringify(b2));
+    R.check('dimanche : « Commande au quai, dernier jour »', b2.text === 'Commande au quai, dernier jour', JSON.stringify(b2));
     c = await ouvrirParBandeau(page, compact, true);
     R.check('dimanche : « Dernier jour : le marchand repart cette nuit. », les offres prises le restent', c.now === 'Dernier jour : le marchand repart cette nuit.' && offre(c, 'energie-materiaux').etat === 'fait', JSON.stringify([c.now, c.offres.map((o) => o.etat)]));
     await page.keyboard.press('Escape');
@@ -274,11 +284,11 @@ const res = (g) => JSON.stringify(g.resources);
       retourFocus.vu && String(retourFocus.cls).includes(compact ? 'bandeau-more' : 'bandeau-visiteur'), JSON.stringify(retourFocus));
     await L.said(page, true);
     await jourSuivant(page, srv, 2);
-    const retour = await L.waitFor(async () => { const m = await bulle(page); return ARRIVEE.includes(m) ? m : null; }, 9000);
-    R.check('lundi : Fanal annonce le marchand revenu', !!retour, String(await bulle(page)));
+    const retour = await L.waitFor(async () => { const m = await bulle(page); return VISITEUR(v1).includes(m) ? m : null; }, 9000);
+    R.check('lundi : Fanal annonce le visiteur à commande de la nouvelle semaine', !!retour, String(await bulle(page)));
     R.check('lundi : la semaine notée sur l’appareil est la nouvelle', await page.evaluate(() => localStorage.getItem('oree.visite.v1')) === LUNDI_SUIVANT);
     const b3 = await bandeauVisiteur(page);
-    R.check('lundi : « Le marchand est au quai, encore 7 jours »', b3.text === 'Le marchand est au quai, encore 7 jours', JSON.stringify(b3));
+    R.check('lundi : « Commande au quai, encore 7 jours »', b3.text === 'Commande au quai, encore 7 jours', JSON.stringify(b3));
     c = await ouvrirParBandeau(page, compact);
     R.check('lundi : plus aucune offre « Fait cette semaine »', c.offres.every((o) => o.etat !== 'fait'), JSON.stringify(c.offres.map((o) => [o.id, o.etat, o.raison])));
     await shot(page, '36-lundi');

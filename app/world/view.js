@@ -6,7 +6,7 @@ import { gameDay, daysUntil, daysBetween, dayOf, isSnowSeason } from '../core/ti
 import { findAnchors } from '../core/infer.js';
 import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
 import { placesParChalet } from '../core/quartiers.js';
-import { visiteurDeLaSemaine } from '../core/visiteurs.js';
+import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
 import { TEMPETE, alerteTempete } from '../core/hiver.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
@@ -30,6 +30,7 @@ export function sectorView(id, game, tasks = []) {
  * 'seme' | 'pousse' | 'mure' ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
  * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets) ;
  * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine ;
+ * commande : sur le quai debout, { id, livree } du visiteur à commande de la semaine (lot C) ;
  * degat : sur un bâtiment debout touché par un mauvais imprévu (core/imprevus.js), { type, joursRestants }.
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
@@ -53,6 +54,8 @@ export function batimentsView(game, ledger = [], now = new Date()) {
         if (type === 'quai') {
           const v = visiteurDeLaSemaine(g, now);
           if (v) b.visiteur = { id: v.id, joursRestants: v.joursRestants };
+          const c = commandeDeLaSemaine(g, ledger, now);
+          if (c) b.commande = { id: c.id, livree: c.livree };
         }
       }
       if (b.bati) {

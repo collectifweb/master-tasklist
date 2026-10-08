@@ -330,6 +330,72 @@
         {"id": "allure.elan.05", "voix": "fanal", "texte": "Belle lancée! Le village suit ton pas, d’un cran plus vite."}
       ]
     },
+    "commande.arrive.convoi": {
+      "quand": "Le visiteur à commande de la semaine est le convoi (lot C) : dit une fois par semaine et par appareil, à l’ouverture (après l’accueil, la lettre, le bilan et l’allure, et après une réplique en cours). Remplace le mot hebdomadaire du marchand, qui reste annoncé quand le quai vient d’être rebâti. Ni chiffre ni ressource : la commande est dans la fiche du quai.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.arrive.convoi.01", "voix": "fanal", "texte": "Le convoi est au quai. Du bois d’œuvre jusqu’aux oreilles, et un capitaine qui a faim."},
+        {"id": "commande.arrive.convoi.02", "voix": "fanal", "texte": "Un remorqueur au quai, plein de planches. Ça sent la sciure jusqu’à la Place."},
+        {"id": "commande.arrive.convoi.03", "voix": "fanal", "texte": "Le convoi a accosté. Il échange son bois contre de quoi nourrir l’équipage."},
+        {"id": "commande.arrive.convoi.04", "voix": "fanal", "texte": "Le convoi est là jusqu’à dimanche. Son capitaine a faim, ça se voit dans sa face."},
+        {"id": "commande.arrive.convoi.05", "voix": "fanal", "texte": "Un remorqueur vert au quai. Le convoi remonte vers le Nord, il fait une pause."}
+      ]
+    },
+    "commande.arrive.famille": {
+      "quand": "Le visiteur à commande de la semaine est la famille du Sud (lot C). Même moment et mêmes règles que commande.arrive.convoi. Aucun reproche s’il n’y a pas de place libre.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.arrive.famille.01", "voix": "fanal", "texte": "Une famille du Sud est au quai. Ils regardent nos chalets avec de grands yeux."},
+        {"id": "commande.arrive.famille.02", "voix": "fanal", "texte": "Un voilier au quai, des malles sur le pont. Une famille cherche où s’installer."},
+        {"id": "commande.arrive.famille.03", "voix": "fanal", "texte": "Des gens du Sud ont accosté. Les enfants ont déjà trouvé la plage."},
+        {"id": "commande.arrive.famille.04", "voix": "fanal", "texte": "Une famille est au quai. Ils ont apporté une plante en pot. C’est bon signe."},
+        {"id": "commande.arrive.famille.05", "voix": "fanal", "texte": "Un voilier du Sud est amarré. La famille aimerait bien rester un bout."}
+      ]
+    },
+    "commande.arrive.scientifique": {
+      "quand": "Le visiteur à commande de la semaine est la scientifique (lot C). Même moment et mêmes règles que commande.arrive.convoi.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.arrive.scientifique.01", "voix": "fanal", "texte": "La scientifique est au quai. Elle mesure le lac, et moi aussi, par politesse."},
+        {"id": "commande.arrive.scientifique.02", "voix": "fanal", "texte": "Une vedette blanche au quai. La scientifique a des instruments partout."},
+        {"id": "commande.arrive.scientifique.03", "voix": "fanal", "texte": "La scientifique a accosté. Son anémomètre tourne plus vite que mes idées."},
+        {"id": "commande.arrive.scientifique.04", "voix": "fanal", "texte": "La scientifique est là jusqu’à dimanche. Elle prend des notes sur tout, moi compris."},
+        {"id": "commande.arrive.scientifique.05", "voix": "fanal", "texte": "La vedette de la scientifique est amarrée. Elle veut sonder le lac, et la forêt."}
+      ]
+    },
+    "commande.livree.convoi": {
+      "quand": "La commande du convoi est livrée (geste « Livrer », lot C). Ce qu’il laisse est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.livree.convoi.01", "voix": "fanal", "texte": "Le convoi repart le ventre plein. Le bois d’œuvre reste, lui."},
+        {"id": "commande.livree.convoi.02", "voix": "fanal", "texte": "Commande livrée. Le capitaine m’a serré la pince. Littéralement."},
+        {"id": "commande.livree.convoi.03", "voix": "fanal", "texte": "Le bois est débarqué. J’ai compté les planches deux fois."},
+        {"id": "commande.livree.convoi.04", "voix": "fanal", "texte": "Livré. Le remorqueur a sifflé pour dire merci, je pense."},
+        {"id": "commande.livree.convoi.05", "voix": "fanal", "texte": "Le convoi a son dû. Le bois d’œuvre attend tes chantiers."}
+      ]
+    },
+    "commande.livree.famille": {
+      "quand": "La commande de la famille du Sud est livrée : elle s’installe (geste « Livrer », lot C). Quand son arrivée fait monter le rang, permis.rang joue à sa place.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.livree.famille.01", "voix": "fanal", "texte": "La famille s’installe. Les enfants ont déjà choisi leur chambre."},
+        {"id": "commande.livree.famille.02", "voix": "fanal", "texte": "Une famille de plus à l’Orée. J’ai sorti le paillasson."},
+        {"id": "commande.livree.famille.03", "voix": "fanal", "texte": "Les malles sont débarquées. Le chalet sent déjà la soupe."},
+        {"id": "commande.livree.famille.04", "voix": "fanal", "texte": "Bienvenue à la famille du Sud. Ils trouvent qu’il fait frais. Ça va passer."},
+        {"id": "commande.livree.famille.05", "voix": "fanal", "texte": "La famille a posé sa plante en pot sur le rebord. Elle reste."}
+      ]
+    },
+    "commande.livree.scientifique": {
+      "quand": "La commande de la scientifique est livrée (geste « Livrer », lot C). Le permis est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "commande.livree.scientifique.01", "voix": "fanal", "texte": "La scientifique a ce qu’il lui faut. Elle laisse un papier tamponné."},
+        {"id": "commande.livree.scientifique.02", "voix": "fanal", "texte": "Commande livrée. Elle m’a mesuré. J’ai pas voulu savoir le résultat."},
+        {"id": "commande.livree.scientifique.03", "voix": "fanal", "texte": "Livré. Elle a noté l’Orée dans son carnet, en gros."},
+        {"id": "commande.livree.scientifique.04", "voix": "fanal", "texte": "La scientifique repart contente. Elle dit que le lac est en forme."},
+        {"id": "commande.livree.scientifique.05", "voix": "fanal", "texte": "Son permis porte le tampon de l’institut. Ça fait sérieux."}
+      ]
+    },
     "famille.arrive": {
       "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,
