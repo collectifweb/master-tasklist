@@ -996,3 +996,63 @@ Le lot contient les habitants qui vont à leur travail et en reviennent, le rég
 3. **Envoi** : direct en production si tout est vert, comme les lots I, H, A et C ?
 
 **Réponses d'Alex (8 octobre)** : 1. vivante par défaut, avec « Économie de batterie » ; 2. rien, ce sont des figurants ; 3. envoi direct si tout est vert. **Plan validé.**
+
+## Lot P — Les quêtes notées après coup
+
+Référence : décisions d'Alex du 8 octobre 2026, après le lot E (deux questions laissées ouvertes : le constat de la simulation (l) sur l'Énergie, et le point ouvert de `PRODUCT.md` sur les quêtes créées puis terminées aussitôt).
+
+Ce qu'Alex a décidé :
+- **Quête créée puis terminée aussitôt** : rien ne la limite. Ses mots : « on ne compte pas le temps d'avoir activé une tâche et de l'avoir résolue […] ça appartient à chacun de tricher ou pas. Dans l'optique, c'est vraiment de réaliser des vraies tâches et de mettre des réelles valeurs à l'intérieur. »
+- **Règle des 10 minutes et quota de « Déjà faite »** (trouvés en lisant le code après sa réponse, `core/quests.js:225`, `core/reward.js:16`) : tout retirer.
+- **Prix des niveaux** : il avait d'abord choisi de le rééquilibrer ; après la mesure ci-dessous, il le garde tel quel. Un échange quotidien Matériaux contre Énergie viendra dans un lot suivant.
+- **Envoi** : direct en production si tout est vert. **Plan validé.**
+
+### Ce que verra Alex
+- Une quête terminée juste après sa création paie comme les autres, bonus « bon fil » compris.
+- La case « Déjà faite » paie toujours plein tarif, même après trois par jour. Seul le plafond quotidien freine : plein tarif jusqu'à 45 points d'effort dans la journée, moitié jusqu'à 90, 20 % au-delà.
+- Rien d'autre ne change, ni à l'écran ni dans le prix des niveaux.
+
+### Prix des niveaux : mesuré, gardé tel quel (simulation, 8 octobre)
+- *Copie de la simulation (l) hors du dépôt, prix réglable : cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars, quai bâti, imprévus et tempêtes comme en (k), sans échanger au marchand ni livrer de commande. Au prix actuel, la copie redonne les chiffres du tableau (l) (très lent parti en juillet : premier niveau au jour 57, 6 niveaux, 154 soirs bloqués par l'Énergie et 193 par les Matériaux).*
+- *Première mesure, tout le prix déplacé vers les Matériaux (70/75, 60/80, 60/90, 50/90, 50/100, 40/110 par niveau) : le joueur rapide gagne 1 à 3 niveaux en 16 semaines, mais le premier niveau des joueurs lents recule beaucoup. Au rythme de l'essai parti en octobre, il passe du jour 22 au jour 41 dès 70/75, au jour 44 à 60/90 ; le joueur très lent parti en juillet, du jour 57 au jour 89, puis 97. Cause : les joueurs lents dépensent leurs Matériaux en bâtiments, c'est leur ressource rare. Ma recommandation de la question (« les gains restent les mêmes ») ne tenait donc pas : je l'avais faite sans mesurer les rythmes lents à d'autres prix, alors que la simulation (l) disait déjà qu'à ces rythmes les deux ressources manquent. Manquement de ma part.*
+- *Il n'y a que 6 quartiers : les 6 premiers niveaux achetés sont tous des niveaux 1. Les joueurs lents n'achètent presque qu'eux d'ici mars ; le joueur rapide bloque sur les niveaux 2 et 3. D'où le prix proposé à Alex : niveau 1 inchangé, puis +50 Énergie et +80 Matériaux par niveau.*
+
+  | Joueur, départ | 1er niveau | Niveaux en 16 semaines | Niveaux au 1er mars | Soirs bloqués par l'Énergie | Matériaux au 1er mars |
+  |---|---|---|---|---|---|
+  | 1 quête tous les 4 jours, juillet | j57 → j57 | 1 → 1 | 6 → 6 | 154 → 154 | 59 → 59 |
+  | 1 quête tous les 4 jours, octobre | j49 → j49 | 2 → 2 | 3 → 3 | 102 → 102 | 36 → 36 |
+  | 1 quête un jour sur deux, juillet | j29 → j29 | 4 → 4 | 7 → 7 | 233 → 233 | 434 → 414 |
+  | 1 quête un jour sur deux, octobre | j29 → j29 | 3 → 3 | 4 → 4 | 133 → 133 | 261 → 261 |
+  | rythme de l'essai, juillet | j38 → j38 | 6 → 6 | 11 → 12 | 205 → 116 | 279 → 36 |
+  | rythme de l'essai, octobre | j22 → j22 | 6 → 6 | 7 → 8 | 134 → 134 | 216 → 56 |
+  | 2 ou 3 par jour, juillet | j8 → j8 | 11 → 12 | 17 → 17 | 231 → 180 | 3 135 → 2 815 |
+  | 2 ou 3 par jour, octobre | j8 → j8 | 10 → 11 | 12 → 13 | 140 → 140 | 1 951 → 1 608 |
+  | 6 par jour, juillet | j6 → j6 | 15 → 16 | 17 → 17 | 120 → 84 | 6 803 → 6 483 |
+  | 6 par jour, octobre | j6 → j6 | 14 → 16 | 17 → 17 | 132 → 107 | 3 254 → 2 937 |
+
+- *Lecture : personne ne perd un niveau ni un jour ; le joueur à 2 ou 3 quêtes par jour et le rapide gagnent 1 ou 2 niveaux en 16 semaines, le joueur de l'essai un niveau au 1er mars. L'Énergie bloque moins souvent, mais bloque encore. Les Matériaux en trop restent : le joueur à 2 ou 3 quêtes par jour parti en juillet a encore 2 815 Matériaux au 1er mars après avoir acheté les 17 niveaux (qui en coûtent 2 300 à ce prix). Un prix des niveaux 2 et 3 plus fort en Matériaux en absorberait davantage, mais ralentirait le joueur de l'essai, qui en manque déjà à ce prix (36 Matériaux au 1er mars, départ de juillet ; à +40 Énergie et +100 Matériaux par niveau, il retombe à 11 niveaux). Il faudra les niveaux 4 et suivants (bible §3) ou un autre usage.*
+- *Toutes les cibles de la simulation, (a) à (l), tiennent à ce prix : 17 réussies, 0 échec, 2 « à faire » connus, comme au prix actuel (copie hors du dépôt, lancée le 8 octobre vers 13 h 40).*
+- *Deux autres pistes mesurées, non retenues : plus d'Énergie par quête (0,4 au lieu de 0,3 par point d'effort) aide tout le monde, mais accélère tout le jeu (premier niveau de l'essai parti en juillet au jour 21 au lieu de 38) et déplace les cibles des lots précédents ; un échange quotidien de 2 Matériaux contre 1 Énergie (10 Énergie au plus) aide le plus le joueur à 2 ou 3 quêtes par jour (2 niveaux de plus en 16 semaines, 1 744 à 1 827 Matériaux au 1er mars au lieu de 3 135 au départ de juillet), sans retarder personne, mais il demande un geste et un écran neufs (essai approximatif : la copie ajoutait les ressources sans passer par le registre).*
+
+### Comment ça marche
+- La règle des 10 minutes (`core/quests.js:198`, `:225`) et le quota (`core/reward.js:16-17`, `:104` ; `core/ledger.js:110`) sont retirés. Une quête « Déjà faite » garde sa marque au registre (Fanal a ses répliques pour elle) et ne donne toujours pas le bonus « bon fil » : elle n'a jamais été dans la liste.
+- `CLIENT_VERSION` et `MIN_CLIENT` restent à 7 : un onglet resté sur l'ancienne version paierait au pire une « Déjà faite » à moitié, jamais plus que prévu, et le gain écrit au registre est celui qu'il a calculé. Le cache passe à `oree-coquille-v18`.
+- Rien ne change dans la partie enregistrée : les gains déjà payés restent.
+- Leçons à appliquer d'entrée : un chiffre de la simulation se relance avant d'être écrit ; avant la série, chercher les scénarios qui créent puis terminent une quête dans la foulée et lisent son gain ou le mot de Fanal (ils passaient par « Déjà faite ») ; un échec sans lien avec le lot se relance d'abord sur `v2.6`.
+
+### P1 — Cœur (tests écrits d'abord et vus en échec)
+- [x] Une quête terminée 3 minutes après sa création est une quête normale : pas de marque « Déjà faite », « bon fil » possible.
+- [x] Cinq « Déjà faite » le même jour paient toutes à plein tarif ; seul le plafond quotidien joue.
+- [x] Retrait de la règle et du quota ; les tests qui les vérifiaient (`tests/core/revue.test.mjs:268`, `tests/core/reward.test.mjs:87`, et ceux que la suite fera tomber) suivent la nouvelle règle.
+- *Fait (8 octobre) : quatre tests réécrits ou neufs, vus en échec sur l'ancien code (`revue.test.mjs` : 3 minutes après la création, plein tarif cinq fois et pas de marque ; « bon fil » possible ; `quests.test.mjs` et `ledger-economy-state.test.mjs` : cinq « Déjà faite » à plein tarif). Retirés : `QUICK_ALREADY_DONE_MINUTES` (`core/quests.js`), `ALREADY_DONE_FULL_PER_DAY`, `ALREADY_DONE_RATE` et `alreadyDoneRate` (`core/reward.js`), le compteur `alreadyDone` de `dayTotals` (`core/ledger.js`, plus personne ne le lisait), et le test de `alreadyDoneRate`. Suite : 529 tests, 527 réussis, 0 échec, 2 « à faire » connus.*
+
+### P2 — Textes
+- [x] Consigne des répliques « Déjà faite » (`content/fr-CA/repliques.json:57`, « elle rapporte la moitié ») et guide des textes (`app/content/README.md:76`, « ou terminée moins de 10 minutes après sa création »).
+
+### P3 — Vérification et documents
+- [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
+- [ ] Série navigateur complète sur code figé ; relecture indépendante par un agent Opus en lecture seule.
+- [ ] Documents : `PRODUCT.md`, bible §4 et §15 (décisions du 8 octobre), `app/ARCHITECTURE.md`, `app/content/README.md`, `CLAUDE.md`, leçon (recommandation faite sans mesurer les rythmes lents).
+
+### P4 — Envoi
+- [ ] Photo des données sur le serveur, étiquette `v2.7`, `.claude/outils/deploy-prod.sh v2.7`, comparaison des fichiers en ligne avec l'étiquette.

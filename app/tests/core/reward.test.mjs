@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   effortPoints, shouldFreeze, freezeValues, effectiveValues, applyFreeze, bonusPe, questPe, cappedPe,
-  alreadyDoneRate, amountsForPe, splitSteps, stepPe, completionPe, round1, round2,
+  amountsForPe, splitSteps, stepPe, completionPe, round1, round2,
 } from '../../core/index.js';
 import { T0, task, plusHours } from './helpers.mjs';
 
@@ -81,10 +81,6 @@ test('plafond quotidien dégressif : 100 % jusqu’à 45 PE, 50 % de 45 à 90, 2
   assert.equal(cappedPe(0, 100), 45 + 22.5 + 2);
   assert.equal(cappedPe(100, 0), 0);
   assert.equal(cappedPe(-5, 10), 10);
-});
-
-test('« Déjà faite » : plein tarif pour 3 par jour, puis 50 %', () => {
-  assert.deepEqual([0, 1, 2, 3, 4].map(alreadyDoneRate), [1, 1, 1, 0.5, 0.5]);
 });
 
 test('montants : ⚡ 0,3·PE, ▣ 0,5·PE, rien d’autre (ni Lueur ni Fil libre)', () => {

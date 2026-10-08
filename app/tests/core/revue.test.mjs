@@ -265,7 +265,7 @@ test('remballer annule exactement le gain : sans plafond de stock, rien n’est 
 });
 
 // 14
-test('« Déjà faite » : une quête terminée moins de 10 minutes après sa création compte dans le quota', () => {
+test('une quête terminée 3 minutes après sa création est une quête normale : pas de « Déjà faite », plein tarif (décision d’Alex du 8 octobre 2026)', () => {
   let w = fresh();
   const pes = [];
   for (let i = 0; i < 5; i++) {
@@ -273,16 +273,17 @@ test('« Déjà faite » : une quête terminée moins de 10 minutes après sa cr
     w = step(w, createQuest, { id: 'n' + i, task: 'Fictive ' + i, priority: 5, length: 3, difficulty: 3 }, now).world;
     const s = step(w, completeQuest, { id: 'n' + i }, plusHours(now, 0.05)); // 3 minutes plus tard
     w = s.world;
-    pes.push(s.r.entries.find((e) => e.type === 'reward').pe);
-    assert.equal(s.r.entries.find((e) => e.type === 'reward').alreadyDone, true);
+    const gain = s.r.entries.find((e) => e.type === 'reward');
+    pes.push(gain.pe);
+    assert.equal(gain.alreadyDone, undefined);
   }
-  assert.deepEqual(pes, [10, 10, 10, 5, 5]);
+  assert.deepEqual(pes, [10, 10, 10, 10, 10]);
 });
 
-test('« Déjà faite » : après 10 minutes, la quête est une quête normale', () => {
-  const w = step(fresh(), createQuest, { id: 'n', task: 'Fictive', priority: 5, length: 3, difficulty: 3 }).world;
-  const s = step(w, completeQuest, { id: 'n' }, plusHours(T0, 11 / 60));
-  assert.equal(s.r.entries[0].alreadyDone, undefined);
+test('une quête prioritaire terminée 3 minutes après sa création peut donner le bonus « bon fil »', () => {
+  const w = step(fresh(), createQuest, { id: 'n', task: 'Fictive', priority: 9, length: 3, difficulty: 3 }).world;
+  const s = step(w, completeQuest, { id: 'n' }, plusHours(T0, 0.05));
+  assert.ok(s.r.entries.some((e) => e.bonus === 'bon-fil'), JSON.stringify(s.r.entries));
 });
 
 // 15

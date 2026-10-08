@@ -54,7 +54,7 @@
       ]
     },
     "quest.already_done": {
-      "quand": "Quête ajoutée déjà faite. Ne jamais promettre le plein tarif : elle rapporte la moitié.",
+      "quand": "Quête ajoutée déjà faite. Elle paie comme une autre quête, sans réduction.",
       "frequence": 1,
       "variantes": [
         {"id": "quest.already_done.01", "voix": "fanal", "texte": "Déjà faite? Elle compte. Bien vu de l’avoir notée."},

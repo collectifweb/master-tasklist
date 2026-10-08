@@ -5,7 +5,7 @@
 // Les entrées écrites en v1 portent `lueur: { sector, amount }` et `filLibre` au lieu de `quartier` : le registre
 // n'est jamais réécrit, quartierOfEntry lit les deux formes.
 import { gameDay, hoursBetween, toISO } from './time.js';
-import { amountsForPe, round1, round2, alreadyDoneRate } from './reward.js';
+import { amountsForPe, round1, round2 } from './reward.js';
 import { QUARTIERS, quartierOfTask, quartierOfSector } from './domains.js';
 
 export const REVERSE_WINDOW_HOURS = 24;
@@ -80,14 +80,11 @@ export const isV1Entry = (entry) => !!entry && typeof entry === 'object' && Obje
 
 /** Totaux d'une journée de jeu à partir du registre (la référence des plafonds). */
 export function dayTotals(ledger, day) {
-  const t = { pe: 0, energy: 0, materials: 0, alreadyDone: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
+  const t = { pe: 0, energy: 0, materials: 0, bonusEnergy: 0, bonusCount: {}, rewards: 0 };
   for (const e of ledger) {
     if (e.day !== day) continue;
     if (e.type === 'reward' || e.type === 'step' || e.type === 'reverse') t.pe += e.pe || 0;
-    if (e.type === 'reward') {
-      t.rewards++;
-      if (e.alreadyDone) t.alreadyDone++;
-    }
+    if (e.type === 'reward') t.rewards++;
     if (e.type === 'bonus' && BONUSES[e.bonus]) {
       if (BONUSES[e.bonus].capped) t.bonusEnergy += e.energy || 0;
       if (e.energy > 0) t.bonusCount[e.bonus] = (t.bonusCount[e.bonus] || 0) + 1;
@@ -106,12 +103,10 @@ export function buildRewardEntry({ task, occurrence, pe, alreadyDone = false }, 
   if (hasKey(ledger, key)) return null;
   const day = gameDay(now);
   const tot = dayTotals(ledger, day);
-  let paid = pe;
-  if (alreadyDone) paid = round2(pe * alreadyDoneRate(tot.alreadyDone));
   const entry = base(key, 'reward', now, {
     taskId: task.id,
     occurrence,
-    ...fromAmounts(amountsForPe(paid, tot.pe), quartierOfTask(task)),
+    ...fromAmounts(amountsForPe(pe, tot.pe), quartierOfTask(task)),
   });
   if (alreadyDone) entry.alreadyDone = true;
   return entry;

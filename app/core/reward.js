@@ -1,5 +1,5 @@
 // Points d'effort (PE), gel de P/L/D, bonus plafonnés, plafond quotidien dégressif,
-// conversion en Énergie / Matériaux, partage étapes / complétion, « Déjà faite ».
+// conversion en Énergie / Matériaux, partage étapes / complétion.
 import { daysBetween, dayOnly, gameDay, hoursBetween, toISO } from './time.js';
 import { taskAgeDays } from './cote.js';
 
@@ -13,8 +13,6 @@ export const DAILY_TIERS = [
   { upTo: 90, rate: 0.5 },
   { upTo: Infinity, rate: 0.2 },
 ];
-export const ALREADY_DONE_FULL_PER_DAY = 3;
-export const ALREADY_DONE_RATE = 0.5;
 
 export const round1 = (n) => Math.round(n * 10) / 10;
 export const round2 = (n) => Math.round(n * 100) / 100;
@@ -98,11 +96,6 @@ export function cappedPe(dayPeBefore, pe) {
     }
   }
   return eff;
-}
-
-/** Facteur « Déjà faite » : plein tarif pour 3 quêtes par jour, 50 % ensuite. `countToday` = déjà comptées aujourd'hui. */
-export function alreadyDoneRate(countToday) {
-  return countToday < ALREADY_DONE_FULL_PER_DAY ? 1 : ALREADY_DONE_RATE;
 }
 
 /**

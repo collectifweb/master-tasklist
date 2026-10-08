@@ -51,7 +51,7 @@ test('buildRewardEntry : le plafond quotidien compte les PE déjà gagnés', () 
   assert.equal(second.energy, 1.5); // 10 PE à 50 % × 0,3
 });
 
-test('buildRewardEntry « Déjà faite » : 50 % à partir de la 4e du jour', () => {
+test('buildRewardEntry « Déjà faite » : plein tarif, même au-delà de 3 par jour ; la marque reste', () => {
   let ledger = [];
   const pes = [];
   for (let i = 0; i < 5; i++) {
@@ -60,7 +60,7 @@ test('buildRewardEntry « Déjà faite » : 50 % à partir de la 4e du jour', ()
     pes.push(e.pe);
     assert.equal(e.alreadyDone, true);
   }
-  assert.deepEqual(pes, [10, 10, 10, 5, 5]);
+  assert.deepEqual(pes, [10, 10, 10, 10, 10]);
 });
 
 test('buildStepEntry et stepsPaid', () => {
@@ -76,14 +76,13 @@ test('buildStepEntry et stepsPaid', () => {
   assert.equal(occurrenceEntries([s1, s2, entry()], 't1', 1).length, 3);
 });
 
-test('dayTotals : PE, ⚡, ▣, Déjà faite, bonus', () => {
+test('dayTotals : PE, ⚡, ▣, bonus', () => {
   const l = [entry(), entry({ key: 'reward:t2:1', alreadyDone: true, taskId: 't2' }),
     entry({ key: 'bonus:plan:2026-10-06', type: 'bonus', bonus: 'plan', pe: 0, energy: 2, materials: 0, quartier: undefined }),
     entry({ key: 'old', day: '2026-10-05' })];
   const d = dayTotals(l, '2026-10-06');
   assert.equal(d.pe, 20);
   assert.equal(d.energy, 8);
-  assert.equal(d.alreadyDone, 1);
   assert.equal(d.rewards, 2);
   assert.equal(d.bonusEnergy, 2);
   assert.equal(d.bonusCount.plan, 1);
@@ -282,10 +281,10 @@ test('entrée minimale : pas de crash dans canReverse, buildReverseEntry, stepsP
   assert.equal(unknownStepsCount([entry({ key: 'step:t1:1:s1', type: 'step' })], 't1', 1), 0);
 });
 
-test('entrée minimale : le compteur « Déjà faite » et les bonus du jour l’ignorent, les clés existantes bloquent', () => {
+test('entrée minimale : les bonus du jour l’ignorent, les clés existantes bloquent', () => {
   const h = hydrateLedger([], ['reward:x:1', 'bonus:ouverture:2026-10-06']);
   const e = buildRewardEntry({ task: task({ id: 'n' }), occurrence: 1, pe: 10, alreadyDone: true }, h, T0);
-  assert.equal(e.pe, 10); // 1re « Déjà faite » du jour : plein tarif
+  assert.equal(e.pe, 10); // « Déjà faite » : plein tarif
   assert.equal(buildBonusEntry('ouverture', h, T0), null); // la clé du jour existe déjà
   assert.equal(buildRewardEntry({ task: task({ id: 'x' }), occurrence: 1, pe: 10 }, h, T0), null);
   assert.equal(buildAjoutRefund(h, 'x', T0), null);

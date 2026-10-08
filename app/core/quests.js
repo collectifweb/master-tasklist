@@ -195,8 +195,6 @@ function paidSoFar(ledger, task, occ, pe) {
   return stepsPaid(ledger, task.id, occ) + (old ? Math.round(((pe * 0.4) / n) * old * 100) / 100 : 0);
 }
 
-const QUICK_ALREADY_DONE_MINUTES = 10;
-
 // Termine une quête dans le contexte (gain, passage à « done », ou occurrence suivante).
 function complete(ctx, task, { alreadyDone = false } = {}) {
   const now = ctx.now;
@@ -220,9 +218,6 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
     }
     nextDl = nextDeadline(dl, recNext, ctx.day);
   }
-
-  // une quête terminée moins de 10 minutes après sa création compte comme « Déjà faite »
-  if (!alreadyDone && t.createdAt && (new Date(ctx.iso) - new Date(t.createdAt)) / 60000 < QUICK_ALREADY_DONE_MINUTES) alreadyDone = true;
 
   const { pe } = questPe(t, now);
   const net = completionPe(pe, paidSoFar(ctx.ledger, t, occ, pe));

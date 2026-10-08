@@ -234,7 +234,7 @@ test('reopenQuest : refus si la quête n’est pas terminée', () => {
   assert.throws(() => reopenQuest(w.tasks, w.game, w.ledger, { id: 't1' }, T0));
 });
 
-test('« Déjà faite » : 3 par jour à plein tarif, puis 50 %', () => {
+test('« Déjà faite » : toujours plein tarif, même au-delà de 3 par jour (décision d’Alex du 8 octobre 2026)', () => {
   let w = fresh();
   const pes = [];
   for (let i = 0; i < 5; i++) {
@@ -244,7 +244,7 @@ test('« Déjà faite » : 3 par jour à plein tarif, puis 50 %', () => {
     assert.equal(w.tasks[i].status, 'done');
     assert.equal(w.tasks[i].alreadyDone, true);
   }
-  assert.deepEqual(pes, [3, 3, 3, 1.5, 1.5]);
+  assert.deepEqual(pes, [3, 3, 3, 3, 3]);
   assert.equal(w.game.quartiers.place, 5); // sans domaine : la Place du village
 });
 

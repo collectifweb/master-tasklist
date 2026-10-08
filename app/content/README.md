@@ -73,7 +73,7 @@ Trois règles :
 | Situation | Déclencheur |
 |---|---|
 | `quest.done.short` / `.medium` / `.big` | Quête terminée, Durée 1 à 3 / 4 et 5 / 6 et plus (grand chantier) |
-| `quest.already_done` | Quête ajoutée déjà faite, ou terminée moins de 10 minutes après sa création |
+| `quest.already_done` | Quête ajoutée déjà faite |
 | `step.done` | Étape cochée |
 | `quest.undo` | « Remballer » dans les 24 h |
 | `deadline.soon` | Une fois par quête, quand l'échéance passe à 7 jours ou moins |
