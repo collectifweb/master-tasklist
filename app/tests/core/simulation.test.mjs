@@ -45,6 +45,10 @@
 //     « régulier »). Cibles : les deux lents passent au ralenti, le rapide au plein régime, l'essai et (f) restent réguliers
 //     et leur partie ne change en rien ; jamais plus d'imprévus que l'allure de la semaine n'en permet ; l'objectif de saison
 //     réduit n'arrive jamais plus tard, et celui d'hiver est atteint au ralenti. OBJECTIFS_SAISON (objectifs.js) se règle ici.
+// (l) (lot C) les visiteurs à commande (core/visiteurs.js) : les cinq joueurs de (k), aux mêmes départs, quai bâti, livrent
+//     chaque commande dès qu'ils le peuvent ('livre') ou jamais ('jamais'). Cibles : livrer tout ne coûte jamais plus d'un
+//     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus tard, le joueur le plus
+//     lent livre au moins une commande sur trois, et la taille suit l'allure de la semaine. VISITEURS se règle ici.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -55,7 +59,7 @@ import {
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
   tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
-  allureDe, ALLURE, daysBetween, weekStart, saisonDe,
+  allureDe, ALLURE, daysBetween, weekStart, saisonDe, commandeDeLaSemaine, refusLivrer, livrer, VISITEURS,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -83,11 +87,13 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
   // avec l'une des trois, le joueur bâtit aussi le quai.
+  // commandes (l) : 'livre', le joueur livre la commande du visiteur dès qu'il le peut, après ses bâtiments et avant le
+  // marchand et les niveaux ; avec elle, il bâtit aussi le quai.
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, monde: null };
@@ -98,6 +104,9 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // récompenses des tempêtes tenues, Énergie que l'éolienne ensevelie n'a pas donnée, jours de pousse perdus sous la neige,
   // déneigements payés et par quête, jour de l'objectif d'hiver
   const hiv = log.hiver = { issues: {}, raisons: {}, cibles: {}, crans: 0, coutCrans: 0, recompense: 0, eolienne: 0, serre: 0, deneige: { paiement: 0, quete: 0, energie: 0 }, objectif: null };
+  // (l) commandes : visiteur de chaque semaine où le quai était là (lundi → visiteur), commandes livrées par visiteur et par
+  // taille, et ce qu'elles ont rapporté
+  const cmd = log.commandes = { offertes: new Map(), livrees: {}, tailles: {}, materiaux: 0, permis: 0, familles: 0, jours: [], bloque: {} };
   if (hiver === 'sans') w.ledger = tempetesDeLHiver(debut).map((j) => ({ key: `tempete:${j}` }));
   let n = 0;
   let i = 0;
@@ -128,6 +137,14 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
         hiv.coutCrans += e.cout.materials || 0;
       } else if (e.type === 'objectif-saison' && e.objectif === OBJECTIFS_SAISON.hiver.id) hiv.objectif = i + 1;
       else if (e.type === 'recolte' && e.ours) imp.ours += e.ours;
+      else if (e.type === 'commande') {
+        cmd.livrees[e.visiteur] = (cmd.livrees[e.visiteur] || 0) + 1;
+        cmd.tailles[e.taille] = (cmd.tailles[e.taille] || 0) + 1;
+        cmd.materiaux += e.recoit.materials || 0;
+        cmd.permis += e.recoit.permis || 0;
+        cmd.familles += e.recoit.habitants || 0;
+        cmd.jours.push(i + 1);
+      }
     }
     const { energy, materials, food } = w.game.resources;
     assert.ok(energy >= 0 && materials >= 0 && food >= 0 && w.game.habitants >= 0, `stock négatif le ${now} : ${JSON.stringify(w.game.resources)}`);
@@ -194,15 +211,27 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       const libre = cultures.find((id) => !refusSemer(w.game, w.ledger, id, soir));
       if (libre) { geste(semer, { id: libre }, soir); continue; }
       // habitudes : une seule serre, comme l'essai (la seconde serre est venue après lui, au lot R2a)
-      const bat = (habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : marchand ? ['parcelle', 'atelier', 'serre', 'quai'] : ['parcelle', 'atelier', 'serre'])
+      const bat = (habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : marchand || commandes ? ['parcelle', 'atelier', 'serre', 'quai'] : ['parcelle', 'atelier', 'serre'])
         .find((t) => !(habitudes && t === 'serre' && batimentsDuVillage(w.game).some((b) => b.type === 'serre')) && !refusConstruire(w.game, t));
       if (bat) { geste(construire, { type: bat }, soir); continue; }
+      if (commandes === 'livre' && !refusLivrer(w.game, w.ledger, {}, soir)) {
+        geste(livrer, {}, soir);
+        if (w.game.habitants >= BATIMENTS.chalet.max * placesParChalet(w.game)) log.plein ??= day; // la famille du Sud
+        continue;
+      }
       const offre = marchand && marchand !== 'sans' && offreDuMarchand(w.game, soir, marchand);
       if (offre) { geste(echanger, { offre }, soir); log.echanges[offre] = (log.echanges[offre] || 0) + 1; continue; }
       const q = niveaux && moinsCher(w.game, w.ledger);
       if (q) { geste(monterQuartier, { quartier: q, niveau: niveauDe(w.game, q) + 1 }, soir); log.niveaux.push(i + 1); continue; }
+      if (commandes && niveaux) { // (l) ce qui manque ce soir pour le niveau le moins cher : permis, Énergie, Matériaux
+        const bas = QUARTIER_IDS.filter((x) => niveauDe(w.game, x) < 3 && !(x === 'garage' && niveauDe(w.game, x) >= 2)).sort((a, b) => niveauDe(w.game, a) - niveauDe(w.game, b))[0];
+        const raison = bas ? refusMonter(w.game, w.ledger, { quartier: bas }) || '' : 'tout';
+        for (const [k, mot] of [['permis', 'permis'], ['energie', 'Énergie'], ['materiaux', 'Matéri'], ['tout', 'tout']]) if (raison.includes(mot)) cmd.bloque[k] = (cmd.bloque[k] || 0) + 1;
+      }
       break;
     }
+    const c = commandes && commandeDeLaSemaine(w.game, w.ledger, soir); // le quai a pu être bâti ce soir
+    if (c) cmd.offertes.set(c.semaine, c.id);
     if (jusquAuHameau && log.hameau) break;
   }
   log.monde = w;
@@ -649,3 +678,42 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
   }
 });
 
+// ───────── (l) les visiteurs à commande ─────────
+
+test('(l) les visiteurs à commande : livrer tout ne coûte au plus qu’un niveau, le plus lent en livre au moins une sur trois, la taille suit l’allure', (t) => {
+  const total = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+  const offertes = (l) => { const o = {}; for (const id of l.commandes.offertes.values()) o[id] = (o[id] || 0) + 1; return o; };
+  const fin16 = (l) => l.niveaux.filter((j) => j <= 16 * 7).length;
+  const resume = (l) => `1er niveau j${l.niveaux[0] ?? '—'}, ${fin16(l)} niveaux en 16 semaines, ${l.niveaux.length} au 1er mars ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${l.monde.game.habitants} habitants`;
+  for (const [nom, rythme, profil, habitudes] of [
+    ['(très lent) 1 quête tous les 4 jours', tresLent, quetes, false],
+    ['(lent) 1 quête un jour sur deux', lent, quetes, false],
+    ['(g) rythme de l’essai', rythmeEssai, parDefaut, true],
+    ['(f) 2 ou 3 par jour', regulier, quetes, false],
+    ['(rapide) 6 par jour', rapide, (n) => quetes(n * 3), false],
+  ]) {
+    for (const debut of ['2026-07-01', '2026-10-07']) {
+      const jours = daysBetween(debut, '2027-03-01');
+      const options = { profil, habitudes, imprevus: 'attend', hiver: 'quetes', marchand: 'sans' };
+      const sans = simuler(debut, jours, rythme, { ...options, commandes: 'jamais' });
+      const livre = simuler(debut, jours, rythme, { ...options, commandes: 'livre' });
+      const c = livre.commandes;
+      t.diagnostic(`${nom}, départ ${debut}`);
+      t.diagnostic(`  sans livrer : ${resume(sans)}`);
+      t.diagnostic(`  en livrant  : ${resume(livre)}`);
+      t.diagnostic(`  soirs sans niveau, ce qui manquait (sans livrer) : ${JSON.stringify(sans.commandes.bloque)} ; fin : ${JSON.stringify(sans.monde.game.resources)}, ${sans.monde.game.permis.dispo} permis en main`);
+      t.diagnostic(`  commandes : ${total(c.livrees)} livrées sur ${c.offertes.size} (offertes ${JSON.stringify(offertes(livre))}, livrées ${JSON.stringify(c.livrees)}, tailles ${JSON.stringify(c.tailles)}) ; +${c.materiaux} Matériaux, +${c.permis} permis, +${c.familles} familles ; première livraison j${c.jours[0] ?? '—'}`);
+      const qui = `${nom}, départ ${debut}`;
+      assert.equal(livre.hameau, sans.hameau, `${qui} : le quai vient après le Hameau`);
+      assert.ok(livre.niveaux.length >= sans.niveaux.length - 1 && livre.niveaux.length <= sans.niveaux.length + 2,
+        `${qui} : ${livre.niveaux.length} niveaux en livrant, ${sans.niveaux.length} sans`);
+      assert.ok(livre.niveaux[0] <= sans.niveaux[0] + 2, `${qui} : premier niveau au jour ${livre.niveaux[0]} contre ${sans.niveaux[0]}`);
+      assert.ok(3 * total(c.livrees) >= c.offertes.size, `${qui} : ${total(c.livrees)} commandes livrées sur ${c.offertes.size}`);
+      assert.ok(c.permis <= (c.livrees.scientifique || 0), `${qui} : un permis par scientifique au plus`);
+      // la taille suit l'allure : les joueurs qui restent réguliers ne voient que la taille « régulier »
+      if (!nom.includes('lent') && !nom.includes('rapide')) assert.deepEqual(Object.keys(c.tailles), ['regulier'], qui);
+      if (nom.includes('lent')) assert.ok(!c.tailles.plein && c.tailles.ralenti > 0, qui);
+      if (nom.includes('rapide')) assert.ok(c.tailles.plein > 0 && !c.tailles.ralenti, qui);
+    }
+  }
+});

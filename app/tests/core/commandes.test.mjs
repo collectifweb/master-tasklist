@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import {
   VISITEURS, ORDRE_VISITEURS, TAILLES, commandeDeLaSemaine, refusLivrer, livrer, visiteurDeLaSemaine, echanger,
   construire, accueillir, advanceTime, completeQuest, allureDe, PAS_IDS, BATIMENTS, MARCHAND, coutNiveau, rangDuVillage,
-  addDays,
+  addDays, manque,
 } from '../../core/index.js';
 import { fresh, step, task } from './helpers.mjs';
 
@@ -147,11 +147,16 @@ test('une seule livraison par semaine : un double toucher, ou un second appareil
 });
 
 test('ce qui manque se dit dans l’ordre Énergie, Matériaux, Nourriture, en entiers, et rien n’est payé', () => {
-  const w = village({ resources: { energy: 3.5, materials: 200, food: 2 } });
-  const d = VISITEURS.convoi.demande;
-  const attendu = [d.energy && `${Math.ceil(d.energy - 3.5)} Énergie`, d.food && `${d.food - 2} Nourriture`].filter(Boolean).join(' et ');
-  assert.equal(refusLivrer(w.game, w.ledger, {}, at(MARDI)), `Il manque ${attendu}.`);
-  assert.throws(() => step(w, livrer, {}, at(MARDI)), { message: `Il manque ${attendu}.` });
+  const VENDREDI_SCIENTIFIQUE = '2026-10-23';
+  const w = village({ resources: { energy: 0, materials: 3.5, food: 2 } });
+  const d = VISITEURS.scientifique.demande;
+  const attendu = [d.energy && `${d.energy} Énergie`, d.materials && `${Math.ceil(d.materials - 3.5)} Matériaux`, d.food && `${d.food - 2} Nourriture`]
+    .filter(Boolean);
+  const phrase = `Il manque ${attendu.length > 2 ? `${attendu.slice(0, -1).join(', ')} et ${attendu.at(-1)}` : attendu.join(' et ')}.`;
+  assert.equal(refusLivrer(w.game, w.ledger, {}, at(VENDREDI_SCIENTIFIQUE)), phrase);
+  assert.throws(() => step(w, livrer, {}, at(VENDREDI_SCIENTIFIQUE)), { message: phrase });
+  // les trois ressources à la fois, dans l'ordre de la barre
+  assert.equal(manque({ resources: { energy: 0, materials: 0, food: 0 } }, { energy: 5, materials: 5, food: 5 }), 'Il manque 5 Énergie, 5 Matériaux et 5 Nourriture.');
 });
 
 test('la famille du Sud : un habitant de plus sans payer la Nourriture d’accueil, seulement s’il y a une place libre', () => {
@@ -222,8 +227,9 @@ test('la taille suit l’allure de la semaine : la moitié au ralenti, une fois 
   assert.deepEqual(plein.recoit, regulier.recoit);
   assert.equal(ralenti.allegee, false);
   // livrée au ralenti : seule la petite commande est payée, et l'entrée garde sa taille
+  const avant = { ...r.game.resources };
   const { world: w2, r: res } = step(r, livrer, {}, at(MARDI));
-  assert.equal(w2.game.resources.energy, 200 - ralenti.demande.energy);
+  for (const [k, n] of Object.entries(ralenti.demande)) assert.equal(w2.game.resources[k], avant[k] - n, k);
   assert.equal(res.entries[0].taille, 'ralenti');
   // les tailles des trois visiteurs, aux trois allures : toujours des entiers positifs
   for (const id of ORDRE_VISITEURS) for (const f of Object.values(TAILLES)) for (const n of Object.values(VISITEURS[id].demande)) assert.ok(Math.ceil(n * f) >= 1);

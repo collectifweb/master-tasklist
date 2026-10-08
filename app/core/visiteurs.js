@@ -121,12 +121,17 @@ export function echanger(tasks, game, ledger, params, now) {
 /**
  * Les visiteurs à commande, dans l'ordre du tour. demande : ce qu'il faut livrer à la taille « régulier » ; recoit : ce
  * qu'il laisse (une seule chose : materials, habitants ou permis, jamais plus d'un permis). Valeurs de départ, réglées par
- * la simulation (tests/core/simulation.test.mjs, joueur (l)).
+ * la simulation (tests/core/simulation.test.mjs, joueur (l), 7 octobre 2026 au soir) : c'est l'Énergie qui manque pour
+ * monter un quartier, chez tous les joueurs simulés, pendant que Matériaux et permis s'accumulent. Une première série qui
+ * demandait de l'Énergie (convoi 15 Énergie et 10 Nourriture, scientifique 30 Énergie et 15 Matériaux) faisait acheter
+ * moins de niveaux à qui livrait tout : de 0 à 3 de moins au 1er mars selon le joueur et le départ, 8 au lieu de 11 au
+ * rythme de l'essai parti l'été. Les commandes ne demandent donc que des Matériaux et de la Nourriture (celle qui se perd quand la réserve est
+ * pleine) : livrer tout ne coûte au plus qu'un niveau au joueur très lent, aucun aux autres.
  */
 export const VISITEURS = {
-  convoi: { demande: { energy: 15, food: 10 }, recoit: { materials: 30 } },
-  famille: { demande: { energy: 10, food: 10 }, recoit: { habitants: 1 } },
-  scientifique: { demande: { energy: 30, materials: 15 }, recoit: { permis: 1 } },
+  convoi: { demande: { food: 12 }, recoit: { materials: 30 } },
+  famille: { demande: { materials: 15, food: 6 }, recoit: { habitants: 1 } },
+  scientifique: { demande: { materials: 20, food: 8 }, recoit: { permis: 1 } },
 };
 export const ORDRE_VISITEURS = Object.keys(VISITEURS);
 /** Taille de la commande selon l'allure de la semaine : la demande est multipliée, arrondie au-dessus ; la récompense ne bouge pas. */
