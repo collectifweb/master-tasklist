@@ -758,9 +758,23 @@ Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (impr
 - Leçons à appliquer d'entrée : avant la série, chercher les scénarios dont le registre préparé ferait changer l'allure (donc le nombre d'imprévus) et ceux qui vérifient un montant exact ; un échec sans lien avec le lot se relance d'abord sur `v2.3`.
 
 ### A1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `core/allure.js` et ses effets (imprévus, objectif de saison, quête proposée, bilan). Tests : la même allure sur deux appareils et hors ligne ; un cran par semaine au plus ; une quête remballée ne compte pas ; une absence descend d'un cran par semaine ; « régulier » donne exactement le calendrier d'aujourd'hui ; au ralenti, jamais de mauvais imprévu ; au plein régime, jamais deux mauvais le même jour ; aucun prix ni gain de quête ne change selon l'allure ; aucune tâche touchée.
-- [ ] `CLIENT_VERSION` et `MIN_CLIENT` à 7 ; `core/allure.js` dans la coquille hors ligne.
-- [ ] Simulation (k) : l'allure semaine par semaine de quatre joueurs (une quête un jour sur deux, rythme de l'essai, 2 ou 3 par jour, 6 par jour), la cible réduite de l'objectif de saison, l'effet sur le premier niveau de quartier ; **tableau montré à Alex avant A2**.
+- [x] `core/allure.js` et ses effets (imprévus, objectif de saison, quête proposée, bilan). Tests : la même allure sur deux appareils et hors ligne ; un cran par semaine au plus ; une quête remballée ne compte pas ; une absence descend d'un cran par semaine ; « régulier » donne exactement le calendrier d'aujourd'hui ; au ralenti, jamais de mauvais imprévu ; au plein régime, jamais deux mauvais le même jour ; aucun prix ni gain de quête ne change selon l'allure ; aucune tâche touchée.
+- *Fait (7 octobre, soir ; 6cd17af) : `core/allure.js` rejoue les semaines depuis la première de la partie (`game.startDay`) et lit les quêtes payées du registre ; rien n'est écrit dans la partie. 11 tests neufs (`tests/core/allure.test.mjs`), vus en échec avant le code, dont « régulier » identique à l'ancien calendrier sur 520 semaines. 4 anciens tests suivent les nouveaux champs (`ralenti` dans l'objectif de saison, `allure` dans le bilan) ou gardent une partie d'hiver régulière (2 quêtes par jour).*
+- [x] `CLIENT_VERSION` et `MIN_CLIENT` à 7 ; `core/allure.js` dans la coquille hors ligne (cache `oree-coquille-v15`).
+- [x] Simulation (k) : l'allure semaine par semaine de quatre joueurs (une quête un jour sur deux, rythme de l'essai, 2 ou 3 par jour, 6 par jour), la cible réduite de l'objectif de saison, l'effet sur le premier niveau de quartier ; **tableau montré à Alex avant A2**.
+- *Fait (7 octobre, soir ; 6473f43). Cinq joueurs, du 1er juillet (avec le marchand) ou du 7 octobre (sans) jusqu'au 1er mars, avec l'allure et sans elle :*
+
+  | Joueur | Allure | Imprévus avec / sans | 1er niveau avec / sans | Objectif d'hiver avec / sans |
+  |---|---|---|---|---|
+  | 1 quête tous les 4 jours | ralenti dès la 4e semaine | 32 / 64 (juillet) ; 18 / 36 (octobre) | j85 / j57 ; j53 / j49 | 25 janv. / jamais ; 24 févr. / jamais |
+  | 1 quête un jour sur deux | ralenti dès la 4e semaine | 35 / 67 ; 22 / 40 | j29 / j29 ; j29 / j29 | 24 déc. / 9 janv. ; 28 déc. / 19 janv. |
+  | rythme de l'essai | régulier tout du long | identiques | identiques | identiques |
+  | 2 ou 3 par jour | régulier tout du long | identiques | identiques | identiques |
+  | 6 par jour | plein régime dès la 4e semaine | 132 / 68 ; 76 / 40 | j6 / j6 | 4 janv. / 4 janv. ; 20 déc. / 21 déc. |
+
+- *Valeurs retenues : 6 récoltes de serre l'hiver au ralenti (à 10, le joueur très lent ne l'atteint jamais ; à une quête par semaine, 2 à 4 récoltes, pas atteint non plus) ; la moitié du grenier à l'automne (le grenier se remplit d'ordinaire avant que l'allure puisse descendre).*
+- *Effet de bord : au ralenti, le joueur lent perd aussi le second imprévu de la semaine, presque toujours bon pour lui (un mauvais qui n'a rien à toucher devient bon). Le joueur très lent parti en juillet a son premier niveau 28 jours plus tard. Variante mesurée : garder les deux imprévus, tous deux bons ; le premier niveau revient au jour 57 (et 49). Test « à faire » en attendant la décision d'Alex.*
+- *Hors du lot, trouvé en passant (lot H) : quand le village est plein et la réserve pleine, la serre ne se récolte plus (« Le stockage est plein »). Sans marchand, 7 des 8 parties parties le 1er juillet ou le 1er septembre (quatre joueurs, du lent au rapide) font 0 à 7 récoltes de serre l'hiver et n'atteignent pas l'objectif d'hiver ; seul le joueur lent parti en septembre l'atteint. Ma simulation (j) ne partait que d'octobre et de novembre : je ne l'avais pas vu. Partis le 1er juillet avec le marchand qui rachète le surplus, les quatre l'atteignent ; le message de refus ne parle pas du marchand. Et le joueur (f) parti l'été avec le marchand l'atteint le 22 décembre, avant Noël.*
 
 ### A2 — Écran [impeccable]
 - [ ] Bilan de la semaine : la ligne « Allure » et sa raison, la marque à trois crans ; les semaines passées.

@@ -604,7 +604,7 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
     ['(rapide) 6 par jour', rapide, (n) => quetes(n * 3), false, /^g{3}P+$/],
   ]) {
     // départ d'été : le joueur vend au marchand la Nourriture qui ne tient plus dans sa réserve pleine (sans quoi la serre ne
-    // se récolte plus l'hiver, mesuré le 7 octobre 2026 : 0 à 7 récoltes) ; départ d'aujourd'hui : sans marchand
+    // se récolte plus l'hiver : 0 à 6 récoltes pour (lent), (g), (f) et (rapide), mesuré le 7 octobre 2026) ; départ d'aujourd'hui : sans marchand
     for (const [debut, marchand] of [['2026-07-01', 'avise'], ['2026-10-07', false]]) {
       const jours = daysBetween(debut, '2027-03-01'); // jusqu'à la fin de l'hiver
       const options = { profil, habitudes, imprevus: 'attend', hiver: 'quetes', marchand };
