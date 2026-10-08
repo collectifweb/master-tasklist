@@ -1068,4 +1068,4 @@ Ce qu'Alex a décidé :
 - Livré : une quête terminée juste après sa création paie comme les autres, bonus « bon fil » compris ; « Déjà faite » paie toujours plein tarif ; seul le plafond quotidien freine les gains.
 - Mesuré et gardé : le prix des niveaux (n × 80 Énergie, n × 60 Matériaux). Le déplacer vers les Matériaux retardait les joueurs lents ; ne toucher qu'aux niveaux 2 et 3 ne retardait personne, mais ne réglait pas le surplus de Matériaux des joueurs rapides.
 - Écarts au plan : aucun dans le code ; un texte mort corrigé en plus (`interface.json:29`, trouvé par la relecture).
-- Suite : l'échange quotidien Matériaux contre Énergie (lot à planifier, le tableau ci-dessus en donne une première mesure, approximative) ; à décider par Alex : retirer ou non la clé morte `quest.already_done.hint`.
+- Suite : l'échange quotidien Matériaux contre Énergie (lot à planifier, le tableau ci-dessus en donne une première mesure, approximative) ; clé morte `quest.already_done.hint` retirée à la demande d'Alex (8 octobre, après l'envoi ; dans le dépôt, elle partira en production avec le prochain lot).
