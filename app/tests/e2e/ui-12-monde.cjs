@@ -58,8 +58,10 @@ L.runScenario('12. monde : fil de lumière, impact, plaque de quartier, repos', 
   R.check('les compteurs ont monté', !!s.hud, JSON.stringify(s.hud));
   if (s.thread && s.hud) R.check('les compteurs montent à l’impact, après le départ du fil (≥ 400 ms)', s.hud.t - s.thread.t >= 400, `${Math.round(s.hud.t - s.thread.t)} ms`);
   R.check('l’Énergie affichée a bien augmenté', (await L.resValue(page, 'energie')) > e0);
-  const g1 = srv.game();
-  const q0 = ((g0 && g0.quartiers) || {}).atelier || 0, q1 = ((g1 && g1.quartiers) || {}).atelier || 0;
+  // l'écran monte avant que le serveur ait écrit la partie : attendre l'écriture (sous charge, elle arrive après)
+  const q0 = ((g0 && g0.quartiers) || {}).atelier || 0;
+  const g1 = await L.waitFor(() => { const g = srv.game(); return (((g && g.quartiers) || {}).atelier || 0) === q0 + 1 ? g : null; }, 5000) || srv.game();
+  const q1 = ((g1 && g1.quartiers) || {}).atelier || 0;
   R.check('l’Atelier compte une tâche de plus dans l’état du jeu enregistré', q1 === q0 + 1, `${q0} → ${q1}`);
   const plaque1 = await page.getAttribute('.ow-plaque[data-sector="atelier"]', 'aria-label');
   const niv1 = await page.getAttribute('.ow-plaque[data-sector="atelier"]', 'data-niveau');

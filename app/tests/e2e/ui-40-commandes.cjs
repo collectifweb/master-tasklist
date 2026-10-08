@@ -14,6 +14,9 @@
 //   Partie D (deux appareils) : le second livre au clavier (le focus reste sur la ligne cochée) ; le premier, pas encore
 //   relu, livre à son tour : le serveur refuse, l'appareil se remet à jour et dit pourquoi ; une seule livraison.
 //   Le bateau se balance quand l'île est réveillée, jamais en mouvement réduit.
+//   Partie E (les deux autres visiteurs, un samedi de leur semaine) : livrés d'un toucher, ce qu'ils laissent arrive dans la
+//   partie (la famille du Sud : un habitant sans Nourriture d'accueil, et le permis du rang qu'elle fait passer ; la
+//   scientifique : 1 permis, au compteur de la barre ; le convoi : 30 Matériaux), la phrase lue et le mot de Fanal.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -48,12 +51,13 @@ function demandeText(d) {
 }
 
 // Village au Hameau : deux chalets (une place libre), un grenier, de quoi payer chaque commande à sa taille régulière
-function village(core, { reserves = { energy: 64, materials: 60, food: 30 }, startDay, reprise } = {}) {
-  const g = L.quietState(core, SAMEDI);
+function village(core, { reserves = { energy: 64, materials: 60, food: 30 }, startDay, reprise, date = SAMEDI, habitants = 3, chalets = 2 } = {}) {
+  const g = L.quietState(core, date);
   g.resources = { ...reserves };
-  g.habitants = 3;
+  g.habitants = habitants;
   g.premiersPas = Object.fromEntries(core.PAS_IDS.map((id) => [id, ymd(-20)]));
-  g.batiments = ['chalet-1', 'chalet-2', 'atelier-1', 'serre-1', 'grenier-1', 'quai-1'].map((id) => ({ id, type: id.replace(/-\d+$/, '') }));
+  const ids = [...Array.from({ length: chalets }, (_, i) => `chalet-${i + 1}`), 'atelier-1', 'serre-1', 'grenier-1', 'quai-1'];
+  g.batiments = ids.map((id) => ({ id, type: id.replace(/-\d+$/, '') }));
   if (startDay) g.startDay = startDay;
   if (reprise) g.reprise = reprise;
   return g;
@@ -108,10 +112,10 @@ const jourSuivant = async (page, srv, k) => {
 };
 const res = (g) => JSON.stringify(g.resources);
 const commandes = (srv) => srv.ledger().filter((e) => e.type === 'commande');
-async function ouvrir(newPage, srv, opts = {}, ctx = {}) {
+async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
   const { page, context } = await newPage(opts, ctx);
   await context.addInitScript(L.VOICES);
-  await page.clock.install({ time: SAMEDI });
+  await page.clock.install({ time });
   await page.goto(srv.url);
   await L.ready(page);
   await L.closeWelcome(page, 1500);
@@ -192,7 +196,7 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}) {
     R.check('double toucher : une seule livraison au serveur, la demande payée une fois', e0.length === 1 && e0[0].key === `commande:${LUNDI}` && e0[0].visiteur === v0 && paye, `${res(gA)} → ${res(gB)} ${JSON.stringify(e0)}`);
     R.check('double toucher : aucune offre du comptoir prise par le second toucher', !gB.visite, JSON.stringify(gB.visite));
     R.check('livraison : ce que laisse le visiteur (Matériaux, une famille ou 1 permis)',
-      v0 === 'convoi' ? e0[0].materials === cmd0.recoit.materials : v0 === 'famille' ? gB.habitants === gA.habitants + 1 : (gB.permis?.dispo ?? 0) === (gA.permis?.dispo ?? 0) + 1, JSON.stringify({ v0, h: [gA.habitants, gB.habitants], p: [gA.permis, gB.permis], e: e0[0] }));
+      v0 === 'convoi' ? e0[0].materials === cmd0.recoit.materials && Math.round((gB.resources.materials - gA.resources.materials) * 10) / 10 === cmd0.recoit.materials : v0 === 'famille' ? gB.habitants === gA.habitants + 1 : (gB.permis?.dispo ?? 0) === (gA.permis?.dispo ?? 0) + 1, JSON.stringify({ v0, h: [gA.habitants, gB.habitants], p: [gA.permis, gB.permis], e: e0[0] }));
     R.check('livraison : les tâches sont intactes', JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])));
     f = await L.waitFor(async () => { const x = await fiche(page); return x.etat === 'fait' ? x : null; }, 3000) || await fiche(page);
     R.check('fiche : « Commande livrée » à la place du bouton', f.etat === 'fait' && f.fait.startsWith(sp(BAT.commande.fait)) && !f.go, JSON.stringify([f.etat, f.fait]));
@@ -310,6 +314,55 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}) {
       await p1.close();
     } finally {
       sD.stop();
+    }
+
+    // ───── Partie E : les deux autres visiteurs, un samedi de leur semaine
+    for (const id of core.ORDRE_VISITEURS.filter((x) => x !== v0)) {
+      const jour = [7, 14].map((n) => new Date(SAMEDI.getTime() + n * 86400000)).find((d) => core.commandeDeLaSemaine(village(core, { date: d }), [], d.toISOString()).id === id);
+      const famille = id === 'famille';
+      // la famille du Sud : 5 habitants dans 3 chalets (une place libre) ; à 6, le village passe au rang Village
+      const gE = village(core, { date: jour, ...(famille ? { habitants: 5, chalets: 3 } : {}) });
+      const cE = core.commandeDeLaSemaine(gE, [], jour.toISOString());
+      const sE = await L.startServer({ tasks: TASKS, game: gE, sandbox: true });
+      try {
+        const pE = await ouvrir(newPage, sE, {}, {}, jour);
+        await pE.waitForTimeout(600);
+        await L.closeWelcome(pE, 800);
+        const fE = await ouvrirParBandeau(pE, compact);
+        const dE = demandeText(cE.demande);
+        R.check(`${id} : sa commande, à la taille régulière, « Livrer » ouvert`, fE.visiteur === id && cE.taille === 'regulier' && !!fE.go && !fE.go.off && fE.go.label === `Livrer ${dE} ${au(id)}`, JSON.stringify([fE.visiteur, cE.taille, fE.go]));
+        await L.said(pE, true);
+        const gAv = sE.game();
+        await pE.click(GO);
+        R.check(`${id} : une entrée commande:{lundi} au registre`, !!await L.waitFor(() => commandes(sE).length === 1, 5000), JSON.stringify(commandes(sE)));
+        const gAp = await L.waitFor(() => { const g = sE.game(); return res(g) !== res(gAv) ? g : null; }, 5000) || sE.game();
+        const e = commandes(sE)[0] || {};
+        const paye = ['energy', 'materials', 'food'].every((k) => Math.round((gAv.resources[k] - gAp.resources[k]) * 10) / 10 === (cE.demande[k] || 0) - (k === 'materials' ? (cE.recoit.materials || 0) : 0));
+        R.check(`${id} : la demande payée, rien de plus (pas de Nourriture d’accueil)`, paye, `${res(gAv)} → ${res(gAp)}`);
+        const pAv = gAv.permis?.dispo ?? 0, pAp = gAp.permis?.dispo ?? 0;
+        if (famille) {
+          R.check('famille : un habitant de plus, et le rang Village donne son permis', gAp.habitants === gAv.habitants + 1 && pAp === pAv + 1 && sE.ledger().some((x) => x.key === 'permis:rang:2'), JSON.stringify({ h: [gAv.habitants, gAp.habitants], p: [pAv, pAp] }));
+        } else if (id === 'scientifique') {
+          R.check('scientifique : 1 permis, par le registre', e.permis === 1 && pAp === pAv + 1 && gAp.habitants === gAv.habitants, JSON.stringify({ e, p: [pAv, pAp] }));
+        } else {
+          R.check('convoi : 30 Matériaux, par le registre', e.materials === cE.recoit.materials && Math.round((gAp.resources.materials - gAv.resources.materials) * 10) / 10 === cE.recoit.materials, JSON.stringify({ e, m: [gAv.resources.materials, gAp.resources.materials] }));
+        }
+        if (pAp !== pAv) R.check(`${id} : le compteur « Permis » de la barre suit`, !!await L.waitFor(async () => (await L.resValue(pE, 'permis')) === pAp, 3000), String(await L.resValue(pE, 'permis')));
+        const fF = await L.waitFor(async () => { const x = await fiche(pE); return x.etat === 'fait' ? x : null; }, 3000) || await fiche(pE);
+        R.check(`${id} : « Commande livrée » et sa ligne`, fF.etat === 'fait' && fF.fait === sp(`${BAT.commande.fait} ${BAT.commande[`${id}.fait`]}`), JSON.stringify(fF.fait));
+        const dits = (await L.said(pE)).map((x) => sp(x.text));
+        const tete = sp(`Commande livrée ${au(id)} : ${dE}.`);
+        // le mot du rang porte son nom (gabarit {rang}) : le village passe au rang Village
+        const merci = famille ? variantes('permis.rang').map((m) => m.replace('{rang}', core.rangDuVillage(gAp.habitants).name)) : variantes(`commande.livree.${id}`);
+        R.check(`${id} : une seule phrase lue, « ${tete} … », et le mot de Fanal (${famille ? 'permis.rang' : `commande.livree.${id}`})`, dits.filter((t) => t.startsWith('Commande livrée')).length === 1 && dits.some((t) => t.startsWith(tete) && merci.some((m) => t.endsWith(`Fanal : ${m}`))), JSON.stringify(dits));
+        await shot(pE, `40-${id}`);
+        await fermer(pE);
+        const bE = await bandeau(pE);
+        R.check(`${id} : bandeau « ${sp(UI[`bandeau.commande.livree.${id}`])} »`, bE.text === sp(UI[`bandeau.commande.livree.${id}`]) && bE.livree && !bE.coupe, JSON.stringify(bE));
+        await pE.close();
+      } finally {
+        sE.stop();
+      }
     }
   }, { tasks: TASKS, game: (core) => village(core), sandbox: true });
 })();

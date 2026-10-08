@@ -47,7 +47,8 @@
 //     réduit n'arrive jamais plus tard, et celui d'hiver est atteint au ralenti. OBJECTIFS_SAISON (objectifs.js) se règle ici.
 // (l) (lot C) les visiteurs à commande (core/visiteurs.js) : les cinq joueurs de (k), aux mêmes départs, quai bâti, livrent
 //     chaque commande dès qu'ils le peuvent ('livre') ou jamais ('jamais'). Cibles : livrer tout ne coûte jamais plus d'un
-//     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus tard, le joueur le plus
+//     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus de 2 jours plus tard
+//     (mesuré le 8 octobre : jamais plus tard), le joueur le plus
 //     lent livre au moins une commande sur trois, et la taille suit l'allure de la semaine. VISITEURS se règle ici.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';

@@ -190,6 +190,13 @@ test('la famille qui fait passer un rang donne le permis de ce rang, une seule f
   assert.ok(r.entries.some((e) => e.key === 'permis:rang:2'));
   assert.equal(w2.game.permis.dispo, avant + 1);
   assert.ok(r.events.some((e) => e.type === 'rang' && e.id === 'village'));
+  // une seconde famille du Sud au même rang (sa semaine suivante, 2 novembre) : un habitant de plus, aucun autre permis
+  w2.game.batiments = [...w2.game.batiments, { id: 'chalet-4', type: 'chalet' }];
+  const { world: w3, r: r3 } = step(w2, livrer, {}, at('2026-11-04'));
+  assert.equal(w3.game.habitants, 7);
+  assert.equal(rangDuVillage(7).id, 'village');
+  assert.equal(w3.game.permis.dispo, avant + 1);
+  assert.ok(!r3.entries.some((e) => e.key.startsWith('permis:')));
   // accueillir n'a pas changé : il paie toujours la Nourriture d'accueil
   const a = step(village(), accueillir, {}, at(MARDI));
   assert.ok(a.r.events.some((e) => e.type === 'famille' && e.nourriture > 0 && e.par === undefined));
@@ -278,7 +285,9 @@ test('aucune tâche touchée : livrer n’écrit rien dans les tâches, et une q
   assert.deepEqual([avec.pe, avec.energy, avec.materials], [sans.pe, sans.energy, sans.materials]);
 });
 
-test('un geste hors ligne se rejoue à son heure : la commande de sa semaine, refusé si un autre appareil l’a déjà livrée', () => {
+// Le magasin rejoue chaque geste de la file à l'heure où il a été fait (new Date(e.at), js/store.js) : ce test vérifie le
+// cœur à cette heure-là, pas le magasin.
+test('un geste calculé à son heure : la commande de sa semaine, refusé si un autre appareil l’a déjà livrée', () => {
   const VENDREDI = '2026-10-09';
   const w = village();
   // le second appareil a livré vendredi ; le premier, hors ligne, avait livré jeudi : rejoué après coup, refusé
@@ -288,6 +297,18 @@ test('un geste hors ligne se rejoue à son heure : la commande de sa semaine, re
   const { world: w3, r } = step(w, livrer, {}, at(VENDREDI));
   assert.equal(r.entries[0].key, `commande:${LUNDI}`);
   assert.equal(commandeDeLaSemaine(w3.game, w3.ledger, at('2026-10-13')).livree, false);
+});
+
+test('« Livrer » épinglé à sa semaine : une fiche restée ouverte au passage du lundi ne livre pas la commande suivante', () => {
+  const w = village();
+  const vue = commandeDeLaSemaine(w.game, w.ledger, at(DIMANCHE)).semaine; // dimanche : le convoi
+  const refus = 'La semaine a changé\u00a0: un autre visiteur attend au quai.';
+  // lundi 12, 4 h passées : la famille du Sud est arrivée ; le geste vu dimanche est refusé, rien n'est payé
+  assert.equal(refusLivrer(w.game, w.ledger, { semaine: vue }, at('2026-10-12', 9)), refus);
+  assert.throws(() => step(w, livrer, { semaine: vue }, at('2026-10-12', 9)), { message: refus });
+  // la même semaine, ou sans semaine, il passe
+  assert.equal(refusLivrer(w.game, w.ledger, { semaine: vue }, at(DIMANCHE, 20)), null);
+  assert.equal(step(w, livrer, { semaine: '2026-10-12' }, at('2026-10-12', 9)).r.entries[0].key, 'commande:2026-10-12');
 });
 
 test('le marchand ne change pas : mêmes offres, prises à part de la commande, à toutes les allures', () => {

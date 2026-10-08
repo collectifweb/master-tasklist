@@ -649,7 +649,7 @@ function annonceVisiteur() {
   if (!started || !store.view) return;
   const c = ctx();
   const v = commandeDeLaSemaine(c.game, c.ledger, c.now);
-  if (!v || visiteVue(v.semaine)) return;
+  if (!v || v.livree || visiteVue(v.semaine)) return; // livrée ailleurs : plus rien à annoncer
   if (!$('#speech').hidden) { setTimeout(annonceVisiteur, 7500); return; } // Fanal finit d'abord sa phrase en cours
   noterVisite(c.game, c.now);
   const reply = pickReply(`commande.arrive.${v.id}`, { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });

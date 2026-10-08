@@ -121,8 +121,8 @@ export function echanger(tasks, game, ledger, params, now) {
 /**
  * Les visiteurs à commande, dans l'ordre du tour. demande : ce qu'il faut livrer à la taille « régulier » ; recoit : ce
  * qu'il laisse (une seule chose : materials, habitants ou permis, jamais plus d'un permis). Valeurs de départ, réglées par
- * la simulation (tests/core/simulation.test.mjs, joueur (l), 7 octobre 2026 au soir) : c'est l'Énergie qui manque pour
- * monter un quartier, chez tous les joueurs simulés, pendant que Matériaux et permis s'accumulent. Une première série qui
+ * la simulation (tests/core/simulation.test.mjs, joueur (l), 7 octobre 2026 au soir) : l'Énergie est ce qui manque le plus
+ * souvent pour monter un quartier (sauf chez le joueur très lent, plus souvent à court de Matériaux). Une première série qui
  * demandait de l'Énergie (convoi 15 Énergie et 10 Nourriture, scientifique 30 Énergie et 15 Matériaux) faisait acheter
  * moins de niveaux à qui livrait tout : de 0 à 3 de moins au 1er mars selon le joueur et le départ, 8 au lieu de 11 au
  * rythme de l'essai parti l'été. Les commandes ne demandent donc que des Matériaux et de la Nourriture (celle qui se perd quand la réserve est
@@ -169,10 +169,15 @@ export function commandeDeLaSemaine(game, ledger, now) {
   };
 }
 
-/** Pourquoi on ne peut pas livrer la commande maintenant (ou null). Ordre : quai, déjà livrée, place pour la famille, manque. */
+/**
+ * Pourquoi on ne peut pas livrer la commande maintenant (ou null). Ordre : quai, semaine changée, déjà livrée, place pour
+ * la famille, manque. params.semaine (facultatif) : le lundi de la commande que le joueur a vue ; une fiche restée ouverte
+ * au passage du lundi (4 h) ne livre pas la commande d'un autre visiteur, à un autre prix.
+ */
 export function refusLivrer(game, ledger, params, now) {
   const c = commandeDeLaSemaine(game, ledger, now);
   if (!c) return 'Il faut d’abord rebâtir le quai.';
+  if (params?.semaine && params.semaine !== c.semaine) return 'La semaine a changé\u00a0: un autre visiteur attend au quai.';
   if (c.livree) return 'Commande déjà livrée cette semaine.';
   if (c.recoit.habitants) {
     const l = logements(game);
@@ -183,7 +188,7 @@ export function refusLivrer(game, ledger, params, now) {
 }
 
 /**
- * Livre la commande du visiteur de la semaine. params : {}. La commande est payée (game.set) ; l'entrée commande:{lundi}
+ * Livre la commande du visiteur de la semaine. params : { semaine } (le lundi de la commande vue) ou {}. La commande est payée (game.set) ; l'entrée commande:{lundi}
  * porte la taille et le gain (Matériaux du convoi, permis de la scientifique) ; la famille du Sud s'installe comme une
  * famille accueillie, sans la Nourriture d'accueil (un nouveau rang donne son permis, permisDeRang). Rien dans les tâches.
  * Événements { type: 'commande', visiteur, taille, donne, recoit }, puis le gain, le permis ({ type: 'permis', source:

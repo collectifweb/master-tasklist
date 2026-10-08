@@ -6,7 +6,9 @@
 // constantes de départ. Le geste passe par data-action="bat-geste".
 // Quand le marchand est au quai (core/visiteurs.js), la fiche du quai devient son comptoir : une ligne par offre, ce
 // que tu donnes → ce que tu reçois, et « Échanger » (bouton secondaire, data-geste="echanger"), le cadenas et la raison
-// du cœur, ou « Fait cette semaine ». Pas de geste principal : le pied de la fiche reste caché.
+// du cœur, ou « Fait cette semaine ». Au-dessus, la commande du visiteur de la semaine (lot C) : « Livrer », seul geste
+// principal de la fiche (data-geste="livrer", épinglé au lundi de la commande vue), ou le cadenas et la raison, ou
+// « Commande livrée ». Le pied de la fiche reste caché.
 // Un mauvais imprévu (core/imprevus.js, lot I) se lit dans « Maintenant » : ce qui s'est passé, ce que ça change, puis
 // « Réparer » (« Chasser l'ours », « Couvrir la culture ») et son prix, en bouton secondaire (data-geste="reparer"), ou le
 // cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
@@ -175,7 +177,7 @@ export function batimentModel(c, id) {
 
 /**
  * Le visiteur à commande de la semaine dans la fiche du quai, ou null : { id, nom, qui, jours, demande: [ressource],
- * recoit: { res, n, nom, note }, taille (phrase, ou null à l'allure régulière), livree, raison, label }.
+ * recoit: { res, n, nom, note }, taille (phrase, ou null à l'allure régulière), livree, semaine, raison, label }.
  */
 function commandeModel(game, ledger, now) {
   const c = commandeDeLaSemaine(game, ledger, now);
@@ -187,7 +189,7 @@ function commandeModel(game, ledger, now) {
     id: c.id, nom: t(`bat.commande.${c.id}.nom`), qui: t(`bat.commande.${c.id}.qui`),
     jours: t(`bat.commande.jours.${c.joursRestants === 1 ? 'one' : 'other'}`, { n: c.joursRestants }),
     demande: ['energy', 'materials', 'food'].filter((k) => c.demande[k] > 0).map((k) => ressource({ [k]: c.demande[k] })),
-    recoit, livree: c.livree,
+    recoit, livree: c.livree, semaine: c.semaine,
     taille: c.allegee ? t('bat.commande.taille.allegee') : c.taille === 'regulier' ? null : t(`bat.commande.taille.${c.taille}`),
     raison: c.livree ? null : refusLivrer(game, ledger, {}, now),
     label: t('bat.commande.geste.label', { demande: ressourcesText(c.demande), au: t(`bat.commande.${c.id}.au`) }),
@@ -224,7 +226,7 @@ function commandeHtml(c) {
   const etat = c.livree ? 'fait' : c.raison ? 'verrou' : 'libre';
   const action = c.livree
     ? `<p class="commande-fait" id="commande-etat" tabindex="-1">${icon('check')}<span>${esc(t('bat.commande.fait'))} <small>${esc(t(`bat.commande.${c.id}.fait`))}</small></span></p>`
-    : `<button class="btn btn--block ${c.raison ? '' : 'btn--primary '}commande-go" type="button" data-action="bat-geste" data-geste="livrer" data-params="{}"
+    : `<button class="btn btn--block ${c.raison ? '' : 'btn--primary '}commande-go" type="button" data-action="bat-geste" data-geste="livrer" data-params="${esc(JSON.stringify({ semaine: c.semaine }))}"
       aria-label="${esc(c.label)}"${c.raison ? ' aria-disabled="true" aria-describedby="commande-raison"' : ''}>${icon(c.raison ? 'lock' : 'fleche')}<span>${esc(t('bat.commande.geste'))}</span></button>
       ${c.raison ? `<p class="commande-raison" id="commande-raison">${icon('lock')}<span>${esc(c.raison)}</span></p>` : ''}`;
   return `<section class="commande" data-visiteur="${c.id}" data-etat="${etat}" aria-labelledby="commande-t">

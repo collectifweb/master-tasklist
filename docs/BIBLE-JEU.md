@@ -153,7 +153,7 @@ Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 **Le premier visiteur sera le marchand** (idée d'Alex, 6 octobre). Il échange de l'Énergie contre des Matériaux ou de la Nourriture, et l'inverse. C'est ce que le Marché du rang Bourg fera sans attendre personne ; le marchand donne le goût de l'échange bien avant.
 
 **Le marchand, tel qu'il est construit** (lot V, 6 octobre 2026, décisions d'Alex) :
-- il arrive dès que le quai est rebâti, et revient chaque semaine : il est au quai du lundi au dimanche (semaine de jeu, celle de la semaine tenue), même quand le quai est rebâti en milieu de semaine. Son chaland solaire est amarré au quai ; Fanal annonce son arrivée une fois par semaine ;
+- il arrive dès que le quai est rebâti, et revient chaque semaine : il est au quai du lundi au dimanche (semaine de jeu, celle de la semaine tenue), même quand le quai est rebâti en milieu de semaine. Son chaland solaire est amarré au quai ; Fanal annonce son arrivée quand le quai est rebâti (depuis le lot C, le mot de Fanal de chaque semaine est pour le visiteur à commande) ;
 - son comptoir a quatre offres fixes, chacune prise une fois par semaine. Elles reviennent le lundi. Laisser passer une semaine ne fait rien perdre ;
 
 | Tu donnes | Tu reçois |
@@ -168,6 +168,25 @@ Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 - il ne vend aucun permis et ne touche à aucune tâche. Un échange ne fait que convertir ce qui a déjà été gagné. Seule conséquence indirecte : de la Nourriture achetée qui remplit le grenier valide l'objectif d'automne, comme le ferait une récolte (une fois par saison, avec son permis).
 
 Taux validés par Alex le 6 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (h), départs d'octobre) : au rythme de l'essai, un joueur qui n'échange que ce qu'il a en trop achète autant de niveaux en 16 semaines et remplit le village vers la fin décembre, au lieu d'après la 16e semaine ; au rythme régulier, il gagne un niveau. Échanger de l'Énergie contre des Matériaux chaque semaine sans compter ne paie pas : 2 niveaux au lieu de 6 au rythme de l'essai.
+
+**Les visiteurs à commande, tels qu'ils sont construits** (lot C, 7 et 8 octobre 2026, décisions d'Alex) :
+- le marchand reste chaque semaine avec son comptoir. À côté de lui, un visiteur à commande accoste chaque lundi et reste jusqu'au dimanche, chacun son tour : le convoi, la famille du Sud, la scientifique (une semaine sur trois chacun). Le tour se lit d'après la date seule (la semaine du lundi 5 octobre 2026 est celle du convoi) : tous les appareils voient le même visiteur, même hors ligne. Sans quai rebâti, personne ;
+- ce qu'ils demandent et ce qu'ils laissent, à la taille « régulier » :
+
+| Visiteur | Demande | Laisse |
+|---|---|---|
+| Le convoi | 12 Nourriture | 30 Matériaux |
+| La famille du Sud | 15 Matériaux et 6 Nourriture | un habitant de plus, sans payer la Nourriture d'accueil, s'il y a une place libre dans un chalet |
+| La scientifique | 20 Matériaux et 8 Nourriture | 1 permis |
+
+- la taille suit l'allure de la semaine (§9) : au ralenti, la moitié ; au plein régime, une fois et demie, arrondi au-dessus (au ralenti : 6 ; 8 et 3 ; 10 et 4 ; au plein régime : 18 ; 23 et 9 ; 30 et 12). La récompense ne change pas. Quand une reprise commence dans la semaine (retour d'une absence de 5 jours ou plus), la commande passe au ralenti et la fiche le dit, sans reproche ;
+- une seule livraison par semaine, en un geste « Livrer », notée au registre sous la clé de la semaine : deux appareils ou un double toucher ne livrent jamais deux fois. Un geste fait hors ligne se recalcule à son heure ; si la commande a été livrée ailleurs entre-temps, il est refusé avec sa raison. Une commande impossible reste visible avec sa raison (il manque N Matériaux, aucune place libre dans un chalet, déjà livrée). Ne pas livrer ne fait rien perdre ;
+- la famille du Sud s'installe comme une famille accueillie : si elle fait monter le rang, le rang donne son permis, comme d'habitude. La scientifique donne un seul permis ;
+- aucune Énergie demandée : une première série qui en demandait faisait acheter moins de niveaux à qui livrait tout (de 0 à 3 de moins au 1er mars). L'Énergie est la ressource qui manque le plus souvent pour monter un quartier, sauf chez le joueur très lent, à qui les Matériaux manquent plus souvent ;
+- jamais : un prix qui change (bâtiments, réparations, niveaux, offres du marchand), un gain de quête qui change, une tâche touchée, une ressource prise sans geste ;
+- à l'écran : le bateau du visiteur amarré au bout du quai, côté lac (le remorqueur du convoi chargé de bois d'œuvre, le voilier de la famille avec ses malles, le bateau de la scientifique avec sa sonde et son anémomètre) ; il reste jusqu'au dimanche ; une fois la commande livrée, le convoi et la scientifique emportent des paniers de Nourriture, la famille a débarqué ses malles. Dans la fiche du quai, la commande passe au-dessus du comptoir : qui, « Demande », « Laisse », « Livrer » ou la raison, puis « Commande livrée ». « Cette semaine » dit « Commande au quai, encore N jours », puis « Commande livrée au convoi » (avec le nom du visiteur, la première phrase ne tenait pas dans la case). La carte en liste et la phrase lue nomment le visiteur. Fanal l'annonce une fois par semaine et par appareil, et le remercie à la livraison (cinq variantes chacune).
+
+Valeurs réglées par la simulation (l) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre, quai bâti, qui livrent tout ce qu'ils peuvent payer ou jamais ; mesurées le 8 octobre 2026) : livrer tout ne change pas le nombre de niveaux au 1er mars, sauf un de moins pour le joueur à une quête tous les quatre jours parti l'été (5 au lieu de 6). Le village est plein de 2 à 12 jours plus tôt dans cinq cas sur dix, à la même date dans trois, 2 jours plus tard dans un ; le dernier ne le remplit jamais. 75 commandes sur 228 ne sont pas livrées : 57 fois la famille du Sud faute de place libre dans un chalet, les 18 autres faute de Nourriture ou de Matériaux le dimanche soir.
 
 **Catalogue de départ** : le marchand (échange de ressources), le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
 
@@ -260,7 +279,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - au ralenti : les deux imprévus de la semaine restent, tous deux bons (la simulation (k) a montré qu'en garder un seul retirait au joueur lent la moitié de ses cadeaux ; choix laissé par Alex le 7 octobre au soir) ; l'objectif de saison est réduit, avec la même récompense (§6) : une fois atteint, il est payé une fois et le reste ; la lettre du matin et la ligne « Aujourd'hui » du bandeau proposent la quête la plus courte (à durée égale, la mieux placée dans la Cote), sans changer l'ordre de la liste ;
 - régulier : les règles de base (§8) ;
 - plein régime : deux créneaux d'imprévu de plus, sur deux autres jours de la semaine, le premier bon, le second à pile ou face. Quatre au plus, deux mauvais au plus, jamais deux le même jour ; les réparations gardent leur prix ;
-- les tempêtes ne changent pas avec l'allure ; la taille des commandes attendra les visiteurs à commande, et les grands chantiers les semaines 9 à 12 ;
+- les tempêtes ne changent pas avec l'allure ; les grands chantiers attendront les semaines 9 à 12. La taille des commandes suit l'allure depuis le lot C (§7) ;
 - à l'écran : le bilan de la semaine montre « Allure : au ralenti (3 quêtes en 14 jours) », une marque de trois barres doublée du texte, et ce que l'allure change. Chaque semaine passée garde la sienne ; un bilan figé avant le lot n'en a pas. La semaine où l'allure change d'un cran, Fanal le dit une fois par appareil, sans reproche : le village ralentit avec toi, ou il prend de l'élan (cinq variantes chacune).
 
 Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre) : au rythme de l'essai, l'allure reste régulière et rien ne change ; à six quêtes par jour, elle passe au plein régime (132 imprévus au lieu de 68 du 1er juillet au 1er mars) ; le joueur à une quête tous les quatre jours atteint l'objectif d'hiver réduit le 29 janvier au lieu du 18 février (départ du 1er juillet), le 20 février au lieu de jamais (départ du 7 octobre).
@@ -365,7 +384,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex des 5 et 6 octobre 2026
+## 15. Décisions d'Alex des 5, 6 et 7 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -399,5 +418,12 @@ Décisions du 6 octobre 2026 (après-midi), lot 8 :
 
 Décisions du 6 octobre 2026 (fin d'après-midi), lot V :
 
-24. **Le marchand** : quatre offres fixes, chacune une fois par semaine ; il revient chaque semaine tant qu'il est le seul visiteur ; le quai reste au rang Hameau. Taux en §7.
+24. **Le marchand** : quatre offres fixes, chacune une fois par semaine ; il revient chaque semaine tant qu'il est le seul visiteur (le 7 octobre, Alex le garde chaque semaine avec les visiteurs à commande : décision 26) ; le quai reste au rang Hameau. Taux en §7.
 25. **Son allure** : un chaland solaire (barge de bois, toit de panneaux solaires, caisses et paniers, un fanion) amarré au quai ; son comptoir, une ligne par offre.
+
+Décisions du 7 octobre 2026 (soir), lot C :
+
+26. **Le quai** : le marchand et un visiteur à commande ensemble, chaque semaine (§7).
+27. **Trois visiteurs à tour de rôle** : le convoi (Matériaux), la famille du Sud (un habitant, s'il y a une place), la scientifique (1 permis). Montants laissés à la simulation.
+28. **La taille suit l'allure** : petite au ralenti, grosse au plein régime, même récompense ; ramenée au ralenti au retour d'une absence.
+29. **Envoi direct en production si tout est vert**, comme les lots I, H et A.

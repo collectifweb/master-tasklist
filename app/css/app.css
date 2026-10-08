@@ -383,7 +383,7 @@
   height: 18px;
 }
 
-/* Commande du visiteur (lot C), au-dessus du comptoir, sous le même filet : titre avec la caisse en sauge et les jours
+/* Commande du visiteur (lot C), au-dessus du comptoir, sous le même filet : titre avec la note en sauge et les jours
    restants en petit à droite ; qui il est ; deux lignes « Demande » / « Laisse » (le terme à gauche, les puces du comptoir
    à droite, « + » gris entre deux ressources) ; la taille de la semaine en note quand elle n'est pas régulière ; « Livrer »,
    seule action principale de la fiche, sur toute la largeur, ou à plat avec le cadenas et la raison du cœur ; livrée, la
@@ -1060,7 +1060,8 @@
   align-items: center;
   gap: 4px;
 }
-/* Cette semaine, le marchand au quai : sa ligne prend la place du compte des quêtes et ouvre son comptoir. Toute la
+/* Cette semaine, le quai rebâti : la ligne de la commande du visiteur (lot C) prend la place du compte des quêtes et
+   ouvre la fiche du quai. Toute la
    case se touche (le bouton s'étend sous le libellé) ; le compte passe dessous, en petit (en compact, dans la carte
    dépliée ; à partir de 700 px, sur la rangée). */
 #bandeau-semaine[hidden],
