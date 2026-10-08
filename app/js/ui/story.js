@@ -2,7 +2,7 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE } from '../../core/index.js';
+import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE, objectifSaison } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom } from '../content.js';
 import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
@@ -127,10 +127,24 @@ export function createStory(app) {
   const tenueHtml = (b, tag) => (b.tenue === true
     ? `<${tag} class="review-tenue">${icon('materiaux')}<span>${esc(t('review.tenue', { n: numGain(Number.isFinite(b.tenueMateriaux) ? b.tenueMateriaux : SEMAINE_TENUE.materials) }))}</span></${tag}>` : '');
 
-  /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), quêtes et heures. */
+  // Allure de la semaine (lot A) : trois crans en motif, doublés du mot et de la raison ; rien pour un bilan figé avant le lot.
+  const CRANS = { ralenti: 1, regulier: 2, plein: 3 };
+  const aAllure = (b) => Boolean(b.allure && Object.hasOwn(CRANS, b.allure.niveau));
+  const cransHtml = (niveau) => `<span class="allure-crans" data-allure="${niveau}" aria-hidden="true">${[1, 2, 3].map((k) => `<span class="allure-cran${k <= CRANS[niveau] ? ' is-on' : ''}"></span>`).join('')}</span>`;
+  const allureMot = (a) => t('review.allure', { niveau: t(`allure.${a.niveau}`) });
+  /** La semaine en cours : l'allure, sa raison (les quêtes des 14 jours d'avant le lundi), puis ce qu'elle change. */
+  function allureHtml(a, c) {
+    if (!aAllure({ allure: a })) return '';
+    const raison = Number.isFinite(a.quetes) ? tn('review.allure.quetes', a.quetes, { n: a.quetes }) : t('review.allure.jeune');
+    const sansObjectif = a.niveau === 'ralenti' && objectifSaison(c.game, c.ledger, c.now).aVenir;
+    return `<div class="review-allure">${cransHtml(a.niveau)}<p class="review-allure-mot"><b>${esc(allureMot(a))}</b> <span class="review-allure-raison">${esc(raison)}</span></p><p class="review-allure-effet">${esc(t(`review.allure.effet.${a.niveau}${sansObjectif ? '.sans' : ''}`))}</p></div>`;
+  }
+
+  /** Une semaine figée (game.bilans) : dates et jours travaillés (sept pastilles doublées du texte), allure, quêtes et heures. */
   function weekHtml(b) {
     const pips = Array.from({ length: 7 }, (_, i) => `<span class="review-pip${i < b.joursTravailles ? ' is-on' : ''}"></span>`).join('');
-    return `<div class="why-line"><dt><span class="review-week-dates">${esc(t('review.week', { debut: shortDate(b.semaine.start), fin: shortDate(b.semaine.end) }))}</span><small><span class="review-pips" aria-hidden="true">${pips}</span>${esc(tn('review.past.days', b.joursTravailles, { n: b.joursTravailles }))}</small>${tenueHtml(b, 'small')}</dt><dd>${esc(tn('review.domain.quests', b.quetes, { n: b.quetes }))}<small>${esc(t('review.domain.hours', { h: num(b.heures) }))}</small></dd></div>`;
+    const allure = aAllure(b) ? `<span class="review-allure-court">${cransHtml(b.allure.niveau)}${esc(allureMot(b.allure))}</span>` : '';
+    return `<div class="why-line"><dt><span class="review-week-dates">${esc(t('review.week', { debut: shortDate(b.semaine.start), fin: shortDate(b.semaine.end) }))}</span><small><span class="review-pips" aria-hidden="true">${pips}</span>${esc(tn('review.past.days', b.joursTravailles, { n: b.joursTravailles }))}${allure}</small>${tenueHtml(b, 'small')}</dt><dd>${esc(tn('review.domain.quests', b.quetes, { n: b.quetes }))}<small>${esc(t('review.domain.hours', { h: num(b.heures) }))}</small></dd></div>`;
   }
   /** Semaines passées, la plus récente en haut : les PAST_SHOWN dernières, puis les autres dans un bloc replié. */
   function pastHtml(game) {
@@ -172,6 +186,7 @@ export function createStory(app) {
           <p class="review-lead">${esc(summary)}</p>
           <p class="review-days">${icon('calendar')}<span>${esc(jours)}</span></p>
           ${tenueHtml(r, 'p')}
+          ${allureHtml(r.allure, c)}
           ${domains ? `<dl class="why-ledger review-domains">${domains}</dl>` : ''}
         </section>
         ${pastHtml(c.game)}

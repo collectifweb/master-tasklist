@@ -308,6 +308,28 @@
         {"id": "saison.serre.05", "voix": "fanal", "texte": "En plein hiver, la serre donne encore. Le village n’en revient pas."}
       ]
     },
+    "allure.ralentit": {
+      "quand": "La semaine où l’allure du village descend d’un cran (plein régime vers régulier, ou régulier vers au ralenti) : dit une fois par appareil, à la première ouverture de la semaine, après l’accueil, la lettre et le bilan. Lot A. Aucun reproche, aucun chiffre, aucune promesse sur les imprévus.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "allure.ralentit.01", "voix": "fanal", "texte": "Le village ralentit avec toi. On garde le feu, sans se presser."},
+        {"id": "allure.ralentit.02", "voix": "fanal", "texte": "On lève le pied, le village et moi. Rien ne presse."},
+        {"id": "allure.ralentit.03", "voix": "fanal", "texte": "Le village prend ton rythme. Une petite quête quand ça adonne, c’est parfait."},
+        {"id": "allure.ralentit.04", "voix": "fanal", "texte": "On ralentit ensemble. Le village tient très bien à ce rythme-là."},
+        {"id": "allure.ralentit.05", "voix": "fanal", "texte": "Allure plus douce cette semaine. Je garde la lanterne allumée."}
+      ]
+    },
+    "allure.elan": {
+      "quand": "La semaine où l’allure du village monte d’un cran (au ralenti vers régulier, ou régulier vers plein régime) : dit une fois par appareil, au même moment que allure.ralentit. Lot A. Aucun chiffre, aucune pression.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "allure.elan.01", "voix": "fanal", "texte": "Le village prend de l’élan. Ça bourdonne sur la place!"},
+        {"id": "allure.elan.02", "voix": "fanal", "texte": "Ça bouge au village! On passe à la vitesse supérieure."},
+        {"id": "allure.elan.03", "voix": "fanal", "texte": "Le village a pris de l’élan. Les journées vont être animées."},
+        {"id": "allure.elan.04", "voix": "fanal", "texte": "On accélère, le village et moi. J’ai graissé ma pelle."},
+        {"id": "allure.elan.05", "voix": "fanal", "texte": "Belle lancée! Le village suit ton pas, d’un cran plus vite."}
+      ]
+    },
     "famille.arrive": {
       "quand": "Une famille s’installe dans un chalet (geste « Accueillir une famille »).",
       "frequence": 1,

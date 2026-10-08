@@ -150,6 +150,7 @@
     "semis": "Semé : {nom}. {cout} dépensés.",
     "recolte": "Récolte : {n} Nourriture.",
     "recolte.perdu": "Récolte : {n} Nourriture. {perdu} n’ont pas tenu dans le stockage.",
+    "recolte.plein": "Récolte : la réserve est pleine, les {perdu} Nourriture n’ont pas tenu dans le stockage.",
     "recolte.ours": "L’ours en a pris {n}.",
     "famille": "Une famille s’installe. Le village compte {n} habitants.",
     "famille.one": "Une famille s’installe. Le village compte 1 habitant.",

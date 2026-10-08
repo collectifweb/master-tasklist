@@ -1,7 +1,7 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
 import {
   SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
-  findEntry,
+  findEntry, allureDe,
 } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
@@ -58,7 +58,7 @@ const story = createStory({
   thumb: (id) => (world ? world.thumb(id) : ''),
   lightBandeau: () => bandeau.light(),
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
-  arrivee: () => { annonceVisiteur(); annonceImprevu(); annonceTempete(); },
+  arrivee: () => { annonceAllure(); annonceVisiteur(); annonceImprevu(); annonceTempete(); },
 });
 /** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
 function focusHome() {
@@ -192,7 +192,7 @@ function batimentSay(events) {
   for (const e of events) {
     if (e.type === 'construction') out.push(t('bat.sr.construction', { nom: nom(e.id), cout: coutText(e.cout) }));
     else if (e.type === 'semis') out.push(t('bat.sr.semis', { nom: nom(e.id), cout: coutText(e.cout) }));
-    else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? 'bat.sr.recolte.perdu' : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }) + (e.ours ? ` ${t('bat.sr.recolte.ours', { n: numGain(e.ours) })}` : ''));
+    else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? `bat.sr.recolte.${entierGain(e.nourriture) > 0 ? 'perdu' : 'plein'}` : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }) + (e.ours ? ` ${t('bat.sr.recolte.ours', { n: numGain(e.ours) })}` : ''));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
     else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
     else if (e.type === 'quartier-monte') out.push(monteText(e));
@@ -673,6 +673,23 @@ function annonceImprevu() {
   if (!reply) return;
   speech.showText(reply.nom, reply.texte);
   announce.say(remember(after(`${reply.nom}\u00a0: ${reply.texte}`))); // la phrase d'un geste ou du passage du temps juste lue est gardée, et « Jour suivant » s'ajoute
+}
+
+// L'allure du village (lot A) : la semaine où elle change d'un cran, Fanal le dit une fois sur cet appareil, à l'ouverture
+// (après l'accueil, la lettre et le bilan, et après une réplique en cours). oree.allure.v1 = lundi de la semaine dite.
+const ALLURE_KEY = 'oree.allure.v1';
+const allureDite = (semaine) => { try { return localStorage.getItem(ALLURE_KEY) === semaine; } catch { return true; } };
+function annonceAllure() {
+  if (!started || !store.view) return;
+  const c = ctx();
+  const a = allureDe(c.game, c.ledger, gameDay(c.now));
+  if (!a.change || allureDite(a.semaine)) return;
+  if (!$('#speech').hidden || document.querySelector('dialog[open]')) { setTimeout(annonceAllure, 7500); return; }
+  try { localStorage.setItem(ALLURE_KEY, a.semaine); } catch { /* sans stockage : pas d'annonce répétée */ }
+  const reply = pickReply(a.change < 0 ? 'allure.ralentit' : 'allure.elan', { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
+  if (!reply) return;
+  speech.showText(reply.nom, reply.texte);
+  announce.say(remember(after(`${reply.nom}\u00a0: ${reply.texte}`)));
 }
 
 // Une tempête (lot H) : Fanal l'annonce une fois par appareil (avec, pour le lecteur d'écran, la barre et son prix), en

@@ -731,6 +731,48 @@
   width: 16px;
   height: 16px;
 }
+/* Allure de la semaine (lot A) : trois crans qui montent, pleins jusqu'à l'allure (1 au ralenti, 2 régulier, 3 plein
+   régime), creux au-delà, comme les pastilles des jours ; toujours doublés du mot. Ce qu'elle change, dessous, en métadonnée. */
+.review-allure {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px var(--sp-2);
+}
+.review-allure-mot { margin: 0; }
+.review-allure-mot b { font-weight: var(--w-semibold); }
+.review-allure-raison { color: var(--text-soft); }
+.review-allure-effet {
+  grid-column: 2;
+  margin: 0;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.allure-crans {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 15px;
+  flex: none;
+}
+.allure-cran {
+  width: 5px;
+  border: 1.5px solid var(--c-ash);
+  border-radius: 2px;
+}
+.allure-cran:nth-child(1) { height: 7px; }
+.allure-cran:nth-child(2) { height: 11px; }
+.allure-cran:nth-child(3) { height: 15px; }
+.allure-cran.is-on {
+  border-color: var(--c-sage-deep);
+  background: var(--c-sage-deep);
+}
+.review-allure-court {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
 .review-domains .why-line dd,
 .review-weeks .why-line dd {
   font-size: var(--text-16);

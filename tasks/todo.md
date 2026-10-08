@@ -778,9 +778,9 @@ Le lot contient le calcul de l'allure, ses effets sur ce qui existe déjà (impr
 - *Suite : 498 tests, 496 réussis, 0 échec, 2 « à faire » connus.*
 
 ### A2 — Écran [impeccable]
-- [ ] Bilan de la semaine : la ligne « Allure » et sa raison, la marque à trois crans ; les semaines passées.
-- [ ] Fanal : deux situations (le village ralentit, il prend de l'élan), 5 variantes chacune, grille « zéro culpabilité » ; une fois par changement et par appareil.
-- [ ] Scénario navigateur neuf (39) : un registre préparé pour chaque allure ; le bilan, la phrase de Fanal, le nombre d'imprévus de la semaine, la quête proposée au ralenti, deux appareils.
+- [x] Bilan de la semaine : la ligne « Allure : au ralenti (3 quêtes en 14 jours) », une marque de trois barres (une, deux ou trois allumées, cachée au lecteur d'écran puisque le texte la double), puis ce que l'allure change (sans la mention de l'objectif quand la saison n'en a pas). Chaque semaine passée figée depuis le lot montre la sienne en court ; un bilan figé avant n'affiche rien. `js/ui/story.js`, `css/app.css`, `content/fr-CA/interface.json`.
+- [x] Fanal : `allure.ralentit` et `allure.elan`, 5 variantes chacune, sans reproche ni chiffre ; dites une fois par semaine de changement et par appareil (`oree.allure.v1`), après l'accueil, la lettre et le bilan, avant le marchand et l'imprévu (`js/main.js`). Au passage : après une récolte à réserve pleine, la phrase lue disait « Récolte : 0 Nourriture. 4 n'ont pas tenu… » ; elle dit maintenant « la réserve est pleine, les 4 Nourriture n'ont pas tenu » (`bat.sr.recolte.plein`).
+- [x] Scénario navigateur neuf (39) : un registre préparé pour chaque allure, dates d'automne cherchées par core (au ralenti, le jour où un mauvais frapperait au rythme régulier ; l'élan ; un créneau du plein régime). Lettre et bandeau au ralenti, imprévus de la semaine, bilan et semaines passées, fiche à réserve pleine et récolte, phrase de Fanal une fois, pas au rechargement, une fois sur un second appareil. Réussi aux trois largeurs (34 vérifications chacune). Captures regardées aux trois largeurs. Détecteur de design : deux rayons hors de l'échelle (simples avis) ; celui des barres passe à 2 px comme les crans de tempête du lot H, à noter dans `DESIGN.md` (A3).
 
 ### A3 — Vérification et documents
 - [ ] `node --test` ; série complète aux trois largeurs (code figé) ; `world-s3` et `world-perf`.
