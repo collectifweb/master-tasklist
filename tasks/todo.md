@@ -1070,30 +1070,30 @@ Ce qu'Alex a décidé :
 - Écarts au plan : aucun dans le code ; un texte mort corrigé en plus (`interface.json:29`, trouvé par la relecture).
 - Suite : l'échange quotidien Matériaux contre Énergie (lot à planifier, le tableau ci-dessus en donne une première mesure, approximative) ; clé morte `quest.already_done.hint` retirée à la demande d'Alex (8 octobre, après l'envoi ; dans le dépôt, elle partira en production avec le prochain lot).
 
-## Lot T — L'échange du jour à l'atelier
+## Lot T — L'échange du jour au quai
 
-Référence : décision 34 de la bible (§15, lot P : « un échange quotidien Matériaux contre Énergie viendra dans un lot suivant »), bilan du lot P (première mesure, approximative), bible §3 (ressources) et §5 (bâtiments). **Statut : plan à valider par Alex** (questions en fin de section).
+Référence : décision 34 de la bible (§15, lot P : « un échange quotidien Matériaux contre Énergie viendra dans un lot suivant »), bilan du lot P (première mesure, approximative), bible §3 (ressources), §5 (bâtiments) et §7 (le marchand). **Statut : validé par Alex le 8 octobre 2026, au soir** (réponses en fin de section) : chiffres et envoi acceptés, le lieu laissé à mon choix, le quai.
 
 Ce qui existe déjà (lu dans le code le 8 octobre) :
-- l'atelier se bâtit dès le campement (`core/batiments.js:30`, 4 Énergie et 20 Matériaux) ; une fois réparé, le texte de sa fiche dit « Il est réparé : rien à y faire pour l'instant. » (`content/fr-CA/batiments.json:26`) ;
-- le comptoir du marchand (`core/visiteurs.js:39-42`) échange déjà 15 Matériaux contre 15 Énergie, une fois par semaine, quai bâti ; il vend ses Matériaux 2 Énergie pièce ;
-- l'Énergie et les Matériaux n'ont aucun plafond de stock (`core/economy.js:3`) ;
-- le jour de jeu change à 4 h (`core/time.js:47`) ; « Jour suivant » n'existe que dans la version d'essai (`core/quests.js:522-525`).
+- le marchand (`core/visiteurs.js`) est au quai chaque semaine du lundi au dimanche dès que le quai est rebâti (`visiteurDeLaSemaine`), donc tous les jours ; son comptoir a quatre offres, chacune une fois par semaine, notées dans `game.visite`, que chaque échange réécrit en entier (`core/visiteurs.js:112`) ; il échange déjà 15 Matériaux contre 15 Énergie, et vend ses Matériaux 2 Énergie pièce (`:39-42`) ;
+- le quai demande le rang Hameau (bible §5) ; l'Énergie et les Matériaux n'ont aucun plafond de stock (`core/economy.js:3`) ;
+- le jour de jeu change à 4 h (`core/time.js:47`) ; « Jour suivant » n'existe que dans la version d'essai (`core/quests.js:522-525`) ;
+- la partie de production, lue le 8 octobre vers 19 h 30 (lecture seule, avec l'accord d'Alex) : début de partie, pas encore de quai, 10 Matériaux en main.
 
-Le lot ne contient que l'échange de l'atelier. Hors du lot : les niveaux 4 et suivants des quartiers (bible §4), le Marché du rang Bourg (bible §5), un signe sur l'île le jour de l'échange, un mot de Fanal.
+Le lot ne contient que l'échange du jour. Hors du lot : l'échange dans l'autre sens chaque jour (le marchand le fait déjà à la semaine, et ce sont les Matériaux qui s'accumulent), les niveaux 4 et suivants des quartiers (bible §4), le Marché du rang Bourg (bible §5), un mot de Fanal.
 
 ### Ce que verra Alex
-- La fiche de l'atelier réparé reçoit une ligne d'échange, dessinée comme une offre du marchand : « 20 Matériaux → 10 Énergie » et un bouton « Échanger ».
-- Une fois par jour. Après l'échange, la ligne dit « Fait aujourd'hui » jusqu'au lendemain, 4 h. Laisser passer un jour ne fait rien perdre, et rien ne s'accumule : jamais deux échanges le même jour.
-- L'atelier garde toujours 150 Matériaux pour les chantiers : il faut en avoir au moins 170 pour échanger. En dessous, la ligne reste visible avec un cadenas et sa raison (texte proposé : « L'atelier garde 150 Matériaux pour les chantiers : il en faut 170 pour échanger. »).
-- « Ce que ça fait » ajoute une phrase : chaque jour, l'atelier peut changer 20 Matériaux en 10 Énergie. Les textes définitifs se règlent à l'écran.
-- Rien d'autre ne change : ni le marchand, ni un prix, ni un gain de quête, ni une tâche.
+- Le comptoir du marchand, dans la fiche du quai, reçoit une cinquième ligne, marquée « chaque jour » : « 20 Matériaux → 10 Énergie » et un bouton « Échanger ».
+- Une fois par jour. Après l'échange, la ligne dit « Fait aujourd'hui » jusqu'au lendemain, 4 h. Laisser passer un jour ne fait rien perdre, et rien ne s'accumule : jamais deux échanges du jour le même jour.
+- Le marchand ne rachète que le surplus : il laisse toujours 150 Matériaux au village pour les chantiers, il faut donc en avoir au moins 170 pour échanger. En dessous, la ligne reste visible avec un cadenas et sa raison (texte proposé : « Le marchand laisse 150 Matériaux au village pour les chantiers : il en faut 170 pour échanger. »). Les textes définitifs se règlent à l'écran.
+- Sans quai, rien ne change : la fiche du quai dit déjà que le marchand y accoste chaque semaine « pour échanger des ressources » (`content/fr-CA/batiments.json:62`).
+- Rien d'autre ne change : ni les quatre offres de la semaine, ni un prix, ni un gain de quête, ni une tâche.
 
-### Règles proposées
-- 20 Matériaux contre 10 Énergie, une fois par jour de jeu, atelier réparé, au moins 170 Matériaux en main.
-- Moins bien que le marchand (1 Matériau pour 1 Énergie, une fois par semaine) : son offre garde son intérêt.
-- Aucun aller-retour ne rapporte : le marchand vend 1 Matériau pour 2 Énergie, l'atelier le reprend pour une demi-Énergie.
-- L'atelier ne donne aucun permis, ne touche à aucune tâche et n'écrit rien au registre des gains.
+### Règles
+- 20 Matériaux contre 10 Énergie, une fois par jour de jeu, quai rebâti, au moins 170 Matériaux en main.
+- Moins bien que l'offre de la semaine (15 Matériaux contre 15 Énergie) : elle garde son intérêt, et l'échange du jour ne lui fait pas d'ombre.
+- Aucun aller-retour ne rapporte : le marchand vend 1 Matériau pour 2 Énergie, et le rachète une demi-Énergie chaque jour.
+- L'échange du jour ne donne aucun permis, ne touche à aucune tâche et n'écrit rien au registre des gains.
 
 ### Pourquoi ce taux et ces 150 Matériaux (simulation, mesurée le 8 octobre)
 - *Copie de la simulation (l) hors du dépôt (commit 84ac8d5), lancée le 8 octobre vers 16 h 20 : cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars, quai bâti, imprévus et tempêtes comme en (k). Le geste n'existe pas encore : la copie change les ressources directement, une fois par jour. Sans échange, elle redonne les chiffres du lot P (très lent parti en juillet : premier niveau au jour 57, 6 niveaux, 154 soirs bloqués par l'Énergie et 193 par les Matériaux).*
@@ -1135,38 +1135,41 @@ Le lot ne contient que l'échange de l'atelier. Hors du lot : les niveaux 4 et s
 - *Lecture : l'échange sert les rythmes de 2 quêtes par jour et plus (1 à 3 niveaux de plus en 16 semaines ou au 1er mars). Au rythme de l'essai et plus lent, avec le marchand et les commandes, il ne s'ouvre jamais d'ici le 1er mars : dans la simulation, ces joueurs n'ont jamais 170 Matériaux au moment où ils pourraient échanger. Sans marchand ni commande, ils échangent de 0 à 13 soirs selon le joueur, et l'échange leur donne au plus un niveau au 1er mars. Les Matériaux en trop des joueurs rapides baissent sans disparaître : les absorber demandera autre chose (les niveaux 4 et suivants, par exemple).*
 - *Non retenus : un échange de quantité libre (2 contre 1, jusqu'à 10 Énergie) donne les mêmes niveaux qu'une offre fixe à un niveau près, avec un écran plus compliqué ; 30 Matériaux contre 10 Énergie aide moins (joueur avisé, sans plancher, 2 ou 3 quêtes par jour : 12 niveaux en 16 semaines au lieu de 13 au départ de juillet, 14 au 1er mars au lieu de 15 au départ d'octobre) ; 1 contre 1 vaudrait l'offre du marchand, chaque jour.*
 
+- *Remesuré au quai (8 octobre, vers 19 h 40, même copie) : l'échange n'est possible qu'une fois le quai bâti. Pour les trois façons d'échanger et dans les deux cadres, les contrôles tiennent comme à l'atelier (premier niveau jamais plus tard, aucun niveau de moins, Hameau au même jour, village plein jamais plus tard, sur les 60 parties). Les colonnes des deux tableaux ci-dessus ne changent pas (comparées par script) ; le pressé rapide parti en octobre échange un soir de moins.*
+- *Au rythme d'Alex (1 à 3 quêtes par jour), départ le 5 octobre, avec le marchand et les commandes. Le joueur simulé à 1 quête un jour, 1 le lendemain, 3, puis 1 gagne en 4 jours 33,9 Énergie et 56,5 Matériaux, contre 36,6 et 51 dans la partie de production (registre lu le 8 octobre) : proche, mais sur 4 jours seulement. L'échange s'ouvre pour lui vers le 9-12 novembre (le 28-31 octobre à 2 quêtes par jour en moyenne) Au joueur avisé, il donne 2 niveaux de plus en 16 semaines et au 1er mars (de 8 à 10 et de 10 à 12 ; à 2 par jour, de 10 à 12 et de 12 à 14) ; à celui qui échange chaque soir, autant, sauf un seul de plus au 1er mars à 2 par jour (13).*
+
 ### Comment ça marche
-- Un petit module du cœur (`core/atelier.js`) : l'offre (`ECHANGE_ATELIER` : ce qu'on donne, ce qu'on reçoit, les Matériaux gardés), `echangeDuJour(game, now)` (lecture pure : disponible, fait aujourd'hui, ou la raison), `refusEchangerAtelier` et le geste `echangerAtelier`.
-- Le geste est un `game.set`, comme chez le marchand : les ressources bougent et la partie note le jour de l'échange (`game.atelier = { jour }`). Deux appareils qui échangent en même temps : le serveur refuse le second (contrôle de conflit déjà en place), l'appareil se remet à jour et voit « Fait aujourd'hui ». Rien au registre, rien dans `tasks.json`.
-- Un geste fait hors ligne se recalcule à son heure. Celui de la veille, rejoué après un échange du jour fait sur un autre appareil, est refusé avec sa raison (leçon du lot H, même règle que la « semaine passée » du marchand).
-- La partie garde une clé qu'elle ne connaît pas à la relecture (`core/state.js:50`) : un onglet resté sur la v2.7 ne voit pas l'échange et ne peut pas en faire, sans effacer le jour noté (à prouver par un test, comme au lot V). `CLIENT_VERSION` et `MIN_CLIENT` restent à 7.
-- Un onglet resté sur la v2.7 qui trouve ce geste en tête de la file partagée l'écarte avec « Action inconnue » (lu dans `js/store.js:269-276` ; même cas que `livrer` au lot C). Avant l'envoi, demander à Alex de recharger ses onglets ouverts.
-- La ligne de l'atelier reprend la ligne d'offre du comptoir (`js/ui/batiment.js`, `offreHtml`), avec « Fait aujourd'hui » à la place de « Fait cette semaine ». La phrase lue reprend celle de l'échange au marchand (`bat.sr.echange`).
+- `core/visiteurs.js` : une offre du jour du marchand (ce qu'on donne, ce qu'on reçoit, les Matériaux laissés au village), lue avec les quatre offres de la semaine par `visiteurDeLaSemaine` ; `refusEchanger` et `echanger` la reconnaissent. Le geste reste `echanger` : rien de neuf dans `js/store.js`.
+- Le jour de l'échange est noté dans sa propre clé de la partie (`game.echangeDuJour`), pas dans `game.visite` : un onglet resté sur la v2.7 réécrit `game.visite` en entier à chaque échange de la semaine, et effacerait la marque. La partie garde une clé qu'elle ne connaît pas à la relecture (`core/state.js:50`) : à prouver par un test, comme au lot V.
+- Le geste est un `game.set`, comme les autres échanges. Deux appareils qui échangent en même temps : le serveur refuse le second (contrôle de conflit déjà en place), l'appareil se remet à jour et voit « Fait aujourd'hui ». Rien au registre, rien dans `tasks.json`.
+- Un geste fait hors ligne se recalcule à son heure. Celui de la veille, rejoué après l'échange du jour fait sur un autre appareil, est refusé avec sa raison (leçon du lot H, même règle que la « semaine passée » du marchand).
+- Un onglet resté sur la v2.7 qui trouve cet échange en tête de la file partagée le calcule avec l'ancien code, reçoit « Offre inconnue » et l'écarte avec un avis (lu dans `js/store.js:269-276` et `core/visiteurs.js:82`). Avant l'envoi, Alex recharge ses onglets ouverts. `CLIENT_VERSION` et `MIN_CLIENT` restent à 7.
+- La ligne reprend la ligne d'offre du comptoir (`js/ui/batiment.js`, `offreHtml`), avec « Fait aujourd'hui » à la place de « Fait cette semaine ». La phrase lue reprend celle de l'échange au marchand (`bat.sr.echange`).
 - Le cache passe à `oree-coquille-v19`. La clé morte `quest.already_done.hint`, retirée dans le dépôt après le lot P, part avec cet envoi.
-- Leçons à appliquer d'entrée : la simulation se refait avec le vrai geste avant d'écrire un chiffre ; un texte de case se mesure dans la vraie case, variante la plus longue, aux trois largeurs ; un double toucher se rejoue aux trois largeurs en notant la cible de chaque toucher ; avant la série, chercher les scénarios qui ouvrent la fiche de l'atelier ou comptent ses boutons ; un échec sans lien avec le lot se relance d'abord sur `v2.7`.
+- Leçons à appliquer d'entrée : la simulation se refait avec le vrai geste avant d'écrire un chiffre ; un texte de case se mesure dans la vraie case, variante la plus longue, aux trois largeurs ; un double toucher se rejoue aux trois largeurs en notant la cible de chaque toucher ; `ui-36-marchand` attend 4 offres au comptoir (lignes 84, 152, 268) et sera adapté ; avant la série, chercher les autres scénarios qui ouvrent la fiche du quai ou lisent ses lignes ; un échec sans lien avec le lot se relance d'abord sur `v2.7`.
 
 ### T1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `tests/core/atelier.test.mjs` puis le code. Tests : atelier à réparer → refus ; 169 Matériaux → refus et raison, 170 → échange, il reste 150 Matériaux et 10 Énergie de plus ; une fois par jour, de nouveau possible le lendemain à 4 h (3 h 59 reste la veille) ; un jour sauté ne donne pas deux échanges ; double toucher ; geste de la veille rejoué après l'échange du jour → refusé ; aucun aller-retour gagnant avec le marchand ; rien au registre ni dans les tâches ; une partie qui porte `game.atelier` le garde à travers la relecture et les gestes d'avant ; le marchand et les prix inchangés.
+- [ ] Tests puis code. Sans quai → refus ; 169 Matériaux → refus et raison, 170 → échange, il reste 150 Matériaux et 10 Énergie de plus ; une fois par jour, de nouveau possible le lendemain à 4 h (3 h 59 reste la veille) ; un jour sauté ne donne pas deux échanges ; double toucher ; geste de la veille rejoué après l'échange du jour → refusé ; l'échange du jour et ceux de la semaine ne se gênent pas ; un échange de la semaine fait par l'ancien code garde la marque du jour ; aucun aller-retour gagnant ; rien au registre ni dans les tâches ; une partie qui porte `game.echangeDuJour` le garde à travers la relecture ; les quatre offres de la semaine et les prix inchangés.
 
 ### T2 — Simulation
 - [ ] Simulation (m) dans `tests/core/simulation.test.mjs`, avec le vrai geste : les cinq joueurs, les deux départs, les trois façons d'échanger, sans puis avec marchand et commandes. Cibles : premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau au même jour, village plein jamais plus tard. Les cibles (a) à (l) inchangées.
-- [ ] Chiffres relancés et comparés au tableau ci-dessus. **S'ils s'en écartent, les montrer à Alex avant T3.**
+- [ ] Chiffres relancés et comparés aux tableaux ci-dessus. **S'ils s'en écartent, les montrer à Alex avant T3.**
 
 ### T3 — Écran [impeccable]
-- [ ] Fiche de l'atelier : la ligne d'échange, le cadenas et la raison, « Fait aujourd'hui » ; le focus reste sur la ligne après l'échange ; une seule phrase lue.
+- [ ] Comptoir du quai : la ligne du jour, distincte des offres de la semaine, le cadenas et la raison, « Fait aujourd'hui » ; le focus reste sur la ligne après l'échange ; une seule phrase lue.
 - [ ] Textes dans `content/fr-CA/`, typographie de `app/content/README.md` ; chaque texte mesuré dans sa case aux trois largeurs.
-- [ ] Scénario navigateur neuf (`ui-42-atelier.cjs`) : échange, double toucher qui n'échange qu'une fois (aux trois largeurs, cible de chaque toucher notée), 169 Matériaux et sa raison, passage de 4 h (horloge figée), deux appareils.
+- [ ] Scénario navigateur (`ui-36-marchand.cjs` adapté, ou un neuf) : échange du jour, double toucher qui n'échange qu'une fois (aux trois largeurs, cible de chaque toucher notée), 169 Matériaux et sa raison, passage de 4 h (horloge figée), deux appareils.
 
 ### T4 — Vérification et documents
 - [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
 - [ ] Série navigateur complète sur code figé, machine au calme ; relecture indépendante par un agent Opus en lecture seule.
-- [ ] Documents : bible §3 (d'où vient l'Énergie), §5 (l'atelier) et §15 (décisions), `PRODUCT.md` si un point ouvert s'y rapporte, `app/ARCHITECTURE.md`, `app/DESIGN.md` (la ligne d'offre sert à deux fiches), `app/content/README.md`, `CLAUDE.md` à l'envoi.
+- [ ] Documents : bible §3 (d'où vient l'Énergie), §7 (le marchand) et §15 (décisions), `PRODUCT.md` si un point ouvert s'y rapporte, `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md`, `CLAUDE.md` à l'envoi.
 
 ### T5 — Envoi
 - [ ] Alex recharge ses onglets ouverts ; photo des données sur le serveur, étiquette `v2.8`, `.claude/outils/deploy-prod.sh v2.8`, comparaison des fichiers en ligne avec l'étiquette.
 
-### Questions pour Alex
-1. **Où** : dans la fiche de l'atelier (recommandé : bâti dès le campement, sa fiche n'a aujourd'hui rien à proposer) ? Ou une cinquième ligne au comptoir du marchand (seulement avec le quai, et ce comptoir vit à la semaine) ?
-2. **Taux et garde-fou** : 20 Matériaux contre 10 Énergie, une fois par jour, l'atelier gardant toujours 150 Matériaux (recommandé : mesuré chez les cinq joueurs, personne ne recule, même en échangeant chaque soir) ?
-3. **À ton rythme** : au rythme de l'essai, avec le marchand et les commandes, la simulation ne l'ouvre jamais d'ici le 1er mars ; il sert à partir de 2 quêtes par jour. Je n'ai pas regardé ta partie de production : si tu as rarement 170 Matériaux en main, il restera fermé pour toi. Ça te va ainsi ? (L'ouvrir plus tôt demanderait de garder moins de Matériaux ; aux essais à 100, 120 et 130, un joueur perd des niveaux ou remplit son village plus tard.)
-4. **Envoi** : direct en production si tout est vert, comme les lots précédents ?
+### Questions posées à Alex et réponses (8 octobre, au soir)
+1. **Où** : la fiche de l'atelier ou le comptoir du marchand ? Réponse : il voyait l'échange chez le marchand, dont c'est le rôle, ou au port, « puisque de toute façon, il s'agit d'un échange avec quelque chose d'extérieur » ; l'atelier lui convient aussi, choix laissé. **Retenu : le comptoir du marchand, au quai.** Raisons : c'est l'image qu'Alex en a ; l'atelier ne l'ouvrirait presque jamais plus tôt, faute de 170 Matériaux avant le quai (remesuré au quai : un seul soir d'échange en moins sur les 60 parties) ; l'échange du jour paie moins que l'offre de la semaine, il ne lui fait pas d'ombre.
+2. **Taux et garde-fou** (20 contre 10, une fois par jour, 150 Matériaux laissés) : « ça me convient ».
+3. **À son rythme** : partie de production au début (pas de quai, 10 Matériaux), 1 à 3 quêtes par jour ; il économise pour les premiers bâtiments. L'échange lui servira plus tard (vers la mi-novembre d'après la simulation).
+4. **Envoi** : direct en production si tout est vert, « ça me convient ».
