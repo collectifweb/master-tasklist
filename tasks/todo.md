@@ -1051,11 +1051,21 @@ Ce qu'Alex a décidé :
 - *Trouvé par la relecture, que j'avais manqué : `content/fr-CA/interface.json:29` (`quest.already_done.hint`) disait encore « les suivantes, la moitié ». Aucun écran n'appelle cette clé (vérifié : toutes les aides de `js/` et `world/` ont une clé écrite en toutes lettres, la case affiche `add.done_today.hint`). Texte corrigé (« Pour une chose faite avant de l’écrire. »), clé gardée : la retirer serait retirer du code mort, à décider par Alex.*
 
 ### P3 — Vérification et documents
-- [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
-- [ ] Série navigateur complète sur code figé ; relecture indépendante par un agent Opus en lecture seule.
+- [x] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
+- *Après les correctifs de la relecture : 530 tests, 528 réussis, 0 échec, 2 « à faire » connus.*
+- [x] Série navigateur complète sur code figé ; relecture indépendante par un agent Opus en lecture seule.
+- *Série complète sur `9b36e34` (8 octobre, 14 h 37 à 15 h 16, rien d'autre ne tournait sur le poste) : 38 scénarios sur 38 réussis, 3 182 vérifications, aucune en échec.*
 - *Relecture (8 octobre, agent Opus, lecture seule, avec trois scripts qui font jouer l'ancien et le nouveau code) : rien de bloquant ; suite relancée par lui (529 tests, 0 échec) ; les quatre tests neufs échouent sur l'ancien code. Corrigé : (1) le texte mort de `interface.json:29` ; (2) la raison de garder la version 7, complétée ci-dessus ; (4) la règle gardée (« Déjà faite » sans « bon fil ») n'avait aucun test : ajouté dans `quests.test.mjs`, vu en échec dans une copie où la règle est cassée ; (6) le plan disait « rien d'autre ne change à l'écran », alors que le mot de Fanal change. Gardé : (3) l'architecture fausse au commit du cœur, corrigée au commit des documents ; (5) la première vérification de « entrée minimale » réussit aussi sur l'ancien code (elle vérifie qu'une entrée minimale ne gêne pas le calcul, sans rapport avec le quota) ; (7) un navigateur qui mélangerait un ancien `ledger.js` et le nouveau `reward.js` (fichier repris du cache quand le serveur répond en erreur, `sw.js:62`) ne démarrerait pas, l'export `alreadyDoneRate` n'existant plus. Déduction de la relecture, non observée ; même risque à chaque lot qui change un import ; un rechargement le règle.*
 - *Scénarios touchés (relecture, lu sans lancer) : seule une quête créée par le formulaire avait `createdAt`, donc seule elle passait par la règle des 10 minutes. `ui-17` est le seul scénario concerné ; le gain ne change pas (première du jour, priorité 5), le mot de Fanal oui, et aucune vérification ne le lit.*
-- [ ] Documents : `PRODUCT.md`, bible §4 et §15 (décisions du 8 octobre), `app/ARCHITECTURE.md`, `app/content/README.md`, `CLAUDE.md`, leçon (recommandation faite sans mesurer les rythmes lents).
+- [x] Documents : `PRODUCT.md`, bible §4 et §15 (décisions du 8 octobre), `app/ARCHITECTURE.md`, `app/content/README.md`, `CLAUDE.md`, leçon (recommandation faite sans mesurer les rythmes lents).
+- *Bible §15 : décisions 30 à 32 (lot E, qui n'y étaient pas) et 33 à 35 (lot P) ; titre « du 5 au 8 octobre ». `CLAUDE.md` à l'envoi.*
 
 ### P4 — Envoi
-- [ ] Photo des données sur le serveur, étiquette `v2.7`, `.claude/outils/deploy-prod.sh v2.7`, comparaison des fichiers en ligne avec l'étiquette.
+- [x] Photo des données sur le serveur, étiquette `v2.7`, `.claude/outils/deploy-prod.sh v2.7`, comparaison des fichiers en ligne avec l'étiquette.
+- *Envoyé le 8 octobre vers 15 h 17 : étiquette `v2.7` = 9b36e34 (le commit de la série), poussée. Photo de la production `api/data/backups/avant-v2.7-20261008-151654/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques). `deploy-prod.sh v2.7` : app 200, API sans code 401, avec code 200, données 403, config vide vue de l'extérieur, cache `oree-coquille-v18`, pas de bac à sable. En ligne : 87 fichiers identiques à l'étiquette, plus `api/config.php` (gardé exprès) ; données inchangées depuis la photo. Non vérifié : l'app ouverte en production (elle écrit dans la partie), et un appareil d'Alex passé à la v18.*
+
+### Bilan du lot P
+- Livré : une quête terminée juste après sa création paie comme les autres, bonus « bon fil » compris ; « Déjà faite » paie toujours plein tarif ; seul le plafond quotidien freine les gains.
+- Mesuré et gardé : le prix des niveaux (n × 80 Énergie, n × 60 Matériaux). Le déplacer vers les Matériaux retardait les joueurs lents ; ne toucher qu'aux niveaux 2 et 3 ne retardait personne, mais ne réglait pas le surplus de Matériaux des joueurs rapides.
+- Écarts au plan : aucun dans le code ; un texte mort corrigé en plus (`interface.json:29`, trouvé par la relecture).
+- Suite : l'échange quotidien Matériaux contre Énergie (lot à planifier, le tableau ci-dessus en donne une première mesure, approximative) ; à décider par Alex : retirer ou non la clé morte `quest.already_done.hint`.
