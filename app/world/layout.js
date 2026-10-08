@@ -114,6 +114,20 @@ export const EMPLACEMENTS = {
   quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true, sector: 'place' }],
 };
 
+/**
+ * Habitants au travail (lot E, world/habitants.js), en grille [u, v] comme FANAL_HOME. PORTES : où un habitant sort de
+ * son chalet (devant la porte, face +v). POSTES : où il travaille, un par emplacement, toujours d'un côté visible du
+ * bâtiment (une figurine derrière un dessin disparaît). POSTE_PLACE : sans lieu de travail bâti, près de Fanal.
+ */
+export const PORTES = { chalet: [[5.05, 5.6], [7.55, 5.6], [2.65, 5.6]] };
+export const POSTES = {
+  parcelle: [[1.28, 9.36], [1.28, 11.26], [3.28, 11.26]],
+  serre: [[11.8, 11.2], [11.45, 8.88]],
+  atelier: [[8.75, 10.05]],
+  grenier: [[9.0, 3.25]],
+};
+export const POSTE_PLACE = [7.4, 6.45];
+
 /** Objets-reflets : ancre de content/fr-CA/ancres.json → objet de la carte. Par défaut, le repère du quartier. */
 export const ANCHOR_OBJECT = {
   glaciere: 'glaciere', garage: 'etabli', cloture: 'cloture-c1', poubelle: 'caisse:0', lit: 'chalet-3', jouets: 'chalet-3',
