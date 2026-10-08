@@ -139,7 +139,7 @@ export function etatCulture(game, ledger, id, now) {
 
 // ───────── Raisons écrites ─────────
 
-/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials? }), en une phrase, ou null. Même ordre que le HUD et les prix : permis, Énergie, Matériaux. */
+/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials?, food? }), en une phrase, ou null. Même ordre que le HUD et les prix : permis, Énergie, Matériaux, Nourriture. */
 export function manque(game, cout) {
   const p = (cout.permis || 0) - Math.max(0, Math.floor(Number(game.permis?.dispo) || 0));
   const m = round1((cout.materials || 0) - game.resources.materials);
@@ -148,6 +148,8 @@ export function manque(game, cout) {
   if (p > 0) parts.push(`${p} permis`);
   if (e > 0) parts.push(`${entierHaut(e)} Énergie`);
   if (m > 0) parts.push(`${entierHaut(m)} ${entierHaut(m) < 2 ? 'Matériau' : 'Matériaux'}`);
+  const n = round1((cout.food || 0) - (Number(game.resources.food) || 0)); // une commande de visiteur (visiteurs.js)
+  if (n > 0) parts.push(`${entierHaut(n)} Nourriture`);
   if (!parts.length) return null;
   return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
@@ -308,19 +310,29 @@ export function accueillir(tasks, game, ledger, params, now) {
   const refus = refusAccueillir(ctx.game);
   if (refus) throw new Error(refus);
   const g = structuredClone(ctx.game);
-  const avant = rangDuVillage(logements(g).habitants);
   const prix = prixFamille(g);
   g.resources.food = round1(g.resources.food - prix);
-  g.habitants = logements(g).habitants + 1;
   ctx.game = g;
-  ctx.events.push({ type: 'famille', habitants: g.habitants, nourriture: prix });
-  const apres = rangDuVillage(g.habitants);
-  if (apres.palier > avant.palier) {
-    ctx.events.push({ type: 'rang', id: apres.id, name: apres.name, habitants: g.habitants });
-    permisDeRang(ctx, apres.palier);
-  }
+  installerFamille(ctx, prix);
   suivreObjectifs(ctx);
   return ctx.result();
+}
+
+/**
+ * Une famille s'installe, accueillie (accueillir) ou venue avec la commande de la famille du Sud (livrer, visiteurs.js) :
+ * +1 habitant. La place libre se vérifie avant. Événements { type: 'famille', habitants, nourriture, ...extra } et, au
+ * changement de rang, { type: 'rang', id, name, habitants } suivi du permis du nouveau rang (permisDeRang).
+ */
+export function installerFamille(ctx, nourriture, extra = {}) {
+  const avant = rangDuVillage(logements(ctx.game).habitants);
+  const habitants = logements(ctx.game).habitants + 1;
+  ctx.game = { ...ctx.game, habitants };
+  ctx.events.push({ type: 'famille', habitants, nourriture, ...extra });
+  const apres = rangDuVillage(habitants);
+  if (apres.palier > avant.palier) {
+    ctx.events.push({ type: 'rang', id: apres.id, name: apres.name, habitants });
+    permisDeRang(ctx, apres.palier);
+  }
 }
 
 /** Jour travaillé : au moins une quête payée ce jour-là et pas remballée. */

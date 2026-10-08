@@ -8,12 +8,21 @@
 // seule écriture au registre possible. La partie garde les offres prises de la semaine dans
 // game.visite = { semaine: lundi, prises: [id] } ; une visite d'une autre semaine ne compte plus.
 // Aucun aller-retour ne rapporte (un test le vérifie), et le marchand ne vend aucun permis.
+// Les visiteurs à commande (lot C, décisions d'Alex du 7 octobre 2026 au soir) : le marchand reste chaque semaine et, à
+// côté, un visiteur à commande accoste du lundi au dimanche, chacun son tour (convoi, famille du Sud, scientifique). Il
+// demande quelques ressources et laisse quelque chose d'unique : des Matériaux, une famille qui s'installe, ou 1 permis
+// (jamais plus d'un). Une seule livraison par semaine, notée au registre sous commande:{lundi} (clé unique : deux appareils
+// ne livrent jamais deux fois). Ne pas livrer ne fait rien perdre. La taille suit l'allure de la semaine (allure.js), et
+// passe au ralenti quand une reprise commence dans la semaine (retour d'une absence, game.reprise) ; la récompense, elle,
+// ne change jamais.
 // Même forme que quests.js : (tasks, game, ledger, params, now) → { tasks, game, ops, entries, events }.
 import { Ctx } from './quests.js';
-import { gameDay, weekStart, weekEnd, daysBetween } from './time.js';
+import { gameDay, weekStart, weekEnd, daysBetween, isDayString } from './time.js';
 import { round1 } from './reward.js';
-import { compte, manque, stockage, entierBas, entierHaut } from './batiments.js';
+import { hasKey } from './ledger.js';
+import { compte, manque, stockage, entierBas, entierHaut, logements, installerFamille } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
+import { allureDe } from './allure.js';
 
 /**
  * Le marchand et ses offres, dans l'ordre d'affichage. donne : ce que le joueur cède ; recoit : ce qu'il obtient
@@ -104,5 +113,92 @@ export function echanger(tasks, game, ledger, params, now) {
   ctx.game = g;
   ctx.events.push({ type: 'echange', visiteur: MARCHAND.id, offre: o.id, donne: { ...o.donne }, recoit: { ...o.recoit } });
   suivreObjectifs(ctx); // de la Nourriture reçue peut remplir le grenier de l'objectif d'automne
+  return ctx.result();
+}
+
+// ───────── Visiteurs à commande (lot C) ─────────
+
+/**
+ * Les visiteurs à commande, dans l'ordre du tour. demande : ce qu'il faut livrer à la taille « régulier » ; recoit : ce
+ * qu'il laisse (une seule chose : materials, habitants ou permis, jamais plus d'un permis). Valeurs de départ, réglées par
+ * la simulation (tests/core/simulation.test.mjs, joueur (l)).
+ */
+export const VISITEURS = {
+  convoi: { demande: { energy: 15, food: 10 }, recoit: { materials: 30 } },
+  famille: { demande: { energy: 10, food: 10 }, recoit: { habitants: 1 } },
+  scientifique: { demande: { energy: 30, materials: 15 }, recoit: { permis: 1 } },
+};
+export const ORDRE_VISITEURS = Object.keys(VISITEURS);
+/** Taille de la commande selon l'allure de la semaine : la demande est multipliée, arrondie au-dessus ; la récompense ne bouge pas. */
+export const TAILLES = { ralenti: 0.5, regulier: 1, plein: 1.5 };
+// Un lundi de référence : la semaine du convoi. Le tour se lit d'après la date seule, le même sur tous les appareils.
+const REPERE = '2026-10-05';
+const commandeKey = (lundi) => `commande:${lundi}`;
+const visiteurDe = (lundi) => ORDRE_VISITEURS[((Math.round(daysBetween(REPERE, lundi) / 7) % 3) + 3) % 3];
+const mesure = (demande, f) => Object.fromEntries(Object.entries(demande).map(([k, n]) => [k, Math.ceil(n * f)]));
+
+// Taille de la commande ce jour-là : celle de l'allure de la semaine, ou « au ralenti » quand une reprise a commencé dans la
+// semaine, au plus tard ce jour-là (la commande en cours au retour d'une absence ; allegee le dit).
+function tailleDe(game, ledger, day) {
+  const r = game.reprise;
+  const allegee = !!(isObj(r) && isDayString(r.du) && r.du >= weekStart(day) && r.du <= day);
+  return { taille: allegee ? 'ralenti' : allureDe(game, ledger, day).niveau, allegee };
+}
+
+/**
+ * Le visiteur à commande de la semaine, ou null sans quai : { id, semaine (lundi), depart (dimanche), joursRestants
+ * (aujourd'hui compris), taille ('ralenti' | 'regulier' | 'plein'), allegee (ramenée au ralenti par un retour d'absence),
+ * demande, recoit, livree }. Lecture pure de la date, du quai, de l'allure et du registre.
+ */
+export function commandeDeLaSemaine(game, ledger, now) {
+  if (!compte(game, 'quai')) return null;
+  const day = gameDay(now);
+  const semaine = weekStart(day);
+  const depart = weekEnd(day);
+  const id = visiteurDe(semaine);
+  const { taille, allegee } = tailleDe(game, Array.isArray(ledger) ? ledger : [], day);
+  return {
+    id, semaine, depart, joursRestants: daysBetween(day, depart) + 1, taille, allegee,
+    demande: mesure(VISITEURS[id].demande, TAILLES[taille]), recoit: { ...VISITEURS[id].recoit },
+    livree: hasKey(Array.isArray(ledger) ? ledger : [], commandeKey(semaine)),
+  };
+}
+
+/** Pourquoi on ne peut pas livrer la commande maintenant (ou null). Ordre : quai, déjà livrée, place pour la famille, manque. */
+export function refusLivrer(game, ledger, params, now) {
+  const c = commandeDeLaSemaine(game, ledger, now);
+  if (!c) return 'Il faut d’abord rebâtir le quai.';
+  if (c.livree) return 'Commande déjà livrée cette semaine.';
+  if (c.recoit.habitants) {
+    const l = logements(game);
+    if (!l.places) return 'Il faut d’abord un chalet.';
+    if (!l.libres) return 'Aucune place libre dans un chalet\u00a0: la famille ne peut pas s’installer.';
+  }
+  return manque(game, c.demande);
+}
+
+/**
+ * Livre la commande du visiteur de la semaine. params : {}. La commande est payée (game.set) ; l'entrée commande:{lundi}
+ * porte la taille et le gain (Matériaux du convoi, permis de la scientifique) ; la famille du Sud s'installe comme une
+ * famille accueillie, sans la Nourriture d'accueil (un nouveau rang donne son permis, permisDeRang). Rien dans les tâches.
+ * Événements { type: 'commande', visiteur, taille, donne, recoit }, puis le gain, le permis ({ type: 'permis', source:
+ * 'commande', dispo }) ou la famille ({ type: 'famille', …, par: 'commande' }).
+ */
+export function livrer(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  const refus = refusLivrer(ctx.game, ctx.ledger, params, now);
+  if (refus) throw new Error(refus);
+  const c = commandeDeLaSemaine(ctx.game, ctx.ledger, now);
+  const g = structuredClone(ctx.game);
+  for (const [k, n] of Object.entries(c.demande)) g.resources[k] = round1(g.resources[k] - n);
+  ctx.game = g;
+  ctx.events.push({ type: 'commande', visiteur: c.id, taille: c.taille, donne: { ...c.demande }, recoit: { ...c.recoit } });
+  ctx.append({
+    key: commandeKey(c.semaine), at: ctx.iso, day: ctx.day, type: 'commande', visiteur: c.id, taille: c.taille, semaine: c.semaine,
+    pe: 0, energy: 0, materials: c.recoit.materials || 0, ...(c.recoit.permis ? { permis: c.recoit.permis } : {}),
+  }, 'commande', { visiteur: c.id });
+  if (c.recoit.permis) ctx.events.push({ type: 'permis', source: 'commande', dispo: ctx.game.permis.dispo });
+  if (c.recoit.habitants) installerFamille(ctx, 0, { par: 'commande' });
+  suivreObjectifs(ctx); // de la Nourriture livrée ne valide rien, mais une famille compte pour les premiers pas
   return ctx.result();
 }
