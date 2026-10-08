@@ -982,7 +982,13 @@ Le lot contient les habitants qui vont à leur travail et en reviennent, le rég
 - [x] Documents : bible §10, `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md`, `CLAUDE.md`, leçons. *(`CLAUDE.md` à l'envoi, avec l'heure et l'étiquette.)*
 
 ### E4 — Envoi
-- [ ] Photo des données sur le serveur, étiquette `v2.6`, `.claude/outils/deploy-prod.sh v2.6`, comparaison des fichiers en ligne avec l'étiquette.
+- [x] Photo des données sur le serveur, étiquette `v2.6`, `.claude/outils/deploy-prod.sh v2.6`, comparaison des fichiers en ligne avec l'étiquette.
+- *Envoyé le 8 octobre vers 13 h 20 : étiquette `v2.6` = f8960c9 (le commit des correctifs de la relecture, celui de la dernière série), poussée avec la branche. Photo de la production `api/data/backups/avant-v2.6-20261008-132115/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques). `deploy-prod.sh v2.6` : app 200, API sans code 401, avec code 200, données 403, config vide, cache `oree-coquille-v17`, bac à sable inactif. Après l'envoi : 87 fichiers en ligne identiques à l'étiquette (le 88e est `api/config.php`, jamais envoyé) ; les 4 fichiers de données inchangés depuis la photo. Ni `app/api/` ni `app/core/` n'ont changé depuis `v2.5` : `CLIENT_VERSION` et `MIN_CLIENT` restent à 7, un onglet ouvert passe à la v2.6 au prochain rechargement. Pas regardé : l'app ouverte en production (l'ouvrir écrirait dans la partie). Retour arrière : `deploy-prod.sh v2.5`, et la photo pour les données.*
+
+### Bilan du lot E
+- Livré : l'île vivante par défaut ; une figurine par habitant logé (au plus 15), qui sort de son chalet, suit les routes jusqu'à son lieu de travail (potager de mai à octobre, serre, atelier, grenier ; sans aucun, la Place), y prend sa place, puis rentre ; « Économie de batterie » dans Réglages, propre à l'appareil ; mouvement réduit respecté ; le scénario 41.
+- Écarts au plan : l'éolienne et le quai ne sont pas des lieux de travail ; la profondeur des figurines est recopiée quatre fois par seconde au lieu d'être animée en CSS (cinq à six fois moins de travail mesuré) ; chaque habitant a sa place près du poste (trouvé par la relecture).
+- Suite : à décider avec Alex.
 
 ### Questions pour Alex
 1. **Quand l'île bouge** : vivante par défaut tant que l'app est ouverte et à l'écran, avec « Économie de batterie » pour revenir au comportement d'aujourd'hui (recommandé, c'est la bible) ? Au repos par défaut, avec un réglage pour la rendre vivante ? Ou comme aujourd'hui, sans réglage (les habitants ne marchent que 9 s après un geste) ?
