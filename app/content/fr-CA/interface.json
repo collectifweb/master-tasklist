@@ -26,7 +26,7 @@
   "quest.split": "Découper",
   "quest.why": "Pourquoi?",
   "quest.already_done": "Déjà faite",
-  "quest.already_done.hint": "Pour une chose faite avant de l’écrire. Les trois premières de la journée rapportent tout; les suivantes, la moitié.",
+  "quest.already_done.hint": "Pour une chose faite avant de l’écrire.",
   "quest.note.prompt": "Un mot pour l’Almanach?",
   "quest.note.placeholder": "Ce qui s’est passé, en une phrase (facultatif)",
   "quest.note.save": "Garder ce mot",

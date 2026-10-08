@@ -96,7 +96,7 @@ Monter un quartier au niveau n coûte n permis, n × 80 Énergie et n × 60 Mat�
 
 Les niveaux 1 à 3 existent pour l'instant, sauf le Garage, arrêté au niveau 2. Les niveaux 4 et suivants viendront. Pistes : plus de Nourriture par récolte, plus de stockage, le camion de ravitaillement du Garage, et les effets que la bible promet quand leurs systèmes existeront (l'Atelier qui répare moins cher, le chasse-neige du Garage, un visiteur de plus pour la Place, une alerte annoncée plus tôt pour la Mairie).
 
-**L'effort paie.** Les points d'effort d'une quête valent arrondi(4 × longueur × (0,6 + 0,08 × difficulté) × (0,8 + 0,04 × priorité)). Une quête longue et difficile rapporte beaucoup plus que plusieurs courtes et faciles : priorité 9, longueur 2, difficulté 2 donne 7 points ; priorité 9, longueur 9, difficulté 9 en donne 55. L'ordre des quêtes (la Cote) ne change pas. Le plafond quotidien (plein tarif jusqu'à 45 points dans la journée, moitié jusqu'à 90, 20 % au-delà) et les bonus d'échéance et d'ancienneté (plafonnés à +40 %) non plus. Les valeurs d'une quête (priorité, longueur, difficulté) se figent à la première étape cochée ou 24 h après sa création.
+**L'effort paie.** Les points d'effort d'une quête valent arrondi(4 × longueur × (0,6 + 0,08 × difficulté) × (0,8 + 0,04 × priorité)). Une quête longue et difficile rapporte beaucoup plus que plusieurs courtes et faciles : priorité 9, longueur 2, difficulté 2 donne 7 points ; priorité 9, longueur 9, difficulté 9 en donne 55. L'ordre des quêtes (la Cote) ne change pas. Le plafond quotidien (plein tarif jusqu'à 45 points dans la journée, moitié jusqu'à 90, 20 % au-delà) et les bonus d'échéance et d'ancienneté (plafonnés à +40 %) non plus. Les valeurs d'une quête (priorité, longueur, difficulté) se figent à la première étape cochée ou 24 h après sa création. Le jeu ne mesure pas le temps entre la création d'une quête et sa fin : une quête finie aussitôt, ou ajoutée avec « Déjà faite », paie plein tarif, sans quota (décision du 8 octobre 2026).
 
 ## 5. Les bâtiments : un rôle chacun
 
@@ -392,7 +392,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex des 5, 6 et 7 octobre 2026
+## 15. Décisions d'Alex du 5 au 8 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -435,3 +435,15 @@ Décisions du 7 octobre 2026 (soir), lot C :
 27. **Trois visiteurs à tour de rôle** : le convoi (Matériaux), la famille du Sud (un habitant, s'il y a une place), la scientifique (1 permis). Montants laissés à la simulation.
 28. **La taille suit l'allure** : petite au ralenti, grosse au plein régime, même récompense ; ramenée au ralenti au retour d'une absence.
 29. **Envoi direct en production si tout est vert**, comme les lots I, H et A.
+
+Décisions du 8 octobre 2026 (matin), lot E :
+
+30. **L'île vivante par défaut**, tant que l'app est ouverte et à l'écran, avec « Économie de batterie » dans Réglages pour revenir à l'île qui s'arrête 9 s après un geste (§10).
+31. **Les habitants sont des figurants** : on ne les touche pas.
+32. **Envoi direct en production si tout est vert.**
+
+Décisions du 8 octobre 2026 (après-midi), lot P :
+
+33. **Le temps d'une quête ne compte pas** : une quête finie aussitôt après sa création paie comme une autre, et « Déjà faite » paie toujours plein tarif. Tricher ou non appartient au joueur ; le but est de faire de vraies tâches et d'y mettre de vraies valeurs. La règle des 10 minutes et le quota de « Déjà faite » sont retirés (§4).
+34. **Prix des niveaux gardé** (n × 80 Énergie et n × 60 Matériaux). Mesuré dans la simulation : déplacer le prix vers les Matériaux retardait le premier niveau des joueurs lents, jusqu'à 48 jours selon le joueur et le prix (rythme de l'essai parti en octobre : du jour 22 au jour 41 dès 70 Énergie et 75 Matériaux) ; garder le niveau 1 et alourdir en Matériaux les niveaux 2 et 3 ne retardait personne, mais laissait leurs Matériaux en trop aux joueurs à 2 quêtes par jour ou plus. Un échange quotidien Matériaux contre Énergie viendra dans un lot suivant.
+35. **Envoi direct en production si tout est vert.**

@@ -1010,7 +1010,7 @@ Ce qu'Alex a décidé :
 ### Ce que verra Alex
 - Une quête terminée juste après sa création paie comme les autres, bonus « bon fil » compris.
 - La case « Déjà faite » paie toujours plein tarif, même après trois par jour. Seul le plafond quotidien freine : plein tarif jusqu'à 45 points d'effort dans la journée, moitié jusqu'à 90, 20 % au-delà.
-- Rien d'autre ne change, ni à l'écran ni dans le prix des niveaux.
+- Fanal : une quête terminée aussitôt reçoit le mot d'une quête terminée (courte, moyenne ou grosse), plus « Déjà faite? ». Rien d'autre ne change, ni à l'écran ni dans le prix des niveaux.
 
 ### Prix des niveaux : mesuré, gardé tel quel (simulation, 8 octobre)
 - *Copie de la simulation (l) hors du dépôt, prix réglable : cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars, quai bâti, imprévus et tempêtes comme en (k), sans échanger au marchand ni livrer de commande. Au prix actuel, la copie redonne les chiffres du tableau (l) (très lent parti en juillet : premier niveau au jour 57, 6 niveaux, 154 soirs bloqués par l'Énergie et 193 par les Matériaux).*
@@ -1036,7 +1036,7 @@ Ce qu'Alex a décidé :
 
 ### Comment ça marche
 - La règle des 10 minutes (`core/quests.js:198`, `:225`) et le quota (`core/reward.js:16-17`, `:104` ; `core/ledger.js:110`) sont retirés. Une quête « Déjà faite » garde sa marque au registre (Fanal a ses répliques pour elle) et ne donne toujours pas le bonus « bon fil » : elle n'a jamais été dans la liste.
-- `CLIENT_VERSION` et `MIN_CLIENT` restent à 7 : un onglet resté sur l'ancienne version paierait au pire une « Déjà faite » à moitié, jamais plus que prévu, et le gain écrit au registre est celui qu'il a calculé. Le cache passe à `oree-coquille-v18`.
+- `CLIENT_VERSION` et `MIN_CLIENT` restent à 7. Un onglet resté sur l'ancienne version garde l'ancienne règle jusqu'à son rechargement : une quête finie dans les 10 minutes y compte encore comme « Déjà faite » (marque au registre, mot de Fanal « Déjà faite? », pas de « bon fil »), et la 4e « Déjà faite » du jour y paie moitié. Il ne paie jamais plus que la nouvelle règle, et la partie ne devient pas incohérente : chaque geste est calculé par un seul onglet et écrit tel quel, le serveur refuse un geste fait sur une partie qui a changé, « Remballer » reprend les montants enregistrés (vérifié par la relecture, en faisant jouer l'ancien et le nouveau code sur la même partie). Conséquence : dans le registre d'avant cet envoi, la marque `alreadyDone` ne veut pas toujours dire « case cochée ». Le cache passe à `oree-coquille-v18`.
 - Rien ne change dans la partie enregistrée : les gains déjà payés restent.
 - Leçons à appliquer d'entrée : un chiffre de la simulation se relance avant d'être écrit ; avant la série, chercher les scénarios qui créent puis terminent une quête dans la foulée et lisent son gain ou le mot de Fanal (ils passaient par « Déjà faite ») ; un échec sans lien avec le lot se relance d'abord sur `v2.6`.
 
@@ -1048,10 +1048,13 @@ Ce qu'Alex a décidé :
 
 ### P2 — Textes
 - [x] Consigne des répliques « Déjà faite » (`content/fr-CA/repliques.json:57`, « elle rapporte la moitié ») et guide des textes (`app/content/README.md:76`, « ou terminée moins de 10 minutes après sa création »).
+- *Trouvé par la relecture, que j'avais manqué : `content/fr-CA/interface.json:29` (`quest.already_done.hint`) disait encore « les suivantes, la moitié ». Aucun écran n'appelle cette clé (vérifié : toutes les aides de `js/` et `world/` ont une clé écrite en toutes lettres, la case affiche `add.done_today.hint`). Texte corrigé (« Pour une chose faite avant de l’écrire. »), clé gardée : la retirer serait retirer du code mort, à décider par Alex.*
 
 ### P3 — Vérification et documents
 - [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
 - [ ] Série navigateur complète sur code figé ; relecture indépendante par un agent Opus en lecture seule.
+- *Relecture (8 octobre, agent Opus, lecture seule, avec trois scripts qui font jouer l'ancien et le nouveau code) : rien de bloquant ; suite relancée par lui (529 tests, 0 échec) ; les quatre tests neufs échouent sur l'ancien code. Corrigé : (1) le texte mort de `interface.json:29` ; (2) la raison de garder la version 7, complétée ci-dessus ; (4) la règle gardée (« Déjà faite » sans « bon fil ») n'avait aucun test : ajouté dans `quests.test.mjs`, vu en échec dans une copie où la règle est cassée ; (6) le plan disait « rien d'autre ne change à l'écran », alors que le mot de Fanal change. Gardé : (3) l'architecture fausse au commit du cœur, corrigée au commit des documents ; (5) la première vérification de « entrée minimale » réussit aussi sur l'ancien code (elle vérifie qu'une entrée minimale ne gêne pas le calcul, sans rapport avec le quota) ; (7) un navigateur qui mélangerait un ancien `ledger.js` et le nouveau `reward.js` (fichier repris du cache quand le serveur répond en erreur, `sw.js:62`) ne démarrerait pas, l'export `alreadyDoneRate` n'existant plus. Déduction de la relecture, non observée ; même risque à chaque lot qui change un import ; un rechargement le règle.*
+- *Scénarios touchés (relecture, lu sans lancer) : seule une quête créée par le formulaire avait `createdAt`, donc seule elle passait par la règle des 10 minutes. `ui-17` est le seul scénario concerné ; le gain ne change pas (première du jour, priorité 5), le mot de Fanal oui, et aucune vérification ne le lit.*
 - [ ] Documents : `PRODUCT.md`, bible §4 et §15 (décisions du 8 octobre), `app/ARCHITECTURE.md`, `app/content/README.md`, `CLAUDE.md`, leçon (recommandation faite sans mesurer les rythmes lents).
 
 ### P4 — Envoi

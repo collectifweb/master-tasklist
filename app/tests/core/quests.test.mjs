@@ -248,6 +248,12 @@ test('« Déjà faite » : toujours plein tarif, même au-delà de 3 par jour (d
   assert.equal(w.game.quartiers.place, 5); // sans domaine : la Place du village
 });
 
+test('« Déjà faite » ne donne pas le bonus « bon fil », même prioritaire : elle n’a jamais été dans la liste', () => {
+  const s = step(fresh(), createQuest, { task: 'Déjà prioritaire', priority: 9, length: 3, difficulty: 3, alreadyDone: true });
+  assert.ok(s.r.entries.some((e) => e.type === 'reward' && e.alreadyDone), JSON.stringify(s.r.entries));
+  assert.ok(!s.r.entries.some((e) => e.bonus === 'bon-fil'), JSON.stringify(s.r.entries));
+});
+
 test('plafond quotidien dégressif : le gain en ⚡ et ▣ baisse au-delà de 45 PE du jour, la tâche compte toujours', () => {
   let w = fresh([1, 2, 3, 4].map((i) => task({ id: 'g' + i, priority: 10, length: 10, difficulty: 10 })));
   const rewards = [];
