@@ -149,9 +149,9 @@ function react(payload) {
     return;
   }
   if (action === 'remballerQuest') {
-    // l'écriture inverse de la quête, et celle de l'éolienne si le jour reste sans quête payée
-    const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0) }), { energy: 0, materials: 0 });
-    const list = [entierGain(e.energy) && `${numGain(e.energy)} ${t('resource.energy')}`, entierGain(e.materials) && `${numGain(e.materials)} ${t('resource.materials.other')}`].filter(Boolean);
+    // l'écriture inverse de la quête, et celles de l'éolienne et des producteurs du Village si le jour reste sans quête payée
+    const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0), food: a.food + (x.food || 0) }), { energy: 0, materials: 0, food: 0 });
+    const list = [entierGain(e.energy) && `${numGain(e.energy)} ${t('resource.energy')}`, entierGain(e.materials) && `${numGain(e.materials)} ${t('resource.materials.other')}`, entierGain(e.food) && `${numGain(e.food)} ${t('resource.food')}`].filter(Boolean);
     const rouverts = events.filter((e) => e.type === 'degat-rouvert').map((e) => ` ${t(`bat.sr.rouvert.${e.imprevu}`)}`).join('');
     announce.show(s, 'undo', { liveText: `${t('sr.quest.undone', { quete: title })}${list.length ? ' ' + t('sr.undone.gains', { liste: list.join(', ') }) : ''}${rouverts}${replyText}` });
     return;

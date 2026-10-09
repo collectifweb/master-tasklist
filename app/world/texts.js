@@ -101,6 +101,7 @@ function etatDebout(t, b) {
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
   if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
+  if (b.type === 'cabane') return t(`bat.etat.cabane.${b.etat === 'sucres' ? 'sucres' : 'dort'}`);
   if (b.type === 'quai' && b.visiteur) {
     const marchand = t(`bat.etat.quai.${b.visiteur.id}.${b.visiteur.joursRestants === 1 ? 'one' : 'other'}`, { n: b.visiteur.joursRestants });
     return b.commande ? `${marchand} · ${t(`bat.etat.quai.${b.commande.livree ? 'livree' : 'commande'}.${b.commande.id}`)}` : marchand;

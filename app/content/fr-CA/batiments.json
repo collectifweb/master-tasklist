@@ -1,5 +1,5 @@
 {
-  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js); comptoir.jour : l’échange du jour, sous les offres de la semaine (lot T). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I).",
+  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js); comptoir.jour : l’échange du jour, sous les offres de la semaine (lot T). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I). tour, scierie, poulailler, cabane : le rang Village (lot V); leur « Maintenant » dit la production du jour (maintenant.fait), la cabane hors saison (maintenant.dort) et la réserve pleine (fiche.production.plein).",
   "chalet": {
     "nom": "Chalet",
     "vide": "Chalet vide",
@@ -63,6 +63,49 @@
     "geste": "Rebâtir",
     "maintenant.one": "Dernier jour : le marchand repart cette nuit.",
     "maintenant.other": "Le marchand est au quai jusqu’à dimanche : encore {n} jours."
+  },
+  "tour": {
+    "nom": "Tour de guet",
+    "vide": "Emplacement de la tour de guet",
+    "quoi": "Une tour de bois au bord de la forêt, sa guérite et sa lanterne. De là-haut, on voit le temps venir sur le lac.",
+    "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour une tour de guet.",
+    "fait": "L’hiver, les tempêtes de neige s’annoncent jusqu’à {n} jours d’avance au lieu de {base} : plus de temps pour rentrer le bois.",
+    "geste": "Bâtir",
+    "maintenant": "Elle guette le lac : aucune tempête de neige en vue.",
+    "maintenant.zero": "La tempête de neige, c’est aujourd’hui.",
+    "maintenant.one": "Tempête de neige annoncée pour demain.",
+    "maintenant.other": "Tempête de neige annoncée dans {n} jours."
+  },
+  "scierie": {
+    "nom": "Scierie",
+    "vide": "Emplacement de la scierie",
+    "quoi": "Un appentis ouvert, une lame ronde et une pile de billots : le bois de la forêt devient des planches.",
+    "quoiVide": "Un coin plat de la terre gagnée sur la forêt, piqueté pour une scierie.",
+    "fait": "{n} Matériaux de plus chaque jour où tu termines au moins une quête.",
+    "geste": "Bâtir",
+    "maintenant": "Elle sciera à ta première quête terminée aujourd’hui.",
+    "maintenant.fait": "Elle a scié aujourd’hui : {n} Matériaux de plus."
+  },
+  "poulailler": {
+    "nom": "Poulailler",
+    "vide": "Emplacement du poulailler",
+    "quoi": "Un cabanon sur pilotis, sa rampe et son enclos grillagé. Les poules pondent même l’hiver.",
+    "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour un poulailler.",
+    "fait": "{n} Nourriture de plus chaque jour où tu termines au moins une quête, toute l’année, sans dépasser la réserve.",
+    "geste": "Bâtir",
+    "maintenant": "Les œufs du jour seront ramassés à ta première quête terminée aujourd’hui.",
+    "maintenant.fait": "Les œufs du jour sont ramassés : {n} Nourriture de plus."
+  },
+  "cabane": {
+    "nom": "Cabane à sucre",
+    "vide": "Emplacement de la cabane à sucre",
+    "quoi": "Une cabane de bois rond, son lanterneau sur le toit et sa corde de bois. Au printemps, l’eau d’érable y bout pour faire le sirop.",
+    "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour une cabane à sucre.",
+    "fait": "Au temps des sucres, du 1er mars au 30 avril, {n} Nourriture de plus chaque jour où tu termines au moins une quête, sans dépasser la réserve.",
+    "geste": "Bâtir",
+    "maintenant": "C’est le temps des sucres : elle bouillira à ta première quête terminée aujourd’hui.",
+    "maintenant.fait": "Elle a bouilli aujourd’hui : {n} Nourriture de plus.",
+    "maintenant.dort": "Elle dort jusqu’au temps des sucres, le 1er mars."
   },
   "comptoir": {
     "titre": "Le comptoir du marchand",
@@ -142,6 +185,8 @@
     "chalet.one": "{n} habitant sur {max}",
     "chalet.other": "{n} habitants sur {max}",
     "debout": "debout",
+    "cabane.sucres": "temps des sucres",
+    "cabane.dort": "dort jusqu’en mars",
     "quai.marchand.one": "le marchand est au quai, dernier jour",
     "quai.marchand.other": "le marchand est au quai, encore {n} jours",
     "quai.commande.convoi": "le convoi attend sa commande",
@@ -163,6 +208,7 @@
     "quoi": "Ce que c’est",
     "fait": "Ce que ça fait",
     "maintenant": "Maintenant",
+    "production.plein": "La réserve est pleine ({stock} sur {max}) : rien n’entre aujourd’hui tant qu’elle le reste.",
     "cout": "Coûte {cout}.",
     "semer": "Semer",
     "semer.cout": "Rien n’est semé. Semer coûte {cout}.",

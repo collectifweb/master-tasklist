@@ -15,6 +15,8 @@
 // cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
 // Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir. La neige d'une tempête (core/hiver.js, lot H)
 // est un dégât du même genre : « Déneiger », une quête Terrain, ou la neige qui fond.
+// Au rang Village (lot V), « Maintenant » dit ce qu'un producteur a donné aujourd'hui, ou pourquoi rien encore (la cabane
+// à sucre hors saison, la réserve pleine) ; celui de la tour de guet, la tempête annoncée.
 // Le visiteur à commande (lot C) a son bloc au-dessus du comptoir : qui il est, ce qu'il demande, ce qu'il laisse, la
 // taille de la commande quand elle n'est pas « régulière », puis « Livrer » (la seule action principale de la fiche,
 // data-geste="livrer"), le cadenas et la raison du cœur, ou « Commande livrée ».
@@ -22,13 +24,20 @@ import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
-  saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer,
+  saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer, PRODUCTION, productionDuJour, produitCeJour, TOUR_ANNONCE,
+  TEMPETE, alerteTempete,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
 import { numPossede, numManque, numGain, entierGain, shortDate } from './format.js';
 
 const typeOf = (id) => String(id ?? '').replace(/-\d+$/, '');
+// le {n} de « Ce que ça fait », lu au cœur : ce que l'éolienne et les producteurs du Village donnent par jour travaillé,
+// les jours d'annonce de la tour de guet, la place du grenier
+const N_FAIT = {
+  eolienne: EOLIENNE_ENERGIE, grenier: GRENIER_STOCKAGE, tour: TOUR_ANNONCE,
+  scierie: PRODUCTION.scierie.materials, poulailler: PRODUCTION.poulailler.food, cabane: PRODUCTION.cabane.food,
+};
 
 /** « 15 Matériaux », « 4 Énergie et 20 Matériaux » (les mêmes mots et le même ordre que le HUD et les prix des quartiers). */
 export function coutText(cout) {
@@ -116,7 +125,7 @@ export function batimentModel(c, id) {
     quoi: t(`bat.${type}.${bati ? 'quoi' : 'quoiVide'}`),
     fait: t(`bat.${type}.fait`, {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
-      n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
+      n: N_FAIT[type], base: TEMPETE.annonce,
     }),
     maintenant: '', raison: null, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };
@@ -172,6 +181,19 @@ export function batimentModel(c, id) {
     m.commande = commandeModel(game, ledger, now);
   } else if (type === 'grenier') {
     m.maintenant = t('bat.grenier.maintenant', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) });
+  } else if (type === 'tour') {
+    const a = alerteTempete(c.tasks || [], game, ledger, now);
+    m.maintenant = !a ? t('bat.tour.maintenant')
+      : t(`bat.tour.maintenant.${a.joursRestants === 0 ? 'zero' : a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants });
+  } else if (Object.hasOwn(PRODUCTION, type)) {
+    // ce qui est déjà donné aujourd'hui, la cabane hors saison, la réserve pleine (rien n'entre), ou la promesse du jour
+    const day = gameDay(now);
+    const donne = productionDuJour(ledger, day, type);
+    m.maintenant = donne > 0 ? t(`bat.${type}.maintenant.fait`, { n: numGain(donne) })
+      : !produitCeJour(type, day) ? t(`bat.${type}.maintenant.dort`)
+        : PRODUCTION[type].food && game.resources.food >= stockage(game)
+          ? t('bat.fiche.production.plein', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) })
+          : t(`bat.${type}.maintenant`);
   } else {
     m.maintenant = t(`bat.${type}.maintenant`);
   }

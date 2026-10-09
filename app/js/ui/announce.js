@@ -9,7 +9,7 @@ export function summarize(events) {
   const s = { energy: 0, materials: 0, food: 0, permis: 0, quartier: null, noGain: false, rewards: 0, tenue: false, imprevu: null, plein: false };
   for (const e of events || []) {
     if (e.type === 'reward') {
-      s.energy += e.energy || 0; s.materials += e.materials || 0; s.food += e.food || 0; // Nourriture : premiers pas
+      s.energy += e.energy || 0; s.materials += e.materials || 0; s.food += e.food || 0; // Nourriture : premiers pas, poulailler, cabane à sucre
       if (e.quartier && !s.quartier) s.quartier = e.quartier;
       s.rewards++;
     } else if (e.type === 'permis') s.permis++;
