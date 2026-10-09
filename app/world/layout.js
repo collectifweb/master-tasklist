@@ -266,7 +266,8 @@ export function decorFor(bandes = []) {
       const voisin = c + 1 < b.c + b.w && isFree(c + 1.5, b.r + 0.5);
       add(c % 2 || !voisin ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1 });
     }
-    // une souche sur un arbre coupé sur deux, et deux au milieu de la bande
+    // une souche sur un arbre coupé sur deux, et deux au milieu de la bande là où rien n'est posé (depuis le lot B, les
+    // emplacements de la tour de guet et du poulailler les recouvrent : isFree les écarte)
     coupes.filter((_, i) => i % 2 === 0).forEach((e) => add('souche', bord + 0.1, e.c + 0.15));
     for (const c of [b.c + 2.2, b.c + b.w - 2.6]) if (isFree(c + 0.5, b.r + 1.5)) add('souche', b.r + 1.2, c);
   }

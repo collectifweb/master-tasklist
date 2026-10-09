@@ -40,7 +40,7 @@
     "quoiVide": "La butte qui prend le vent du lac, piquetée pour une éolienne.",
     "fait": "{n} Énergie de plus chaque jour où tu termines au moins une quête.",
     "geste": "Bâtir",
-    "maintenant": "Elle tournera à ta première quête terminée aujourd’hui.",
+    "maintenant": "Elle tournera à ta prochaine quête terminée aujourd’hui.",
     "maintenant.fait": "Elle a tourné aujourd’hui : {n} Énergie de plus.",
     "maintenant.panne": "À l’arrêt pour l’instant : une pale est cassée.",
     "maintenant.neige": "À l’arrêt pour l’instant : la neige bloque ses pales."
@@ -83,7 +83,7 @@
     "quoiVide": "Un coin plat de la terre gagnée sur la forêt, piqueté pour une scierie.",
     "fait": "{n} Matériaux de plus chaque jour où tu termines au moins une quête.",
     "geste": "Bâtir",
-    "maintenant": "Elle sciera à ta première quête terminée aujourd’hui.",
+    "maintenant": "Elle sciera à ta prochaine quête terminée aujourd’hui.",
     "maintenant.fait": "Elle a scié aujourd’hui : {n} Matériaux de plus."
   },
   "poulailler": {
@@ -93,7 +93,7 @@
     "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour un poulailler.",
     "fait": "{n} Nourriture de plus chaque jour où tu termines au moins une quête, toute l’année, sans dépasser la réserve.",
     "geste": "Bâtir",
-    "maintenant": "Les œufs du jour seront ramassés à ta première quête terminée aujourd’hui.",
+    "maintenant": "Les œufs du jour seront ramassés à ta prochaine quête terminée aujourd’hui.",
     "maintenant.fait": "Les œufs du jour sont ramassés : {n} Nourriture de plus."
   },
   "cabane": {
@@ -103,7 +103,7 @@
     "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour une cabane à sucre.",
     "fait": "Au temps des sucres, du 1er mars au 30 avril, {n} Nourriture de plus chaque jour où tu termines au moins une quête, sans dépasser la réserve.",
     "geste": "Bâtir",
-    "maintenant": "C’est le temps des sucres : elle bouillira à ta première quête terminée aujourd’hui.",
+    "maintenant": "C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.",
     "maintenant.fait": "Elle a bouilli aujourd’hui : {n} Nourriture de plus.",
     "maintenant.dort": "Elle dort jusqu’au temps des sucres, le 1er mars."
   },

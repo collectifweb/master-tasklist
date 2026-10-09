@@ -163,7 +163,7 @@ async function plan(page) {
       await page.click('#dlg-plan [data-bat="scierie-1"]');
     }
     const f1 = await ouvrir(page);
-    R.check('la fiche promet la production du jour', f1 && f1.nom === 'Scierie' && f1.values[2] === 'Elle sciera à ta première quête terminée aujourd’hui.', JSON.stringify(f1));
+    R.check('la fiche promet la production du jour', f1 && f1.nom === 'Scierie' && f1.values[2] === 'Elle sciera à ta prochaine quête terminée aujourd’hui.', JSON.stringify(f1));
     await shot(page, '44-scierie');
     await fermer(page);
 
@@ -248,7 +248,7 @@ async function plan(page) {
       R.check('la carte en liste dit le temps des sucres', bats['cabane-1'] === 'Temps des sucres', JSON.stringify(bats));
       await pc.click('#dlg-plan [data-bat="cabane-1"]');
       const fc = await ouvrir(pc);
-      R.check('la fiche de la cabane promet la Nourriture du jour', fc && fc.nom === 'Cabane à sucre' && fc.values[2] === 'C’est le temps des sucres : elle bouillira à ta première quête terminée aujourd’hui.', JSON.stringify(fc && fc.values));
+      R.check('la fiche de la cabane promet la Nourriture du jour', fc && fc.nom === 'Cabane à sucre' && fc.values[2] === 'C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.', JSON.stringify(fc && fc.values));
       await shot(pc, '44-cabane');
     } finally {
       await cc.close();

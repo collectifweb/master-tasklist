@@ -59,11 +59,20 @@ test('ce que ça fait : les valeurs viennent du cœur', () => {
 test('maintenant, producteurs : la promesse du jour, puis ce qui a été donné', () => {
   const D = '2026-10-06';
   let w = monde(['scierie', 'poulailler']);
-  assert.equal(fiche(w, 'scierie-1', D).maintenant, 'Elle sciera à ta première quête terminée aujourd’hui.');
-  assert.equal(fiche(w, 'poulailler-1', D).maintenant, 'Les œufs du jour seront ramassés à ta première quête terminée aujourd’hui.');
+  assert.equal(fiche(w, 'scierie-1', D).maintenant, 'Elle sciera à ta prochaine quête terminée aujourd’hui.');
+  assert.equal(fiche(w, 'poulailler-1', D).maintenant, 'Les œufs du jour seront ramassés à ta prochaine quête terminée aujourd’hui.');
   w = step(w, completeQuest, { id: 'q0' }, at(D)).world;
   assert.equal(fiche(w, 'scierie-1', D).maintenant, `Elle a scié aujourd’hui : ${PRODUCTION.scierie.materials} Matériaux de plus.`);
   assert.equal(fiche(w, 'poulailler-1', D).maintenant, `Les œufs du jour sont ramassés : ${PRODUCTION.poulailler.food} Nourriture de plus.`);
+});
+
+test('maintenant, bâti après une quête du jour : il donnera à la prochaine, puis il a donné', () => {
+  const D = '2026-10-06';
+  let w = step(monde(['poulailler']), completeQuest, { id: 'q0' }, at(D)).world;
+  w.game.batiments = [...w.game.batiments, { id: 'scierie-1', type: 'scierie' }];
+  assert.equal(fiche(w, 'scierie-1', D).maintenant, 'Elle sciera à ta prochaine quête terminée aujourd’hui.');
+  w = step(w, completeQuest, { id: 'q1' }, at(D, 15)).world;
+  assert.equal(fiche(w, 'scierie-1', D).maintenant, `Elle a scié aujourd’hui : ${PRODUCTION.scierie.materials} Matériaux de plus.`);
 });
 
 test('maintenant, réserve pleine : rien n’entre ; la scierie, elle, n’est pas concernée', () => {
@@ -72,7 +81,7 @@ test('maintenant, réserve pleine : rien n’entre ; la scierie, elle, n’est p
   w.game.resources.food = stockage(w.game);
   const max = stockage(w.game);
   assert.equal(fiche(w, 'poulailler-1', D).maintenant, `La réserve est pleine (${max} sur ${max}) : rien n’entre aujourd’hui tant qu’elle le reste.`);
-  assert.equal(fiche(w, 'scierie-1', D).maintenant, 'Elle sciera à ta première quête terminée aujourd’hui.');
+  assert.equal(fiche(w, 'scierie-1', D).maintenant, 'Elle sciera à ta prochaine quête terminée aujourd’hui.');
 });
 
 test('maintenant, cabane à sucre : elle dort hors saison, même réserve pleine ; au temps des sucres, elle promet puis donne', () => {
@@ -81,7 +90,7 @@ test('maintenant, cabane à sucre : elle dort hors saison, même réserve pleine
   w.game.resources.food = stockage(w.game);
   assert.equal(fiche(w, 'cabane-1', '2027-02-20').maintenant, 'Elle dort jusqu’au temps des sucres, le 1er mars.');
   const m = monde(['cabane'], '2027-03-16');
-  assert.equal(fiche(m, 'cabane-1', '2027-03-16').maintenant, 'C’est le temps des sucres : elle bouillira à ta première quête terminée aujourd’hui.');
+  assert.equal(fiche(m, 'cabane-1', '2027-03-16').maintenant, 'C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.');
   const apres = step(m, completeQuest, { id: 'q0' }, at('2027-03-16')).world;
   assert.equal(fiche(apres, 'cabane-1', '2027-03-16').maintenant, `Elle a bouilli aujourd’hui : ${PRODUCTION.cabane.food} Nourriture de plus.`);
   // sur la carte et dans la liste

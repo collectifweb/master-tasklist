@@ -190,7 +190,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   });
   const row = (id) => cat.rows.find((r) => r.q === id) || {};
   R.check('catalogue : en tête, les permis (« Tu n’as aucun permis. … »)', /^Tu n’as aucun permis\. Le prochain/.test(cat.permis), cat.permis);
-  R.check('catalogue : section « Quartiers », six lignes, après les 7 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 7, JSON.stringify(cat.rows.map((r) => r.q)));
+  R.check('catalogue : section « Quartiers », six lignes, après les 11 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 11, JSON.stringify(cat.rows.map((r) => r.q)));
   R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 240 Énergie et 180 Matériaux', JSON.stringify(row('champs')));
   R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').suivant === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
   const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`; })());

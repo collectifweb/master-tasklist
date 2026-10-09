@@ -116,7 +116,7 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
     };
   }));
   const row = (t) => cat.find((c) => c.type === t) || {};
-  R.check('catalogue : une ligne par type de bâtiment (7), avec son dessin', cat.map((c) => c.type).join() === 'chalet,parcelle,atelier,serre,eolienne,grenier,quai' && cat.every((c) => c.thumb), JSON.stringify(cat.map((c) => c.type)));
+  R.check('catalogue : une ligne par type de bâtiment (11, le rang Village compris), avec son dessin', cat.map((c) => c.type).join() === 'chalet,parcelle,atelier,serre,eolienne,grenier,quai,tour,scierie,poulailler,cabane' && cat.every((c) => c.thumb), JSON.stringify(cat.map((c) => c.type)));
   R.check('catalogue : coût écrit (chalet)', row('chalet').cout === 'Coûte 15 Matériaux.', row('chalet').cout);
   R.check('catalogue : chalet disponible, sur le premier emplacement libre', !row('chalet').off && row('chalet').etat === 'Disponible' && row('chalet').id === 'chalet-1' && row('chalet').label === 'Rebâtir : Chalet', JSON.stringify(row('chalet')));
   R.check('catalogue : parcelle sur la 2e (la 1re est là depuis le départ)', row('parcelle').id === 'parcelle-2', JSON.stringify(row('parcelle')));
