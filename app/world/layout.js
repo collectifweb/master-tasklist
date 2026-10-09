@@ -51,6 +51,12 @@ export const PLAQUE_ANCHOR = {
   ecole: [0.15, 3.0],
   garage: [3.0, 0.15],
 };
+/** Bande gagnée (lot V) : la plaque du Garage suit la lisière replantée ; l'ancienne porte la scierie et la tour. */
+const PLAQUE_ANCHOR_BANDE = { hameau: { garage: [-0.4, -2.8] } };
+export function plaqueAnchor(s, bandes = []) {
+  for (const id of bandes) if (PLAQUE_ANCHOR_BANDE[id]?.[s]) return PLAQUE_ANCHOR_BANDE[id][s];
+  return PLAQUE_ANCHOR[s];
+}
 
 /** Contour d'un secteur en coordonnées de grille (polygone du bord des cases), pour les éclats. */
 export function sectorOutline(id) {

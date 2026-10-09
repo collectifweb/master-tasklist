@@ -7,6 +7,8 @@ import {
   BATIMENTS, PRODUCTION, EOLIENNE_ENERGIE, completeQuest, remballerQuest, construire, refusConstruire, stockage,
 } from '../../core/index.js';
 import { regrouperProductions } from '../../world/moments.js';
+import { batimentsView } from '../../world/view.js';
+import { artFor } from '../../world/models.js';
 import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
 const at = (day, h = 14) => `${day}T${String(h).padStart(2, '0')}:00:00Z`;
@@ -142,4 +144,15 @@ test('île : les productions du jour partent en un seul fil, après celui de la 
   assert.deepEqual([fils[1].energy, fils[1].materials, fils[1].food], [EOLIENNE_ENERGIE, PRODUCTION.scierie.materials, PRODUCTION.poulailler.food]);
   const autres = [{ type: 'reward', source: 'semaine', materials: 5 }, { type: 'permis' }, { type: 'reward', source: 'scierie', materials: 3 }];
   assert.deepEqual(regrouperProductions(autres), autres);
+});
+
+test('île : la cabane fume au temps des sucres, pas avant ; l’emplacement vide reste des piquets', () => {
+  const etat = (day, types = ['cabane']) => batimentsView(monde(types, day).game, [], new Date(at(day))).find((b) => b.type === 'cabane');
+  assert.equal(etat('2027-02-28').etat, 'bati');
+  assert.equal(etat('2027-03-01').etat, 'sucres');
+  assert.equal(etat('2027-04-30').etat, 'sucres');
+  assert.equal(etat('2027-05-01').etat, 'bati');
+  assert.equal(etat('2027-03-16', []).etat, 'vide');
+  assert.ok(artFor({ model: 'cabane', variant: 'sucres' }).anchors.vapeur);
+  assert.equal(artFor({ model: 'cabane', variant: '' }).anchors.vapeur, undefined);
 });

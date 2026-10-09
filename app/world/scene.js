@@ -172,11 +172,12 @@ export class Scene {
       c.innerHTML = '<svg viewBox="-20 -20 40 40" width="40" height="40" aria-hidden="true"><ellipse rx="12" ry="4" cy="2" class="ow-crys-ring"/><polygon points="0,-15 -8,-1 1,4" class="ow-crys-t"/><polygon points="0,-15 1,4 8,-1" class="ow-crys-l"/><polygon points="0,13 -8,-1 1,4" class="ow-crys-l"/><polygon points="0,13 1,4 8,-1" class="ow-crys-r"/><polygon points="0,-15 -8,-1 -4.5,-3" fill="#fff" opacity=".55"/></svg>';
       el.appendChild(c);
     }
-    if (art.anchors.smoke) {
+    const fumee = art.anchors.smoke || art.anchors.vapeur;
+    if (fumee) {
       const s = document.createElement('div');
-      s.className = 'ow-smoke';
-      s.style.left = f(art.anchors.smoke[0] - bx) + 'px';
-      s.style.top = f(art.anchors.smoke[1] - by) + 'px';
+      s.className = art.anchors.smoke ? 'ow-smoke' : 'ow-smoke ow-vapeur';
+      s.style.left = f(fumee[0] - bx) + 'px';
+      s.style.top = f(fumee[1] - by) + 'px';
       s.innerHTML = '<i></i><i></i><i></i>';
       el.appendChild(s);
     }

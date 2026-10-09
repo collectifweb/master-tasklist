@@ -4,7 +4,7 @@ import { QUARTIER_IDS, quartierOfTask } from '../core/domains.js';
 import { niveauDe, niveauMax } from '../core/quartiers.js';
 import { gameDay, daysUntil, daysBetween, dayOf, isSnowSeason } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
-import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements } from '../core/batiments.js';
+import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements, produitCeJour } from '../core/batiments.js';
 import { placesParChalet } from '../core/quartiers.js';
 import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
@@ -28,7 +28,7 @@ export function sectorView(id, game, tasks = []) {
 /**
  * Bâtiments de l'île, un par emplacement (EMPLACEMENTS), dans l'ordre du catalogue :
  * { id, type, bati, etat, refus, reste, occupants }. etat : 'vide' (pas encore bâti), 'bati', et pour une culture
- * 'seme' | 'pousse' | 'mure' ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
+ * 'seme' | 'pousse' | 'mure', pour la cabane à sucre 'sucres' (mars et avril, lot V) ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
  * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets) ;
  * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine ;
  * commande : sur le quai debout, { id, livree } du visiteur à commande de la semaine (lot C) ;
@@ -55,6 +55,7 @@ export function batimentsView(game, ledger = [], now = new Date()) {
       } else {
         b.etat = 'bati';
         if (type === 'chalet') { b.occupants = Math.min(places, loges); loges -= b.occupants; }
+        if (type === 'cabane' && produitCeJour('cabane', gameDay(now))) b.etat = 'sucres'; // le temps des sucres : elle fume
         if (type === 'quai') {
           const v = visiteurDeLaSemaine(g, now);
           if (v) b.visiteur = { id: v.id, joursRestants: v.joursRestants };

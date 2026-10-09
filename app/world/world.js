@@ -32,7 +32,7 @@
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
-  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
+  SECTOR_ORDER, SECTOR_CENTER, plaqueAnchor, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
   IMPREVU_SPOTS, decorFor,
 } from './layout.js';
 import { deriveView } from './view.js';
@@ -404,8 +404,10 @@ export function createWorld(container, options = {}) {
     }
     return true;
   }
+  let plaqueBandes = [];
   function applyPlaques(v) {
     let changed = false;
+    if ((v.bandes || []).join(' ') !== plaqueBandes.join(' ')) { plaqueBandes = v.bandes || []; changed = true; }
     for (const s of SECTOR_ORDER) changed = updatePlaque(v.sectors[s]) || changed;
     changed = sizePlaques() || changed;
     if (changed && !first) { measurePlaques(); placePlaques(); }
@@ -457,7 +459,7 @@ export function createWorld(container, options = {}) {
       const b = plaqueEls[s];
       if (!b || !plaqueSize[s]) continue;
       const [w, h] = plaqueSize[s];
-      const [u, v, mode] = PLAQUE_ANCHOR[s];
+      const [u, v, mode] = plaqueAnchor(s, plaqueBandes);
       const [x, y] = camera.toContent(...P(u, v));
       let vl = x - w / 2 - camera.sx;
       let vt = (mode === 'hang' ? y + 8 : y - h / 2) - camera.sy;

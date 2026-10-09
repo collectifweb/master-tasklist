@@ -663,7 +663,8 @@ export function poulailler() {
 /**
  * Cabane à sucre, emprise 1,4 × 1,1 : bois rond foncé, toit à deux pans et son lanterneau le long du faîtage (d'où sort la
  * vapeur de l'évaporateur), le tuyau du poêle, une corde de bois contre le pignon et un tonneau d'eau d'érable. etat
- * 'sucres' : au temps des sucres, la vapeur sort du lanterneau (fumée de l'île, scene.js).
+ * 'sucres' : au temps des sucres, la vapeur sort du lanterneau (anchors.vapeur : la fumée de l'île en bouffées plus grosses
+ * et ombrées, lisibles sur la neige et les arbres blancs ; scene.js).
  */
 export function cabane(etat = '') {
   const a = new Art();
@@ -697,7 +698,7 @@ export function cabane(etat = '') {
   a.seg([u + 0.37, V + 0.19, 5.8], [u + 0.51, V + 0.19, 5.8], 'k-wooddk-l', 0.8);
   const r = a.done(3);
   r.anchors.light = P(u + 0.68, V + 0.03, 8.5);
-  if (etat === 'sucres') r.anchors.smoke = P(u + 0.49, vm, zr + 8);
+  if (etat === 'sucres') r.anchors.vapeur = P(u + 0.49, vm, zr + 8);
   return r;
 }
 
