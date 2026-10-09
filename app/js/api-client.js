@@ -57,8 +57,10 @@ async function call(method, payload) {
  * Version 7 (allure, lot A) : l'API refuse la version 6, qui tirerait deux imprévus par semaine quelle que soit l'allure.
  * Version 8 (rang Village, lot B) : l'API refuse la version 7, qui réglerait une tempête avec 3 jours d'annonce malgré la
  * tour de guet et ne verserait pas la production de la scierie, du poulailler ni de la cabane à sucre.
+ * Version 9 (lot B, annonce de 6 jours) : l'API refuse la version 8, qui réglerait une tempête avec 7 jours d'annonce au
+ * lieu de 6 avec la tour de guet.
  */
-export const CLIENT_VERSION = 8;
+export const CLIENT_VERSION = 9;
 
 export const api = {
   get: () => call('GET'),

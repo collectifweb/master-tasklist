@@ -99,15 +99,16 @@ test('maintenant, cabane à sucre : elle dort hors saison, même réserve pleine
   assert.equal(etat(m, '2027-03-16'), 'temps des sucres');
 });
 
-test('maintenant, tour de guet : la tempête annoncée, 7 jours d’avance ; rien en vue sinon', () => {
+test('maintenant, tour de guet : la tempête annoncée, 6 jours d’avance ; rien en vue sinon', () => {
+  const A = TOUR_ANNONCE;
   let j = null;
   for (let y = 2026; y <= 2100 && !j; y++) {
     const s = tempetesDeLHiver(`${y}-12-01`);
-    j = s.find((x, i) => (!i || daysBetween(s[i - 1], x) >= 8) && ![...Array(8).keys()].some((k) => isTruce(addDays(x, -k)))) || null;
+    j = s.find((x, i) => (!i || daysBetween(s[i - 1], x) >= A + 2) && ![...Array(A + 2).keys()].some((k) => isTruce(addDays(x, -k)))) || null;
   }
   const lire = (k) => fiche(monde(['tour'], addDays(j, -k)), 'tour-1', addDays(j, -k)).maintenant;
-  assert.equal(lire(8), 'Elle guette le lac : aucune tempête de neige en vue.');
-  assert.equal(lire(7), 'Tempête de neige annoncée dans 7 jours.');
+  assert.equal(lire(A + 1), 'Elle guette le lac : aucune tempête de neige en vue.');
+  assert.equal(lire(A), `Tempête de neige annoncée dans ${A} jours.`);
   assert.equal(lire(1), 'Tempête de neige annoncée pour demain.');
   assert.equal(lire(0), 'La tempête de neige, c’est aujourd’hui.');
 });

@@ -4,8 +4,8 @@
 //   « Bâtir ») ; bâtir la paie une fois au serveur, la fiche promet la production du jour ; une quête faite inscrit la
 //   production de la scierie et du poulailler au registre, la phrase lue dit les Matériaux et la Nourriture, les fiches
 //   disent ce qui a été donné ; Remballer reprend les deux et la phrase lue le dit.
-//   Partie B (l'hiver, tour bâtie, 7 jours avant une tempête) : la rangée d'alerte paraît 7 jours d'avance ; la fiche de la
-//   tour dit la tempête annoncée.
+//   Partie B (l'hiver, tour bâtie, TOUR_ANNONCE jours avant une tempête) : la rangée d'alerte paraît 6 jours d'avance ; la
+//   fiche de la tour dit la tempête annoncée.
 //   Partie C (16 mars, cabane bâtie) : la cabane fume, sa fiche et la carte en liste disent le temps des sucres.
 // Données fictives seulement.
 const path = require('node:path');
@@ -82,7 +82,7 @@ async function plan(page) {
 
 (async () => {
   const core = await import(require('node:url').pathToFileURL(path.join(L.REPO, 'app', 'core', 'index.js')).href);
-  const { addDays, weekStart, calendrierImprevus, isTruce, tempetesDeLHiver, daysBetween, gameDay, PRODUCTION } = core;
+  const { addDays, weekStart, calendrierImprevus, isTruce, tempetesDeLHiver, daysBetween, gameDay, PRODUCTION, TOUR_ANNONCE: A } = core;
   const auj = gameDay(new Date());
 
   const village = (day, types, over = {}) => {
@@ -104,15 +104,15 @@ async function plan(page) {
     return out;
   };
 
-  // Partie B : la première tempête des prochains hivers dont les 7 jours d'annonce sont libres (hors trêve, la précédente
-  // au moins 8 jours avant), et qui tombe au moins 8 jours après aujourd'hui
+  // Partie B : la première tempête des prochains hivers dont les A jours d'annonce sont libres (hors trêve, la précédente
+  // au moins A + 1 jours avant), et qui tombe au moins 8 jours après aujourd'hui
   let J = null;
   for (let y = Number(auj.slice(0, 4)); y < Number(auj.slice(0, 4)) + 4 && !J; y++) {
     const s = tempetesDeLHiver(`${y}-12-01`);
-    J = s.find((j, i) => j > addDays(auj, 8) && (!i || daysBetween(s[i - 1], j) >= 8) && ![...Array(8).keys()].some((k) => isTruce(addDays(j, -k)))) || null;
+    J = s.find((j, i) => j > addDays(auj, 8) && (!i || daysBetween(s[i - 1], j) >= A + 1) && ![...Array(A + 1).keys()].some((k) => isTruce(addDays(j, -k)))) || null;
   }
   if (!J) throw new Error('aucune tempête libre trouvée dans les quatre prochains hivers');
-  const B = addDays(J, -7);
+  const B = addDays(J, -A);
   // Partie C : le 16 mars qui suit aujourd'hui
   const C = `${Number(auj.slice(0, 4)) + (auj.slice(5) >= '03-16' ? 1 : 0)}-03-16`;
 
@@ -208,7 +208,7 @@ async function plan(page) {
     const live2 = sp(await page.textContent('#live'));
     R.check('la phrase lue dit les Matériaux et la Nourriture repris', /Gains repris/.test(live2) && /Matériaux/.test(live2) && /Nourriture/.test(live2), live2);
 
-    // ───── Partie B : la tour de guet, 7 jours avant une tempête
+    // ───── Partie B : la tour de guet, A jours avant une tempête
     const srvB = await L.startServer({ tasks: TASKS(B), game: village(B, ['tour']), ledger: calme([B], tempetesDeLHiver(J).filter((j) => j < J)), sandbox: true });
     const { page: pb, context: cb } = await newPage();
     try {
@@ -222,12 +222,12 @@ async function plan(page) {
         const box = document.getElementById('bandeau-alerte');
         return { vu: !box.hidden && box.checkVisibility(), titre: s(box.querySelector('.bandeau-alerte-titre')?.textContent), crans: box.querySelectorAll('.bandeau-crans i').length };
       });
-      R.check('avec la tour : l’alerte paraît 7 jours avant la tempête, avec ses 3 crans', al.vu && /7 jours/.test(al.titre) && al.crans === 3, JSON.stringify(al));
+      R.check(`avec la tour : l’alerte paraît ${A} jours avant la tempête, avec ses 3 crans`, al.vu && new RegExp(`${A} jours`).test(al.titre) && al.crans === 3, JSON.stringify(al));
       await L.openPlan(pb);
       await pb.waitForSelector('#dlg-plan[open]');
       await pb.click('#dlg-plan [data-bat="tour-1"]');
       const ft = await ouvrir(pb);
-      R.check('la fiche de la tour dit la tempête annoncée', ft && ft.nom === 'Tour de guet' && ft.values[2] === 'Tempête de neige annoncée dans 7 jours.', JSON.stringify(ft && ft.values));
+      R.check('la fiche de la tour dit la tempête annoncée', ft && ft.nom === 'Tour de guet' && ft.values[2] === `Tempête de neige annoncée dans ${A} jours.`, JSON.stringify(ft && ft.values));
       await shot(pb, '44-tour');
     } finally {
       await cb.close();

@@ -121,6 +121,6 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   for (const e of reg) if (e && e.type === 'imprevu' && e.day === today && Object.hasOwn(IMPREVUS.bons, e.imprevu)) imprevus.add(e.imprevu);
   const a = alerteTempete(list, g, reg, now ?? new Date());
   const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max } : null;
-  const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / daysBetween(a.debut, a.jour) } : null; // 3 ou 7 jours (tour de guet)
+  const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / daysBetween(a.debut, a.jour) } : null; // 3 ou 6 jours (tour de guet)
   return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants) };
 }

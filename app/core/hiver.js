@@ -32,7 +32,7 @@ import { etatPremiersPas } from './objectifs.js';
  */
 export const TEMPETE = { annonce: 3, ecart: [7, 14], fin: '03-31', crans: 3, cran: { materials: 3 }, tenue: { materials: 6 } };
 /** Jours d'annonce avec une tour de guet (bible §5, lot B). */
-export const TOUR_ANNONCE = 7;
+export const TOUR_ANNONCE = 6; // 7 à l'envoi du lot B ; 6 depuis le 9 octobre (Alex : l'alerte restait affichée 63 % des jours d'hiver)
 /** Jours d'annonce de ce village : TOUR_ANNONCE avec une tour de guet debout, TEMPETE.annonce sans elle. */
 export const annonceDe = (game) => (compte(game, 'tour') ? TOUR_ANNONCE : TEMPETE.annonce);
 

@@ -254,7 +254,7 @@
       ]
     },
     "tempete.annonce": {
-      "quand": "Une tempête est annoncée (lot H) : dit une fois par appareil, à la première ouverture pendant les jours d’annonce (3, ou 7 avec la tour de guet), après l’imprévu du jour. Rassure, ne chiffre rien : les jours, la barre et le prix sont dans le bandeau et la phrase lue.",
+      "quand": "Une tempête est annoncée (lot H) : dit une fois par appareil, à la première ouverture pendant les jours d’annonce (3, ou 6 avec la tour de guet), après l’imprévu du jour. Rassure, ne chiffre rien : les jours, la barre et le prix sont dans le bandeau et la phrase lue.",
       "frequence": 1,
       "variantes": [
         {"id": "tempete.annonce.01", "voix": "fanal", "texte": "Une tempête s’en vient. Je l’ai sentie dans mes vieux boulons."},
