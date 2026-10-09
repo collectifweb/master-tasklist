@@ -833,6 +833,9 @@ export function createWorld(container, options = {}) {
   }
 
   function onFocusIn(ev) {
+    // pendant un moment, la caméra suit le moment : le focus rendu par une fiche qui se ferme (la bande du Hameau,
+    // gagnée au quai) ne la ramène pas
+    if (playing || queued) return;
     const n = ev.target;
     if (n.classList?.contains('ow-plaque') || n.classList?.contains('ow-ent')) revealEl(n);
   }

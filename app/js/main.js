@@ -634,10 +634,10 @@ document.addEventListener('click', (e) => {
       let params = {};
       try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
       markSpent(action, target);
-      const dlg = target.closest('dialog'); // la fiche se redessine pendant le geste : le bouton n'y sera plus
       const r = run(target.dataset.geste, params);
-      // un rang qui gagne une bande (lot F) : la fiche se ferme, la forêt qui recule se voit sur la carte, pas derrière
-      if (r && r.events.some((x) => x.type === 'rang' && BANDES.some((b) => b.rang === x.id))) closeSheet(dlg);
+      // un rang qui gagne une bande (lot F) : les feuilles se ferment (fiche, carte en liste d'où elle a pu s'ouvrir),
+      // la forêt qui recule se voit sur la carte, pas derrière
+      if (r && r.events.some((x) => x.type === 'rang' && BANDES.some((b) => b.rang === x.id))) for (const d of $$('dialog.sheet[open]')) closeSheet(d);
       return r;
     }
   }

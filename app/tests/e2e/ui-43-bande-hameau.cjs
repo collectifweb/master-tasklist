@@ -8,7 +8,10 @@
 //       de la Place), aucun défilement horizontal ; toucher la bande, loin de tout objet, n'ouvre rien ;
 //     - le second appareil, relu (retour sur l'onglet), dessine la bande sans moment ni phrase.
 //   Partie B : une partie déjà au Hameau a la bande dès l'ouverture, sans moment ; lanternes du soir (fin de visite),
-//     été et hiver en capture ; en mouvement réduit, l'accueil pose la bande sans la déplacer. Données fictives seulement.
+//     été et hiver en capture ; en mouvement réduit, l'accueil pose la bande sans la déplacer.
+//   Partie C : le chalet ouvert depuis la carte en liste : après l'accueil, aucune feuille ne reste ouverte.
+//   Partie D : la famille du Sud livrée au quai, ouvert depuis la carte : la bande reste à l'écran pendant tout le moment
+//     (le focus rendu au quai par la fiche qui se ferme ne ramène pas la caméra). Données fictives seulement.
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const L = require('./lib.cjs');
@@ -75,6 +78,17 @@ const solBande = (page) => page.evaluate(() => {
   return null;
 });
 const foret = (s) => s.filter((x) => x.text.includes('La forêt recule'));
+/** La bande à l'écran : part de sa boîte dans la carte, et ce qui est au centre est bien la carte (ni panneau ni barre). */
+const enVue = (page) => page.evaluate(() => {
+  const b = document.querySelector('.ow-bande');
+  if (!b) return null;
+  const r = b.getBoundingClientRect(), w = document.querySelector('.ow').getBoundingClientRect();
+  const ix = Math.max(0, Math.min(r.right, w.right, innerWidth) - Math.max(r.left, w.left, 0));
+  const iy = Math.max(0, Math.min(r.bottom, w.bottom, innerHeight) - Math.max(r.top, w.top, 0));
+  const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  return { part: Math.round((100 * ix * iy) / (r.width * r.height)), centre: !!top && !!top.closest('.ow') && !top.closest('.ow-zoom, .panel, .hud') };
+});
+const samediSuivant = () => { const d = new Date(); d.setUTCHours(14, 0, 0, 0); d.setUTCDate(d.getUTCDate() + 1); while (d.getUTCDay() !== 6) d.setUTCDate(d.getUTCDate() + 1); return d; };
 
 L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, size, tag, core }) => {
   const compact = tag < 1000;
@@ -139,8 +153,9 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
 
   // ───── Partie B : une partie déjà au Hameau ; le soir, l'été, l'hiver ; le mouvement réduit
   const sB = await L.startServer({ tasks: TASKS, game: village(core, 3) });
+  const cB = await newPage({}, touche);
   try {
-    const { page: pb } = await newPage({}, touche);
+    const pb = cB.page;
     await pb.addInitScript(L.VOICES);
     await pb.goto(sB.url);
     await L.ready(pb);
@@ -158,13 +173,13 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
     await pb.waitForTimeout(800);
     R.check('déjà au Hameau : jamais « La forêt recule »', foret(await L.said(pb)).length === 0);
     await pb.screenshot({ path: `${L.SHOTS}/43-soir-${size[0]}.png` });
-  } finally { sB.stop(); }
+  } finally { await cB.context.close(); sB.stop(); }
 
   for (const [nom, date] of [['ete', '2027-07-15T14:00:00-04:00'], ['hiver', '2026-12-10T15:00:00-05:00']]) {
     const now = new Date(date);
     const s = await L.startServer({ game: village(core, 3, now) });
+    const c = await newPage({}, touche);
     try {
-      const c = await newPage({}, touche);
       await c.page.clock.setFixedTime(now);
       await c.page.goto(s.url);
       await L.ready(c.page);
@@ -172,12 +187,13 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
       await c.page.waitForTimeout(800);
       R.check(`${nom} : la bande est là`, !!(await bande(c.page)));
       await c.page.screenshot({ path: `${L.SHOTS}/43-${nom}-${size[0]}.png` });
-    } finally { s.stop(); }
+    } finally { await c.context.close(); s.stop(); }
   }
 
   const sR = await L.startServer({ game: village(core, 2) });
+  const cR = await newPage({}, { ...touche, reducedMotion: 'reduce' });
   try {
-    const { page: pr } = await newPage({}, { ...touche, reducedMotion: 'reduce' });
+    const pr = cR.page;
     await pr.goto(sR.url);
     await L.ready(pr);
     await L.closeWelcome(pr);
@@ -192,5 +208,55 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
     const b = await bande(pr);
     if (b && b.bouge) deplacee = true;
     R.check('mouvement réduit : la bande arrive sans bouger', !!vue && !deplacee, JSON.stringify(b));
-  } finally { sR.stop(); }
+  } finally { await cR.context.close(); sR.stop(); }
+
+  // ───── Partie C : depuis la carte en liste
+  const sC = await L.startServer({ game: village(core, 2) });
+  const cC = await newPage({}, touche);
+  try {
+    const pc = cC.page;
+    await pc.goto(sC.url);
+    await L.ready(pc);
+    await L.closeWelcome(pc);
+    await L.openPlan(pc);
+    await pc.waitForSelector('#dlg-plan[open] [data-bat="chalet-2"]', { timeout: 4000 });
+    await pc.click('#dlg-plan [data-bat="chalet-2"]');
+    await pc.waitForSelector('#dlg-batiment[open] [data-action="bat-geste"][data-geste="accueillir"]', { timeout: 5000 });
+    await pc.waitForTimeout(700); // un toucher juste après l'ouverture serait le second de celui qui l'a ouverte
+    await pc.click('#dlg-batiment[open] [data-action="bat-geste"]');
+    R.check('carte en liste : après l’accueil, aucune feuille ne reste ouverte', !!await L.waitFor(async () => (await ouvertes(pc)).length === 0, 1500), JSON.stringify(await ouvertes(pc)));
+    await pc.waitForTimeout(2500);
+    R.check('carte en liste : la bande est là', !!(await bande(pc)));
+  } finally { await cC.context.close(); sC.stop(); }
+
+  // ───── Partie D : la famille du Sud livrée au quai, ouvert depuis la carte
+  const sam = samediSuivant();
+  const villageQuai = (date) => {
+    const g = village(core, 2, date);
+    g.batiments = ['chalet-1', 'chalet-2', 'atelier-1', 'serre-1', 'quai-1'].map((id) => ({ id, type: id.replace(/-\d+$/, '') }));
+    return g;
+  };
+  const jour = [0, 7, 14, 21].map((n) => new Date(sam.getTime() + n * 86400000)).find((d) => core.commandeDeLaSemaine(villageQuai(d), [], d.toISOString()).id === 'famille');
+  R.check('un samedi de la famille du Sud dans les quatre semaines', !!jour);
+  const sD = await L.startServer({ game: villageQuai(jour), sandbox: true });
+  const cD = await newPage({}, touche);
+  try {
+    const pd = cD.page;
+    await pd.clock.install({ time: jour });
+    await pd.goto(sD.url);
+    await L.ready(pd);
+    await L.closeWelcome(pd, 1500);
+    await pd.waitForTimeout(800);
+    const pq = await hitPoint(pd, 'quai-1');
+    R.check('le quai se touche', !!pq);
+    await toucher(pd, pq, compact);
+    await pd.waitForSelector('#dlg-batiment[open] .commande-go', { timeout: 5000 });
+    await pd.waitForTimeout(700);
+    await pd.click('#dlg-batiment .commande-go');
+    R.check('quai : la famille du Sud livrée, le Hameau atteint', !!await L.waitFor(() => (sD.game() || {}).habitants === 3, 5000));
+    const vues = [];
+    for (const ms of [700, 1200, 1800, 2600]) { await pd.waitForTimeout(ms - (vues.length ? [700, 1200, 1800, 2600][vues.length - 1] : 0)); vues.push(await enVue(pd)); }
+    R.check('quai : la bande reste à l’écran pendant tout le moment (focus rendu au quai sans ramener la caméra)', vues.every((v) => v && v.part >= 80 && v.centre), JSON.stringify(vues));
+    await pd.screenshot({ path: `${L.SHOTS}/43-quai-${size[0]}.png` });
+  } finally { await cD.context.close(); sD.stop(); }
 }, { game: (core) => village(core, 2) });

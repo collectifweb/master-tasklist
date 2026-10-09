@@ -203,7 +203,7 @@ function bandeStep(ctx) {
     const partent = [...avant.values()].filter((n) => /^d-/.test(n.id) && !reste.has(n.id));
     for (const n of partent) {
       ctx.fx.anim(art(n), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: 420, easing: 'ease-in', fill: 'forwards' });
-      n.shadow?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' });
+      if (n.shadow) ctx.fx.anim(n.shadow, [{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' });
     }
     await ctx.fx.wait(380);
     // 2. la terre monte de derrière l'île (le socle et le sol de l'île, dessinés après, en cachent le pied)
@@ -217,7 +217,7 @@ function bandeStep(ctx) {
     neufs.forEach((n, i) => {
       const delay = 320 + i * 60;
       ctx.fx.anim(art(n), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
-      n.shadow?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 460, delay, fill: 'backwards' });
+      if (n.shadow) ctx.fx.anim(n.shadow, [{ opacity: 0 }, { opacity: 1 }], { duration: 460, delay, fill: 'backwards' });
     });
     ctx.fx.twinkle([[x - 60, y - 34], [x + 34, y - 52], [x - 8, y - 20]]);
     await ctx.fx.wait(320 + neufs.length * 60 + 460);
