@@ -7,7 +7,7 @@ Tout le texte visible de « La lisière rallumée » vit ici, en JSON UTF-8, ave
 | `fr-CA/repliques.json` | La voix de Fanal et ses répliques, classées par situation |
 | `fr-CA/lettres.json` | Les lettres de Fanal : matin, matin sans quête, retour, passage à la v2, conversion des niveaux en permis |
 | `fr-CA/interface.json` | Les petits textes d'interface (boutons, tris, états, confirmations…) |
-| `fr-CA/batiments.json` | Les bâtiments du village : noms, fiches à trois lignes (ce que c'est, ce que ça fait, maintenant), états, annonces et textes du catalogue « Construire », la commande du visiteur dans la fiche du quai (`bat.commande.*`, lot C). Lus sous `bat.<groupe>.<clé>` ; les raisons de refus viennent de `core/batiments.js` |
+| `fr-CA/batiments.json` | Les bâtiments du village : noms, fiches à trois lignes (ce que c'est, ce que ça fait, maintenant), états, annonces et textes du catalogue « Construire », la commande du visiteur dans la fiche du quai (`bat.commande.*`, lot C), le comptoir du marchand (`bat.comptoir.*`, dont l'échange du jour sous les offres de la semaine, `bat.comptoir.jour.*`, lot T). Lus sous `bat.<groupe>.<clé>` ; les raisons de refus viennent de `core/batiments.js` |
 | `fr-CA/ancres.json` | Les objets-ancres et mots-clés qui servent à deviner le domaine. Tenu à part, voir le fichier lui-même |
 
 Vérifier un fichier après modification : `python3 -m json.tool app/content/fr-CA/repliques.json > /dev/null`.

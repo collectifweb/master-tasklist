@@ -32,7 +32,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Ressource | D'où elle vient | À quoi elle sert |
 |---|---|---|
-| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
+| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
 | **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie ; et une fois par semaine, la semaine tenue (§4) | Construire et réparer |
 | **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, faire des réserves pour l'hiver |
 | **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
@@ -168,6 +168,15 @@ Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 - il ne vend aucun permis et ne touche à aucune tâche. Un échange ne fait que convertir ce qui a déjà été gagné. Seule conséquence indirecte : de la Nourriture achetée qui remplit le grenier valide l'objectif d'automne, comme le ferait une récolte (une fois par saison, avec son permis).
 
 Taux validés par Alex le 6 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (h), départs d'octobre) : au rythme de l'essai, un joueur qui n'échange que ce qu'il a en trop achète autant de niveaux en 16 semaines et remplit le village vers la fin décembre, au lieu d'après la 16e semaine ; au rythme régulier, il gagne un niveau. Échanger de l'Énergie contre des Matériaux chaque semaine sans compter ne paie pas : 2 niveaux au lieu de 6 au rythme de l'essai.
+
+**L'échange du jour, tel qu'il est construit** (lot T, 8 octobre 2026, décisions d'Alex) :
+- en plus de ses quatre offres de la semaine, le marchand rachète chaque jour 20 Matériaux contre 10 Énergie, une fois par jour de jeu (le jour change à 4 h). Laisser passer un jour ne fait rien perdre, et rien ne s'accumule ;
+- il ne rachète que le surplus : il laisse toujours 150 Matériaux au village pour les chantiers, il en faut donc au moins 170. En dessous, la ligne reste visible avec un cadenas et sa raison (« Il manque N Matériaux. Le marchand en laisse toujours 150 au village pour les chantiers. ») ;
+- il paie moins que l'offre de la semaine dans le même sens (15 Matériaux contre 15 Énergie), qui garde son intérêt. Aucun aller-retour ne rapporte : il vend 1 Matériau 2 Énergie et le rachète une demi-Énergie ;
+- ni permis, ni tâche touchée, ni entrée au registre des gains ;
+- à l'écran : dans le comptoir, sous les offres de la semaine, une phrase (« Chaque jour, il rachète aussi tes Matériaux en trop. ») puis la ligne « 20 Matériaux → 10 Énergie » et « Échanger » ; l'échange fait, « ✓ Fait aujourd'hui » jusqu'au lendemain, 4 h.
+
+Valeurs réglées par la simulation (m) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre jusqu'au 1er mars, trois façons d'échanger, avec le vrai geste ; mesurées le 8 octobre 2026) : premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau au même jour, village plein jamais plus tard. L'échange sert les rythmes de 2 quêtes par jour et plus : avec le marchand et les commandes, de 1 à 2 niveaux de plus en 16 semaines, de 0 à 2 au 1er mars. Au rythme de l'essai et plus lent, avec le marchand et les commandes, il ne s'ouvre pas d'ici le 1er mars : ces joueurs n'ont jamais 170 Matériaux au moment où ils pourraient échanger. Sans les 150 Matériaux gardés, échanger chaque soir était un piège : aucun niveau d'ici le 1er mars chez 6 joueurs sur 10.
 
 **Les visiteurs à commande, tels qu'ils sont construits** (lot C, 7 et 8 octobre 2026, décisions d'Alex) :
 - le marchand reste chaque semaine avec son comptoir. À côté de lui, un visiteur à commande accoste chaque lundi et reste jusqu'au dimanche, chacun son tour : le convoi, la famille du Sud, la scientifique (une semaine sur trois chacun). Le tour se lit d'après la date seule (la semaine du lundi 5 octobre 2026 est celle du convoi) : tous les appareils voient le même visiteur, même hors ligne. Sans quai rebâti, personne ;
@@ -445,5 +454,10 @@ Décisions du 8 octobre 2026 (matin), lot E :
 Décisions du 8 octobre 2026 (après-midi), lot P :
 
 33. **Le temps d'une quête ne compte pas** : une quête finie aussitôt après sa création paie comme une autre, et « Déjà faite » paie toujours plein tarif. Tricher ou non appartient au joueur ; le but est de faire de vraies tâches et d'y mettre de vraies valeurs. La règle des 10 minutes et le quota de « Déjà faite » sont retirés (§4).
-34. **Prix des niveaux gardé** (n × 80 Énergie et n × 60 Matériaux). Mesuré dans la simulation : déplacer le prix vers les Matériaux retardait le premier niveau des joueurs lents, jusqu'à 48 jours selon le joueur et le prix (rythme de l'essai parti en octobre : du jour 22 au jour 41 dès 70 Énergie et 75 Matériaux) ; garder le niveau 1 et alourdir en Matériaux les niveaux 2 et 3 ne retardait personne, mais laissait leurs Matériaux en trop aux joueurs à 2 quêtes par jour ou plus. Un échange quotidien Matériaux contre Énergie viendra dans un lot suivant.
+34. **Prix des niveaux gardé** (n × 80 Énergie et n × 60 Matériaux). Mesuré dans la simulation : déplacer le prix vers les Matériaux retardait le premier niveau des joueurs lents, jusqu'à 48 jours selon le joueur et le prix (rythme de l'essai parti en octobre : du jour 22 au jour 41 dès 70 Énergie et 75 Matériaux) ; garder le niveau 1 et alourdir en Matériaux les niveaux 2 et 3 ne retardait personne, mais laissait leurs Matériaux en trop aux joueurs à 2 quêtes par jour ou plus. Un échange quotidien Matériaux contre Énergie viendra dans un lot suivant (lot T, décision 36).
 35. **Envoi direct en production si tout est vert.**
+
+Décisions du 8 octobre 2026 (soir), lot T :
+
+36. **L'échange du jour se fait chez le marchand, au quai** : Alex voyait l'échange chez lui, « le commerçant, son rôle c'était vraiment ça ». 20 Matériaux contre 10 Énergie, une fois par jour, 150 Matériaux toujours laissés au village (§7). Le lieu était laissé au choix entre l'atelier et le quai. Retenu le quai, parce que c'est l'image qu'en a Alex et que l'atelier ne l'ouvrirait presque jamais plus tôt, faute de 170 Matériaux avant le quai.
+37. **Envoi direct en production si tout est vert.**
