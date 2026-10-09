@@ -1412,3 +1412,4 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
 2. Récompense du repas : « De l'Énergie ».
 3. Partie de sucre : « Objectif de printemps » — l'objectif « Faire les sucres ».
 4. Sirop : « Vendu tout seul » — ce qui ne rentre pas dans la réserve part au marchand, de l'Énergie en plus ce jour-là ; il faut le quai.
+5. Partie de sucre, avec ou sans cabane (question posée après les quatre premières) : « Sans cabane » — le village entaille les érables de l'île, la partie se fait même sans cabane bâtie. Prix : la moitié du stockage de base (10 sans grenier, 30 avec un), le quart au ralenti (5 et 15). La table de tire se pose près de la cabane si elle est bâtie, sinon près des érables.

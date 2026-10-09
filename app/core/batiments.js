@@ -66,6 +66,12 @@ export const PRODUCTION = {
   poulailler: { food: 1 },
   cabane: { food: 4, mois: [3, 4] },
 };
+/**
+ * Le sirop (lot N, choix d'Alex du 9 octobre 2026) : ce que la cabane à sucre ne peut pas ranger dans une réserve pleine
+ * part au marchand, `energie` Énergie par Nourriture, plus cher que son comptoir (1 Énergie pièce). Il faut le quai (le
+ * marchand) ; sans lui, rien ne part. Le poulailler n'en fait pas.
+ */
+export const SIROP = { energie: 1.5 };
 
 const own = (o, k) => typeof k === 'string' && Object.hasOwn(o, k);
 // Nombres entiers dans les phrases (l'état garde ses dixièmes ; on n'arrondit que ce qu'on écrit).
@@ -392,9 +398,17 @@ export function produireEolienne(ctx) {
 
 /** Ce qu'un bâtiment producteur (PRODUCTION) a donné et qui reste acquis ce jour-là : productions moins reprises. */
 export function productionDuJour(ledger, day, type) {
-  const res = PRODUCTION[type].materials ? 'materials' : 'food';
-  return round1(ledger.filter((e) => e.type === 'prod' && e.batiment === type && e.day === day).reduce((s, e) => s + (Number(e[res]) || 0), 0));
+  return netDuJour(ledger, day, type)[PRODUCTION[type].materials ? 'materials' : 'food'];
 }
+
+/** Tout ce qu'un producteur a donné et qui reste acquis ce jour-là, ressource par ressource (le sirop compte en Énergie). */
+export function netDuJour(ledger, day, type) {
+  const net = { energy: 0, materials: 0, food: 0 };
+  for (const e of ledger) if (e.type === 'prod' && e.batiment === type && e.day === day) for (const k of Object.keys(net)) net[k] += Number(e[k]) || 0;
+  for (const k of Object.keys(net)) net[k] = round1(net[k]);
+  return net;
+}
+const aDonne = (net) => net.energy > 0 || net.materials > 0 || net.food > 0;
 
 /** Vrai si ce bâtiment producteur travaille ce jour-là (la cabane à sucre dort hors du temps des sucres). */
 export const produitCeJour = (type, day) => !PRODUCTION[type].mois || PRODUCTION[type].mois.includes(mois(day));
@@ -407,11 +421,16 @@ export const produitCeJour = (type, day) => !PRODUCTION[type].mois || PRODUCTION
 export function produireBatiments(ctx) {
   for (const [type, def] of Object.entries(PRODUCTION)) {
     const n = compte(ctx.game, type);
-    if (!n || !produitCeJour(type, ctx.day) || productionDuJour(ctx.ledger, ctx.day, type) > 0) continue;
-    const gain = def.materials
-      ? { materials: def.materials * n }
-      : { materials: 0, food: round1(Math.min(def.food * n, Math.max(0, stockage(ctx.game) - ctx.game.resources.food))) };
-    if (!(gain.materials > 0 || gain.food > 0)) continue;
+    if (!n || !produitCeJour(type, ctx.day) || aDonne(netDuJour(ctx.ledger, ctx.day, type))) continue;
+    let gain;
+    if (def.materials) gain = { materials: def.materials * n };
+    else {
+      const food = round1(Math.min(def.food * n, Math.max(0, stockage(ctx.game) - ctx.game.resources.food)));
+      // le sirop : ce que la réserve ne prend pas part au marchand (il faut le quai)
+      const sirop = type === 'cabane' && compte(ctx.game, 'quai') ? round1((def.food * n - food) * SIROP.energie) : 0;
+      gain = { materials: 0, food, ...(sirop > 0 ? { energy: sirop } : {}) };
+    }
+    if (!aDonne({ energy: 0, materials: 0, food: 0, ...gain })) continue;
     const key = cleLibre(ctx.ledger, `prod:${type}:${ctx.day}`);
     ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: type, pe: 0, energy: 0, ...gain }, type);
   }
@@ -421,10 +440,11 @@ export function produireBatiments(ctx) {
 export function reprendreBatiments(ctx, day) {
   if (jourPaye(ctx.ledger, day)) return;
   for (const [type, def] of Object.entries(PRODUCTION)) {
-    const net = productionDuJour(ctx.ledger, day, type);
-    if (net <= 0) continue;
+    const net = netDuJour(ctx.ledger, day, type);
+    if (!aDonne(net)) continue;
     const key = cleLibre(ctx.ledger, `reprise:${type}:${day}`, 1);
-    ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: type, reprise: true, pe: 0, energy: 0, ...(def.materials ? { materials: -net } : { materials: 0, food: -net }) }, type);
+    const inverse = def.materials ? { materials: -net.materials } : { materials: 0, food: net.food > 0 ? -net.food : 0, ...(net.energy > 0 ? { energy: -net.energy } : {}) };
+    ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: type, reprise: true, pe: 0, energy: 0, ...inverse }, type);
   }
 }
 

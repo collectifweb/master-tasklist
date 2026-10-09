@@ -43,10 +43,20 @@ export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
  * (départ du 7 octobre, où il n'en fait jamais 10). À une quête par semaine, 2 à 4 récoltes. À l'automne, le grenier se remplit
  * d'ordinaire avant que l'allure puisse descendre ; à moitié, le joueur très lent parti l'été l'atteint le 1er septembre au
  * lieu du 19.
+ * Le printemps : « Faire les sucres » (lot N, choix d'Alex du 9 octobre 2026), un geste du 1er mars au 30 avril, sans
+ * cabane : le village entaille les érables de l'île. Son prix en Nourriture suit le stockage de base (`part`, au ralenti
+ * `partRalenti`) ; avoir la Nourriture ne suffit pas, il faut la partie de sucre (faireLesSucres). L'été reste « à venir ».
  */
 export const OBJECTIFS_SAISON = {
   automne: { id: 'grenier', partRalenti: 0.5, recompense: { energy: 3, materials: 10, permis: 1 } },
   hiver: { id: 'serre', recoltes: 10, recoltesRalenti: 6, recompense: { energy: 3, materials: 10, permis: 1 } },
+  printemps: { id: 'sucres', part: 0.5, partRalenti: 0.25, recompense: { energy: 3, materials: 10, permis: 1 } },
+};
+
+/** Prix de la partie de sucre en Nourriture : la moitié du stockage de base (au ralenti, le quart), arrondi au-dessus. */
+export const prixPartieDeSucre = (game, ralenti = false) => {
+  const o = OBJECTIFS_SAISON.printemps;
+  return Math.ceil(stockageBase(game) * (ralenti ? o.partRalenti : o.part));
 };
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -79,12 +89,18 @@ export function noterRecolteHiver(g, lieu, day) {
 
 // Avancée de chaque objectif de saison : { stock, max } ; atteint quand stock ≥ max. Le grenier se mesure au stockage de
 // base (départ et greniers) : monter la Place ne rend pas l'objectif plus dur. `ralenti` : la cible réduite (allure).
+// Les sucres : { stock, max, faite, geste } ; la Nourriture prête sur le prix, mais atteint seulement une fois faite.
 const AVANCEE = {
   grenier: (game, cle, ralenti) => ({ stock: round1(game.resources.food), max: ralenti ? Math.ceil(stockageBase(game) * OBJECTIFS_SAISON.automne.partRalenti) : stockageBase(game) }),
   serre: (game, cle, ralenti) => ({ stock: recoltesHiver(game, cle), max: ralenti ? OBJECTIFS_SAISON.hiver.recoltesRalenti : OBJECTIFS_SAISON.hiver.recoltes }),
+  sucres: (game, cle, ralenti) => {
+    const max = prixPartieDeSucre(game, ralenti);
+    const faite = game.sucres === cle;
+    return { stock: faite ? max : Math.min(round1(game.resources.food), max), max, faite, geste: true };
+  },
 };
 const auRalenti = (game, ledger, day) => allureDe(game, ledger, day).niveau === 'ralenti';
-const atteint = (id, game, cle, ralenti) => { const a = AVANCEE[id](game, cle, ralenti); return a.stock >= a.max; };
+const atteint = (id, game, cle, ralenti) => { const a = AVANCEE[id](game, cle, ralenti); return a.geste ? a.faite : a.stock >= a.max; };
 
 /** Saison du vrai calendrier pour un jour de jeu : { id, cle }. L'hiver de décembre 2026 à février 2027 est hiver-2026. */
 export function saisonDe(day) {
@@ -223,6 +239,38 @@ function suivreSaison(ctx) {
 export function suivreObjectifs(ctx) {
   suivrePremiersPas(ctx);
   suivreSaison(ctx);
+}
+
+// ───────── La partie de sucre (objectif de printemps) ─────────
+
+/** Pourquoi on ne peut pas faire la partie de sucre maintenant (ou null). Ordre : saison, déjà faite, Nourriture. */
+export function refusFaireLesSucres(game, ledger, params, now) {
+  const day = gameDay(now);
+  const m = Number(day.slice(5, 7));
+  if (m <= 2 || m === 12) return 'Le temps des sucres commence le 1er mars.';
+  if (m > 4) return 'Le temps des sucres est fini\u00a0: il revient le 1er mars.';
+  const { cle } = saisonDe(day);
+  if (game.sucres === cle || hasKey(ledger, saisonKey(cle))) return 'La partie de sucre est déjà faite ce printemps.';
+  const manque = round1(prixPartieDeSucre(game, auRalenti(game, ledger, day)) - game.resources.food);
+  return manque > 0 ? `Il manque ${Math.ceil(manque)} Nourriture.` : null;
+}
+
+/**
+ * Fait la partie de sucre : la Nourriture est payée (game.set), game.sucres = printemps-AAAA, puis l'objectif de la
+ * saison est validé par suivreObjectifs (registre saison:printemps-AAAA, son permis). Événement { type: 'sucres', nourriture }.
+ */
+export function faireLesSucres(tasks, game, ledger, params, now) {
+  const ctx = new Ctx(tasks, game, ledger, params, now);
+  const refus = refusFaireLesSucres(ctx.game, ctx.ledger, params, now);
+  if (refus) throw new Error(refus);
+  const prix = prixPartieDeSucre(ctx.game, auRalenti(ctx.game, ctx.ledger, ctx.day));
+  const g = structuredClone(ctx.game);
+  g.resources.food = round1(g.resources.food - prix);
+  g.sucres = saisonDe(ctx.day).cle;
+  ctx.game = g;
+  ctx.events.push({ type: 'sucres', nourriture: prix });
+  suivreObjectifs(ctx);
+  return ctx.result();
 }
 
 /** Tenue : les écrans d'accueil ont été vus (game.accueil = jour). Une seule fois ; ensuite, sans effet. */
