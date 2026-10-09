@@ -1374,3 +1374,34 @@ Choix d'Alex : « 6 jours (Recommandé) », avec un nouvel envoi. Mesuré avant 
 3. **La tour qui compte les jours d'avant elle** : « c'est correct ». Gardé ; la bible §8 le dit, validé.
 4. **L'alerte affichée près de deux jours d'hiver sur trois avec la tour** : « c'est peut-être un petit peu trop haut. Si on peut faire de quoi, c'est bien. Sinon, c'est pas grave. » Options à mesurer et proposer après l'envoi.
 5. **Points visuels** (3 souches au lieu de 5, la cabane en partie derrière l'éolienne, la pastille du Garage sous la bulle de Fanal à 390 px) : « c'est OK ».
+
+## Lot N — Ce que la Nourriture achète (proposé le 9 octobre 2026, à valider)
+
+Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l'option C de trouver d'autres usages à la nourriture »), puis son choix de trois pistes : la partie de sucre, le repas du dimanche, le sirop au marchand. Point de départ mesuré (B2 bis, joueurs simulés) : une fois le village plein, la réserve reste au plafond ; le poulailler a donné 161 jours sur 563, la cabane 9 jours sur 214 en mars et avril. Règles à garder (bible §2, PRODUCT.md) : la Nourriture ne se dépense que par un geste choisi, jamais en cachette ; personne ne part, personne n'a faim ; un bonus reste plafonné ; aucune tâche réelle n'est touchée ; ne rien faire ne fait rien perdre.
+
+**Statut : plan seulement. Rien n'est codé avant les réponses d'Alex et la validation du plan.**
+
+### Proposition (mes choix, chacun *à valider*)
+- **Repas du dimanche** : une fois par semaine de jeu, un geste « Servir le repas » sur la Place : X Nourriture contre une petite récompense fixe, en Énergie (la ressource qui manque le plus souvent, d'après la simulation du lot C). Une fois par semaine au plus (clé de la semaine au registre, comme la commande du quai) ; ne pas le servir ne fait rien perdre. À l'écran : une longue table sur la Place le jour où il est servi.
+- **Partie de sucre** : une fois par printemps, du 1er mars au 30 avril, cabane bâtie : un geste « Faire la partie de sucre » à la cabane : Y Nourriture contre 1 permis et un décor qu'on ne trouve nulle part ailleurs (la table de tire sur la neige, qui reste). Elle devient l'objectif de printemps « Faire les sucres » prévu par la bible (§6), à côté de ceux de l'automne et de l'hiver.
+- **Sirop au marchand** : le plus simple. Quand la réserve est pleine, ce que la cabane ne peut pas ranger part en sirop, que le marchand achète au passage : Z Énergie de plus ce jour-là, plus que la même Nourriture vendue au comptoir (1 Énergie pièce). Pas de nouveau stock à afficher ; la fiche de la cabane le dit. Il faut le quai (le marchand) ; sans lui, rien ne change.
+
+### N1 — Mesure d'abord (simulation, hors dépôt puis dans `simulation.test.mjs`)
+- [ ] Combien de Nourriture se perd au plafond, par semaine, une fois le village plein (récoltes et productions), pour les cinq joueurs.
+- [ ] Prix X, Y, Z tels que : personne ne recule (niveaux, Hameau, village plein, tempêtes) ; le repas absorbe une bonne part du surplus d'une semaine ; la partie de sucre se paie en deux ou trois semaines de surplus ; le sirop rapporte moins qu'une journée de quêtes.
+
+### N2 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] Les trois gestes, leurs refus avec raison, une seule fois par semaine ou par printemps (clé au registre), deux appareils ou un double toucher ne paient jamais deux fois, un geste hors ligne recalculé à son heure.
+- [ ] Version du client et cache, si une règle change pour un vieil onglet.
+
+### N3 — Écrans et île [impeccable]
+- [ ] Le geste dans la fiche de la Place et dans celle de la cabane ; la table du repas, la table de tire ; les phrases lues ; Fanal.
+
+### N4 — Vérification, documents, envoi
+- [ ] Suite de logique, scénario navigateur neuf, série complète, relecture Opus en lecture seule ; bible §2, §5, §6 ; `app/ARCHITECTURE.md`, `app/DESIGN.md` ; envoi sur accord d'Alex.
+
+### Questions pour Alex (avant N1)
+1. Le repas : seulement le dimanche, ou une fois par semaine, le jour de ton choix ?
+2. Sa récompense : de l'Énergie (ma recommandation) ou des Matériaux ?
+3. La partie de sucre comme objectif de printemps « Faire les sucres » (ma recommandation), ou un geste à part ?
+4. Le sirop : vendu automatiquement au marchand quand la réserve est pleine (ma recommandation, le plus simple), ou un petit stock de cruches que tu vends toi-même au comptoir ?
