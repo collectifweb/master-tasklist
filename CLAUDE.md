@@ -16,7 +16,7 @@ Ce que contient le dépôt :
 
 L’app historique (`index.html` à la racine), le prototype 006 « Orée vivante » et les autres maquettes (`sketches/001` à `007`) ont été retirés du dépôt le 9 octobre 2026 ; ils restent dans l’étiquette `v2.10.1` et les précédentes.
 
-Le dépôt est public, sous licence PolyForm Noncommercial 1.0.0 (`LICENSE.md`, au nom d’Alexandre Alves) : `README.md` le présente, `docs/INSTALLATION.md` guide une installation chez un hébergeur PHP pour quelqu’un d’autre qu’Alex. La branche `main` de GitHub est ce qu’on clone par défaut : elle suit la version en production. Après un envoi, l’y avancer : `git push Master_tasklist '<étiquette>^{commit}:refs/heads/main'` (avance rapide seulement, jamais de poussée forcée).
+Le dépôt est public, sous licence PolyForm Noncommercial 1.0.0 (`LICENSE.md`, au nom d’Alexandre Alves) : `README.md` le présente, `docs/INSTALLATION.md` guide une installation chez un hébergeur PHP pour quelqu’un d’autre qu’Alex. La branche `main` de GitHub est ce qu’on clone par défaut : elle suit la version en production. `deploy-prod.sh` l’y avance tout seul à la fin d’un envoi (avance rapide seulement : après un retour arrière, elle reste en place). La v2.10.2 (9 octobre 2026) a le même dossier `app/` que la v2.10.1 : c’est la première version publiée sur GitHub (README, guide d’installation, licence), rien à envoyer.
 
 ## Commandes
 
