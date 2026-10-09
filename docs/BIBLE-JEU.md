@@ -32,16 +32,16 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Ressource | D'où elle vient | À quoi elle sert |
 |---|---|---|
-| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
+| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7), et le sirop de la cabane à sucre quand la réserve est pleine (§5) ; une fois par semaine, le repas du village (§5) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
 | **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie ; et une fois par semaine, la semaine tenue (§4) | Construire et réparer |
-| **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, faire des réserves pour l'hiver |
+| **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, servir le repas de la semaine (§5), faire la partie de sucre au printemps (§6), faire des réserves pour l'hiver |
 | **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
 
 **Les permis ne sont pas une ressource.** Un compteur « Permis » à part, à droite des quatre ressources dans la barre du haut, dit combien il en reste à placer. Il ne sert qu'à monter un quartier (§4).
 
 **Ce qui disparaît** : Lueur, Fil libre, Souffler, cendre, voile et Confiance. Leur rôle passe aux Habitants (la progression) et aux quartiers (des réglages du jeu que tu fais monter, au choix, avec des permis).
 
-**Règle d'or** : la Nourriture n'est jamais consommée en cachette. On la dépense pour un geste choisi (accueillir, échanger, mettre en réserve). Personne ne meurt de faim, personne ne part.
+**Règle d'or** : la Nourriture n'est jamais consommée en cachette. On la dépense pour un geste choisi (accueillir, échanger, servir le repas, faire la partie de sucre, mettre en réserve). Personne ne meurt de faim, personne ne part.
 
 ## 4. Les deux progressions
 
@@ -118,7 +118,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Tour de guet | Village | Annonce les tempêtes de neige jusqu'à 6 jours d'avance au lieu de 3 |
 | Scierie | Village | Donne des Matériaux en plus les jours où tu as travaillé |
 | Poulailler | Village | Un peu de Nourriture, même l'hiver |
-| Cabane à sucre | Village | Grosse récolte au temps des sucres (mars-avril) |
+| Cabane à sucre | Village | Grosse récolte au temps des sucres (mars-avril) ; réserve pleine, le marchand du quai achète le reste en sirop |
 | Marché | Bourg | Échanger sans attendre un visiteur |
 | École | Bourg | Les habitants produisent un peu plus |
 | Centrale solaire | Bourg | De l'Énergie en plus, surtout l'été |
@@ -130,6 +130,21 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 - la fiche de chacun dit, dans « Maintenant », ce qu'il a donné aujourd'hui, ou pourquoi rien encore (hors saison, réserve pleine) ; celle de la tour, la tempête annoncée (§8) ;
 - rien ne tombe en panne ni sous la neige dans ce lot : seules l'éolienne et la serre le peuvent.
 
+**Ce que la Nourriture achète** (lot N, 9 octobre 2026 ; choix d'Alex du matin, valeurs réglées par la simulation (o) et
+*à valider par Alex* ; pas encore en ligne). Une fois le village plein, la réserve restait au plafond et la Nourriture en
+trop se perdait. Elle sert maintenant à trois choses de plus :
+- **le repas de la semaine**, depuis la fiche de la Place : une fois par semaine (du lundi au dimanche), le jour que tu
+  choisis, le village mange ensemble ; 15 Nourriture contre 15 Énergie. Il attend une première famille. **Les familles
+  d'abord** : tant qu'une place est libre au chalet, le repas ne prend pas la Nourriture qui accueillerait la prochaine
+  famille (la fiche dit combien il en faut). Ne pas le servir ne fait rien perdre. La semaine où il est servi, une longue
+  tablée est dressée sur la Place, devant la lanterne ;
+- **la partie de sucre**, l'objectif du printemps (§6) ;
+- **le sirop** : au temps des sucres, réserve pleine, ce que la cabane à sucre ne peut pas ranger part au marchand du
+  quai, 1,5 Énergie par Nourriture, sans geste à faire ; sans le quai, rien n'entre. Remballer le reprend comme le reste
+  de la production du jour. La fiche de la cabane le dit dans « Maintenant ».
+D'après la simulation (o), avec ce garde-fou personne ne recule (Hameau, premier niveau, niveaux au 1er mai, village
+plein), que le joueur serve le repas chaque semaine ou seulement quand la réserve déborde.
+
 Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village.
 
 ## 6. Les saisons : le vrai calendrier du Nord
@@ -140,7 +155,7 @@ Le jeu suit la date réelle. Quand il neige dehors, il neige à l'Orée.
 |---|---|---|---|
 | Automne | septembre à novembre | Récoltes, couleurs ; alerte du premier gel | Remplir le grenier pour l'hiver |
 | Hiver | décembre à mars (neige au sol du 15 novembre au 30 avril) | Le potager dort. Serre et poulailler seuls produisent de la Nourriture, jusqu'au temps des sucres en mars ; la serre consomme de l'Énergie. Tempêtes de neige. Trêve des Fêtes du 21 décembre au 4 janvier : aucune alerte | Garder la serre allumée : 10 récoltes de serre |
-| Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue ; semis en mai | Faire les sucres |
+| Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue ; semis en mai | Faire les sucres : la partie de sucre, en mars ou en avril |
 | Été | juin à août | Pleine production ; mouches noires en juin ; fête de la Saint-Jean le 24 juin ; plus de visiteurs | Accueillir une nouvelle famille |
 
 Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : un décor unique, un permis, une famille qui s'installe.
@@ -149,6 +164,16 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
 - du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
 - objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Au ralenti (§9), 6 récoltes suffisent, et le grenier à moitié à l'automne. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
 - les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler (qui produit même l'hiver) et la tour de guet (qui prévient plus tôt) arrivent au rang Village (lot B, §5 et §8) ; le garage à chasse-neige viendra plus tard.
+
+**Le printemps, tel qu'il est construit** (lot N, 9 octobre 2026, choix d'Alex ; pas encore en ligne) :
+- objectif de printemps, « Faire les sucres » : la partie de sucre, un geste à faire depuis la fiche de la Place, du
+  1er mars au 30 avril, une fois par printemps. Avoir la Nourriture ne suffit pas. Pas besoin de cabane à sucre ;
+- son prix : la moitié de la réserve de base, soit 10 Nourriture au départ et 30 avec un grenier ; au ralenti (§9), le
+  quart (5, ou 15 avec un grenier). Récompense comme les autres saisons : 3 Énergie, 10 Matériaux et 1 permis. Les
+  familles d'abord, comme pour le repas (§5) ;
+- au temps des sucres, la case « Cette saison » du bandeau mène à la fiche de la Place ; une fois la partie faite, une
+  table de tire attend sur la neige, devant la cabane à sucre si elle est bâtie, sinon près de l'érable, jusqu'au
+  30 avril. En mai, si elle n'a pas été faite, le bandeau dit qu'elle revient le 1er mars : rien n'est perdu.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
 
@@ -475,3 +500,10 @@ Décisions du 8 octobre 2026 (soir), lot F :
 
 38. **La bande du Hameau arrive vide** : « J'aime mieux que l'espace permette de mettre de nouveaux bâtiments plutôt que de jouer sur les bâtiments existants pour les mettre sur la bande. » L'éolienne et le grenier restent où ils sont ; la bande attend les bâtiments du rang Village (§4). L'autre choix proposé était d'y déménager leurs emplacements.
 39. **Envoi direct en production si tout est vert.**
+
+Décisions du 9 octobre 2026 (matin), lot N :
+
+40. **D'autres usages à la Nourriture**, une fois le village plein, plutôt que de la laisser se perdre (§5).
+41. **Le repas de la semaine** : un jour au choix, une fois par semaine ; il rapporte de l'Énergie.
+42. **La partie de sucre est l'objectif de printemps** (« Faire les sucres »), et elle se fait sans cabane.
+43. **Le sirop est vendu tout seul** au marchand quand la réserve est pleine ; il faut le quai.
