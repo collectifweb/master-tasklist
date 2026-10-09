@@ -1356,7 +1356,9 @@ Choix d'Alex : « 6 jours (Recommandé) », avec un nouvel envoi. Mesuré avant 
 - [x] `TOUR_ANNONCE` = 6 (`core/hiver.js`) ; les tests de la tour, de la fiche et du scénario 44 lisent la constante au lieu d'un 7 écrit en dur.
 - [x] Version 9 (`CLIENT_VERSION`, `MIN_CLIENT`) : un onglet sur la v2.10 réglerait une tempête avec 7 jours ; cache `oree-coquille-v22`.
 - [x] Bible §5 et §8, `app/ARCHITECTURE.md`, note de rédaction des répliques ; `CLAUDE.md` à l'envoi.
-- [ ] Suite de logique, scénarios 38 (tempêtes) et 44 ; envoi `v2.10.1`.
+- [x] Suite de logique, scénarios 38 (tempêtes) et 44 ; envoi `v2.10.1`.
+- [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts (version 9 : un onglet sur la v2.10 est refusé à l'écriture jusqu'au rechargement, rien ne se perd).
+- *Envoyé le 9 octobre vers 8 h 35 : étiquette `v2.10.1` = 670fea6 (code de l'app identique au commit testé ; seul `CLAUDE.md` a changé depuis), poussée avec la branche. Photo de la production `api/data/backups/avant-v2.10.1-20261009-083502/` (4 empreintes identiques ; la partie avait changé depuis la photo de 7 h 44, Alex jouait). `deploy-prod.sh v2.10.1` : app 200, API sans code 401, avec code 200, données 403, config vide vue de l'extérieur, cache `oree-coquille-v22`, pas de bac à sable. En ligne : les 84 fichiers de l'étiquette, identiques, plus les 4 fichiers propres au serveur ; données inchangées depuis la photo. Non vérifié en production : le refus d'un client 8 (l'essayer écrirait s'il passait ; couvert par `tests/api/migration.test.mjs`, et `api/api.php` en ligne est identique à l'étiquette). Retour arrière : `deploy-prod.sh v2.10`, et la photo pour les données.*
 - *Vérifié (9 octobre, matin) : sur 75 hivers (2026 à 2100, 812 tempêtes), l'écart minimal entre deux tempêtes est de 7 jours ; avec 6 jours, 18 annonces seulement sont raccourcies, toutes par la trêve. Suite de logique : 588 tests, 586 réussis, aucun échec, 2 « à faire » (les mêmes). Scénarios 38 (146 vérifications) et 44 (80 ; « l'alerte paraît 6 jours avant la tempête » aux trois largeurs), réussis.*
 
 ### Bilan du lot B (nuit du 9 octobre, pas encore envoyé)
