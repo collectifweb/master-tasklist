@@ -38,6 +38,19 @@ export function rangDuVillage(habitants) {
   return { ...rangAt(p), suivant: { ...next, encore: next.min - n } };
 }
 
+/**
+ * Bandes de terrain gagnées sur la forêt (bible §4, lot F), dans l'ordre : chacune vient avec un rang. Les habitants ne
+ * baissent jamais, donc une bande gagnée ne repart pas ; rien n'est écrit dans la partie. Leur place sur l'île :
+ * world/layout.js (BANDES_ILE).
+ */
+export const BANDES = [{ id: 'hameau', rang: 'hameau' }];
+
+/** Identifiants des bandes gagnées avec ce nombre d'habitants. */
+export function bandesGagnees(habitants) {
+  const p = rangDuVillage(habitants).palier;
+  return BANDES.filter((b) => RANGS.findIndex((r) => r.id === b.rang) <= p).map((b) => b.id);
+}
+
 // Tâches à atteindre pour le niveau v (v ≥ 1).
 const seuilDe = (v) => v <= NIVEAUX_QUARTIER.length
   ? NIVEAUX_QUARTIER[v - 1]

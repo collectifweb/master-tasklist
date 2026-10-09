@@ -9,6 +9,7 @@ import { placesParChalet } from '../core/quartiers.js';
 import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
 import { TEMPETE, alerteTempete } from '../core/hiver.js';
+import { bandesGagnees } from '../core/village.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
@@ -73,7 +74,8 @@ export function batimentsView(game, ledger = [], now = new Date()) {
  * ledger (registre, pour les cultures et les imprévus ; facultatif) }. Ne lit que des champs connus et tolère un état
  * partiel. imprevus : les bons imprévus reçus aujourd'hui (aurore, peche, trouvaille, orignal), que l'île montre le jour même.
  * Hiver (lot H) : neige, l'île sous la neige (du 15 novembre au 30 avril) ; tempete, l'alerte en cours { jour,
- * joursRestants, crans, max } ou null ; avis, son front de givre { sector, progress (0 à l'annonce, 1 le jour même) }.
+ * joursRestants, crans, max } ou null ; avis, son front de givre { sector, progress (0 à l'annonce, 1 le jour même) } ;
+ * bandes (lot F) : les bandes de terrain gagnées sur la forêt, selon les habitants (core/village.js).
  */
 export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const g = game || {};
@@ -116,5 +118,5 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const a = alerteTempete(list, g, reg, now ?? new Date());
   const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max } : null;
   const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / TEMPETE.annonce } : null;
-  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, neige: isSnowSeason(today), tempete, avis };
+  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants) };
 }

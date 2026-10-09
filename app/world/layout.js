@@ -214,6 +214,58 @@ export const DECOR = (() => {
   return out;
 })();
 
+// ---------------------------------------------------------------- bandes gagnées sur la forêt (lot F)
+/**
+ * Place de chaque bande (core/village.js, BANDES) : cases ajoutées au fond de l'île, en grille comme les repères
+ * (rangées négatives : derrière le bord r = 0). Celle du Hameau longe le bord du fond côté Garage et Mairie sans en
+ * atteindre les coins : l'île garde son emprise à l'écran, le cadrage ne change pas. Elle arrive vide.
+ */
+export const BANDES_ILE = { hameau: { r: -2, c: 2, h: 2, w: 8 } };
+const bandeDe = (id) => (Object.hasOwn(BANDES_ILE, id) ? BANDES_ILE[id] : null);
+
+/** Cases [r, c] des bandes gagnées. */
+export function bandeCells(bandes = []) {
+  const out = [];
+  for (const b of bandes.map(bandeDe).filter(Boolean)) {
+    for (let r = b.r; r < b.r + b.h; r++) for (let c = b.c; c < b.c + b.w; c++) out.push([r, c]);
+  }
+  return out;
+}
+
+/** Cases de chaque secteur, bandes gagnées comprises (sans bande : CELLS). */
+export function cellsFor(bandes = []) {
+  const extra = bandeCells(bandes);
+  if (!extra.length) return CELLS;
+  const out = Object.fromEntries(SECTOR_ORDER.map((id) => [id, CELLS[id].slice()]));
+  for (const [r, c] of extra) out[sectorAt(r, c)].push([r, c]);
+  return out;
+}
+
+const ARBRES = new Set(['epinette', 'arbre', 'erable']);
+/**
+ * Décor avec les bandes gagnées. La lisière recule : les arbres du bord, au droit de la bande, se replantent sur sa
+ * rangée du fond (mêmes essences, même trouée pour la route) ; des souches restent sur la terre gagnée. Sans bande : DECOR.
+ */
+export function decorFor(bandes = []) {
+  let out = DECOR;
+  for (const b of bandes.map(bandeDe).filter(Boolean)) {
+    const bord = b.r + b.h; // l'ancien bord de l'île, juste devant la bande
+    const auDroit = (e) => e.c >= b.c && e.c < b.c + b.w;
+    const coupes = out.filter((e) => ARBRES.has(e.model) && Math.floor(e.r) === bord && auDroit(e));
+    out = out.filter((e) => !coupes.includes(e));
+    const R = rng(b.c * 31 + b.w);
+    const add = (model, r, c, extra = {}) => out.push({ id: `d-${model}-${r}-${c}`, model, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: Math.floor(R() * 1e6), ...extra });
+    for (let c = b.c; c < b.c + b.w; c++) {
+      if (!isFree(c + 0.5, b.r + 0.5)) continue;
+      add(c % 2 ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1 });
+    }
+    // une souche sur un arbre coupé sur deux, et deux au milieu de la bande
+    coupes.filter((_, i) => i % 2 === 0).forEach((e) => add('souche', bord + 0.1, e.c + 0.15));
+    for (const c of [b.c + 2.2, b.c + b.w - 2.6]) if (isFree(c + 0.5, b.r + 1.5)) add('souche', b.r + 1.2, c);
+  }
+  return out;
+}
+
 /** Touffes d'herbe et fleurs posées sur le sol, par secteur. */
 export function groundDetails(seed = 9) {
   const R = rng(seed);

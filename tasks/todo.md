@@ -1229,8 +1229,9 @@ Le lot ne contient que la première bande. Hors du lot : les bâtiments du rang 
 - Leçons à appliquer d'entrée : en isométrique, un objet posé derrière un autre disparaît (tout regarder à l'écran aux trois largeurs avant d'affiner) ; avant de poser une couleur, relire les « Don't » de `app/DESIGN.md` et `.impeccable/design.json` ; une capture à une autre date fige l'horloge du navigateur (la bande sous la neige) ; un changement de dessin partagé se valide par la série complète ; avant la série, chercher les scénarios qui comptent le décor ou mesurent une position au fond de l'île.
 
 ### F1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] Bandes gagnées : 0, 1 ou 2 habitants → aucune ; 3 → celle du Hameau ; 40 → toujours une seule (les suivantes n'existent pas encore) ; habitants illisibles → aucune.
-- [ ] Les cases de la bande ne recouvrent aucune case de l'île de départ, et la bande gagnée ne fait sortir l'île du cadre actuel (`BOUNDS`) à aucune largeur.
+- [x] Bandes gagnées : 0, 1 ou 2 habitants → aucune ; 3 → celle du Hameau ; 40 → toujours une seule (les suivantes n'existent pas encore) ; habitants illisibles → aucune.
+- [x] Les cases de la bande ne recouvrent aucune case de l'île de départ, et la bande gagnée ne fait sortir l'île du cadre actuel (`BOUNDS`) à aucune largeur.
+- *Fait (8 octobre, au soir) : `BANDES` et `bandesGagnees` dans `core/village.js` ; `bandes` dans la vue de l'île (`world/view.js`) ; dans `world/layout.js`, `BANDES_ILE` (rangées −2 et −1, colonnes 2 à 9), `bandeCells`, `cellsFor` et `decorFor` (la lisière replantée sur la rangée du fond de la bande, même trouée pour la route du Garage ; des souches sur la terre gagnée ; sans bande, le décor d'aujourd'hui, à l'identique). 11 tests (`tests/core/bandes.test.mjs`), vus en échec avant le code (export absent). Contre-épreuves dans une copie : bande au rang Village ou Campement, vue sans bandes, bande sur toute la longueur du bord, bande trop profonde, arbres gardés, lisière non replantée, souches absentes, route ignorée ; chacune vue par au moins un test. Tests voisins (rang, bâtiments, deuxième serre, île vivante, typographie, répliques) : 63 sur 63.*
 
 ### F2 — L'île [impeccable]
 - [ ] La bande, la lisière qui recule, les souches, le bout de falaise.
