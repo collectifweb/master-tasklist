@@ -1458,13 +1458,20 @@ Constats (9 octobre, avant le ménage) :
 
 Décisions d'Alex (9 octobre) : hébergeur PHP pour son amie (le mode « un seul appareil » viendra plus tard) ; licence qui interdit l'usage commercial, au nom d'Alexandre Alves (PolyForm Noncommercial 1.0.0) ; retirer de `main` ce qui ne sert plus, garder tout ce qui touche Hermes (il ne sait pas si la machine d'Hermes tire le script depuis GitHub) ; une capture du jeu dans le README, quêtes fictives ; pousser `main` et changer la description GitHub.
 
-- [ ] Retirer l'app historique (`index.html`, `tasks-server.py`, `run-public-tunnel.sh`), `sketches/` et `CONTRIBUTING.md` ; mettre à jour `CLAUDE.md`, `.gitignore` et la revue d'octobre (où retrouver les maquettes : étiquette `v2.10.1`).
-- [ ] `LICENSE.md` : texte officiel de PolyForm Noncommercial 1.0.0, avis « Copyright 2026 Alexandre Alves ».
-- [ ] README neuf : le jeu, ce qu'il faut pour l'héberger, les dossiers, lancer et tester en local, Hermes en option, les archives.
-- [ ] `docs/INSTALLATION.md` : guide pas à pas pour un hébergeur PHP (fichier de quêtes et données hors du web, code d'accès, mise à jour, sauvegardes).
-- [ ] Captures du jeu avec des quêtes fictives (`docs/captures/`).
-- [ ] Passe /humanize sur le README et le guide.
-- [ ] Essai d'installation neuve en suivant le guide à la lettre (PHP 8.3 + Apache dans Docker), liste de quêtes vide.
-- [ ] Contrôle de confidentialité (motifs interdits) sur la branche.
-- [ ] Pousser `main` (avance rapide depuis l'ancienne `main`), description et sujets GitHub.
-- [ ] Reporter sur `feat/village-v2` (fusion préparée dans la copie séparée, puis avance rapide quand l'autre session a commité).
+- [x] Retirer l'app historique (`index.html`, `tasks-server.py`, `run-public-tunnel.sh`), `sketches/` et `CONTRIBUTING.md` ; mettre à jour `CLAUDE.md`, `.gitignore` et la revue d'octobre (où retrouver les maquettes : étiquette `v2.10.1`).
+- [x] `LICENSE.md` : texte officiel de PolyForm Noncommercial 1.0.0, avis « Copyright 2026 Alexandre Alves ».
+- [x] README neuf : le jeu, ce qu'il faut pour l'héberger, les dossiers, lancer et tester en local, Hermes en option, les archives.
+- [x] `docs/INSTALLATION.md` : guide pas à pas pour un hébergeur PHP (fichier de quêtes et données hors du web, code d'accès, mise à jour, sauvegardes).
+- [x] Captures du jeu avec des quêtes fictives (`docs/captures/`).
+- [x] Passe /humanize sur le README et le guide.
+- [x] Essai d'installation neuve en suivant le guide à la lettre (PHP 8.3 + Apache dans Docker), liste de quêtes vide.
+- [x] Contrôle de confidentialité (motifs interdits) sur la branche.
+- [x] Pousser `main` (avance rapide depuis l'ancienne `main`), description et sujets GitHub.
+- [x] Reporter sur `feat/village-v2` (fusion préparée dans la copie séparée, puis avance rapide quand l'autre session a commité).
+
+### Bilan du ménage (9 octobre 2026, après-midi)
+- Fait : `main` sur GitHub avancée de `5c91c8b` à `4a93c0e` (v2.10.1 + ménage, sans poussée forcée) ; ancienne app, `sketches/` et `CONTRIBUTING.md` retirés (57 fichiers, 16 560 lignes ; les images binaires ne comptent pas de lignes) ; `LICENSE.md` (texte officiel tiré du dépôt `polyformproject/polyform-licenses`) ; README neuf avec deux captures ; `docs/INSTALLATION.md` ; description et sujets GitHub. Le lien du site sur GitHub (le domaine de la production) n'a pas été touché : à trancher par Alex.
+- Vérifié : 588 tests de logique et d'API sur la branche, 586 réussis, 0 échec, 2 « à faire » (les mêmes qu'au lot B). Installation neuve suivie à la lettre dans Docker (`php:8.3-apache`, `.htaccess` lus) à partir d'un clone : les trois façons de calculer l'empreinte donnent la même ; `api/config.php` répond vide, `serveur/rappel.php` 403, l'API 401 sans code ; dans Chromium, un mauvais code est refusé, le bon ouvre les trois écrans de bienvenue, une quête ajoutée puis faite s'écrit dans `tasks.json`, le registre et les sauvegardes ; sans `tasks.json`, « Impossible de charger tes quêtes ». Un code avec espaces ou avec accents est refusé même avec la bonne empreinte (Chromium). Contrôle de confidentialité (38 motifs) passé sur la branche ; captures sans métadonnées texte.
+- Pas vérifié : un vrai hébergeur mutualisé (droits d'écriture de PHP, version exacte) ; Nginx ; l'ajout à l'écran d'accueil sur un vrai téléphone ; Safari pour les accents.
+- Report sur `feat/village-v2` : fusion préparée dans une copie séparée (`report-menage`), seul conflit dans ce plan (deux sections ajoutées à la fin, gardées toutes les deux, aucune ligne du lot N perdue).
+- Reste à décider par Alex : le lien du site sur GitHub ; avancer `main` à chaque envoi depuis `deploy-prod.sh` (proposé, pas fait : l'outil est partagé avec l'autre session) ; savoir si la machine d'Hermes tire ses fichiers de GitHub, avant de les ranger.
