@@ -2,7 +2,8 @@
 // arrière de l'emprise. Chaque fonction renvoie { svg, x, y, w, h, shadow, anchors } (voir iso.js : Art.done).
 // Les modèles du décor fixe : lanterne, cloture, caisse, etabli, erable, glaciere. Bâtiments du joueur : chalet,
 // parcelle, atelier, serre, eolienne, grenier, quai, tour (de guet), scierie, poulailler, cabane (à sucre), et piquets
-// (chantier possible). Décor : epinette, arbre, buisson, rocher, et souche (la bande gagnée sur la forêt, lot F).
+// (chantier possible). Décor : epinette, arbre, buisson, rocher, et souche (la bande gagnée sur la forêt, lot F). Fêtes
+// (lot N) : tablee (le repas de la semaine), tire (la partie de sucre).
 // Fanal : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
@@ -953,6 +954,63 @@ export function bois() {
   return a.done(2);
 }
 
+// Disque à plat (bol de soupe, sirop dans un chaudron), n pans, à la hauteur z.
+const disque = (a, cu, cv, R, z, cls, n = 6) => a.poly(Array.from({ length: n }, (_, k) => { const t = ((k + 0.5) / n) * Math.PI * 2; return [cu + Math.cos(t) * R, cv + Math.sin(t) * R, z]; }), cls);
+
+/**
+ * Le repas de la semaine (lot N) : une longue tablée sur la Place, dans le sens de la route du quai (v), un banc de chaque
+ * côté, une nappe, des bols de bois et la marmite de soupe aux pois qui fume au milieu (anchors.smoke). Emprise 0,5 (u)
+ * × 0,9 (v). La soupe n'est pas en `squash` : c'est la couleur de la tire (tire()).
+ */
+export function tablee() {
+  const a = new Art();
+  const v0 = 0.05, v1 = 0.86, tu = 0.12, tdu = 0.28;
+  const banc = (u) => {
+    for (const y of [v0 + 0.1, v1 - 0.15]) a.box(u + 0.01, y, 0.05, 0.05, 0, 6, 'woodd');
+    a.box(u, v0 + 0.05, 0.07, v1 - v0 - 0.1, 6, 1.6, 'woodb', { rim: true });
+  };
+  banc(0.02);
+  for (const [x, y] of [[tu + 0.03, v0 + 0.04], [tu + 0.03, v1 - 0.09], [tu + tdu - 0.08, v0 + 0.04], [tu + tdu - 0.08, v1 - 0.09]]) a.box(x, y, 0.05, 0.05, 0, 11, 'woodd');
+  a.box(tu, v0, tdu, v1 - v0, 11, 2, 'woodb', { rim: true });
+  a.poly([[tu + 0.04, v0 + 0.04, 13.05], [tu + tdu - 0.04, v0 + 0.04, 13.05], [tu + tdu - 0.04, v1 - 0.04, 13.05], [tu + 0.04, v1 - 0.04, 13.05]], 'paper-t');
+  // bols et marmite, du fond vers l'avant
+  const bols = [[0.19, 0.17], [0.19, 0.3], [0.19, 0.65], [0.19, 0.77], [0.33, 0.15], [0.33, 0.28], [0.33, 0.63], [0.33, 0.75]];
+  const marmite = [0.26, 0.46];
+  const tous = [...bols.map((p) => ({ p })), { p: marmite, m: true }].sort((x, y) => x.p[0] + x.p[1] - (y.p[0] + y.p[1]));
+  for (const { p, m } of tous) {
+    if (!m) { a.prism(p[0], p[1], 0.055, 13, 2.6, 'woodd', 6, { cast: false, top: false }); disque(a, p[0], p[1], 0.045, 15.6, 'wheat-t'); }
+    else { a.prism(p[0], p[1], 0.1, 13, 7, 'wooddk', 8, { cast: false, top: false }); disque(a, p[0], p[1], 0.085, 20, 'wheat-l', 8); a.anchor('smoke', p[0], p[1], 21); }
+  }
+  banc(0.42);
+  return a.done(2);
+}
+
+/**
+ * La partie de sucre (lot N) : une auge de bois remplie de neige où refroidissent les bandes de tire, deux bâtonnets
+ * piqués dans la neige, et le chaudron de sirop qui fume sur ses pierres (anchors.smoke). Emprise 1 (u) × 0,45 (v).
+ * La tire est en `squash` : `amber` prend la neige l'hiver (palette.js), et le temps des sucres finit le 30 avril.
+ */
+export function tire() {
+  const a = new Art();
+  const u = 0.06, v = 0.08, du = 0.62, dv = 0.3, z = 8, H = 4;
+  for (const [x, y] of [[u + 0.04, v + 0.03], [u + du - 0.09, v + 0.03], [u + 0.04, v + dv - 0.08], [u + du - 0.09, v + dv - 0.08]]) a.box(x, y, 0.05, 0.05, 0, z, 'woodd');
+  a.box(u, v, du, dv, z, H, 'woodb', { rim: true });
+  const e = 0.04;
+  a.poly([[u + e, v + e, z + H], [u + du - e, v + e, z + H], [u + du - e, v + dv - e, z + H], [u + e, v + dv - e, z + H]], 'snow-t');
+  for (const x of [0.16, 0.27, 0.38, 0.49]) a.seg([x, v + 0.07, z + H + 0.2], [x + 0.015, v + dv - 0.07, z + H + 0.2], 'k-squash-l', 2.2);
+  for (const [x, y] of [[0.59, 0.16], [0.6, 0.28]]) {
+    a.seg([x, y, z + H], [x, y, z + H + 7], 'k-woodb-l', 1.1);
+    a.prism(x, y, 0.025, z + H + 5.5, 2.2, 'squash', 5, { cast: false });
+  }
+  // le chaudron, sur trois pierres
+  const cu = 0.86, cv = 0.24;
+  for (const [x, y] of [[cu - 0.08, cv - 0.05], [cu + 0.07, cv - 0.06], [cu, cv + 0.08]]) a.prism(x, y, 0.04, 0, 2.5, 'stone', 5, { cast: false });
+  a.prism(cu, cv, 0.1, 2.5, 6, 'wooddk', 8, { top: false });
+  disque(a, cu, cv, 0.085, 8.5, 'squash-l', 8);
+  a.anchor('smoke', cu, cv, 9.5);
+  return a.done(2);
+}
+
 /** Bonne pêche : une caisse de poissons au bout de la route du quai, emprise 0,5 × 0,5, filet posé dessus. */
 export function poissons() {
   const a = new Art();
@@ -1150,6 +1208,8 @@ export function artFor(e) {
     case 'orignal': return orignal();
     case 'bois': return bois();
     case 'poissons': return poissons();
+    case 'tablee': return tablee();
+    case 'tire': return tire();
     case 'grenier': return grenier();
     case 'quai': return quai(e.variant || '');
     case 'tour': return tour();

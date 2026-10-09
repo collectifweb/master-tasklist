@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  PRODUCTION, TOUR_ANNONCE, TEMPETE, completeQuest, stockage, tempetesDeLHiver, addDays, daysBetween, isTruce, PAS_IDS,
+  PRODUCTION, TOUR_ANNONCE, TEMPETE, completeQuest, stockage, tempetesDeLHiver, addDays, daysBetween, isTruce, PAS_IDS, SIROP,
 } from '../../core/index.js';
 import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
@@ -97,6 +97,23 @@ test('maintenant, cabane à sucre : elle dort hors saison, même réserve pleine
   const etat = (w2, day) => nb(batimentEtat(t, batimentsView(w2.game, w2.ledger, new Date(at(day))).find((b) => b.type === 'cabane')));
   assert.equal(etat(w, '2027-02-20'), 'dort jusqu’en mars');
   assert.equal(etat(m, '2027-03-16'), 'temps des sucres');
+});
+
+test('maintenant, cabane à sucre et sirop (lot N) : réserve pleine, le sirop part au marchand s’il y a le quai', () => {
+  const D = '2027-03-16';
+  const avec = monde(['cabane', 'quai'], D);
+  const max = stockage(avec.game);
+  avec.game.resources.food = max;
+  assert.equal(fiche(avec, 'cabane-1', D).maintenant, `La réserve est pleine (${max} sur ${max}) : à ta prochaine quête terminée aujourd’hui, le sirop partira au marchand.`);
+  const sans = monde(['cabane'], D);
+  sans.game.resources.food = max;
+  assert.equal(fiche(sans, 'cabane-1', D).maintenant, `La réserve est pleine (${max} sur ${max}) : rien n’entre aujourd’hui. Avec le quai rebâti, le marchand achèterait le sirop.`);
+  const tout = step(avec, completeQuest, { id: 'q0' }, at(D)).world;
+  assert.equal(fiche(tout, 'cabane-1', D).maintenant, `Elle a bouilli aujourd’hui : la réserve était pleine, tout le sirop est vendu au marchand pour ${PRODUCTION.cabane.food * SIROP.energie} Énergie.`);
+  const part = monde(['cabane', 'quai'], D);
+  part.game.resources.food = max - 1;
+  const reste = step(part, completeQuest, { id: 'q0' }, at(D)).world;
+  assert.equal(fiche(reste, 'cabane-1', D).maintenant, `Elle a bouilli aujourd’hui : 1 Nourriture de plus, et le sirop qui ne rentrait pas est vendu au marchand pour ${Math.round((PRODUCTION.cabane.food - 1) * SIROP.energie)} Énergie.`); // l'écran montre des entiers
 });
 
 test('maintenant, tour de guet : la tempête annoncée, 6 jours d’avance ; rien en vue sinon', () => {

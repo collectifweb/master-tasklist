@@ -43,6 +43,9 @@ export function situationFor(action, params, events, task) {
     case 'reparer': return regle();
     // la récolte qui atteint l'objectif d'hiver (lot H) ; les autres récoltes ne disent rien
     case 'recolter': return events.some((e) => e.type === 'objectif-saison' && e.objectif === 'serre') ? 'saison.serre' : null;
+    // le repas de la semaine et la partie de sucre, qui fait l'objectif du printemps (lot N)
+    case 'servirRepas': return has('repas') ? 'repas.servi' : null;
+    case 'faireLesSucres': return has('sucres') ? 'saison.sucres' : null;
     default: return null;
   }
 }

@@ -188,6 +188,18 @@ export const IMPREVU_SPOTS = {
   trouvaille: { model: 'bois', r: 3.15, c: 6.7, h: 0.6, w: 0.85 },
 };
 
+/**
+ * Fêtes (lot N) : la tablée du repas de la semaine sur la Place, devant la lanterne et Fanal, dans le sens de la route du
+ * quai : seul coin de la Place que sa plaque ne cache pas à 390 px ; la table de tire de la partie de
+ * sucre devant la cabane à sucre quand elle est bâtie (à droite de la souche, au bord de la terre gagnée), sinon entre la
+ * glacière et l'érable. L'île les montre la semaine du repas et le printemps de la partie (world/view.js : fetes).
+ */
+export const FETE_SPOTS = {
+  repas: { model: 'tablee', r: 7.25, c: 7.55, h: 0.9, w: 0.5 },
+  tire: { model: 'tire', r: 9.15, c: 6.85, h: 0.45, w: 1.0 },
+  'tire-cabane': { model: 'tire', r: 0.12, c: 9.2, h: 0.45, w: 1.0 },
+};
+
 // ---------------------------------------------------------------- décor (arbres, buissons, rochers)
 // Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe.
 function isFree(u, v) {

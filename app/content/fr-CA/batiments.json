@@ -101,11 +101,15 @@
     "vide": "Emplacement de la cabane à sucre",
     "quoi": "Une cabane de bois rond, son lanterneau sur le toit et sa corde de bois. Au printemps, l’eau d’érable y bout pour faire le sirop.",
     "quoiVide": "Un coin de la terre gagnée sur la forêt, piqueté pour une cabane à sucre.",
-    "fait": "Au temps des sucres, du 1er mars au 30 avril, {n} Nourriture de plus chaque jour où tu termines au moins une quête, sans dépasser la réserve.",
+    "fait": "Au temps des sucres, du 1er mars au 30 avril, {n} Nourriture de plus chaque jour où tu termines au moins une quête, sans dépasser la réserve. Quand elle est pleine, le marchand du quai achète le reste en sirop : {sirop} Énergie par Nourriture.",
     "geste": "Bâtir",
     "maintenant": "C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.",
     "maintenant.fait": "Elle a bouilli aujourd’hui : {n} Nourriture de plus.",
-    "maintenant.dort": "Elle dort jusqu’au temps des sucres, le 1er mars."
+    "maintenant.dort": "Elle dort jusqu’au temps des sucres, le 1er mars.",
+    "maintenant.fait.sirop": "Elle a bouilli aujourd’hui : {n} Nourriture de plus, et le sirop qui ne rentrait pas est vendu au marchand pour {e} Énergie.",
+    "maintenant.fait.sirop.seul": "Elle a bouilli aujourd’hui : la réserve était pleine, tout le sirop est vendu au marchand pour {e} Énergie.",
+    "maintenant.plein.sirop": "La réserve est pleine ({stock} sur {max}) : à ta prochaine quête terminée aujourd’hui, le sirop partira au marchand.",
+    "maintenant.plein.sansQuai": "La réserve est pleine ({stock} sur {max}) : rien n’entre aujourd’hui. Avec le quai rebâti, le marchand achèterait le sirop."
   },
   "comptoir": {
     "titre": "Le comptoir du marchand",
@@ -254,7 +258,9 @@
     "rouvert.gel": "La culture n’est plus couverte.",
     "rouvert.neige": "La neige retombe sur le bâtiment déneigé.",
     "eolienne.arretee": "L’éolienne en panne n’a pas tourné.",
-    "eolienne.arretee.neige": "L’éolienne ensevelie n’a pas tourné."
+    "eolienne.arretee.neige": "L’éolienne ensevelie n’a pas tourné.",
+    "repas": "Repas servi sur la Place : {donne} contre {recoit}.",
+    "sucres": "Partie de sucre faite : {n} Nourriture partagées autour de la tire."
   },
   "plan": {
     "titre": "Bâtiments",

@@ -33,7 +33,7 @@ import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   SECTOR_ORDER, SECTOR_CENTER, plaqueAnchor, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
-  IMPREVU_SPOTS, decorFor,
+  IMPREVU_SPOTS, FETE_SPOTS, decorFor,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -125,6 +125,11 @@ export function entitiesFor(v, tasks = []) {
   for (const id of v.imprevus || []) {
     const s = IMPREVU_SPOTS[id];
     if (s) list.push({ id: `imprevu-${id}`, sector: sectorAt(Math.floor(s.r), Math.floor(s.c)), ...s });
+  }
+  // fêtes (lot N) : la tablée du repas de la semaine, la table de tire du printemps (décor, rien à toucher)
+  for (const id of v.fetes || []) {
+    const s = FETE_SPOTS[id];
+    if (s) list.push({ id: `fete-${id}`, sector: sectorAt(Math.floor(s.r), Math.floor(s.c)), ...s });
   }
   v.crates.forEach((cr, i) => {
     const [u, vv] = CRATE_SPOTS[i];

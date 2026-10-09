@@ -1072,8 +1072,14 @@
 .bandeau-visiteur[hidden] {
   display: none;
 }
-.bandeau-semaine:has(.bandeau-visiteur:not([hidden])) {
+.bandeau-semaine:has(.bandeau-visiteur:not([hidden])),
+.bandeau-saison:has(.bandeau-sucres:not([hidden])) {
   cursor: pointer;
+}
+/* Cette saison, au temps des sucres (lot N) : la même ligne touchable, qui ouvre la fiche de la Place ; la feuille
+   d'érable remplace la coche. Le texte simple et le bouton ne sont jamais montrés ensemble, à aucune largeur. */
+.bandeau .bandeau-saison .bandeau-value[hidden] {
+  display: none;
 }
 .bandeau-visiteur {
   display: flex;
@@ -1112,7 +1118,8 @@
   border-radius: var(--r-lg);
 }
 @media (hover: hover) {
-  .bandeau-semaine:has(.bandeau-visiteur:not([hidden])):hover {
+  .bandeau-semaine:has(.bandeau-visiteur:not([hidden])):hover,
+  .bandeau-saison:has(.bandeau-sucres:not([hidden])):hover {
     background: var(--c-paper-raised);
   }
 }

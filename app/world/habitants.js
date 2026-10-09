@@ -11,7 +11,7 @@
 // Le chemin est cherché sur une grille fine (PAS) : les routes coûtent le moins, l'herbe davantage, et une case où la
 // figurine serait cachée derrière un dessin (bâtiment, arbre) coûte cher. Les bâtiments, repères, décors, caisses,
 // imprévus et Fanal bloquent leur pied. Le chemin est ensuite tendu (lignes droites tant que le terrain ne change pas).
-import { N, EMPLACEMENTS, LANDMARKS, DECOR, CRATE_SPOTS, IMPREVU_SPOTS, FANAL_HOME, PORTES, POSTES, POSTE_PLACE } from './layout.js';
+import { N, EMPLACEMENTS, LANDMARKS, DECOR, CRATE_SPOTS, IMPREVU_SPOTS, FETE_SPOTS, FANAL_HOME, PORTES, POSTES, POSTE_PLACE } from './layout.js';
 import { artFor } from './models.js';
 import { P } from './iso.js';
 import { potagerOuvert } from '../core/batiments.js';
@@ -49,6 +49,7 @@ function obstacles() {
   }
   for (const [u, v] of CRATE_SPOTS) blocs.push({ cu: u, cv: v, rad: PIED.caisse });
   for (const s of Object.values(IMPREVU_SPOTS)) blocs.push({ cu: s.c + s.w / 2, cv: s.r + s.h / 2, rad: PIED[s.model] ?? 0.35 });
+  for (const s of Object.values(FETE_SPOTS)) blocs.push({ u0: s.c, u1: s.c + s.w, v0: s.r, v1: s.r + s.h });
   blocs.push({ cu: FANAL_HOME[0], cv: FANAL_HOME[1], rad: 0.3 });
   return { blocs, dessins };
 

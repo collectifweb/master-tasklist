@@ -1400,7 +1400,27 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
   *Version 10, cache v23 (`core/nourriture.js` ajouté à la coquille) : un onglet en version 9 ne reprendrait pas au Remballer l'Énergie du sirop. Tests de l'API passés au client 10 : 65 sur 65.*
 
 ### N3 — Écrans et île [impeccable]
-- [ ] Le geste dans la fiche de la Place et dans celle de la cabane ; la table du repas, la table de tire ; les phrases lues ; Fanal.
+- [x] Le geste dans la fiche de la Place et dans celle de la cabane ; la table du repas, la table de tire ; les phrases lues ; Fanal.
+  Détail (9 octobre, après N2) :
+  - [x] N3a — Branchement : les deux gestes dans `store.js` et `main.js` (gestes du village, phrases lues après le geste, objectif de printemps atteint).
+  - [x] N3b — Fiche de la Place : bloc « Le repas de la semaine » au dessin d'une offre du comptoir (le troc sur une ligne, « Servir le repas » en bouton secondaire, ou « ✓ Servi cette semaine », cadenas et raison du cœur dessous) ; du 1er mars au 30 avril, bloc « La partie de sucre » au dessin de la commande du quai (Demande / Laisse, « Faire la partie de sucre », jamais en bouton principal : la fiche garde « Monter au niveau » comme seul geste principal).
+  - [x] N3c — Bandeau « Cette saison » : l'objectif de printemps (« Sucres : 8 sur 10 », « Faire la partie de sucre » quand la Nourriture y est, « Partie de sucre faite », en mai « revient en mars ») ; pendant le temps des sucres, la case mène à la fiche de la Place.
+  - [x] N3d — Fiche de la cabane : le sirop vendu au marchand (« Ce que ça fait », et « Maintenant » quand la réserve est pleine).
+  - [x] N3e — Fanal : deux situations neuves, `repas.servi` et `saison.sucres`, cinq variantes chacune ; `content/README.md`.
+  - [x] N3f — Île : la longue table sur la Place la semaine où le repas est servi ; la table de tire près des érables (ou de la cabane si elle est bâtie) le printemps où la partie est faite. Décor sans toucher, comme les bons imprévus.
+  - [x] N3g — Tests des modèles de fiche et du bandeau, scénario navigateur neuf aux trois largeurs, captures et une passe de corrections.
+  *Fait le 9 octobre. La tablée (`tablee()`, `world/models.js`) est posée dans le sens de la route du quai, devant la lanterne
+  et Fanal (`FETE_SPOTS`, `world/layout.js`) : mesuré aux trois largeurs, c'est le seul coin de la Place que sa plaque ne
+  cache pas à 390 px (au centre ou à gauche de la route, elle couvrait la moitié de la table ; à droite de la lanterne, la
+  table se collait à l'établi). Bols en bois et soupe aux pois, pour ne pas la confondre avec la tire. La table de tire
+  (`tire()`) est devant la cabane bâtie, sinon entre la glacière et l'érable ; elle n'est montrée qu'en mars et avril
+  (la neige fond le 30 avril sur l'île, alors que le printemps du jeu va jusqu'à fin mai). Obstacles des habitants
+  ajoutés. Tests : `fiche-place.test.mjs` (4 : repas et sucres de la fiche, autres quartiers, décor de l'île),
+  `fiches-village.test.mjs` (+1 : le sirop dans « Maintenant » de la cabane). Scénario `ui-45-nourriture.cjs` : réussi
+  aux trois largeurs, 78 vérifications (la case du bandeau mène à la Place ; partie de sucre puis repas payés une fois,
+  phrases lues reçues par un lecteur d'écran, lignes cochées avec le focus ; tablée et tire sur l'île ; bandeau
+  « Partie de sucre faite » ; rechargement). Corrigé au passage : les guillemets des deux situations de Fanal sans
+  espace insécable.*
 
 ### N4 — Vérification, documents, envoi
 - [ ] Suite de logique, scénario navigateur neuf, série complète, relecture Opus en lecture seule ; bible §2, §5, §6 ; `app/ARCHITECTURE.md`, `app/DESIGN.md` ; envoi sur accord d'Alex.

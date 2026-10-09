@@ -136,6 +136,16 @@
     <path d="M2.8 14.6h18.4l-2.4 4.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/>
     <path d="M2.8 14.6h18.4l-2.4 4.3H5.6zM5.2 14.6V9.4M12 14.6V9.4M4 9.4h9.2M18 14.6V4.2l3 1.6-3 1.6"/>
   </symbol>
+  <!-- repas de la semaine (lot N) : un bol fumant posé sur la longue table de la Place -->
+  <symbol id="i-repas" viewBox="0 0 24 24">
+    <path d="M7.4 8.6h9.2a4.6 3.5 0 0 1-9.2 0z" fill="currentColor" opacity=".22" stroke="none"/>
+    <path d="M7.4 8.6h9.2a4.6 3.5 0 0 1-9.2 0zM10.2 6.2c-.8-.8-.8-1.8 0-2.6M13.8 6.2c-.8-.8-.8-1.8 0-2.6M3 14.2h18M5.6 14.2v6M18.4 14.2v6"/>
+  </symbol>
+  <!-- feuille d'érable (lot N) : la partie de sucre, l'objectif du printemps -->
+  <symbol id="i-erable" viewBox="0 0 24 24">
+    <path d="M12 2.8l1.6 3.6 2-.8-.4 3 4.6-1.2-1.4 3 2.2 1-3.8 2.8.6 2-4.5-1-.9.8-.9-.8-4.5 1 .6-2-3.8-2.8 2.2-1-1.4-3 4.6 1.2-.4-3 2 .8z" fill="currentColor" opacity=".22" stroke="none"/>
+    <path d="M12 2.8l1.6 3.6 2-.8-.4 3 4.6-1.2-1.4 3 2.2 1-3.8 2.8.6 2-4.5-1-.9.8-.9-.8-4.5 1 .6-2-3.8-2.8 2.2-1-1.4-3 4.6 1.2-.4-3 2 .8zM12 16v5.2"/>
+  </symbol>
   <symbol id="i-echange" viewBox="0 0 24 24">
     <path d="M4.5 8.5h14M15 5l3.5 3.5L15 12M19.5 15.5h-14M9 12l-3.5 3.5L9 19"/>
   </symbol>

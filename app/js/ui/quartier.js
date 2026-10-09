@@ -4,13 +4,20 @@
 // propres identifiants : elle s'ouvre aussi par-dessus le catalogue « Construire » ou la Carte en liste.
 // Rien n'est calculé ici qui ne vienne de core/quartiers.js ; l'achat passe par data-action="qrt-monter", l'ancien
 // filtre de la liste par data-action="qrt-quetes" (main.js).
+// La fiche de la Place porte aussi ce que la Nourriture achète (lot N, core/nourriture.js et objectifs.js) : du 1er mars
+// au 30 avril, la partie de sucre, au dessin de la commande du quai (Demande / Laisse, « Faire la partie de sucre » en
+// bouton secondaire : « Monter au niveau » reste le seul geste principal de la fiche), puis le repas de la semaine, au
+// dessin d'une offre du comptoir (le troc, « Servir le repas »). Chacun : le cadenas et la raison du cœur, ou sa ligne
+// cochée à la même place. Les gestes passent par data-action="bat-geste", comme ceux d'un bâtiment.
 import {
   QUARTIERS, EFFETS_QUARTIERS, niveauDe, niveauMax, valeur, coutNiveau, refusMonter, progressionPermis,
-  quartierOfTask, potagerOuvert, compte, gameDay,
+  quartierOfTask, potagerOuvert, compte, gameDay, PLACE_ID, repasDeLaSemaine, refusServirRepas, objectifSaison,
+  OBJECTIFS_SAISON, refusFaireLesSucres,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml, setText } from './dom.js';
 import { num } from './format.js';
+import { ressource, ressourcesText, resHtml } from './batiment.js';
 
 /** « 6 Nourriture par récolte du potager » : l'effet d'un niveau, sans point final (valeur au niveau n, 0 = départ). */
 export function effetText(quartier, n) {
@@ -39,9 +46,38 @@ export function permisText(c) {
 /** Quêtes à faire du quartier : celles que « Voir les quêtes » montre dans la liste. */
 const quetesDe = (tasks, quartier) => tasks.filter((x) => x.status === 'todo' && quartierOfTask(x) === quartier).length;
 
+/** Le repas de la semaine (Place) : { donne, recoit (ressources), servi, raison, label }. */
+function repasModel({ game, ledger, now }) {
+  const r = repasDeLaSemaine(game, ledger, now);
+  return {
+    donne: ressource(r.donne), recoit: ressource(r.recoit), servi: r.servi,
+    raison: r.servi ? null : refusServirRepas(game, ledger, {}, now),
+    label: t('quartier.fiche.repas.geste.label', { donne: ressourcesText(r.donne), recoit: ressourcesText(r.recoit) }),
+  };
+}
+
+/**
+ * La partie de sucre (Place), du 1er mars au 30 avril seulement, sinon null : { demande, laisse (ressources), faite,
+ * ralenti, raison, label }. Son prix est la cible de l'objectif de printemps (objectifSaison du cœur).
+ */
+function sucresModel({ game, ledger, now }) {
+  const mois = Number(gameDay(now).slice(5, 7));
+  if (mois < 3 || mois > 4) return null;
+  const o = objectifSaison(game, ledger, now);
+  const rec = OBJECTIFS_SAISON.printemps.recompense;
+  const faite = o.atteint || o.faite;
+  return {
+    demande: [ressource({ food: o.max })],
+    laisse: [ressource({ energy: rec.energy }), ressource({ materials: rec.materials }), { res: 'permis', n: rec.permis, nom: t('bat.commande.recoit.permis') }],
+    faite, ralenti: !!o.ralenti,
+    raison: faite ? null : refusFaireLesSucres(game, ledger, {}, now),
+    label: t('quartier.fiche.sucres.geste.label', { demande: ressourcesText({ food: o.max }) }),
+  };
+}
+
 /**
  * Modèle de la fiche : { id, nom, ligne, niveau, max, fait, maintenant, suivant: { n, effet } | null, prix, permis,
- * raison, quetes }.
+ * raison, quetes, repas, sucres } (repas et sucres : la Place seulement, voir repasModel et sucresModel).
  */
 export function quartierModel(c, quartier) {
   if (!Object.hasOwn(EFFETS_QUARTIERS, quartier)) return null;
@@ -68,7 +104,47 @@ export function quartierModel(c, quartier) {
     permis: permisText(c),
     raison: niveau < max ? refusMonter(game, ledger, { quartier }) : null,
     quetes: domaine ? t('quartier.fiche.quetes', { domaine, n }) : t('quartier.fiche.quetes.place', { n }),
+    repas: quartier === PLACE_ID ? repasModel(c) : null,
+    sucres: quartier === PLACE_ID ? sucresModel(c) : null,
   };
+}
+
+// La partie de sucre, au dessin de la commande du quai : titre (la feuille d'érable) et « jusqu'au 30 avril », ce que
+// c'est, Demande / Laisse, la note du ralenti, le geste (secondaire) ou le cadenas et la raison, ou la ligne cochée ; la règle.
+function sucresHtml(s) {
+  const etat = s.faite ? 'fait' : s.raison ? 'verrou' : 'libre';
+  const plus = (r, i) => (i ? `<span class="commande-plus"><span class="commande-et" aria-hidden="true">+</span><span class="sr-only"> ${esc(t('bat.commande.et'))} </span>${resHtml(r)}</span>` : resHtml(r));
+  const action = s.faite
+    ? `<p class="commande-fait" id="sucres-etat" tabindex="-1">${icon('check')}<span>${esc(t('quartier.fiche.sucres.fait'))} <small>${esc(t('quartier.fiche.sucres.fait.quand'))}</small></span></p>`
+    : `<button class="btn btn--block commande-go" type="button" data-action="bat-geste" data-geste="faireLesSucres" data-params="{}"
+      aria-label="${esc(s.label)}"${s.raison ? ' aria-disabled="true" aria-describedby="sucres-raison"' : ''}>${icon(s.raison ? 'lock' : 'erable')}<span>${esc(t('quartier.fiche.sucres.geste'))}</span></button>
+      ${s.raison ? `<p class="commande-raison" id="sucres-raison">${icon('lock')}<span>${esc(s.raison)}</span></p>` : ''}`;
+  return `<section class="commande fete fete--sucres" data-etat="${etat}" aria-labelledby="sucres-t">
+    <h3 class="commande-titre" id="sucres-t">${icon('erable')}<span>${esc(t('quartier.fiche.sucres.titre'))}</span><small class="commande-jours">${esc(t('quartier.fiche.sucres.jours'))}</small></h3>
+    <p class="commande-qui">${esc(t('quartier.fiche.sucres.qui'))}</p>
+    <dl class="commande-troc">
+      <div><dt>${esc(t('bat.commande.demande'))}</dt><dd>${s.demande.map(plus).join('')}</dd></div>
+      <div><dt>${esc(t('bat.commande.laisse'))}</dt><dd>${s.laisse.map(plus).join('')}</dd></div>
+    </dl>
+    ${s.ralenti && !s.faite ? `<p class="commande-taille">${esc(t('quartier.fiche.sucres.ralenti'))}</p>` : ''}
+    ${action}
+    <p class="commande-regle">${esc(t('quartier.fiche.sucres.regle'))}</p></section>`;
+}
+
+// Le repas de la semaine, au dessin d'une offre du comptoir : le troc sur une ligne et « Servir le repas » (secondaire),
+// ou « ✓ Servi cette semaine » ; impossible, le bouton verrouillé et la raison du cœur sous la ligne.
+function repasHtml(r) {
+  const etat = r.servi ? 'fait' : r.raison ? 'verrou' : 'libre';
+  const action = r.servi
+    ? `<p class="offre-fait" id="repas-etat" tabindex="-1">${icon('check')}<span>${esc(t('quartier.fiche.repas.fait'))} <small>${esc(t('quartier.fiche.repas.fait.quand'))}</small></span></p>`
+    : `<button class="btn btn--small offre-go" type="button" data-action="bat-geste" data-geste="servirRepas" data-params="{}"
+      aria-label="${esc(r.label)}"${r.raison ? ' aria-disabled="true" aria-describedby="repas-raison"' : ''}>${icon(r.raison ? 'lock' : 'repas')}<span>${esc(t('quartier.fiche.repas.geste'))}</span></button>`;
+  return `<section class="comptoir fete fete--repas" aria-labelledby="repas-t">
+    <h3 class="comptoir-titre" id="repas-t">${icon('repas')}<span>${esc(t('quartier.fiche.repas.titre'))}</span></h3>
+    <p class="comptoir-intro">${esc(t('quartier.fiche.repas.intro'))}</p>
+    <ul class="comptoir-offres" role="list"><li class="offre" data-etat="${etat}">
+      <p class="offre-troc">${resHtml(r.donne)}${icon('fleche', 'offre-fleche')}<span class="sr-only"> ${esc(t('bat.comptoir.contre'))} </span>${resHtml(r.recoit)}</p>
+      ${action}${r.raison ? `<p class="offre-raison" id="repas-raison">${icon('lock')}<span>${esc(r.raison)}</span></p>` : ''}</li></ul></section>`;
 }
 
 // Dernier achat réussi : sa phrase reste en tête de la fiche (coche, sauge) tant qu'elle montre ce niveau ; une
@@ -89,7 +165,7 @@ function bodyHtml(m) {
   } else {
     rows.push(line(t('quartier.fiche.permis'), permis));
   }
-  return `${ok}<dl class="help-lines">${rows.join('')}</dl>`;
+  return `${ok}<dl class="help-lines">${rows.join('')}</dl>${m.sucres ? sucresHtml(m.sucres) : ''}${m.repas ? repasHtml(m.repas) : ''}`;
 }
 
 function footHtml(m) {
@@ -123,7 +199,15 @@ function fill(dlg, m) {
   setText($('#qrt-t', dlg), m.nom);
   setText($('#qrt-d', dlg), m.ligne);
   dlg.dataset.niveau = String(m.niveau);
-  setHtml($('.qrt-body', dlg), bodyHtml(m));
+  // un repas servi ou une partie de sucre faite change de bouton : le focus reste à sa place (bouton, ou la ligne cochée)
+  const body = $('.qrt-body', dlg);
+  const fete = body.contains(document.activeElement) ? document.activeElement.closest('.fete') : null;
+  const sorte = fete ? (fete.classList.contains('fete--sucres') ? 'sucres' : 'repas') : null;
+  setHtml(body, bodyHtml(m));
+  if (sorte && !body.contains(document.activeElement)) {
+    const bloc = $(`.fete--${sorte}`, body);
+    if (bloc) ($('[data-action="bat-geste"]', bloc) || $(`#${sorte}-etat`, bloc))?.focus();
+  }
   const foot = $('.qrt-foot', dlg);
   const had = foot.contains(document.activeElement);
   setHtml(foot, footHtml(m));

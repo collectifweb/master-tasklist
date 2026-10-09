@@ -169,7 +169,7 @@ function react(payload) {
   if (bat) announce.say(remember(action === 'advanceTime' ? after(bat + replyText) : bat + replyText));
 }
 
-const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger', 'livrer'];
+const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger', 'livrer', 'servirRepas', 'faireLesSucres'];
 
 /** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine tenue. */
 function objectifsSay(events) {
@@ -186,7 +186,7 @@ function objectifsSay(events) {
 /**
  * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang (et sa bande de
  * terrain), quartier monté,
- * échange au comptoir du marchand, commande livrée au visiteur de la semaine.
+ * échange au comptoir du marchand, commande livrée au visiteur de la semaine, repas servi, partie de sucre faite (lot N).
  */
 function batimentSay(events) {
   const out = [];
@@ -201,6 +201,8 @@ function batimentSay(events) {
     else if (e.type === 'quartier-monte') out.push(monteText(e));
     else if (e.type === 'echange') out.push(t('bat.sr.echange', { donne: ressource(e.donne).texte, recoit: ressource(e.recoit).texte }));
     else if (e.type === 'commande') out.push(t('bat.sr.commande', { au: t(`bat.commande.${e.visiteur}.au`), donne: ressourcesText(e.donne) }));
+    else if (e.type === 'repas') out.push(t('bat.sr.repas', { donne: ressourcesText(e.donne), recoit: ressourcesText(e.recoit) }));
+    else if (e.type === 'sucres') out.push(t('bat.sr.sucres', { n: numGain(e.nourriture) }));
     else if (e.type === 'reparation' && e.par === 'paiement') out.push(t(`bat.sr.reparation.${e.imprevu}`, { cout: coutText(e.cout) }));
   }
   return out.join(' ');
@@ -523,6 +525,11 @@ document.addEventListener('click', (e) => {
       if (target.checkVisibility?.() === false) $('.bandeau-more')?.focus();
       const quai = store.view && batimentsDuVillage(store.view.game).find((b) => b.type === 'quai');
       return quai && openBatimentSheet(quai.id);
+    }
+    case 'sucres-go': { // « Cette saison », au temps des sucres (lot N) : la partie se fait depuis la fiche de la Place
+      bandeau.toggle(false);
+      if (target.checkVisibility?.() === false) $('.bandeau-more')?.focus();
+      return openQuartierSheet('place');
     }
     case 'preparer': {
       // « Rentrer du bois » (bandeau, tempête annoncée) : un cran payé une fois, même touché deux fois

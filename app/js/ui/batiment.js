@@ -24,12 +24,12 @@ import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
-  saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer, PRODUCTION, productionDuJour, produitCeJour, TOUR_ANNONCE,
-  TEMPETE, alerteTempete,
+  saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer, PRODUCTION, netDuJour, produitCeJour, TOUR_ANNONCE,
+  TEMPETE, alerteTempete, SIROP, compte,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
-import { numPossede, numManque, numGain, entierGain, shortDate } from './format.js';
+import { num, numPossede, numManque, numGain, entierGain, shortDate } from './format.js';
 
 const typeOf = (id) => String(id ?? '').replace(/-\d+$/, '');
 // le {n} de « Ce que ça fait », lu au cœur : ce que l'éolienne et les producteurs du Village donnent par jour travaillé,
@@ -125,7 +125,7 @@ export function batimentModel(c, id) {
     quoi: t(`bat.${type}.${bati ? 'quoi' : 'quoiVide'}`),
     fait: t(`bat.${type}.fait`, {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
-      n: N_FAIT[type], base: TEMPETE.annonce,
+      n: N_FAIT[type], base: TEMPETE.annonce, sirop: num(SIROP.energie),
     }),
     maintenant: '', raison: null, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };
@@ -186,14 +186,19 @@ export function batimentModel(c, id) {
     m.maintenant = !a ? t('bat.tour.maintenant')
       : t(`bat.tour.maintenant.${a.joursRestants === 0 ? 'zero' : a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants });
   } else if (Object.hasOwn(PRODUCTION, type)) {
-    // ce qui est déjà donné aujourd'hui, la cabane hors saison, la réserve pleine (rien n'entre), ou la promesse du jour
+    // ce qui est déjà donné aujourd'hui (la cabane : avec le sirop vendu au marchand, lot N), la cabane hors saison, la
+    // réserve pleine (rien n'entre ; la cabane, avec le quai, vendra le sirop), ou la promesse du jour
     const day = gameDay(now);
-    const donne = productionDuJour(ledger, day, type);
-    m.maintenant = donne > 0 ? t(`bat.${type}.maintenant.fait`, { n: numGain(donne) })
-      : !produitCeJour(type, day) ? t(`bat.${type}.maintenant.dort`)
-        : PRODUCTION[type].food && game.resources.food >= stockage(game)
-          ? t('bat.fiche.production.plein', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) })
-          : t(`bat.${type}.maintenant`);
+    const net = netDuJour(ledger, day, type);
+    const donne = PRODUCTION[type].materials ? net.materials : net.food;
+    const sirop = type === 'cabane' ? net.energy : 0;
+    const plein = { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) };
+    m.maintenant = sirop > 0 ? t(`bat.cabane.maintenant.fait.sirop${donne > 0 ? '' : '.seul'}`, { n: numGain(donne), e: numGain(sirop) })
+      : donne > 0 ? t(`bat.${type}.maintenant.fait`, { n: numGain(donne) })
+        : !produitCeJour(type, day) ? t(`bat.${type}.maintenant.dort`)
+          : PRODUCTION[type].food && game.resources.food >= stockage(game)
+            ? (type === 'cabane' ? t(`bat.cabane.maintenant.plein.${compte(game, 'quai') ? 'sirop' : 'sansQuai'}`, plein) : t('bat.fiche.production.plein', plein))
+            : t(`bat.${type}.maintenant`);
   } else {
     m.maintenant = t(`bat.${type}.maintenant`);
   }
@@ -223,7 +228,7 @@ function commandeModel(game, ledger, now) {
 
 const GESTE_ICON = { construire: 'chantier', semer: 'champs', recolter: 'nourriture', accueillir: 'habitants' };
 
-const resHtml = (r) => `<span class="offre-res" data-res="${r.res}">${icon(r.res)}<b>${r.n}</b> ${esc(r.nom)}</span>`;
+export const resHtml = (r) => `<span class="offre-res" data-res="${r.res}">${icon(r.res)}<b>${r.n}</b> ${esc(r.nom)}</span>`;
 
 // Une offre du marchand : le troc sur une ligne, puis « Échanger » (ou « Fait cette semaine », « Fait aujourd'hui » pour
 // l'échange du jour) ; la raison du cœur dessous.

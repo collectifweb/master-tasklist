@@ -319,6 +319,28 @@
         {"id": "saison.serre.05", "voix": "fanal", "texte": "En plein hiver, la serre donne encore. Le village n’en revient pas."}
       ]
     },
+    "repas.servi": {
+      "quand": "Le repas de la semaine est servi sur la Place (geste « Servir le repas »). Lot N. Le gain est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "repas.servi.01", "voix": "fanal", "texte": "Une longue table sur la Place. Tout le monde à la même hauteur."},
+        {"id": "repas.servi.02", "voix": "fanal", "texte": "Ça sent la soupe jusqu’au quai. Bon appétit, tout le monde."},
+        {"id": "repas.servi.03", "voix": "fanal", "texte": "Personne ne mange seul aujourd’hui. C’est ça, un village."},
+        {"id": "repas.servi.04", "voix": "fanal", "texte": "Le pain passe de main en main. Moi, je garde les assiettes."},
+        {"id": "repas.servi.05", "voix": "fanal", "texte": "Rien ne se perd. Ce qui débordait du grenier nourrit la tablée."}
+      ]
+    },
+    "saison.sucres": {
+      "quand": "La partie de sucre est faite, et l’objectif du printemps avec elle (geste « Faire la partie de sucre »). Lot N. La récompense est dans l’annonce.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "saison.sucres.01", "voix": "fanal", "texte": "De la tire sur la neige! Le printemps a enfin un goût."},
+        {"id": "saison.sucres.02", "voix": "fanal", "texte": "Les érables ont donné. Le village se sucre le bec."},
+        {"id": "saison.sucres.03", "voix": "fanal", "texte": "Objectif du printemps atteint. Même mes engrenages collent."},
+        {"id": "saison.sucres.04", "voix": "fanal", "texte": "Une partie de sucre comme dans le temps. Personne ne veut rentrer."},
+        {"id": "saison.sucres.05", "voix": "fanal", "texte": "La tire fige sur la neige. Tout le monde en redemande."}
+      ]
+    },
     "allure.ralentit": {
       "quand": "La semaine où l’allure du village descend d’un cran (plein régime vers régulier, ou régulier vers au ralenti) : dit une fois par appareil, à la première ouverture de la semaine, après l’accueil, la lettre et le bilan. Lot A. Aucun reproche, aucun chiffre, aucune promesse sur les imprévus.",
       "frequence": 1,

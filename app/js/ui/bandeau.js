@@ -11,10 +11,13 @@
 // alerteTempete) : les jours restants, la barre de trois crans doublée de « 1 sur 3 », et « Rentrer du bois » avec son prix
 // (data-action="preparer", protégé du double toucher). Le jour même, l'issue : tenue, le bâtiment sous la neige (le bouton
 // ouvre sa fiche, data-action="tempete-voir"), puis déneigé une fois le dégât réglé, ou passée sans rien abîmer. L'objectif d'hiver compte les récoltes de serre ;
-// sans serre, il dit d'en bâtir une.
+// sans serre, il dit d'en bâtir une. L'objectif du printemps (lot N) : « Sucres : 8 sur 10 Nourriture », « Faire la partie de
+// sucre » quand la Nourriture y est, « Partie de sucre faite » ; en mai, s'il n'est pas fait, « de retour le 1er mars ». Du
+// 1er mars au 30 avril, tant qu'il n'est pas fait, toute la case mène à la fiche de la Place (data-action="sucres-go"),
+// où la partie se fait, comme la ligne du visiteur mène au quai.
 import {
   bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
-  degatsActifs,
+  degatsActifs, gameDay,
 } from '../../core/index.js';
 import { t, tn } from '../content.js';
 import { $, esc, icon, setAttr, setHtml, setText, restart } from './dom.js';
@@ -41,10 +44,15 @@ function semaineText(s) {
   return `${tn('bandeau.semaine.quetes', s.quetes)} ${tn('bandeau.semaine.jours', s.jours)}`;
 }
 
-function saisonText(s, sansSerre) {
+// Au temps des sucres (mars et avril), l'objectif du printemps se fait par un geste, depuis la Place.
+const tempsDesSucres = (now) => { const m = Number(gameDay(now).slice(5, 7)); return m >= 3 && m <= 4; };
+
+function saisonText(s, sansSerre, now) {
   if (s.aVenir) return t('bandeau.saison.avenir', { saison: t(`saison.${s.id}`) });
   if (s.atteint) return t(`bandeau.saison.${s.objectif}.atteint`);
   if (sansSerre) return t('bandeau.saison.serre.sans');
+  if (s.objectif === 'sucres' && !tempsDesSucres(now)) return t('bandeau.saison.sucres.fini');
+  if (s.objectif === 'sucres' && s.stock >= s.max) return t('bandeau.saison.sucres.pret');
   return t(`bandeau.saison.${s.objectif}`, { stock: numPossede(s.stock), max: numPossede(s.max) });
 }
 
@@ -136,8 +144,15 @@ export function createBandeau(root) {
     setHtml(liste, b.semaine.kind === 'pas' ? pasHtml(b.semaine) : '');
 
     const sansSerre = b.saison.objectif === 'serre' && !batimentsDuVillage(c.game).some((x) => x.type === 'serre');
-    setText(q('#bandeau-saison'), saisonText(b.saison, sansSerre));
+    const texteSaison = saisonText(b.saison, sansSerre, c.now);
+    setText(q('#bandeau-saison'), texteSaison);
     setAttr(q('.bandeau-saison'), 'data-atteint', b.saison.atteint ? 'true' : null);
+    // au temps des sucres, tant que la partie n'est pas faite, la case mène à la fiche de la Place
+    const sucres = b.saison.objectif === 'sucres' && !b.saison.atteint && tempsDesSucres(c.now);
+    q('.bandeau-saison-texte').hidden = sucres;
+    q('.bandeau-sucres').hidden = !sucres;
+    setText(q('#bandeau-sucres'), sucres ? texteSaison : '');
+    setAttr(q('.bandeau-sucres'), 'aria-label', sucres ? t('bandeau.saison.sucres.label', { texte: texteSaison }) : null);
     const detail = q('.bandeau-saison-detail');
     detail.hidden = !b.saison.objectif;
     const pourquoi = sansSerre && !b.saison.atteint ? refusConstruire(c.game, 'serre', 'serre-1') : null; // l'atelier d'abord
