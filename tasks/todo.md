@@ -1210,7 +1210,7 @@ Le lot ne contient que la première bande. Hors du lot : les bâtiments du rang 
 - La phrase lue devient, par exemple, « Nouveau rang : Hameau. La forêt recule : l'île gagne une bande de terrain. » ; Fanal a quelques répliques propres au Hameau, qui parlent de la forêt. Textes définitifs réglés à l'écran.
 - Sur un autre appareil, ou à la prochaine ouverture, la bande est simplement là.
 - L'île garde sa taille à l'écran. D'après la projection de l'île (`world/iso.js:10`), une bande de deux cases de profondeur posée entre les colonnes 2 et 10 reste dans le cadre actuel ; posée sur toute la longueur du bord, elle en sortait, et l'île aurait rapetissé sur le téléphone (calculé le 8 octobre ; à confirmer en capture aux trois largeurs).
-- Toucher la bande ouvre la fiche du quartier voisin (le Garage à gauche, la Mairie à droite), comme partout sur l'île.
+- Toucher la bande fait comme toucher le sol ailleurs : rien, sinon retirer la sélection (les fiches s'ouvrent par les plaques des quartiers et par les objets, `world/world.js:757-790`). Corrigé le 8 octobre au soir : la première version du plan disait qu'elle ouvrait la fiche du quartier voisin, sans l'avoir vérifié.
 - Gratuite : elle vient avec le rang, comme le dit la bible. Rien d'autre ne change : ni un prix, ni un gain, ni une tâche.
 - Rien n'est posé dessus pour l'instant : l'éolienne et le grenier restent où ils sont. La bande attend les bâtiments du rang Village (tour de guet, scierie, poulailler, cabane à sucre), au lot suivant.
 
