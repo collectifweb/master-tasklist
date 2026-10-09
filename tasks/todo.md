@@ -1387,7 +1387,8 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
 - **Sirop au marchand** : le plus simple. Quand la réserve est pleine, ce que la cabane ne peut pas ranger part en sirop, que le marchand achète au passage : Z Énergie de plus ce jour-là, plus que la même Nourriture vendue au comptoir (1 Énergie pièce). Pas de nouveau stock à afficher ; la fiche de la cabane le dit. Il faut le quai (le marchand) ; sans lui, rien ne change.
 
 ### N1 — Mesure d'abord (simulation, hors dépôt puis dans `simulation.test.mjs`)
-- [ ] Combien de Nourriture se perd au plafond, par semaine, une fois le village plein (récoltes et productions), pour les cinq joueurs.
+- [x] Combien de Nourriture se perd au plafond, par semaine, une fois le village plein (récoltes et productions), pour les cinq joueurs.
+  *Mesuré le 9 octobre au matin (copie hors dépôt, un compteur ajouté à `recolter` et à `produireBatiments`, du 7 octobre au 1er mai, avec le rang Village). Perdu par semaine après le village plein, moyenne (médiane) : sans marchand ni commandes, très lent 1,3 (0), lent 9,8 (10), (g) 14,1 (12), (f) 23,6 (29), rapide 27,2 (35) ; avec le marchand avisé et les commandes livrées, 0,3 (0), 4,3 (0), 5,7 (0), 15,2 (15), 15,6 (16). La cabane pèse le plus (de 56 à 244 sur la période selon le joueur), puis la serre et le poulailler. Avant le village plein, presque rien ne se perd (3 à 13 en tout).*
 - [ ] Prix X, Y, Z tels que : personne ne recule (niveaux, Hameau, village plein, tempêtes) ; le repas absorbe une bonne part du surplus d'une semaine ; la partie de sucre se paie en deux ou trois semaines de surplus ; le sirop rapporte moins qu'une journée de quêtes.
 
 ### N2 — Cœur (tests écrits d'abord et vus en échec)
