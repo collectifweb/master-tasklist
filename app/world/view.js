@@ -28,12 +28,12 @@ export function sectorView(id, game, tasks = []) {
 /**
  * Bâtiments de l'île, un par emplacement (EMPLACEMENTS), dans l'ordre du catalogue :
  * { id, type, bati, etat, refus, reste, occupants }. etat : 'vide' (pas encore bâti), 'bati', et pour une culture
- * 'seme' | 'pousse' | 'mure', pour la cabane à sucre 'sucres' (mars et avril, lot V) ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
+ * 'seme' | 'pousse' | 'mure', pour la cabane à sucre 'sucres' (mars et avril, lot B) ; refus : pourquoi on ne peut pas bâtir maintenant (null si possible) ; reste : jours
  * travaillés avant la récolte ; occupants : habitants logés dans un chalet (répartis dans l'ordre des chalets) ;
  * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine ;
  * commande : sur le quai debout, { id, livree } du visiteur à commande de la semaine (lot C) ;
  * degat : sur un bâtiment debout touché par un mauvais imprévu (core/imprevus.js), { type, joursRestants }.
- * Un emplacement posé sur une bande de terrain n'y est qu'une fois la bande gagnée (lot V).
+ * Un emplacement posé sur une bande de terrain n'y est qu'une fois la bande gagnée (lot B).
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
   const g = { ...game, resources: { energy: 0, materials: 0, food: 0, ...(game.resources || {}) } };

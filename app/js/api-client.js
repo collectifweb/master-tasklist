@@ -55,7 +55,7 @@ async function call(method, payload) {
  * reprise ; son geste reste en file et l'onglet rechargé le recalcule avant l'envoi (`withoutStaleBodies`). Version 6 (hiver,
  * lot H) : l'API refuse la version 5, qui ferait tourner une éolienne ensevelie et effacerait la neige des tempêtes.
  * Version 7 (allure, lot A) : l'API refuse la version 6, qui tirerait deux imprévus par semaine quelle que soit l'allure.
- * Version 8 (rang Village, lot V) : l'API refuse la version 7, qui réglerait une tempête avec 3 jours d'annonce malgré la
+ * Version 8 (rang Village, lot B) : l'API refuse la version 7, qui réglerait une tempête avec 3 jours d'annonce malgré la
  * tour de guet et ne verserait pas la production de la scierie, du poulailler ni de la cabane à sucre.
  */
 export const CLIENT_VERSION = 8;

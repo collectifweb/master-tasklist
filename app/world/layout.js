@@ -51,7 +51,7 @@ export const PLAQUE_ANCHOR = {
   ecole: [0.15, 3.0],
   garage: [3.0, 0.15],
 };
-/** Bande gagnée (lot V) : la plaque du Garage suit la lisière replantée ; l'ancienne porte la scierie et la tour. */
+/** Bande gagnée (lot B) : la plaque du Garage suit la lisière replantée ; l'ancienne porte la scierie et la tour. */
 const PLAQUE_ANCHOR_BANDE = { hameau: { garage: [-0.4, -2.8] } };
 export function plaqueAnchor(s, bandes = []) {
   for (const id of bandes) if (PLAQUE_ANCHOR_BANDE[id]?.[s]) return PLAQUE_ANCHOR_BANDE[id][s];
@@ -119,7 +119,7 @@ export const EMPLACEMENTS = {
   eolienne: [{ r: 0.5, c: 10.6, h: 1, w: 1 }],
   grenier: [{ r: 1, c: 8, h: 2, w: 2 }],
   quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true, sector: 'place' }],
-  // rang Village (lot V) : sur la bande du Hameau, devant la lisière replantée, de part et d'autre de la trouée de la
+  // rang Village (lot B) : sur la bande du Hameau, devant la lisière replantée, de part et d'autre de la trouée de la
   // route ; ils n'existent sur l'île qu'avec leur bande (world/view.js)
   tour: [{ r: -1.15, c: 4.25, h: 0.9, w: 0.9, bande: 'hameau' }],
   scierie: [{ r: -1.2, c: 2.15, h: 1, w: 1.8, bande: 'hameau' }],

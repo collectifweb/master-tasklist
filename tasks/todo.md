@@ -1262,7 +1262,7 @@ Le lot ne contient que la première bande. Hors du lot : les bâtiments du rang 
 1. **Ce qu'on pose sur la bande** : (a) les piquets de l'éolienne et du grenier y déménagent (ma recommandation), ou (b) elle arrive vide et attend les bâtiments du rang Village. Réponse : « je tends vers B. J'aime mieux que l'espace permette de mettre de nouveaux bâtiments plutôt que de jouer sur les bâtiments existants pour les mettre sur la bande. » **Retenu : (b).**
 2. **Envoi** : « oui, mise en ligne directement en production si tout est vert ».
 
-## Lot V — Le rang Village : tour de guet, scierie, poulailler, cabane à sucre
+## Lot B — Le rang Village : tour de guet, scierie, poulailler, cabane à sucre
 
 Référence : bible §4 (« Village | 6 à 10 | Nouvelle bande de terrain ; tour de guet, scierie, poulailler, cabane à sucre »), §5 (tableau des bâtiments), §6 (hiver : « Serre et poulailler seuls produisent »), §8 (« la tour de guet prévient plus tôt »), décision 38 (la bande du Hameau attend les bâtiments du rang Village). **Statut : lancé en autonomie la nuit du 8 au 9 octobre 2026, à la demande d'Alex (« Continue alors. Autonome. Topo demain matin »).** Les choix ci-dessous sont les miens : chacun est marqué *à valider*. **Pas d'envoi en production sans l'accord d'Alex** : ses autorisations d'envoi ont été données lot par lot, et celui-ci porte des choix qu'il n'a pas vus. Tout est préparé pour un envoi en une commande.
 
@@ -1300,23 +1300,39 @@ Quand Alex y arrivera : *d'après la simulation du lot T (rapportée au plan du 
 - `CLIENT_VERSION` et `MIN_CLIENT` passent à 8 : un onglet resté sur la v2.9 réglerait une tempête avec 3 jours d'annonce au lieu de 7 ; il doit se recharger avant d'écrire. Cache `oree-coquille-v21`.
 - Hors du lot : la bande du rang Village (elle accueillera les bâtiments du Bourg, comme celle du Hameau accueille ceux du Village : *à valider*), un habitant au travail sur la bande (`world/habitants.js` lit `DECOR`), l'objectif de printemps « Faire les sucres », des pannes pour les nouveaux bâtiments.
 
-### V1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] Catalogue : quatre types, rang Village, emplacements = maximum ; refus « Village : encore N habitants » ; scierie sans atelier refusée.
-- [ ] Production : scierie, poulailler, cabane (hors saison : rien ; en mars et avril : oui) ; une fois par jour ; reprise par Remballer ; Nourriture plafonnée à la réserve ; l'éolienne inchangée.
-- [ ] Tour de guet : annonce de 7 jours ; crans et achats sur 7 jours ; jamais pendant la trêve ; jamais avant le lendemain de la tempête précédente ; « annonce vue » ; sans tour, tous les tests d'hiver d'aujourd'hui passent sans retouche.
+### B1 — Cœur (tests écrits d'abord et vus en échec)
+- [x] Catalogue : quatre types, rang Village, emplacements = maximum ; refus « Village : encore N habitants » ; scierie sans atelier refusée.
+- [x] Production : scierie, poulailler, cabane (hors saison : rien ; en mars et avril : oui) ; une fois par jour ; reprise par Remballer ; Nourriture plafonnée à la réserve ; l'éolienne inchangée.
+- [x] Tour de guet : annonce de 7 jours ; crans et achats sur 7 jours ; jamais pendant la trêve ; jamais avant le lendemain de la tempête précédente ; « annonce vue » ; sans tour, tous les tests d'hiver d'aujourd'hui passent sans retouche.
+  Fait : `tests/core/rang-village.test.mjs` (11 tests), `tour-de-guet.test.mjs` (10), `bandes.test.mjs` (+2), `batiments.test.mjs` (catalogue à 11 types ; « moulin » remplace « tour » comme type inconnu). Suite de logique : 578 tests, 576 réussis, 0 échec, 2 « à faire » (nuit du 9 octobre, avant les fiches). Version 8 (`CLIENT_VERSION`, `MIN_CLIENT`), cache `oree-coquille-v21`. Commit 28fb725.
 
-### V2 — Simulation (diagnostic)
-- [ ] Mesurer, pour les joueurs simulés qui atteignent le rang Village : le jour d'arrivée, les ressources ce jour-là, quand chaque bâtiment devient abordable, et ce que scierie et poulailler rapportent en un mois. Régler les coûts si besoin.
+### B2 — Simulation (diagnostic)
+- [x] Mesurer, pour les joueurs simulés qui atteignent le rang Village : le jour d'arrivée, les ressources ce jour-là, quand chaque bâtiment devient abordable, et ce que scierie et poulailler rapportent en un mois. Régler les coûts si besoin.
+  Fait : simulation (n), du 7 octobre au 1er mai, chaque joueur avec et sans les bâtiments du Village. Coûts gardés. Ce que montre la simulation (pas la partie d'Alex) : village plein du 1er novembre (joueur (f)) au 12 mars (très lent) ; niveaux au 1er mai égaux avec et sans, sauf le très lent (5 sans, 4 avec) ; la scierie rapporte de 36 à 543 Matériaux selon le joueur, le poulailler de 10 à 54 Nourriture, la cabane de 0 à 20 (bloquée surtout par une réserve pleine) ; tempêtes tenues : le joueur lent passe de 0 à 7 sur 11, l'essai (g) de 7 à 10, les rapides les tenaient déjà toutes.
 
-### V3 — L'île [impeccable]
-- [ ] Quatre dessins, quatre emplacements sur la bande, cachés sans elle ; les piquets arrivent avec la bande dans le moment « la forêt recule ».
-- [ ] Captures aux trois largeurs, été et hiver, jour et soir.
+### B3 — L'île [impeccable]
+- [x] Quatre dessins, quatre emplacements sur la bande, cachés sans elle ; les piquets arrivent avec la bande dans le moment « la forêt recule ».
+- [x] Captures aux trois largeurs : automne, hiver (10 décembre) et temps des sucres (16 mars), hors dépôt. Une passe de corrections : la plaque du Garage montait sur la scierie (elle passe au-dessus de la lisière replantée quand la bande est gagnée) ; la cabane fume au temps des sucres, en bouffées plus grosses et ombrées (la fumée ordinaire disparaissait sur les arbres enneigés). Mesuré après : aucune plaque ne couvre plus de 11 % de la boîte d'un bâtiment du Village (390 px), 1 % à 834 et 1280 px.
+- [ ] Le soir (lanterne de la tour, fenêtre de la cabane) : pas capturé.
 
-### V4 — Fiches, textes, annonces
-- [ ] Textes des quatre bâtiments (nom, ce que c'est, ce que ça fait, maintenant) ; annonce de la Nourriture à Remballer ; bible, `ARCHITECTURE.md`, `DESIGN.md`, `content/README.md`.
+### B4 — Fiches, textes, annonces
+- [x] Textes des quatre bâtiments (nom, ce que c'est, ce que ça fait, maintenant) ; annonce de la Nourriture à Remballer ; bible, `ARCHITECTURE.md`, `DESIGN.md`.
+  Fait : « Maintenant » dit ce qu'un producteur a donné aujourd'hui, la cabane qui dort hors saison, la réserve pleine (`bat.fiche.production.plein`), la tempête annoncée pour la tour ; les valeurs de « Ce que ça fait » sont lues au cœur (`N_FAIT`, `js/ui/batiment.js`), plus de `GRENIER_STOCKAGE` par défaut. Carte en liste : « Temps des sucres » / « Dort jusqu'en mars ». `tests/core/fiches-village.test.mjs` (6 tests, contre-épreuve faite). `content/README.md` n'avait rien à changer (sa ligne sur `batiments.json` couvre les nouvelles clés).
 
-### V5 — Vérification
-- [ ] Tests de logique ; scénario navigateur neuf (bâtir les quatre, production du jour, tour et alerte de 7 jours) ; série complète sur code figé ; relecture Opus en lecture seule.
+### B5 — Vérification
+- [x] Tests de logique (voir B1, puis 54 tests des textes, de la typographie et du Village après les fiches).
+- [x] Scénario navigateur neuf : `ui-44-rang-village.cjs` (bâtir la scierie, production du jour, Remballer, tour et alerte à 7 jours, cabane au temps des sucres). Scénario 43 adapté (sol nu cherché sur toute la bande) ; `world-s3.cjs` vert.
+- [ ] Série complète sur code figé.
+- [ ] Relecture Opus en lecture seule.
 
-### V6 — Envoi (en attente de l'accord d'Alex)
+### Relecture du plan (Opus, nuit du 9 octobre) : corrections
+Vérifié dans le code avant d'être écrit ici :
+- `TEMPETE.annonce` est aussi lu au tirage des tempêtes (`core/hiver.js:56`) : c'est voulu, la liste des tempêtes ne dépend pas de la partie.
+- Une tempête écrit aussi `game.degats` (`core/hiver.js:180`), pas seulement le règlement et les crans.
+- L'écart entre deux tempêtes peut dépasser 14 jours quand la trêve en retire : 20 écarts sur 205 en 20 hivers, le plus long 38 jours (13 décembre 2033 → 20 janvier 2034, mesuré).
+- Un client ancien ne montre pas un type de bâtiment qu'il ne connaît pas (`batimentsDuVillage` filtre par le catalogue, `core/batiments.js:85`), mais le garde quand il recopie la liste (`list()`, `:266`).
+- Alerte avec la tour : l'agent avait compté 71 % des jours d'hiver contre 37 % ; remesuré, du 1er décembre au 31 mars sur 20 hivers (2026 à 2045), 63 % avec la tour contre 33 % sans (2026-2027 : 75 jours sur 121, contre 40). Son 71 % divisait 84 jours (du 15 novembre au 30 avril) par 122. Question pour Alex : la rangée d'alerte restera affichée presque deux jours d'hiver sur trois.
+- Nom : « lot V » était déjà le marchand du quai (v2.1) ; ce lot s'appelle « lot B » (leçon du 9 octobre).
+
+### B6 — Envoi (en attente de l'accord d'Alex)
 - [ ] Étiquette `v2.10` prête ; photo des données, `deploy-prod.sh v2.10`, comparaison des fichiers en ligne.

@@ -115,7 +115,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Éolienne | Hameau | Donne de l'Énergie en plus les jours où tu as travaillé |
 | Grenier | Hameau | Garde plus de Nourriture en réserve |
 | Quai | Hameau | Les visiteurs arrivent par le lac : débloque les commandes |
-| Tour de guet | Village | Annonce les alertes météo 7 jours d'avance au lieu de 3 |
+| Tour de guet | Village | Annonce les tempêtes de neige jusqu'à 7 jours d'avance au lieu de 3 |
 | Scierie | Village | Donne des Matériaux en plus les jours où tu as travaillé |
 | Poulailler | Village | Un peu de Nourriture, même l'hiver |
 | Cabane à sucre | Village | Grosse récolte au temps des sucres (mars-avril) |
@@ -123,6 +123,12 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | École | Bourg | Les habitants produisent un peu plus |
 | Centrale solaire | Bourg | De l'Énergie en plus, surtout l'été |
 | Garage à chasse-neige | Bourg | Protège des tempêtes de neige |
+
+**Le rang Village, tel qu'il est construit** (lot B, nuit du 8 au 9 octobre 2026 ; choix de Claude, *à valider par Alex*, pas encore en ligne) :
+- les quatre bâtiments se posent sur la bande du Hameau (décision 38), un exemplaire chacun ; leurs piquets y paraissent avec la bande, et avant le 6e habitant leur fiche dit combien il en manque (« Village : encore 3 habitants. » au 3e). Prix : tour de guet 4 Énergie et 30 Matériaux ; scierie 6 Énergie et 35 Matériaux (il faut d'abord l'atelier) ; poulailler 25 Matériaux ; cabane à sucre 3 Énergie et 30 Matériaux ;
+- comme l'éolienne, les trois producteurs donnent à la première quête payée du jour, une fois par jour, et Remballer reprend leur part si le jour reste sans quête payée : la scierie 3 Matériaux ; le poulailler 1 Nourriture, toute l'année ; la cabane à sucre 4 Nourriture du 1er mars au 30 avril (le reste de l'année, elle dort ; au temps des sucres, sa vapeur sort du lanterneau). La Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'entre, et la quête payée suivante du même jour réessaie ;
+- la fiche de chacun dit, dans « Maintenant », ce qu'il a donné aujourd'hui, ou pourquoi rien encore (hors saison, réserve pleine) ; celle de la tour, la tempête annoncée (§8) ;
+- rien ne tombe en panne ni sous la neige dans ce lot : seules l'éolienne et la serre le peuvent.
 
 Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village.
 
@@ -142,7 +148,7 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
 **L'hiver, tel qu'il est construit** (lot H, 7 octobre 2026, décisions d'Alex) :
 - du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
 - objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Au ralenti (§9), 6 récoltes suffisent, et le grenier à moitié à l'automne. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
-- les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler, la tour de guet et le garage à chasse-neige viendront plus tard, quand le village approchera du rang Village.
+- les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler (qui produit même l'hiver) et la tour de guet (qui prévient plus tôt) arrivent au rang Village (lot B, §5 et §8) ; le garage à chasse-neige viendra plus tard.
 
 Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
 
@@ -241,7 +247,8 @@ Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/c
 - chaque jour travaillé pendant l'annonce (une vraie quête payée, n'importe laquelle) remplit un cran ; un cran manqué s'achète : « Rentrer du bois », 3 Matériaux (au plus un par jour d'annonce écoulé : les quêtes gardent leur rôle, et la veille tout ce qui manque s'achète) ;
 - le jour même, barre pleine : tempête tenue, 6 Matériaux (la récompense attend jusqu'au dimanche). Sinon, si l'annonce a été vue et que l'app s'ouvre ce jour-là, un bâtiment est enseveli : une éolienne (elle ne donne plus son Énergie) ou une petite serre dont la culture pousse (elle ne pousse plus). Trois façons de le dégager, comme un dégât : « Déneiger », 2 Énergie ; une quête Terrain, gratuite (le potager dort, Terrain retrouve un usage l'hiver) ; ou attendre que la neige fonde, en 3 jours. Sinon, elle passe sans rien laisser ;
 - jamais à cause d'une absence ; une tempête qui tombe pendant les trois jours de reprise passe sans dégât (§9) ; le jour d'une tempête, aucun mauvais imprévu ; un bâtiment ne porte qu'un dégât à la fois, et s'il n'y a rien à ensevelir, la tempête passe ;
-- la tour de guet (prévenir plus tôt) et le garage à chasse-neige (protéger) viendront plus tard.
+- avec la tour de guet (lot B, *à valider*), l'annonce commence jusqu'à 7 jours d'avance : jamais pendant la trêve des Fêtes, ni avant le lendemain de la tempête précédente (deux tempêtes peuvent être à 7 jours l'une de l'autre). La barre garde ses trois crans : chaque jour travaillé des 7 jours compte, et un cran manqué s'achète toujours au plus un par jour d'annonce écoulé. Les jours de tempête ne changent pas (leur tirage garde l'annonce de 3 jours) ; sans tour, rien ne change. Mesuré sur 20 hivers (2026 à 2045), du 1er décembre au 31 mars : avec la tour, la rangée d'alerte est affichée 63 % des jours, contre 33 % sans (hiver 2026-2027 : 75 jours sur 121, contre 40) ;
+- le garage à chasse-neige (protéger) viendra plus tard.
 
 Montants validés par Alex le 7 octobre, après une simulation (`tests/core/simulation.test.mjs`, joueur (j)) : avec ou sans tempêtes, le premier niveau de quartier arrive à 0 ou 1 jour près.
 

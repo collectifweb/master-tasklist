@@ -2,7 +2,7 @@
 // Tempêtes de neige : de la première neige (15 novembre) à la fin de mars, l'écart entre deux tempêtes est tiré entre 7 et
 // 14 jours d'après la date (tous les appareils voient les mêmes, même hors ligne). Aucune tempête pendant la trêve des
 // Fêtes, ni annoncée pendant elle. Chaque tempête est annoncée TEMPETE.annonce jours d'avance (TOUR_ANNONCE avec une tour
-// de guet, lot V : jamais pendant la trêve ni avant le lendemain de la tempête précédente) ; la barre de préparation a
+// de guet, lot B : jamais pendant la trêve ni avant le lendemain de la tempête précédente) ; la barre de préparation a
 // TEMPETE.crans crans : un par jour travaillé pendant l'annonce (une quête payée, non remballée), et un cran manqué
 // s'achète, au plus un par jour d'annonce écoulé (« Rentrer du bois », game.prepa = { jour, achetes }).
 // Le jour venu, au passage du temps, la tempête se règle une fois, sous la clé tempete:{jour} du registre :
@@ -31,7 +31,7 @@ import { etatPremiersPas } from './objectifs.js';
  * crans : taille de la barre ; cran : prix d'un cran acheté ; tenue : récompense d'une tempête tenue.
  */
 export const TEMPETE = { annonce: 3, ecart: [7, 14], fin: '03-31', crans: 3, cran: { materials: 3 }, tenue: { materials: 6 } };
-/** Jours d'annonce avec une tour de guet (bible §5, lot V). */
+/** Jours d'annonce avec une tour de guet (bible §5, lot B). */
 export const TOUR_ANNONCE = 7;
 /** Jours d'annonce de ce village : TOUR_ANNONCE avec une tour de guet debout, TEMPETE.annonce sans elle. */
 export const annonceDe = (game) => (compte(game, 'tour') ? TOUR_ANNONCE : TEMPETE.annonce);

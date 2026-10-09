@@ -15,7 +15,7 @@
 // cadenas et la raison du cœur, et les deux autres voies : une quête du bon domaine, ou attendre qu'il se règle seul.
 // Réglé aujourd'hui, il laisse à sa place une ligne cochée jusqu'au soir. La neige d'une tempête (core/hiver.js, lot H)
 // est un dégât du même genre : « Déneiger », une quête Terrain, ou la neige qui fond.
-// Au rang Village (lot V), « Maintenant » dit ce qu'un producteur a donné aujourd'hui, ou pourquoi rien encore (la cabane
+// Au rang Village (lot B), « Maintenant » dit ce qu'un producteur a donné aujourd'hui, ou pourquoi rien encore (la cabane
 // à sucre hors saison, la réserve pleine) ; celui de la tour de guet, la tempête annoncée.
 // Le visiteur à commande (lot C) a son bloc au-dessus du comptoir : qui il est, ce qu'il demande, ce qu'il laisse, la
 // taille de la commande quand elle n'est pas « régulière », puis « Livrer » (la seule action principale de la fiche,

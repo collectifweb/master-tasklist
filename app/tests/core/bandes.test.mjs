@@ -154,8 +154,8 @@ test('phrase lue : « Nouveau rang : Hameau. » suivi de la forêt qui recule', 
   assert.equal(bat.sr['rang.bande'], 'La forêt recule : l’île gagne une bande de terrain.');
 });
 
-// ───────── Lot V : les emplacements du rang Village sont posés sur la bande du Hameau ─────────
-test('lot V : les emplacements posés sur une bande restent dans ses cases, hors de l’île de départ et de la route', () => {
+// ───────── Lot B : les emplacements du rang Village sont posés sur la bande du Hameau ─────────
+test('lot B : les emplacements posés sur une bande restent dans ses cases, hors de l’île de départ et de la route', () => {
   const surBande = Object.entries(EMPLACEMENTS).flatMap(([type, l]) => l.filter((s) => s.bande).map((s) => ({ type, ...s })));
   assert.deepEqual(surBande.map((s) => s.type).sort(), ['cabane', 'poulailler', 'scierie', 'tour']);
   for (const s of surBande) {
@@ -168,7 +168,7 @@ test('lot V : les emplacements posés sur une bande restent dans ses cases, hors
   }
 });
 
-test('lot V : la vue ne montre les emplacements d’une bande qu’une fois la bande gagnée, verrouillés jusqu’au Village', () => {
+test('lot B : la vue ne montre les emplacements d’une bande qu’une fois la bande gagnée, verrouillés jusqu’au Village', () => {
   const vue = (habitants) => {
     const g = createInitialState(NOW);
     g.habitants = habitants;

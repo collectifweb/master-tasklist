@@ -228,7 +228,7 @@
 }
 .ow-smoke i:nth-child(2) { animation-delay: -1.5s; }
 .ow-smoke i:nth-child(3) { animation-delay: -3s; }
-/* vapeur de la cabane à sucre (lot V) : plus grosse, et ombrée dessous pour se lire sur la neige et les arbres blancs */
+/* vapeur de la cabane à sucre (lot B) : plus grosse, et ombrée dessous pour se lire sur la neige et les arbres blancs */
 .ow-vapeur i {
   left: -8px;
   top: -8px;

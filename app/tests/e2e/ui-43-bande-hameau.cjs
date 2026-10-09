@@ -59,24 +59,27 @@ const bande = (page) => page.evaluate(() => {
 const defile = (page) => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
 const ouvertes = (page) => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((d) => d.id));
 /**
- * Un point au milieu de la bande, sans rien de touchable par-dessus ni à moins de 28 px (sur écran tactile, Chromium
- * rapproche un toucher de l'élément cliquable voisin, sur la bande comme sur le reste du sol). Boîte de la bande : de
- * P(2, 0) à P(10, -2) en x (320 px monde) et depuis P(2, -2) en y ; la ligne du milieu de la bande est y = x / 2 - 32.
+ * Un point de sol nu sur la bande, sans rien de touchable par-dessus ni à moins de `marge` px (sur écran tactile, Chromium
+ * rapproche un toucher de l'élément cliquable voisin, sur la bande comme sur le reste du sol). Depuis le lot B, les piquets
+ * du rang Village occupent la bande : on balaie toute sa surface, rangée par rangée. Boîte de la bande : de P(2, 0) à
+ * P(10, -2) en x (320 px monde) et depuis P(2, -2) en y ; la case (c, r) y est en x = 32 (c - r) - 64, y = 16 (c + r).
  */
-const solBande = (page) => page.evaluate(() => {
+const solBande = (page, marge) => page.evaluate((marge) => {
   const r = document.querySelector('.ow-bande').getBoundingClientRect();
   const s = r.width / 320;
   const libre = (x, y) => {
     const top = document.elementFromPoint(x, y);
     return top && top.closest('.ow') && !top.closest('.is-btn, .ow-plaque, button, [role="button"], .ow-zoom');
   };
-  for (const X of [220, 180, 260, 150, 290]) {
-    const x = r.left + (X - 64) * s, y = r.top + (X / 2 - 32) * s;
-    const autour = Array.from({ length: 8 }, (_, k) => [x + 28 * Math.cos((k * Math.PI) / 4), y + 28 * Math.sin((k * Math.PI) / 4)]);
-    if (libre(x, y) && autour.every(([a, b]) => libre(a, b))) return [x, y];
+  for (const rg of [-1, -0.6, -1.4, -0.3, -1.7]) {
+    for (let c = 2.3; c < 9.8; c += 0.25) {
+      const x = r.left + (32 * (c - rg) - 64) * s, y = r.top + 16 * (c + rg) * s;
+      const autour = Array.from({ length: 8 }, (_, k) => [x + marge * Math.cos((k * Math.PI) / 4), y + marge * Math.sin((k * Math.PI) / 4)]);
+      if (libre(x, y) && autour.every(([a, b]) => libre(a, b))) return [x, y];
+    }
   }
   return null;
-});
+}, marge);
 const foret = (s) => s.filter((x) => x.text.includes('La forêt recule'));
 /** La bande à l'écran : part de sa boîte dans la carte, et ce qui est au centre est bien la carte (ni panneau ni barre). */
 const enVue = (page) => page.evaluate(() => {
@@ -133,12 +136,16 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
   R.check('Fanal dit une réplique du Hameau qui gagne sa bande', repliques.some((t) => fanal.includes(t)), fanal);
   await page.screenshot({ path: `${L.SHOTS}/43-bande-${size[0]}.png` });
 
-  const q = await solBande(page);
-  R.check('un point de la bande loin de tout objet touchable', !!q);
+  // loin des piquets du Village, un vrai toucher ; s'ils sont trop près pour un doigt à cette largeur, un clic de souris
+  // (sans rapprochement) sur le sol nu
+  const loin = await solBande(page, 28);
+  const q = loin || await solBande(page, 0);
+  R.check('un point de sol nu sur la bande', !!q);
   if (q) {
-    await toucher(page, q, compact);
+    if (loin) await toucher(page, q, compact);
+    else await page.mouse.click(q[0], q[1]);
     await page.waitForTimeout(700);
-    R.check('toucher la bande n’ouvre rien', (await ouvertes(page)).length === 0, JSON.stringify({ q, ouvertes: await ouvertes(page), titre: await page.evaluate(() => document.querySelector('dialog[open] h2')?.textContent) }));
+    R.check(`toucher la bande n’ouvre rien (${loin ? 'loin de tout objet touchable' : 'à la souris : les piquets sont à moins de 28 px'})`, (await ouvertes(page)).length === 0, JSON.stringify({ q, ouvertes: await ouvertes(page), titre: await page.evaluate(() => document.querySelector('dialog[open] h2')?.textContent) }));
   }
 
   // le second appareil n'a pas encore relu le serveur : il le relit au retour sur l'onglet

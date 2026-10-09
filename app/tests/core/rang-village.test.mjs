@@ -1,4 +1,4 @@
-// Bâtiments du rang Village (bible §5, lot V) : tour de guet, scierie, poulailler, cabane à sucre. Les trois derniers
+// Bâtiments du rang Village (bible §5, lot B) : tour de guet, scierie, poulailler, cabane à sucre. Les trois derniers
 // produisent les jours travaillés, comme l'éolienne : à la première quête payée du jour, inscrit au registre sous
 // prod:{type}:{jour}, repris par Remballer si le jour reste sans quête payée. Titres fictifs génériques.
 import test from 'node:test';

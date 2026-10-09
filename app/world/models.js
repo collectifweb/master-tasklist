@@ -499,7 +499,7 @@ export function grenier() {
   return a.done(3);
 }
 
-// ---------------------------------------------------------------- rang Village (lot V), sur la bande du Hameau
+// ---------------------------------------------------------------- rang Village (lot B), sur la bande du Hameau
 
 /**
  * Tour de guet, emprise 0,9 × 0,9 : quatre pieds de bois croisés de Saint-André, une échelle sur la face +v, la

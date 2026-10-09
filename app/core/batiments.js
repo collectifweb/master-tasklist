@@ -58,7 +58,7 @@ export const ACCUEIL_NOURRITURE = 18;
 /** Énergie d'une éolienne, par jour travaillé. */
 export const EOLIENNE_ENERGIE = 3;
 /**
- * Bâtiments du rang Village qui produisent les jours travaillés (lot V), comme l'éolienne : ce qu'ils donnent par jour
+ * Bâtiments du rang Village qui produisent les jours travaillés (lot B), comme l'éolienne : ce qu'ils donnent par jour
  * ({ materials } ou { food }) ; mois : seulement ces mois-là (la cabane à sucre, au temps des sucres).
  */
 export const PRODUCTION = {

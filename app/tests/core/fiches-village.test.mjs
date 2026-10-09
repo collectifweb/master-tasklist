@@ -1,4 +1,4 @@
-// Fiches des bâtiments du rang Village (lot V) : « Ce que ça fait » lit ses valeurs au cœur ; « Maintenant » dit ce qu'un
+// Fiches des bâtiments du rang Village (lot B) : « Ce que ça fait » lit ses valeurs au cœur ; « Maintenant » dit ce qu'un
 // producteur a donné aujourd'hui, la cabane à sucre hors saison, la réserve pleine ; celui de la tour, la tempête annoncée.
 // Titres fictifs génériques, aucune donnée réelle.
 import test from 'node:test';

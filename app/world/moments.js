@@ -185,7 +185,7 @@ function etapeStep(ctx, ev) {
  */
 function bandeStep(ctx) {
   const neuves = () => (ctx.target?.bandes || []).filter((id) => !(ctx.shown.bandes || []).includes(id));
-  // les emplacements posés sur la bande (lot V) arrivent avec elle : leurs piquets se plantent après les souches
+  // les emplacements posés sur la bande (lot B) arrivent avec elle : leurs piquets se plantent après les souches
   const surBande = (b) => EMPLACEMENTS[b.type]?.[Number(b.id.slice(b.type.length + 1)) - 1]?.bande;
   const apply = () => {
     ctx.shown.bandes = [...(ctx.target?.bandes || [])];
@@ -259,7 +259,7 @@ const SAID_BY_UI = new Set(['quartier-monte']);
 
 const PRODUCTEURS = new Set(['eolienne', ...Object.keys(PRODUCTION)]);
 /**
- * Les productions du jour (éolienne et bâtiments du rang Village, lot V), qui suivent la quête payée, partent en un seul
+ * Les productions du jour (éolienne et bâtiments du rang Village, lot B), qui suivent la quête payée, partent en un seul
  * fil vers la Place : leurs gains s'additionnent. Les autres événements ne changent pas.
  */
 export function regrouperProductions(events) {

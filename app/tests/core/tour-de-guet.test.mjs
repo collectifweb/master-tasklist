@@ -1,4 +1,4 @@
-// Tour de guet (bible §5 et §8, lot V) : avec elle, une tempête de neige est annoncée 7 jours d'avance au lieu de 3. La
+// Tour de guet (bible §5 et §8, lot B) : avec elle, une tempête de neige est annoncée 7 jours d'avance au lieu de 3. La
 // barre garde ses trois crans : les jours travaillés des 7 jours comptent, et un cran manqué s'achète, au plus un par jour
 // d'annonce écoulé. L'annonce ne commence jamais pendant la trêve des Fêtes, ni avant le lendemain de la tempête
 // précédente. Les jours de tempête ne changent pas. Sans tour, tout est comme avant (tests/core/hiver.test.mjs, inchangé).

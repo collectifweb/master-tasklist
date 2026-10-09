@@ -105,7 +105,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // commandes (l) : 'livre', le joueur livre la commande du visiteur dès qu'il le peut, après ses bâtiments et avant le
   // marchand et les niveaux ; avec elle, il bâtit aussi le quai.
   // duJour (m) : 'avise', 'chaque' ou 'presse', sa façon de prendre l'échange du jour (voir l'en-tête).
-  // village (n) : après ses autres bâtiments, il bâtit aussi ceux du rang Village dès qu'il le peut (lot V).
+  // village (n) : après ses autres bâtiments, il bâtit aussi ceux du rang Village dès qu'il le peut (lot B).
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
@@ -791,7 +791,7 @@ test('(m) l’échange du jour : personne ne recule, même en échangeant chaque
   }
 });
 
-// (n) Le rang Village (lot V) : le même joueur, avec ou sans les quatre bâtiments du rang Village, du 7 octobre au 1er mai
+// (n) Le rang Village (lot B) : le même joueur, avec ou sans les quatre bâtiments du rang Village, du 7 octobre au 1er mai
 // (le temps des sucres compris). Mesure d'abord : ce que coûtent et rapportent la scierie, le poulailler, la cabane à sucre,
 // et ce que change la tour de guet aux tempêtes.
 test('(n) le rang Village : quand il arrive, ce que coûtent et rapportent ses bâtiments', (t) => {
