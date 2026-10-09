@@ -1379,7 +1379,7 @@ Choix d'Alex : « 6 jours (Recommandé) », avec un nouvel envoi. Mesuré avant 
 
 Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l'option C de trouver d'autres usages à la nourriture »), puis son choix de trois pistes : la partie de sucre, le repas du dimanche, le sirop au marchand. Point de départ mesuré (B2 bis, joueurs simulés) : une fois le village plein, la réserve reste au plafond ; le poulailler a donné 161 jours sur 563, la cabane 9 jours sur 214 en mars et avril. Règles à garder (bible §2, PRODUCT.md) : la Nourriture ne se dépense que par un geste choisi, jamais en cachette ; personne ne part, personne n'a faim ; un bonus reste plafonné ; aucune tâche réelle n'est touchée ; ne rien faire ne fait rien perdre.
 
-**Statut : plan seulement. Rien n'est codé avant les réponses d'Alex et la validation du plan.**
+**Statut : choix d'Alex reçus le 9 octobre au matin (ci-dessous) ; les prix X, Y, Z viendront de la mesure (N1), *à valider*.**
 
 ### Proposition (mes choix, chacun *à valider*)
 - **Repas du dimanche** : une fois par semaine de jeu, un geste « Servir le repas » sur la Place : X Nourriture contre une petite récompense fixe, en Énergie (la ressource qui manque le plus souvent, d'après la simulation du lot C). Une fois par semaine au plus (clé de la semaine au registre, comme la commande du quai) ; ne pas le servir ne fait rien perdre. À l'écran : une longue table sur la Place le jour où il est servi.
@@ -1405,3 +1405,9 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
 2. Sa récompense : de l'Énergie (ma recommandation) ou des Matériaux ?
 3. La partie de sucre comme objectif de printemps « Faire les sucres » (ma recommandation), ou un geste à part ?
 4. Le sirop : vendu automatiquement au marchand quand la réserve est pleine (ma recommandation, le plus simple), ou un petit stock de cruches que tu vends toi-même au comptoir ?
+
+### Réponses d'Alex (9 octobre, au matin)
+1. Repas : « Un jour au choix » — une fois par semaine (lundi au dimanche), le jour qu'il veut.
+2. Récompense du repas : « De l'Énergie ».
+3. Partie de sucre : « Objectif de printemps » — l'objectif « Faire les sucres ».
+4. Sirop : « Vendu tout seul » — ce qui ne rentre pas dans la réserve part au marchand, de l'Énergie en plus ce jour-là ; il faut le quai.
