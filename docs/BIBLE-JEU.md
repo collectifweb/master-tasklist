@@ -58,6 +58,8 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 Le prochain rang est toujours affiché avec ce qui manque, par exemple : « Hameau : encore 2 habitants. »
 
+La bande du Hameau (lot F, 8 octobre 2026) : quand le village atteint 3 habitants, la forêt du fond recule. L'île gagne deux cases de profondeur sur les deux tiers de son bord du fond, côté Garage et Mairie, sans changer de taille à l'écran. La lisière est replantée au nouveau bord, quelques souches restent sur la terre gagnée. Elle arrive vide et attend les bâtiments du rang Village (décision 38). Rien n'est écrit dans la partie : elle se lit dans le nombre d'habitants, qui ne baisse jamais, et ne repart donc pas.
+
 ### Les quartiers (tes domaines de vie)
 
 Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne compte plus pour les niveaux : la fiche d'un quartier et la Carte en liste montrent seulement combien de ses quêtes sont à faire, rien de plus.
@@ -397,7 +399,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 |---|---|---|
 | 1 et 2 | Nouveau vocabulaire, quatre ressources, rang et habitants, bâtiments du campement et du hameau, fiches à trois lignes, quêtes d'initiation, bandeau d'objectifs, bilans passés, « Jour suivant » au bac à sable, rappel quotidien | Automne : premier gel, remplir le grenier |
 | 3 et 4 | Visiteurs et commandes (le marchand d'abord), catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
-| 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée | Prêt avant le 1er décembre |
+| 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée (lot F, 8 octobre) | Prêt avant le 1er décembre |
 | 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
@@ -461,3 +463,8 @@ Décisions du 8 octobre 2026 (soir), lot T :
 
 36. **L'échange du jour se fait chez le marchand, au quai** : Alex voyait l'échange chez lui, « le commerçant, son rôle c'était vraiment ça ». 20 Matériaux contre 10 Énergie, une fois par jour, 150 Matériaux toujours laissés au village (§7). Le lieu était laissé au choix entre l'atelier et le quai. Retenu le quai, parce que c'est l'image qu'en a Alex et que l'atelier ne l'ouvrirait presque jamais plus tôt, faute de 170 Matériaux avant le quai.
 37. **Envoi direct en production si tout est vert.**
+
+Décisions du 8 octobre 2026 (soir), lot F :
+
+38. **La bande du Hameau arrive vide** : « J'aime mieux que l'espace permette de mettre de nouveaux bâtiments plutôt que de jouer sur les bâtiments existants pour les mettre sur la bande. » L'éolienne et le grenier restent où ils sont ; la bande attend les bâtiments du rang Village (§4). L'autre choix proposé était d'y déménager leurs emplacements.
+39. **Envoi direct en production si tout est vert.**
