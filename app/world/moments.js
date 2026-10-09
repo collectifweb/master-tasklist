@@ -7,8 +7,9 @@
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
 //   la forêt recule : un rang gagne une bande de terrain (rang, lot F)
 import { P, f } from './iso.js';
-import { SECTOR_CENTER, BANDES_ILE, decorFor } from './layout.js';
+import { SECTOR_CENTER, BANDES_ILE, EMPLACEMENTS, decorFor } from './layout.js';
 import { quartierOfTask } from '../core/domains.js';
+import { PRODUCTION } from '../core/batiments.js';
 
 export function cloneView(v) {
   return {
@@ -184,8 +185,16 @@ function etapeStep(ctx, ev) {
  */
 function bandeStep(ctx) {
   const neuves = () => (ctx.target?.bandes || []).filter((id) => !(ctx.shown.bandes || []).includes(id));
-  const apply = () => { ctx.shown.bandes = [...(ctx.target?.bandes || [])]; ctx.apply({ enter: false }); };
+  // les emplacements posés sur la bande (lot V) arrivent avec elle : leurs piquets se plantent après les souches
+  const surBande = (b) => EMPLACEMENTS[b.type]?.[Number(b.id.slice(b.type.length + 1)) - 1]?.bande;
+  const apply = () => {
+    ctx.shown.bandes = [...(ctx.target?.bandes || [])];
+    const deja = new Set(ctx.shown.batiments.map((b) => b.id));
+    ctx.shown.batiments = [...ctx.shown.batiments, ...(ctx.target?.batiments || []).filter((b) => !deja.has(b.id) && surBande(b))];
+    ctx.apply({ enter: false });
+  };
   const art = (n) => n.el.querySelector('.ow-art') || n.el;
+  const ordre = (n) => (n.e.model === 'souche' ? 1 : n.e.batiment ? 2 : 0);
   const run = async () => {
     const ids = neuves().filter((id) => BANDES_ILE[id]);
     if (!ids.length) { apply(); return; }
@@ -211,9 +220,9 @@ function bandeStep(ctx) {
     const g = ctx.bande(ids[0]);
     if (g) ctx.fx.anim(g, [{ opacity: 0, transform: 'translateY(22px)' }, { opacity: 1, transform: 'none' }], { duration: 760, easing: 'cubic-bezier(.16,1,.3,1)' });
     ctx.fx.ring(x, y - 20, 70, { dur: 900, delay: 180 });
-    // 3. la lisière se replante d'un bout à l'autre, puis les souches
+    // 3. la lisière se replante d'un bout à l'autre, puis les souches et les piquets
     const neufs = [...ctx.scene.nodes.values()].filter((n) => !avant.has(n.id))
-      .sort((p, q) => (p.e.model === 'souche') - (q.e.model === 'souche') || p.e.c - q.e.c);
+      .sort((p, q) => ordre(p) - ordre(q) || p.e.c - q.e.c);
     neufs.forEach((n, i) => {
       const delay = 320 + i * 60;
       ctx.fx.anim(art(n), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
@@ -248,6 +257,23 @@ function extraSteps(ctx) {
 /** Une seule voix par événement : le niveau acheté est annoncé par l'interface ; le monde le dessine. */
 const SAID_BY_UI = new Set(['quartier-monte']);
 
+const PRODUCTEURS = new Set(['eolienne', ...Object.keys(PRODUCTION)]);
+/**
+ * Les productions du jour (éolienne et bâtiments du rang Village, lot V), qui suivent la quête payée, partent en un seul
+ * fil vers la Place : leurs gains s'additionnent. Les autres événements ne changent pas.
+ */
+export function regrouperProductions(events) {
+  const out = [];
+  for (const ev of events) {
+    const prev = out[out.length - 1];
+    const prod = (e) => e?.type === 'reward' && PRODUCTEURS.has(e.source);
+    if (prod(ev) && prod(prev)) {
+      out[out.length - 1] = { ...prev, energy: (prev.energy || 0) + (ev.energy || 0), materials: (prev.materials || 0) + (ev.materials || 0), food: (prev.food || 0) + (ev.food || 0) };
+    } else out.push(ev);
+  }
+  return out;
+}
+
 export async function playEvents(ctx, events) {
   const missed = [];
   const runAll = async (steps, quiet = false) => {
@@ -262,7 +288,7 @@ export async function playEvents(ctx, events) {
       await step.run();
     }
   };
-  for (const ev of events) {
+  for (const ev of regrouperProductions(events)) {
     const quiet = SAID_BY_UI.has(ev.type);
     await runAll(stepsFor(quiet ? Object.create(ctx, { say: { value: () => {} } }) : ctx, ev), quiet);
   }

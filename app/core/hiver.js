@@ -1,7 +1,8 @@
 // L'hiver (bible §6 et §8, lot H, plan validé par Alex le 7 octobre 2026).
 // Tempêtes de neige : de la première neige (15 novembre) à la fin de mars, l'écart entre deux tempêtes est tiré entre 7 et
 // 14 jours d'après la date (tous les appareils voient les mêmes, même hors ligne). Aucune tempête pendant la trêve des
-// Fêtes, ni annoncée pendant elle. Chaque tempête est annoncée TEMPETE.annonce jours d'avance ; la barre de préparation a
+// Fêtes, ni annoncée pendant elle. Chaque tempête est annoncée TEMPETE.annonce jours d'avance (TOUR_ANNONCE avec une tour
+// de guet, lot V : jamais pendant la trêve ni avant le lendemain de la tempête précédente) ; la barre de préparation a
 // TEMPETE.crans crans : un par jour travaillé pendant l'annonce (une quête payée, non remballée), et un cran manqué
 // s'achète, au plus un par jour d'annonce écoulé (« Rentrer du bois », game.prepa = { jour, achetes }).
 // Le jour venu, au passage du temps, la tempête se règle une fois, sous la clé tempete:{jour} du registre :
@@ -22,7 +23,7 @@ import { gameDay, addDays, weekStart, daysBetween, isTruce, isDayString, seasonD
 import { round1 } from './reward.js';
 import { hasKey } from './ledger.js';
 import { tirage, DEGATS, degatsActifs, enReprise } from './imprevus.js';
-import { batimentsDuVillage, etatCulture, joursTravailles, manque } from './batiments.js';
+import { batimentsDuVillage, etatCulture, joursTravailles, manque, compte } from './batiments.js';
 import { etatPremiersPas } from './objectifs.js';
 
 /**
@@ -30,6 +31,10 @@ import { etatPremiersPas } from './objectifs.js';
  * crans : taille de la barre ; cran : prix d'un cran acheté ; tenue : récompense d'une tempête tenue.
  */
 export const TEMPETE = { annonce: 3, ecart: [7, 14], fin: '03-31', crans: 3, cran: { materials: 3 }, tenue: { materials: 6 } };
+/** Jours d'annonce avec une tour de guet (bible §5, lot V). */
+export const TOUR_ANNONCE = 7;
+/** Jours d'annonce de ce village : TOUR_ANNONCE avec une tour de guet debout, TEMPETE.annonce sans elle. */
+export const annonceDe = (game) => (compte(game, 'tour') ? TOUR_ANNONCE : TEMPETE.annonce);
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const cle = (jour) => `tempete:${jour}`;
@@ -56,9 +61,25 @@ export function tempetesDeLHiver(day) {
 /** Vrai le jour d'une tempête. */
 export const estJourDeTempete = (day) => tempetesDeLHiver(day).includes(day);
 
-/** La tempête annoncée (ou celle du jour) : { jour, joursRestants (0 le jour même) }, ou null. Lecture pure de la date. */
-export function tempeteEnVue(day) {
-  const jour = tempetesDeLHiver(day).find((j) => j >= day && daysBetween(day, j) <= TEMPETE.annonce);
+/**
+ * Premier jour d'annonce de la tempête du `jour`, pour une annonce de `annonce` jours : jamais avant le lendemain de la
+ * tempête précédente, ni pendant la trêve des Fêtes (alors le lendemain de la trêve). Avec l'annonce de base, toujours
+ * `jour` − 3 : le tirage écarte une annonce dans la trêve, et deux tempêtes sont à 7 jours au moins. Lecture pure.
+ */
+export function debutAnnonce(jour, annonce = TEMPETE.annonce) {
+  const prec = tempetesDeLHiver(jour).filter((j) => j < jour).at(-1);
+  let d = addDays(jour, -annonce);
+  if (prec && d <= prec) d = addDays(prec, 1);
+  while (isTruce(d)) d = addDays(d, 1);
+  return d;
+}
+
+/**
+ * La tempête annoncée (ou celle du jour) : { jour, joursRestants (0 le jour même) }, ou null. `annonce` : jours d'annonce
+ * (annonceDe). Lecture pure de la date.
+ */
+export function tempeteEnVue(day, annonce = TEMPETE.annonce) {
+  const jour = tempetesDeLHiver(day).find((j) => j >= day && daysBetween(day, j) <= annonce && day >= debutAnnonce(j, annonce));
   return jour ? { jour, joursRestants: daysBetween(day, jour) } : null;
 }
 
@@ -67,7 +88,7 @@ export function tempeteEnVue(day) {
  * tempête), achetes (crans achetés pour elle), crans (au plus max), max }.
  */
 export function preparation(game, ledger, jour, day) {
-  const avant = addDays(jour, -TEMPETE.annonce - 1);
+  const avant = addDays(debutAnnonce(jour, annonceDe(game)), -1);
   const jusqua = day < jour ? day : addDays(jour, -1);
   const travailles = jusqua > avant ? joursTravailles(ledger, avant, jusqua) : 0;
   const p = isObj(game.prepa) && game.prepa.jour === jour ? Math.max(0, Math.floor(Number(game.prepa.achetes)) || 0) : 0;
@@ -79,14 +100,15 @@ const premiersPasFaits = (tasks, game, ledger) => !etatPremiersPas(tasks, game, 
 const premiersPasAvant = (ctx, jour) => etatPremiersPas(ctx.tasks, ctx.game, ctx.ledger).pas.every((p) => p.fait && p.fait < jour);
 
 /**
- * Alerte à montrer (bandeau, île, Fanal) : { jour, joursRestants, travailles, achetes, crans, max, prix } pendant l'annonce
- * et le jour même ; null hors alerte et pendant les premiers pas.
+ * Alerte à montrer (bandeau, île, Fanal) : { jour, joursRestants, debut (premier jour d'annonce), travailles, achetes,
+ * crans, max, prix } pendant l'annonce et le jour même ; null hors alerte et pendant les premiers pas.
  */
 export function alerteTempete(tasks, game, ledger, now) {
   const day = gameDay(now);
-  const v = tempeteEnVue(day);
+  const annonce = annonceDe(game);
+  const v = tempeteEnVue(day, annonce);
   if (!v || !premiersPasFaits(tasks, game, ledger)) return null;
-  return { ...v, ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
+  return { ...v, debut: debutAnnonce(v.jour, annonce), ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
 }
 
 /**
@@ -102,7 +124,7 @@ export function refusPreparer(tasks, game, ledger, params, now) {
   if (a.joursRestants === 0) return 'La tempête est là : trop tard pour se préparer.';
   if (a.crans >= a.max) return 'La barre est déjà pleine.';
   if (params.n !== a.achetes + 1) return 'Ce cran est déjà rentré.';
-  if (a.travailles + a.achetes >= TEMPETE.annonce - a.joursRestants + 1) return 'Le prochain cran se gagne demain.';
+  if (a.travailles + a.achetes >= daysBetween(a.debut, gameDay(now)) + 1) return 'Le prochain cran se gagne demain.';
   return manque(game, TEMPETE.cran);
 }
 
@@ -147,7 +169,7 @@ function regler(ctx, jour, resultat, extra = {}, gain = {}) {
 
 // La tempête du jour ensevelit un bâtiment, si elle le peut. Renvoie la raison de ne pas le faire, ou null.
 function ensevelir(ctx, jour, seen) {
-  const vue = isDayString(seen) && seen >= addDays(jour, -TEMPETE.annonce) && seen < jour;
+  const vue = isDayString(seen) && seen >= debutAnnonce(jour, annonceDe(ctx.game)) && seen < jour;
   if (!vue) return 'pas-vue';
   if (enReprise(ctx.game, ctx.now)) return 'reprise';
   const jours = DEGATS.neige.jours;

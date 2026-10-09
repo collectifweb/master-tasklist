@@ -3,9 +3,9 @@
 // pour le joueur, et la même raison se lit sans rien faire par refusConstruire, refusSemer, refusRecolter et
 // refusAccueillir (les fiches de l'interface l'écrivent sous le bouton).
 // Construire, semer, récolter et accueillir n'écrivent rien au registre : ils dépensent ou convertissent ce qui a déjà
-// été gagné (game.set suffit). Seule l'éolienne y inscrit sa production, une fois par jour travaillé ; un geste qui
-// accomplit un premier pas ou l'objectif de la saison y inscrit son coup de pouce (objectifs.js) ; et l'accueil qui
-// fait passer un nouveau rang y inscrit son permis (quartiers.js).
+// été gagné (game.set suffit). L'éolienne et les producteurs du rang Village (PRODUCTION) y inscrivent leur production,
+// une fois par jour travaillé ; un geste qui accomplit un premier pas ou l'objectif de la saison y inscrit son coup de
+// pouce (objectifs.js) ; et l'accueil qui fait passer un nouveau rang y inscrit son permis (quartiers.js).
 // Les nombres sont des exemples de départ (bible), réglés par la simulation de tests/core/simulation.test.mjs. Les
 // niveaux de quartier changent cinq d'entre eux (quartiers.js) : récolte du potager et de la serre, jours de pousse,
 // places par chalet, prix d'une famille, stockage ; ils se lisent par valeur(game, réglage), jamais en dur.
@@ -32,6 +32,10 @@ export const BATIMENTS = {
   eolienne: { rang: 'hameau', cout: { energy: 5, materials: 30 }, max: 1, un: 'une éolienne', prerequis: 'atelier' },
   grenier: { rang: 'hameau', cout: { energy: 0, materials: 30 }, max: 1, un: 'un grenier' },
   quai: { rang: 'hameau', cout: { energy: 4, materials: 25 }, max: 1, un: 'un quai' },
+  tour: { rang: 'village', cout: { energy: 4, materials: 30 }, max: 1, un: 'une tour de guet' },
+  scierie: { rang: 'village', cout: { energy: 6, materials: 35 }, max: 1, un: 'une scierie', prerequis: 'atelier' },
+  poulailler: { rang: 'village', cout: { energy: 0, materials: 25 }, max: 1, un: 'un poulailler' },
+  cabane: { rang: 'village', cout: { energy: 3, materials: 30 }, max: 1, un: 'une cabane à sucre' },
 };
 export const BATIMENT_IDS = Object.keys(BATIMENTS);
 
@@ -53,6 +57,15 @@ export const GRENIER_STOCKAGE = 40;
 export const ACCUEIL_NOURRITURE = 18;
 /** Énergie d'une éolienne, par jour travaillé. */
 export const EOLIENNE_ENERGIE = 3;
+/**
+ * Bâtiments du rang Village qui produisent les jours travaillés (lot V), comme l'éolienne : ce qu'ils donnent par jour
+ * ({ materials } ou { food }) ; mois : seulement ces mois-là (la cabane à sucre, au temps des sucres).
+ */
+export const PRODUCTION = {
+  scierie: { materials: 3 },
+  poulailler: { food: 1 },
+  cabane: { food: 4, mois: [3, 4] },
+};
 
 const own = (o, k) => typeof k === 'string' && Object.hasOwn(o, k);
 // Nombres entiers dans les phrases (l'état garde ses dixièmes ; on n'arrondit que ce qu'on écrit).
@@ -375,6 +388,44 @@ export function produireEolienne(ctx) {
   if (!n) return;
   const key = cleLibre(ctx.ledger, `prod:eolienne:${ctx.day}`);
   ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: 'eolienne', pe: 0, energy: EOLIENNE_ENERGIE * n, materials: 0 }, 'eolienne');
+}
+
+/** Ce qu'un bâtiment producteur (PRODUCTION) a donné et qui reste acquis ce jour-là : productions moins reprises. */
+export function productionDuJour(ledger, day, type) {
+  const res = PRODUCTION[type].materials ? 'materials' : 'food';
+  return round1(ledger.filter((e) => e.type === 'prod' && e.batiment === type && e.day === day).reduce((s, e) => s + (Number(e[res]) || 0), 0));
+}
+
+/** Vrai si ce bâtiment producteur travaille ce jour-là (la cabane à sucre dort hors du temps des sucres). */
+export const produitCeJour = (type, day) => !PRODUCTION[type].mois || PRODUCTION[type].mois.includes(mois(day));
+
+/**
+ * Production des bâtiments du rang Village, appelée par quests.js après une quête payée, comme celle de l'éolienne :
+ * la première du jour inscrit prod:{type}:{jour} au registre, une fois par jour (après une reprise, :2, :3…). La
+ * Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'est inscrit et la quête payée suivante réessaie.
+ */
+export function produireBatiments(ctx) {
+  for (const [type, def] of Object.entries(PRODUCTION)) {
+    const n = compte(ctx.game, type);
+    if (!n || !produitCeJour(type, ctx.day) || productionDuJour(ctx.ledger, ctx.day, type) > 0) continue;
+    const gain = def.materials
+      ? { materials: def.materials * n }
+      : { materials: 0, food: round1(Math.min(def.food * n, Math.max(0, stockage(ctx.game) - ctx.game.resources.food))) };
+    if (!(gain.materials > 0 || gain.food > 0)) continue;
+    const key = cleLibre(ctx.ledger, `prod:${type}:${ctx.day}`);
+    ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: type, pe: 0, energy: 0, ...gain }, type);
+  }
+}
+
+/** Reprise, appelée par Remballer, comme celle de l'éolienne : reprise:{type}:{jour}:{n}, si le jour reste sans quête payée. */
+export function reprendreBatiments(ctx, day) {
+  if (jourPaye(ctx.ledger, day)) return;
+  for (const [type, def] of Object.entries(PRODUCTION)) {
+    const net = productionDuJour(ctx.ledger, day, type);
+    if (net <= 0) continue;
+    const key = cleLibre(ctx.ledger, `reprise:${type}:${day}`, 1);
+    ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: type, reprise: true, pe: 0, energy: 0, ...(def.materials ? { materials: -net } : { materials: 0, food: -net }) }, type);
+  }
 }
 
 /**

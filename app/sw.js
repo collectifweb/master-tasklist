@@ -2,7 +2,7 @@
 // hors ligne. Les données passent par api/api.php : jamais mises en cache ici (la copie hors ligne des quêtes est
 // celle du magasin, dans localStorage). Chemins relatifs : l'app peut vivre dans un sous-dossier.
 // Changer VERSION à chaque déploiement qui touche la coquille : l'ancien cache est effacé à l'activation.
-const VERSION = 'oree-coquille-v20';
+const VERSION = 'oree-coquille-v21';
 
 const SHELL = [
   './',

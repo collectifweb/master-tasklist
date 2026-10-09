@@ -21,7 +21,7 @@ import {
 import { applyEntry } from './economy.js';
 import { migrateState, isV1State } from './state.js';
 import { figerBilans } from './recycling.js';
-import { produireEolienne, reprendreEolienne } from './batiments.js';
+import { produireEolienne, reprendreEolienne, produireBatiments, reprendreBatiments } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
 import { suivreImprevus, reparerParQuete, rouvrirParQuete } from './imprevus.js';
@@ -234,6 +234,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   else ctx.events.push({ type: 'sans-gain', taskId: t.id, reason: 'deja-recompensee' });
   if (entry) reparerParQuete(ctx, t); // une quête payée du bon domaine règle les dégâts en cours (imprevus.js), avant l'éolienne
   if (entry) produireEolienne(ctx); // la première quête payée du jour fait tourner l'éolienne (une fois par jour)
+  if (entry) produireBatiments(ctx); // et les producteurs du rang Village (scierie, poulailler, cabane à sucre)
   if (entry) suivrePermis(ctx); // le 4e jour travaillé depuis le dernier permis en donne un (une fois par jour)
   if (entry) suivreSemaine(ctx); // le 5e jour travaillé de la semaine (lundi au dimanche) paie la semaine tenue, une fois
 
@@ -421,6 +422,7 @@ export function remballerQuest(tasks, game, ledger, params, now) {
   const reverse = buildReverseEntry(ctx.ledger, t.id, occ, now);
   ctx.append(reverse, 'reverse'); // −1 tâche au quartier (economy.js)
   reprendreEolienne(ctx, reverse.day); // le jour du gain redevient sans quête payée : l'éolienne rend son Énergie
+  reprendreBatiments(ctx, reverse.day); // et les producteurs du rang Village, leur production
   rouvrirParQuete(ctx, t.id, reverse.day); // le dégât que cette quête avait réglé revient (imprevus.js)
   if (recurring) {
     const p = t.lastDone.prev;

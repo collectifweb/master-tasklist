@@ -102,7 +102,8 @@ export const LANDMARKS = [
  * Emplacements des bâtiments du joueur (core/batiments.js) : un par bâtiment possible, dans l'ordre des identifiants
  * (chalet-1, chalet-2…). Emprise en grille comme les repères. Un emplacement vide reste visible : chalet vide, atelier
  * abîmé, vieux quai, ou piquets d'un chantier possible. Le quai est posé sur le lac, au bout de la route avant
- * (lac : dessiné au niveau de l'eau, au pied du socle) ; il appartient à la Place, dont il est le front.
+ * (lac : dessiné au niveau de l'eau, au pied du socle) ; il appartient à la Place, dont il est le front. bande : posé sur
+ * une bande gagnée sur la forêt (BANDES_ILE), absent de l'île tant qu'elle ne l'est pas.
  */
 export const EMPLACEMENTS = {
   chalet: [{ r: 4.2, c: 4.2, h: 1.2, w: 1.2 }, { r: 4.2, c: 6.7, h: 1.2, w: 1.2 }, { r: 4.2, c: 1.8, h: 1.2, w: 1.2 }],
@@ -112,6 +113,12 @@ export const EMPLACEMENTS = {
   eolienne: [{ r: 0.5, c: 10.6, h: 1, w: 1 }],
   grenier: [{ r: 1, c: 8, h: 2, w: 2 }],
   quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true, sector: 'place' }],
+  // rang Village (lot V) : sur la bande du Hameau, devant la lisière replantée, de part et d'autre de la trouée de la
+  // route ; ils n'existent sur l'île qu'avec leur bande (world/view.js)
+  tour: [{ r: -1.15, c: 4.25, h: 0.9, w: 0.9, bande: 'hameau' }],
+  scierie: [{ r: -1.2, c: 2.15, h: 1, w: 1.8, bande: 'hameau' }],
+  poulailler: [{ r: -1.1, c: 6.85, h: 0.95, w: 1.15, bande: 'hameau' }],
+  cabane: [{ r: -1.25, c: 8.35, h: 1.1, w: 1.4, bande: 'hameau' }],
 };
 
 /**

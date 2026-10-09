@@ -55,7 +55,7 @@ test('ancienne app : écriture sans version de client (ou < 6) refusée, code cl
     { type: 'task.upsert', task: { id: 'a2', status: 'done' } },
     { type: 'game.set', game: { version: 1, resources: { energy: 99 } }, baseGameRevision: sha1(V1_GAME) },
   ];
-  for (const extra of [{}, { client: 1 }, { client: 2 }, { client: 3 }, { client: 4 }, { client: 5 }, { client: 6 }, { client: '7' }, { client: null }]) {
+  for (const extra of [{}, { client: 1 }, { client: 2 }, { client: 3 }, { client: 4 }, { client: 5 }, { client: 6 }, { client: 7 }, { client: '8' }, { client: null }]) {
     const r = await s.post({ opId: 'vieil-onglet', ops, ...extra });
     assert.equal(r.status, 409, JSON.stringify(extra));
     const j = await r.json();
@@ -133,12 +133,12 @@ test('opId de la v1 rejoué : sans effet, par l’ancienne app comme par la v2',
   assert.equal(r.status, 409);
   assert.equal((await r.json()).code, 'client_outdated');
   // la v2 la rejoue telle quelle : déjà appliquée, rien n'est refait
-  r = await s.post({ client: 7, opId: 'v1-op', ops: V1_OPS });
+  r = await s.post({ client: 8, opId: 'v1-op', ops: V1_OPS });
   let j = await r.json();
   assert.equal(r.status, 200);
   assert.equal(j.replay, true);
   // la v2 la rejoue recalculée (autre corps) : refusée
-  r = await s.post({ client: 7, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
+  r = await s.post({ client: 8, opId: 'v1-op', ops: [...V1_OPS, { type: 'ledger.append', entries: [{ key: 'reward:a1:2', pe: 1 }] }] });
   j = await r.json();
   assert.equal(r.status, 409);
   assert.equal(j.code, 'op_id_reused');
@@ -153,12 +153,12 @@ test('quête payée en v1 : la v2 ne peut pas l’inscrire une seconde fois', ()
   assert.deepEqual(snapshot(s), before);
 }));
 
-test('versions 3, 4, 5 et 6 refusées (409 client_outdated) : un onglet resté à l’ancien prix des niveaux, d’avant les imprévus, d’avant l’hiver ou d’avant l’allure, n’écrit plus', async () => {
+test('versions 3, 4, 5, 6 et 7 refusées (409 client_outdated) : un onglet resté à l’ancien prix des niveaux, d’avant les imprévus, d’avant l’hiver, d’avant l’allure ou d’avant le rang Village, n’écrit plus', async () => {
   const s = await startServer();
   try {
     const before = s.readTasksRaw();
     const ops = [{ type: 'task.upsert', task: { id: 'a2', status: 'done' } }];
-    for (const client of [2, 3, 4, 5, 6]) {
+    for (const client of [2, 3, 4, 5, 6, 7]) {
       const r = await s.post({ client, opId: 'onglet-ancien', ops });
       assert.equal(r.status, 409, `client ${client}`);
       const j = await r.json();
@@ -166,8 +166,8 @@ test('versions 3, 4, 5 et 6 refusées (409 client_outdated) : un onglet resté �
       assert.equal(j.error, OUTDATED);
       assert.equal(s.readTasksRaw(), before);
     }
-    // la version 7 passe, et l'opId refusé n'a pas été retenu
-    const ok = await s.post({ client: 7, opId: 'onglet-ancien', ops });
+    // la version 8 passe, et l'opId refusé n'a pas été retenu
+    const ok = await s.post({ client: 8, opId: 'onglet-ancien', ops });
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).replay, undefined);
   } finally {

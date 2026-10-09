@@ -49,7 +49,7 @@ import { playEvents, cloneView } from './moments.js';
 export { createWorldPlan } from './plan.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const LIGHT = { lanterne: 'lantern', etabli: 'lamp', chalet: 'window', grenier: 'window' };
+const LIGHT = { lanterne: 'lantern', etabli: 'lamp', chalet: 'window', grenier: 'window', tour: 'lantern', cabane: 'window' };
 const HORIZON_Y = -128; // ligne d'horizon (px monde), derrière les arbres du fond
 const HAB_MS = 250; // l'île vivante : profondeur des habitants recopiée quatre fois par seconde (scene.habDepths)
 const AMBIENT_MS = 9000; // en économie de batterie, l'île respire quelques secondes après chaque activité, puis s'immobilise

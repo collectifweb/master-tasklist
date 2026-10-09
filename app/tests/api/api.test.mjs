@@ -368,7 +368,7 @@ test('1. nombre non fini : 400, fichiers intacts ; déjà présent sur disque : 
 
 test('2. fichier changé pendant l’écriture : relu et réappliqué ; 3 échecs : 503 tasks_changed', () => withServer({}, async (s) => {
   const code = (always) => `
-$GLOBALS['oree_body_override'] = json_encode(['client' => 7, 'opId' => 'h1', 'ops' => [['type' => 'task.upsert', 'task' => ['id' => 'a1', 'status' => 'done']]]]);
+$GLOBALS['oree_body_override'] = json_encode(['client' => 8, 'opId' => 'h1', 'ops' => [['type' => 'task.upsert', 'task' => ['id' => 'a1', 'status' => 'done']]]]);
 $_SERVER['REQUEST_METHOD'] = 'POST'; $_SERVER['CONTENT_TYPE'] = 'application/json';
 $n = 0;
 $GLOBALS['oree_hook_before_rename'] = function ($f) use (&$n) {
@@ -420,7 +420,7 @@ async function holdLock(path) {
 function sha1hex(x) { return createHash('sha256').update(x).digest('hex'); }
 
 test('3b. POST : Content-Type autre que application/json refusé (415)', () => withServer({}, async (s) => {
-  const body = JSON.stringify({ client: 7, opId: 'x', ops: [{ type: 'task.delete', id: 'a1' }] });
+  const body = JSON.stringify({ client: 8, opId: 'x', ops: [{ type: 'task.delete', id: 'a1' }] });
   for (const ct of ['text/plain', 'application/x-www-form-urlencoded']) {
     const r = await fetch(s.url, { method: 'POST', headers: { 'Content-Type': ct }, body });
     assert.equal(r.status, 415);

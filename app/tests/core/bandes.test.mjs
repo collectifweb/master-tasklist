@@ -153,3 +153,36 @@ test('phrase lue : « Nouveau rang : Hameau. » suivi de la forêt qui recule', 
   assert.equal(bat.sr.rang, 'Nouveau rang : {rang}.');
   assert.equal(bat.sr['rang.bande'], 'La forêt recule : l’île gagne une bande de terrain.');
 });
+
+// ───────── Lot V : les emplacements du rang Village sont posés sur la bande du Hameau ─────────
+test('lot V : les emplacements posés sur une bande restent dans ses cases, hors de l’île de départ et de la route', () => {
+  const surBande = Object.entries(EMPLACEMENTS).flatMap(([type, l]) => l.filter((s) => s.bande).map((s) => ({ type, ...s })));
+  assert.deepEqual(surBande.map((s) => s.type).sort(), ['cabane', 'poulailler', 'scierie', 'tour']);
+  for (const s of surBande) {
+    const b = BANDES_ILE[s.bande];
+    assert.ok(b, s.type);
+    assert.ok(s.c >= b.c && s.c + s.w <= b.c + b.w && s.r >= b.r && s.r + s.h <= b.r + b.h, `${s.type} hors de sa bande`);
+    // l'île de départ n'en voit rien : ni décor ni touffes d'herbe ne bougent sans la bande (isFree garde 0,1 de marge)
+    assert.ok(s.r + s.h + 0.1 <= 0, `${s.type} déborde sur la rangée 0`);
+    assert.ok(s.c + s.w <= 5.4 || s.c >= 6.6, `${s.type} sur la trouée de la route`);
+  }
+});
+
+test('lot V : la vue ne montre les emplacements d’une bande qu’une fois la bande gagnée, verrouillés jusqu’au Village', () => {
+  const vue = (habitants) => {
+    const g = createInitialState(NOW);
+    g.habitants = habitants;
+    g.resources = { energy: 500, materials: 500, food: 5 };
+    g.batiments = [{ id: 'atelier-1', type: 'atelier' }];
+    return deriveView(g, [], { now: NOW }).batiments;
+  };
+  const village = (l) => l.filter((b) => ['tour', 'scierie', 'poulailler', 'cabane'].includes(b.type));
+  assert.deepEqual(village(vue(2)), []);
+  assert.deepEqual(village(vue(3)).map((b) => [b.id, b.refus]), [
+    ['tour-1', 'Village : encore 3 habitants.'], ['scierie-1', 'Village : encore 3 habitants.'],
+    ['poulailler-1', 'Village : encore 3 habitants.'], ['cabane-1', 'Village : encore 3 habitants.'],
+  ]);
+  assert.deepEqual(village(vue(6)).map((b) => [b.id, b.refus]), [['tour-1', null], ['scierie-1', null], ['poulailler-1', null], ['cabane-1', null]]);
+  // les autres emplacements ne bougent pas : même liste au Campement qu'avant le lot
+  assert.equal(vue(2).length, 3 + 3 + 1 + 2 + 1 + 1 + 1);
+});

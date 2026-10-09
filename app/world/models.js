@@ -1,8 +1,9 @@
 // Modèles low-poly en aplats à trois tons (dessus -t, face +v -l, face +u -r). Repère local : (0,0,0) = coin
 // arrière de l'emprise. Chaque fonction renvoie { svg, x, y, w, h, shadow, anchors } (voir iso.js : Art.done).
 // Les modèles du décor fixe : lanterne, cloture, caisse, etabli, erable, glaciere. Bâtiments du joueur : chalet,
-// parcelle, atelier, serre, eolienne, grenier, quai, et piquets (chantier possible). Décor : epinette, arbre, buisson,
-// rocher, et souche (la bande gagnée sur la forêt, lot F). Fanal : characterSVG().
+// parcelle, atelier, serre, eolienne, grenier, quai, tour (de guet), scierie, poulailler, cabane (à sucre), et piquets
+// (chantier possible). Décor : epinette, arbre, buisson, rocher, et souche (la bande gagnée sur la forêt, lot F).
+// Fanal : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
 // ---------------------------------------------------------------- primitives
@@ -498,6 +499,208 @@ export function grenier() {
   return a.done(3);
 }
 
+// ---------------------------------------------------------------- rang Village (lot V), sur la bande du Hameau
+
+/**
+ * Tour de guet, emprise 0,9 × 0,9 : quatre pieds de bois croisés de Saint-André, une échelle sur la face +v, la
+ * plateforme et sa guérite au toit en pointe, plus haute que la lisière ; une lanterne y veille la nuit, un fanion au faîte.
+ */
+export function tour() {
+  const a = new Art();
+  const u0 = 0.2, u1 = 0.7, Z = 50; // pieds sur un carré de 0,5 ; plateforme à 50 px
+  a.box(0.12, 0.12, 0.66, 0.66, 0, 3, 'stoned', { rim: true });
+  const pied = (u, v) => a.box(u - 0.035, v - 0.035, 0.07, 0.07, 3, Z - 3, 'woodd');
+  pied(u0, u0);
+  pied(u1, u0);
+  pied(u0, u1);
+  // croix de Saint-André sur les deux faces visibles, en deux étages
+  for (const [z0, z1] of [[7, 28.5], [28.5, Z]]) {
+    a.seg([u0, u1 + 0.04, z0], [u1, u1 + 0.04, z1], 'k-woodd-l', 1.4);
+    a.seg([u0, u1 + 0.04, z1], [u1, u1 + 0.04, z0], 'k-woodd-l', 1.4);
+    a.seg([u1 + 0.04, u0, z0], [u1 + 0.04, u1, z1], 'k-woodd-r', 1.4);
+    a.seg([u1 + 0.04, u0, z1], [u1 + 0.04, u1, z0], 'k-woodd-r', 1.4);
+  }
+  a.seg([u0, u1 + 0.04, 28.5], [u1, u1 + 0.04, 28.5], 'k-woodd-l', 1.2); // moise du milieu
+  a.seg([u1 + 0.04, u0, 28.5], [u1 + 0.04, u1, 28.5], 'k-woodd-r', 1.2);
+  pied(u1, u1);
+  // échelle sur la face +v, du sol à la plateforme
+  const ev = u1 + 0.1;
+  a.seg([0.36, ev, 0], [0.36, ev, Z + 2], 'k-woodb-l', 1.2);
+  a.seg([0.5, ev, 0], [0.5, ev, Z + 2], 'k-woodb-l', 1.2);
+  for (let z = 4; z < Z; z += 5) a.seg([0.36, ev, z], [0.5, ev, z], 'k-woodb-l', 0.9);
+  // plateforme, garde-corps du fond, guérite
+  a.box(0.08, 0.08, 0.74, 0.74, Z, 2.5, 'woodb', { rim: true });
+  const g0 = 0.13, g1 = 0.77, zg = Z + 2.5, hp = 6, zt = Z + 17;
+  a.box(g0, g0, g1 - g0, 0.04, zg, hp, 'woodd'); // parapet du fond
+  a.box(g0, g0, 0.04, g1 - g0, zg, hp, 'woodd');
+  for (const [pu, pv] of [[g0, g0], [g1 - 0.04, g0], [g0, g1 - 0.04]]) a.box(pu, pv, 0.04, 0.04, zg, zt - zg, 'wooddk');
+  // la lanterne pendue au milieu de la guérite (allumée la nuit, world.js)
+  a.seg([0.45, 0.45, zt], [0.45, 0.45, zg + 9.5], 'k-wooddk-l', 0.7);
+  a.box(0.42, 0.42, 0.06, 0.06, zg + 5.5, 4, 'lampg', { cast: false });
+  a.box(g0, g1 - 0.04, g1 - g0, 0.04, zg, hp, 'woodd'); // parapets de devant
+  a.box(g1 - 0.04, g0, 0.04, g1 - g0, zg, hp, 'woodd');
+  a.seg([g0, g1, zg + hp - 0.2], [g1, g1, zg + hp - 0.2], 'k-woodb-l', 1); // main courante
+  a.seg([g1, g0, zg + hp - 0.2], [g1, g1, zg + hp - 0.2], 'k-woodb-r', 1);
+  a.box(g1 - 0.04, g1 - 0.04, 0.04, 0.04, zg, zt - zg, 'wooddk');
+  // toit en pointe : pans du fond, puis +u et +v
+  const e0 = 0.04, e1 = 0.86, ap = [0.45, 0.45, zt + 15];
+  a.poly([[e0, e0, zt], [e1, e0, zt], ap], 'roofb-r');
+  a.poly([[e0, e0, zt], [e0, e1, zt], ap], 'roofb-r');
+  a.poly([[e1, e0, zt], [e1, e1, zt], ap], 'roofb-l');
+  a.poly([[e0, e1, zt], [e1, e1, zt], ap], 'roofb-t');
+  // fanion au faîte
+  a.seg(ap, [ap[0], ap[1], ap[2] + 9], 'k-wooddk-l', 1);
+  a.poly([[ap[0], ap[1], ap[2] + 9], [ap[0], ap[1], ap[2] + 5], [ap[0] + 0.2, ap[1], ap[2] + 7.4]], 'paper-l');
+  for (const [cu, cv] of [[0.16, 0.16], [0.74, 0.16], [0.74, 0.74], [0.16, 0.74]]) a.cast(cu, cv, 0);
+  a.cast(0.45, 0.45, zt + 15);
+  const r = a.done(3);
+  r.anchors.light = P(0.45, 0.45, zg + 7.5);
+  return r;
+}
+
+/**
+ * Scierie, emprise 1,8 × 1 : un appentis de planches au toit d'une seule pente, le banc de sciage et sa lame ronde qui sort
+ * du banc, une bille en travers ; à côté, la pile de rondins tirés de la lisière et des planches sciées.
+ */
+export function scierie() {
+  const a = new Art();
+  const u0 = 0.12, u1 = 1.14, v0 = 0.14, v1 = 0.84, zb = 25, zf = 17;
+  a.box(0.06, 0.1, 1.14, 0.8, 0, 2, 'stoned', { rim: true });
+  // mur du fond en planches, poteaux du fond
+  a.box(u0, v0, u1 - u0, 0.06, 2, zb - 2, 'woodd', { top: false });
+  for (let uu = u0 + 0.1; uu < u1 - 0.04; uu += 0.1) a.seg([uu, v0 + 0.06, 2.5], [uu, v0 + 0.06, zb], 'k-wooddk-l', 0.6, ' opacity=".45"');
+  a.box(u0, v0, 0.06, v1 - v0, 2, zf - 2, 'woodd', { top: false }); // mur de gauche, à mi-hauteur de la pente
+  // banc de sciage, la bille en travers, la lame
+  a.box(0.3, 0.4, 0.7, 0.26, 2, 7, 'woodb', { rim: true });
+  buche(a, 0.34, 0.6, 0.53, 12.2);
+  // la lame : demi-disque dressé dans le plan u-z, rayon 6,5 px (une case le long de u fait 35,8 px à l'écran)
+  const R = 6.5, k = R / 35.8;
+  a.poly(Array.from({ length: 8 }, (_, i) => [0.74 + Math.cos((i / 7) * Math.PI) * k, 0.53, 9 + Math.sin((i / 7) * Math.PI) * R]), 'metal-l');
+  a.seg([0.74 - k, 0.53, 9.2], [0.74 + k, 0.53, 9.2], 'k-stoned-l', 0.8);
+  // un tas de sciure au pied du banc
+  a.poly([[0.62, 0.68, 2], [0.86, 0.68, 2], [0.76, 0.74, 4.6]], 'hay-l');
+  // poteaux de devant, puis le toit
+  for (const pu of [u0, u1 - 0.06]) a.box(pu, v1 - 0.06, 0.06, 0.06, 2, zf - 2, 'woodd');
+  a.box(u1 - 0.06, v0, 0.06, 0.06, 2, zb - 2, 'woodd');
+  const r0 = u0 - 0.07, r1 = u1 + 0.07, w0 = v0 - 0.07, w1 = v1 + 0.1;
+  a.poly([[r0, w0, zb + 1.6], [r1, w0, zb + 1.6], [r1, w1, zf + 1.6], [r0, w1, zf + 1.6]], 'roofb-t');
+  a.poly([[r0, w1, zf + 1.6], [r1, w1, zf + 1.6], [r1, w1, zf], [r0, w1, zf]], 'roofb-l');
+  a.poly([[r1, w0, zb + 1.6], [r1, w1, zf + 1.6], [r1, w1, zf], [r1, w0, zb]], 'roofb-r');
+  for (const [a0, a1] of [[r0, r1]]) for (let vv = w0 + 0.16; vv < w1; vv += 0.16) a.seg([a0, vv, zb + 1.7 - ((vv - w0) / (w1 - w0)) * (zb - zf)], [a1, vv, zb + 1.7 - ((vv - w0) / (w1 - w0)) * (zb - zf)], 'k-roofb-r', 0.5, ' opacity=".35"');
+  // la pile de rondins, bouts coupés vers +u
+  for (const [vc, zc] of [[0.26, 3.2], [0.43, 3.2], [0.6, 3.2], [0.345, 9.1], [0.515, 9.1], [0.43, 15]]) buche(a, 1.26, 1.72, vc, zc);
+  // planches sciées, devant la pile
+  a.box(1.24, 0.78, 0.46, 0.15, 0, 1.8, 'woodb', { rim: true });
+  a.box(1.27, 0.79, 0.42, 0.13, 1.8, 1.8, 'woodb', { rim: true });
+  for (const [cu, cv] of [[0.06, 0.1], [1.74, 0.16], [1.74, 0.94], [0.06, 0.94]]) a.cast(cu, cv, 0);
+  a.cast(u0, v0, zb); a.cast(u1, v0, zb);
+  return a.done(3);
+}
+
+// Poule de profil, pattes au point (u, v) ; dir : 1 tournée vers la droite de l'écran, -1 vers la gauche. m : plumage.
+function poule(a, u, v, dir = 1, m = 'paper') {
+  const [x, y] = P(u, v, 0);
+  const X = (dx) => f(x + dx * dir);
+  const pt = (l) => l.map(([dx, dy]) => `${X(dx)},${f(y + dy)}`).join(' ');
+  a.raw(`<line x1="${X(-0.6)}" y1="${f(y - 1)}" x2="${X(-0.6)}" y2="${f(y + 0.6)}" class="k-gold-l" stroke-width=".8"/>`
+    + `<line x1="${X(0.9)}" y1="${f(y - 1)}" x2="${X(0.9)}" y2="${f(y + 0.6)}" class="k-gold-l" stroke-width=".8"/>`
+    + `<polygon points="${pt([[-3.8, -2.2], [-4.8, -7], [-2.4, -4.8], [1.2, -5.4], [3, -3.2], [1.6, -0.8], [-2, -0.8]])}" class="${m}-l"/>`
+    + `<polygon points="${pt([[-4.8, -7], [-2.4, -4.8], [-3.4, -3.4]])}" class="${m}-r"/>`
+    + `<circle cx="${X(2.5)}" cy="${f(y - 6.6)}" r="1.8" class="${m}-t"/>`
+    + `<circle cx="${X(2.2)}" cy="${f(y - 8.5)}" r=".95" class="maple-t"/>`
+    + `<polygon points="${pt([[4.1, -7], [5.6, -6.4], [4.1, -5.9]])}" class="gold-t"/>`);
+  a.ext(x - 6, y - 10); a.ext(x + 6, y + 1);
+}
+
+// Grillage : un pan de l'enclos entre (ua, va) et (ub, vb), haut de h px, mailles en losange (traits fins, à demi
+// transparents : on voit les poules à travers).
+function grillage(a, ua, va, ub, vb, h, face) {
+  const n = Math.max(2, Math.round(Math.hypot(ub - ua, vb - va) / 0.09));
+  const at = (k) => [ua + ((ub - ua) * k) / n, va + ((vb - va) * k) / n];
+  for (let k = 0; k < n; k++) {
+    const [p, q] = [at(k), at(k + 1)];
+    a.seg([p[0], p[1], 0.6], [q[0], q[1], h], `k-stoned-${face}`, 0.45, ' opacity=".6"');
+    a.seg([p[0], p[1], h], [q[0], q[1], 0.6], `k-stoned-${face}`, 0.45, ' opacity=".6"');
+  }
+  a.seg([ua, va, h], [ub, vb, h], `k-woodd-${face}`, 0.9);
+}
+
+/**
+ * Poulailler, emprise 1,15 × 0,95 : un cabanon de planches sur pilotis, sa trappe et sa rampe à tasseaux, l'enclos
+ * grillagé à côté ; trois poules, deux blanches et une rousse.
+ */
+export function poulailler() {
+  const a = new Art();
+  const u = 0.1, v = 0.2, du = 0.46, dv = 0.52, z0 = 4, H = 11;
+  const e0 = 0.6, e1 = 1.08, f0 = 0.12, f1 = 0.88, hg = 8; // enclos
+  // piquets et grillage du fond de l'enclos
+  for (const [pu, pv] of [[e0, f0], [e1, f0]]) a.box(pu - 0.025, pv - 0.025, 0.05, 0.05, 0, hg + 1, 'woodd');
+  grillage(a, e0, f0, e1, f0, hg, 'l');
+  // cabanon sur pilotis
+  for (const [pu, pv] of [[u + 0.04, v + 0.04], [u + du - 0.04, v + 0.04], [u + 0.04, v + dv - 0.04], [u + du - 0.04, v + dv - 0.04]]) a.box(pu - 0.025, pv - 0.025, 0.05, 0.05, 0, z0, 'wooddk');
+  a.box(u, v, du, dv, z0, H, 'woodb', { top: false });
+  for (let uu = u + 0.08; uu < u + du - 0.03; uu += 0.08) a.seg([uu, v + dv, z0 + 0.4], [uu, v + dv, z0 + H], 'k-woodd-l', 0.5, ' opacity=".45"');
+  rectV(a, v + dv, u + 0.12, u + 0.3, z0 + 5, z0 + 8.6, 'win');
+  rectU(a, u + du, v + 0.18, v + 0.34, z0 + 0.6, z0 + 5.6, 'wooddk-r'); // trappe
+  roofU(a, u, v, du, dv, z0 + H, 9, 'roof', 'woodb', 0.07);
+  // rampe à tasseaux, de la trappe au sol de l'enclos
+  const r0 = v + 0.18, r1 = v + 0.34, ub = u + du, ue = u + du + 0.3;
+  a.poly([[ub, r0, z0 + 0.6], [ub, r1, z0 + 0.6], [ue, r1, 0.4], [ue, r0, 0.4]], 'woodb-t');
+  for (let k = 1; k < 4; k++) { const uu = ub + (ue - ub) * k / 4, zz = z0 + 0.6 - (z0 + 0.2) * k / 4; a.seg([uu, r0, zz + 0.3], [uu, r1, zz + 0.3], 'k-woodd-t', 0.7); }
+  // les poules : une sur la rampe, deux dans l'enclos
+  poule(a, u + du + 0.12, v + 0.27, 1, 'hay');
+  poule(a, 0.86, 0.42, -1);
+  poule(a, 0.95, 0.66, 1);
+  // pans de devant de l'enclos
+  grillage(a, e1, f0, e1, f1, hg, 'r');
+  grillage(a, e0, f1, e1, f1, hg, 'l');
+  for (const [pu, pv] of [[e0, f1], [e1, f1]]) a.box(pu - 0.025, pv - 0.025, 0.05, 0.05, 0, hg + 1, 'woodd');
+  for (const [cu, cv] of [[u, v], [u + du, v], [u + du, v + dv], [u, v + dv]]) a.cast(cu, cv, 0);
+  a.cast(u + du / 2, v + dv / 2, z0 + H + 9);
+  return a.done(3);
+}
+
+/**
+ * Cabane à sucre, emprise 1,4 × 1,1 : bois rond foncé, toit à deux pans et son lanterneau le long du faîtage (d'où sort la
+ * vapeur de l'évaporateur), le tuyau du poêle, une corde de bois contre le pignon et un tonneau d'eau d'érable. etat
+ * 'sucres' : au temps des sucres, la vapeur sort du lanterneau (fumée de l'île, scene.js).
+ */
+export function cabane(etat = '') {
+  const a = new Art();
+  const u = 0.1, v = 0.2, du = 0.92, dv = 0.7, H = 14;
+  a.box(u - 0.05, v - 0.05, du + 0.1, dv + 0.1, 0, 2.5, 'stoned', { rim: true });
+  a.box(u, v, du, dv, 2.5, H - 2.5, 'woodd', { top: false });
+  for (let z = 4.6; z < H - 0.4; z += 2.3) {
+    a.seg([u, v + dv, z], [u + du, v + dv, z], 'k-woodb-l', 0.8, ' opacity=".5"');
+    a.seg([u + du, v, z], [u + du, v + dv, z], 'k-woodb-r', 0.8, ' opacity=".5"');
+  }
+  const V = v + dv;
+  rectV(a, V, u + 0.12, u + 0.3, 2.5, 11, 'wooddk-l'); // porte
+  rectV(a, V, u + 0.58, u + 0.78, 6.5, 10.5, 'win');
+  rectU(a, u + du, v + 0.24, v + 0.46, 6.5, 10.5, 'win');
+  const vm = v + dv / 2, zr = H + 12;
+  roofU(a, u, v, du, dv, H, 12, 'roofb', 'woodd', 0.09, () => {
+    // tuyau du poêle de l'évaporateur, sur le pan du fond
+    a.prism(u + du - 0.2, v + 0.2, 0.045, H + 5, 17, 'metal', 6, { cast: false });
+    a.prism(u + du - 0.2, v + 0.2, 0.07, H + 21, 1.6, 'wooddk', 6, { cast: false });
+  });
+  // lanterneau : une petite caisse à claire-voie sur le faîtage, son propre toit
+  const l0 = u + 0.24, l1 = u + 0.74;
+  a.box(l0, vm - 0.09, l1 - l0, 0.18, zr - 1.5, 5, 'woodd', { top: false });
+  for (let uu = l0 + 0.07; uu < l1 - 0.02; uu += 0.07) a.seg([uu, vm + 0.09, zr - 0.6], [uu, vm + 0.09, zr + 3], 'k-wooddk-l', 0.9);
+  roofU(a, l0, vm - 0.09, l1 - l0, 0.18, zr + 3.5, 4, 'roofb', 'woodd', 0.05);
+  // corde de bois contre le pignon (+u)
+  for (const [vc, zc] of [[v + 0.14, 3.2], [v + 0.31, 3.2], [v + 0.48, 3.2], [v + 0.225, 9.1], [v + 0.395, 9.1]]) buche(a, u + du + 0.04, u + du + 0.3, vc, zc);
+  // tonneau d'eau d'érable devant la porte, cerclé
+  a.prism(u + 0.44, V + 0.12, 0.075, 0, 7.5, 'woodb', 8, { rim: true });
+  a.seg([u + 0.37, V + 0.19, 1.8], [u + 0.51, V + 0.19, 1.8], 'k-wooddk-l', 0.8);
+  a.seg([u + 0.37, V + 0.19, 5.8], [u + 0.51, V + 0.19, 5.8], 'k-wooddk-l', 0.8);
+  const r = a.done(3);
+  r.anchors.light = P(u + 0.68, V + 0.03, 8.5);
+  if (etat === 'sucres') r.anchors.smoke = P(u + 0.49, vm, zr + 8);
+  return r;
+}
+
 /** Hauteur (en cases) de l'emprise du quai quand le marchand y est amarré : le chaland est dans la zone de toucher. */
 export const QUAI_MARCHAND_H = 1.55;
 
@@ -948,6 +1151,10 @@ export function artFor(e) {
     case 'poissons': return poissons();
     case 'grenier': return grenier();
     case 'quai': return quai(e.variant || '');
+    case 'tour': return tour();
+    case 'scierie': return scierie();
+    case 'poulailler': return poulailler();
+    case 'cabane': return cabane(e.variant || '');
     case 'piquets': return piquets(e.w || 1, e.h || 1);
     case 'erable': return erable(e.seed || 1);
     case 'epinette': return epinette(e.seed || 1, e.s || 1);
@@ -959,7 +1166,7 @@ export function artFor(e) {
   }
 }
 
-export const MODEL_IDS = ['lanterne', 'cloture', 'caisse', 'atelier', 'etabli', 'erable', 'glaciere', 'chalet', 'parcelle', 'serre', 'eolienne', 'grenier', 'quai', 'piquets'];
+export const MODEL_IDS = ['lanterne', 'cloture', 'caisse', 'atelier', 'etabli', 'erable', 'glaciere', 'chalet', 'parcelle', 'serre', 'eolienne', 'grenier', 'quai', 'tour', 'scierie', 'poulailler', 'cabane', 'piquets'];
 
 /** Hauteur approximative (px monde) au-dessus du sol, pour viser le haut d'un objet. */
 export function artTop(art) { return art.y; }

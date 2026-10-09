@@ -1,4 +1,4 @@
-// Bâtiments du campement et du hameau (bible §5, lot 4) : coûts, rang requis, prérequis, maximum, emplacements de
+// Bâtiments du campement, du hameau et du village (bible §5, lots 4 et V) : coûts, rang requis, prérequis, maximum, emplacements de
 // l'île, et chaque refus avec sa raison écrite. Titres fictifs génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,10 +17,13 @@ const riche = (over = {}) => {
 };
 const bati = (w, type) => step(w, construire, { type }, NOW).world.game;
 
-test('catalogue : campement = chalet, parcelle, atelier, petite serre ; hameau = éolienne, grenier, quai', () => {
-  assert.deepEqual(BATIMENT_IDS, ['chalet', 'parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai']);
+test('catalogue : campement = chalet, parcelle, atelier, petite serre ; hameau = éolienne, grenier, quai ; village = tour de guet, scierie, poulailler, cabane à sucre', () => {
+  assert.deepEqual(BATIMENT_IDS, ['chalet', 'parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai', 'tour', 'scierie', 'poulailler', 'cabane']);
   const rang = Object.fromEntries(BATIMENT_IDS.map((id) => [id, BATIMENTS[id].rang]));
-  assert.deepEqual(rang, { chalet: 'campement', parcelle: 'campement', atelier: 'campement', serre: 'campement', eolienne: 'hameau', grenier: 'hameau', quai: 'hameau' });
+  assert.deepEqual(rang, {
+    chalet: 'campement', parcelle: 'campement', atelier: 'campement', serre: 'campement', eolienne: 'hameau', grenier: 'hameau', quai: 'hameau',
+    tour: 'village', scierie: 'village', poulailler: 'village', cabane: 'village',
+  });
   for (const id of BATIMENT_IDS) {
     const b = BATIMENTS[id];
     assert.ok(Number.isInteger(b.cout.energy) && b.cout.energy >= 0, id);
@@ -133,7 +136,7 @@ test('refus : le maximum passe avant le rang, le rang avant le prérequis, le pr
 
 test('refus : bâtiment inconnu, même un nom hérité (constructor)', () => {
   const w = riche();
-  for (const type of ['tour', 'constructor', '__proto__', undefined]) {
+  for (const type of ['moulin', 'constructor', '__proto__', undefined]) {
     assert.equal(refusConstruire(w.game, type), 'Bâtiment inconnu.', String(type));
     assert.throws(() => step(w, construire, { type }, NOW), { message: 'Bâtiment inconnu.' });
   }

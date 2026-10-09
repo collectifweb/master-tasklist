@@ -8,7 +8,7 @@ import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstrui
 import { placesParChalet } from '../core/quartiers.js';
 import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
-import { TEMPETE, alerteTempete } from '../core/hiver.js';
+import { alerteTempete } from '../core/hiver.js';
 import { bandesGagnees } from '../core/village.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
 
@@ -33,15 +33,18 @@ export function sectorView(id, game, tasks = []) {
  * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine ;
  * commande : sur le quai debout, { id, livree } du visiteur à commande de la semaine (lot C) ;
  * degat : sur un bâtiment debout touché par un mauvais imprévu (core/imprevus.js), { type, joursRestants }.
+ * Un emplacement posé sur une bande de terrain n'y est qu'une fois la bande gagnée (lot V).
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
   const g = { ...game, resources: { energy: 0, materials: 0, food: 0, ...(game.resources || {}) } };
   const debout = new Set(batimentsDuVillage(g).map((b) => b.id));
   let loges = logements(g).habitants;
   const places = placesParChalet(g);
+  const bandes = bandesGagnees(g.habitants);
   const out = [];
   for (const type of BATIMENT_IDS) {
-    EMPLACEMENTS[type].forEach((_, i) => {
+    EMPLACEMENTS[type].forEach((slot, i) => {
+      if (slot.bande && !bandes.includes(slot.bande)) return; // sa bande n'est pas encore gagnée sur la forêt
       const id = `${type}-${i + 1}`;
       const b = { id, type, bati: debout.has(id), etat: 'vide', refus: null, reste: 0, occupants: 0, places };
       if (!b.bati) b.refus = refusConstruire(g, type, id);
@@ -117,6 +120,6 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   for (const e of reg) if (e && e.type === 'imprevu' && e.day === today && Object.hasOwn(IMPREVUS.bons, e.imprevu)) imprevus.add(e.imprevu);
   const a = alerteTempete(list, g, reg, now ?? new Date());
   const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max } : null;
-  const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / TEMPETE.annonce } : null;
+  const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / daysBetween(a.debut, a.jour) } : null; // 3 ou 7 jours (tour de guet)
   return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants) };
 }

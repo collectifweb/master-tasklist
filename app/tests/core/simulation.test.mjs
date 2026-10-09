@@ -97,7 +97,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -105,9 +105,10 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // commandes (l) : 'livre', le joueur livre la commande du visiteur dès qu'il le peut, après ses bâtiments et avant le
   // marchand et les niveaux ; avec elle, il bâtit aussi le quai.
   // duJour (m) : 'avise', 'chaque' ou 'presse', sa façon de prendre l'échange du jour (voir l'en-tête).
+  // village (n) : après ses autres bâtiments, il bâtit aussi ceux du rang Village dès qu'il le peut (lot V).
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
   // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
   // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
@@ -125,6 +126,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     const s = step(w, fn, params, now);
     w = s.world;
     for (const e of s.r.events) {
+      if (e.type === 'construction') log.construits[e.id] ??= addDays(debut, i); // (n) jour de chaque bâtiment
       if (e.type === 'objectif-saison') log.objectifs[e.cle] = addDays(debut, i); // (k) jour de chaque objectif de saison atteint
       if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
       else if (e.type === 'imprevu') {
@@ -240,7 +242,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       const libre = cultures.find((id) => !refusSemer(w.game, w.ledger, id, soir));
       if (libre) { geste(semer, { id: libre }, soir); continue; }
       // habitudes : une seule serre, comme l'essai (la seconde serre est venue après lui, au lot R2a)
-      const bat = (habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : marchand || commandes ? ['parcelle', 'atelier', 'serre', 'quai'] : ['parcelle', 'atelier', 'serre'])
+      const bat = [...(habitudes ? ['parcelle', 'atelier', 'serre', 'eolienne', 'grenier', 'quai'] : marchand || commandes ? ['parcelle', 'atelier', 'serre', 'quai'] : ['parcelle', 'atelier', 'serre']),
+        ...(village ? ['scierie', 'poulailler', 'tour', 'cabane'] : [])]
         .find((t) => !(habitudes && t === 'serre' && batimentsDuVillage(w.game).some((b) => b.type === 'serre')) && !refusConstruire(w.game, t));
       if (bat) { geste(construire, { type: bat }, soir); continue; }
       if (commandes === 'livre' && !refusLivrer(w.game, w.ledger, {}, soir)) {
@@ -785,5 +788,29 @@ test('(m) l’échange du jour : personne ne recule, même en échangeant chaque
         }
       }
     }
+  }
+});
+
+// (n) Le rang Village (lot V) : le même joueur, avec ou sans les quatre bâtiments du rang Village, du 7 octobre au 1er mai
+// (le temps des sucres compris). Mesure d'abord : ce que coûtent et rapportent la scierie, le poulailler, la cabane à sucre,
+// et ce que change la tour de guet aux tempêtes.
+test('(n) le rang Village : quand il arrive, ce que coûtent et rapportent ses bâtiments', (t) => {
+  const debut = '2026-10-07';
+  const jours = daysBetween(debut, '2027-05-01');
+  const prod = (l, type) => Math.round(l.monde.ledger.filter((e) => e.type === 'prod' && e.batiment === type).reduce((s, e) => s + (e.materials || 0) + (e.food || 0), 0));
+  const res = (l) => Object.entries(l.monde.game.resources).map(([k, v]) => `${k} ${Math.round(v)}`).join(', ');
+  for (const [nom, rythme, profil, habitudes] of JOUEURS_L) {
+    const options = { profil, habitudes, ...OPTIONS_L };
+    const sans = simuler(debut, jours, rythme, options);
+    const avec = simuler(debut, jours, rythme, { ...options, village: true });
+    const bats = ['scierie-1', 'poulailler-1', 'tour-1', 'cabane-1'].map((id) => `${id.slice(0, -2)} ${avec.construits[id]?.slice(5) ?? '—'}`).join(', ');
+    t.diagnostic(`${nom} : Hameau j${sans.hameau ?? '—'}, village plein ${sans.plein ?? '—'} ; bâtis ${bats}`);
+    t.diagnostic(`  niveaux au 1er mai : ${sans.niveaux.length} sans, ${avec.niveaux.length} avec ; fin sans : ${res(sans)} ; fin avec : ${res(avec)}`);
+    t.diagnostic(`  rapporté : scierie ${prod(avec, 'scierie')} Matériaux, poulailler ${prod(avec, 'poulailler')} et cabane ${prod(avec, 'cabane')} Nourriture ; tempêtes sans ${JSON.stringify(sans.hiver.issues)}, avec ${JSON.stringify(avec.hiver.issues)}`);
+    // la tour de guet ne fait jamais tenir moins de tempêtes ; bâtir le rang Village coûte au plus un niveau au 1er mai
+    // (le joueur très lent : mesuré le 9 octobre 2026, 4 niveaux avec, 5 sans)
+    assert.ok((avec.hiver.issues.tenue || 0) >= (sans.hiver.issues.tenue || 0), `${nom} : ${avec.hiver.issues.tenue || 0} tempêtes tenues avec, ${sans.hiver.issues.tenue || 0} sans`);
+    assert.ok(avec.niveaux.length >= sans.niveaux.length - 1, `${nom} : ${avec.niveaux.length} niveaux avec, ${sans.niveaux.length} sans`);
+    assert.ok(avec.construits['tour-1'] && avec.construits['scierie-1'], `${nom} : le rang Village est atteint et bâti avant le 1er mai`);
   }
 });
