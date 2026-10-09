@@ -1186,3 +1186,71 @@ Le lot ne contient que l'échange du jour. Hors du lot : l'échange dans l'autre
 2. **Taux et garde-fou** (20 contre 10, une fois par jour, 150 Matériaux laissés) : « ça me convient ».
 3. **À son rythme** : partie de production au début (pas de quai, 10 Matériaux), 1 à 3 quêtes par jour ; il économise pour les premiers bâtiments. L'échange lui servira plus tard (vers la mi-novembre d'après la simulation).
 4. **Envoi** : direct en production si tout est vert, « ça me convient ».
+
+## Lot F — La forêt recule : la bande de terrain du Hameau
+
+Référence : bible §2 (« La forêt recule, l'île s'agrandit »), §4 (tableau des rangs : « Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; éolienne, grenier, quai »), §13 (« l'île de 12 sur 12 devient une île qui s'agrandit ») et §14 (semaines 5 et 6). **Statut : à valider par Alex.**
+
+Ce qui existe déjà (lu dans le code le 8 octobre, au soir) :
+- le rang Hameau arrive au 3e habitant (`core/village.js:8`). L'accueil qui le fait passer donne un permis ; Fanal le dit (`permis.rang`, `js/ui/speech.js:29`, et `:34` pour la famille du Sud) et la phrase lue est « Nouveau rang : Hameau. » (`content/fr-CA/batiments.json:194`). Sur l'île, rien ne change ;
+- l'île est une grille fixe de 12 cases sur 12 (`world/layout.js:14`), dessinée une seule fois à l'ouverture (`world/world.js:214`) ; le cadrage vise une emprise fixe (`world/terrain.js:10`, `world/camera.js:43`) ;
+- la forêt est une rangée d'arbres sur les deux bords du fond (`world/layout.js:196-205`), calculée une fois pour toutes ;
+- l'éolienne et le grenier ont leur emplacement au fond de l'île, côté Mairie, dans cette rangée d'arbres (`world/layout.js:112-113`). Tous les emplacements sont dessinés, même verrouillés (`world/view.js:42-46`) : avant le Hameau, on voit déjà leurs piquets. L'éolienne, « entourée de décor », n'a pas d'habitant au travail (bible §10) ;
+- le nombre d'habitants ne baisse jamais : aucune ligne de `core/` ni de `js/` ne le fait baisser (recherche du 8 octobre) ;
+- sept scénarios navigateur visent l'éolienne ou le grenier (`ui-26`, `ui-37`, `ui-38`, `ui-39`, `ui-40`, `ui-41`, `world-s3`) ; `ui-26` (lignes 56 à 60, et 93 pour la Carte en liste) et `world-s3` (lignes 149 à 151) touchent les piquets du grenier.
+
+Quand Alex y arrivera :
+- *d'après la simulation du lot T (copie au commit 84ac8d5, lancée le 8 octobre), un joueur à 1 à 3 quêtes par jour, parti le 5 octobre et qui bâtit dès qu'il peut, passe Hameau au jour 16, soit le 20 octobre, pour les trois rythmes essayés (1-2-3, 1-2, 1-1-3-1). Tous ses logements sont pleins (6 habitants ou plus, donc rang Village) le 31 octobre ou le 2 novembre ;*
+- *ce n'est pas une mesure de la partie d'Alex : le 8 octobre, elle n'avait pas encore de quai et 10 Matériaux en main (lecture de la production pour le lot T), et Alex économise pour ses premiers bâtiments.*
+
+Le lot ne contient que la première bande. Hors du lot : les bâtiments du rang Village et sa propre bande (lot suivant), un habitant au travail à l'éolienne, des emplacements de plus (un 4e chalet ou une 4e parcelle changeraient le rythme du jeu et demanderaient une simulation), la bande du Bourg et l'île voisine de la Ville.
+
+### Ce que verra Alex
+- Quand la 3e famille arrive (accueillie, ou la famille du Sud livrée au quai) : en plus de la réplique de Fanal et du permis, la forêt du fond recule. Au fond de l'île, en haut à droite de l'écran, une bande de terre apparaît, deux cases de profondeur sur les deux tiers du bord, entre l'île et la nouvelle lisière d'arbres. Quelques souches rappellent qu'elle a été gagnée sur la forêt. Le moment dure une ou deux secondes ; en mouvement réduit, la bande est là tout de suite.
+- La phrase lue devient, par exemple, « Nouveau rang : Hameau. La forêt recule : l'île gagne une bande de terrain. » ; Fanal a quelques répliques propres au Hameau, qui parlent de la forêt. Textes définitifs réglés à l'écran.
+- Sur un autre appareil, ou à la prochaine ouverture, la bande est simplement là.
+- L'île garde sa taille à l'écran. D'après la projection de l'île (`world/iso.js:10`), une bande de deux cases de profondeur posée entre les colonnes 2 et 10 reste dans le cadre actuel ; posée sur toute la longueur du bord, elle en sortait, et l'île aurait rapetissé sur le téléphone (calculé le 8 octobre ; à confirmer en capture aux trois largeurs).
+- Toucher la bande ouvre la fiche du quartier voisin (le Garage à gauche, la Mairie à droite), comme partout sur l'île.
+- Gratuite : elle vient avec le rang, comme le dit la bible. Rien d'autre ne change : ni un prix, ni un gain, ni une tâche.
+- Ce qu'on pose dessus : question 1, en fin de section.
+
+### Règles
+- La bande est là dès que le village a atteint le rang Hameau, et ne repart jamais (les habitants ne baissent pas). Avec le choix (a) de la question 1, elle est aussi là quand un bâtiment qu'elle porte est déjà debout (une partie montée à la main pour un essai, par exemple).
+- Rien n'est écrit dans la partie, ni au registre, ni dans les tâches : la bande se lit dans le nombre d'habitants. Aucun geste nouveau.
+
+### Comment ça marche
+- `core/village.js` : la liste des bandes, chacune avec le rang qui l'apporte (une seule pour l'instant, celle du Hameau), et une lecture pure, les bandes gagnées selon les habitants (et, choix (a), les bâtiments debout).
+- `world/layout.js` : les cases de la bande (rangées −2 et −1, colonnes 2 à 9), rattachées au Garage et à la Mairie par la règle des secteurs existante (calculé) ; la lisière qui recule ; la route du Garage prolongée jusqu'à la bande. Choix (a) : les emplacements de l'éolienne et du grenier sur la bande, avec ce qui en dépend (poste d'un habitant au grenier, pile de bois « rangée près du grenier », repère de la Mairie).
+- `world/terrain.js` : le dessus de l'île prend les bandes gagnées ; le bout de falaise visible au bout de la bande ; les liserés du bord.
+- `world/world.js` : le terrain et le décor se redessinent quand le nombre de bandes change (aujourd'hui, ils sont dessinés une fois) ; le moment « la forêt recule » joue quand un geste fait dans cet onglet fait passer le Hameau (l'événement `rang` existe déjà, `core/batiments.js:333`).
+- `world/habitants.js` : la grille de marche connaît la bande (choix (a) : un habitant va au grenier).
+- Choix (a) : la Carte en liste garde l'éolienne et le grenier verrouillés, mais sans « Voir sur la carte » tant que la bande n'est pas gagnée ; à régler à l'écran.
+- Textes dans `content/fr-CA/` (phrase lue, répliques de Fanal), typographie de `app/content/README.md`.
+- `CLIENT_VERSION` et `MIN_CLIENT` restent à 7 (`js/api-client.js:59`, `api/api.php:26`) : aucune donnée ne change de forme. Un onglet resté sur la v2.8 ne dessine pas la bande, sans rien abîmer. Cache `oree-coquille-v20`.
+- Leçons à appliquer d'entrée : en isométrique, un objet posé derrière un autre disparaît (tout regarder à l'écran aux trois largeurs avant d'affiner) ; avant de poser une couleur, relire les « Don't » de `app/DESIGN.md` et `.impeccable/design.json` ; une capture à une autre date fige l'horloge du navigateur (la bande sous la neige) ; un changement de dessin partagé se valide par la série complète ; avant la série, chercher les scénarios qui comptent le décor ou mesurent une position au fond de l'île.
+
+### F1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] Bandes gagnées : 0, 1 ou 2 habitants → aucune ; 3 → celle du Hameau ; 40 → toujours une seule (les suivantes n'existent pas encore) ; habitants illisibles → aucune. Choix (a) : un grenier ou une éolienne debout sans le rang → la bande aussi.
+- [ ] Chaque emplacement tombe sur une case de l'île telle qu'elle est à son rang.
+
+### F2 — L'île [impeccable]
+- [ ] La bande, la lisière qui recule, les souches, le bout de falaise ; choix (a) : les deux emplacements sur la bande.
+- [ ] Le moment « la forêt recule » (rien en mouvement réduit), la phrase lue, les répliques de Fanal.
+- [ ] Regardé en capture aux trois largeurs, en été et en hiver, de jour et à la tombée du jour (lanternes) ; l'île garde sa taille à 390 px.
+- [ ] Scénario navigateur neuf : la 3e famille accueillie → la bande apparaît, aux trois largeurs ; une seule phrase lue ; mouvement réduit ; une partie déjà au Hameau l'a dès l'ouverture ; deux appareils ; taille de l'île à l'écran avant et après. Choix (a) : `ui-26` et `world-s3` adaptés.
+
+### F3 — Vérification et documents
+- [ ] `node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"`.
+- [ ] Série navigateur complète sur code figé, machine au calme ; relecture indépendante par un agent Opus en lecture seule.
+- [ ] Documents : bible §4, §10 si le grenier change de place, §14 et §15 (décisions) ; `app/ARCHITECTURE.md`, `app/DESIGN.md`, `app/content/README.md` ; `CLAUDE.md` à l'envoi.
+
+### F4 — Envoi
+- [ ] Photo des données sur le serveur, étiquette `v2.9`, `.claude/outils/deploy-prod.sh v2.9`, comparaison des fichiers en ligne avec l'étiquette.
+- [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts pour voir la bande (rien ne se perd s'il ne le fait pas).
+
+### Questions pour Alex
+1. **Que pose-t-on sur la bande ?** L'éolienne et le grenier, deux des bâtiments du Hameau, ont aujourd'hui leurs piquets au fond de l'île, entre les arbres ; tu les vois déjà, verrouillés.
+   - (a) **Leurs piquets déménagent sur la bande (recommandé).** Avant le Hameau, la forêt les cache : tu ne les vois plus sur l'île, mais ils restent dans « Construire », avec leur cadenas. Quand la forêt recule, ils apparaissent sur la terre gagnée : la bande sert tout de suite, et le Hameau montre ce qu'il apporte. Un peu plus de travail.
+   - (b) **Rien pour l'instant.** La bande arrive vide, avec ses souches ; l'éolienne et le grenier restent où ils sont. Elle attend les bâtiments du rang Village (tour de guet, scierie, poulailler, cabane à sucre) au lot suivant. Plus simple.
+   - Aucune règle ne change dans les deux cas.
+2. **Envoi** : direct en production si tout est vert, comme les lots précédents ?
