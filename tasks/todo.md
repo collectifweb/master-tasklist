@@ -1313,7 +1313,7 @@ Quand Alex y arrivera : *d'après la simulation du lot T (rapportée au plan du 
 ### B3 — L'île [impeccable]
 - [x] Quatre dessins, quatre emplacements sur la bande, cachés sans elle ; les piquets arrivent avec la bande dans le moment « la forêt recule ».
 - [x] Captures aux trois largeurs : automne, hiver (10 décembre) et temps des sucres (16 mars), hors dépôt. Une passe de corrections : la plaque du Garage montait sur la scierie (elle passe au-dessus de la lisière replantée quand la bande est gagnée) ; la cabane fume au temps des sucres, en bouffées plus grosses et ombrées (la fumée ordinaire disparaissait sur les arbres enneigés). Mesuré après : aucune plaque ne couvre plus de 11 % de la boîte d'un bâtiment du Village (390 px), 1 % à 834 et 1280 px.
-- [ ] Le soir (lanterne de la tour, fenêtre de la cabane) : pas capturé.
+- [x] Le soir (lanterne de la tour, fenêtre de la cabane) : capturé à 1280 le 9 octobre, la veillée fermée et la cascade finie (environ 2 s : les lumières s'allument du centre vers le bord, la tour et la cabane parmi les dernières). Les deux halos sont allumés, opacité 1. La fenêtre de la cabane luit derrière les pales de l'éolienne.
 
 ### B4 — Fiches, textes, annonces
 - [x] Textes des quatre bâtiments (nom, ce que c'est, ce que ça fait, maintenant) ; annonce de la Nourriture à Remballer ; bible, `ARCHITECTURE.md`, `DESIGN.md`.
