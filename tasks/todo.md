@@ -1424,6 +1424,15 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
 
 ### N4 — Vérification, documents, envoi
 - [ ] Suite de logique, scénario navigateur neuf, série complète, relecture Opus en lecture seule ; bible §2, §5, §6 ; `app/ARCHITECTURE.md`, `app/DESIGN.md` ; envoi sur accord d'Alex.
+  - [x] N4a — Documents : bible §3, §5, §6 et décisions 40 à 43 ; `app/ARCHITECTURE.md` ; `app/DESIGN.md` (commit fa78453). La ligne du lot B de la bible disait encore « pas encore en ligne » : corrigée.
+  - [x] N4b — Relecture Opus en lecture seule (9 octobre) : rien de bloquant. Corrigé (commit dd48a07) :
+    - « Les familles d'abord » demandait parfois un total que la réserve ne peut pas contenir (un chalet à moitié plein, sans grenier : 28 Nourriture pour une réserve de 20), et le bandeau disait « Faire la partie de sucre » pendant ce temps. La raison dit maintenant d'accueillir d'abord la prochaine famille ; l'avancée de l'objectif porte `familles` et le bandeau dit « Sucres : les familles d'abord ». Tests : 2 de plus dans `nourriture.test.mjs` ; vérifié dans le navigateur aux trois largeurs (script hors dépôt, 15 vérifications).
+    - Le changement de jour à 4 h (semaine du repas, 1er mars, 1er mai, heure d'hiver et d'été) n'avait pas de test : ajouté.
+    - La réplique de Fanal « Ce qui débordait du grenier » était dite même sans débordement : « Ce qui dormait au grenier ».
+    - Gardé et expliqué : la protection contre le double toucher partage une clé pour les deux gestes de la Place (le bloc des sucres rapetisse une fois faite, le repas remonte sous le doigt) ; les emplacements des fêtes restent des obstacles toute l'année (7 trajets sur 24 contournent un coin vide, aucun ne devient impossible, mesuré ; écrit dans `ARCHITECTURE.md`).
+    - Suite de logique après correctifs : 610 tests, 607 réussis, 2 « à faire » connus, 1 échec (`saisons.test.mjs` comparait l'avancée champ par champ et ne connaissait pas `familles`) ; attendu complété, fichier relancé seul : 11 sur 11.
+  - [ ] N4c — Série navigateur complète (42 scénarios).
+  - [ ] N4d — Envoi, sur accord d'Alex : CLAUDE.md (étiquette, 42 scénarios), étiquette `v2.11`.
 
 ### Questions pour Alex (avant N1)
 1. Le repas : seulement le dimanche, ou une fois par semaine, le jour de ton choix ?

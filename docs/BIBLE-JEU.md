@@ -124,7 +124,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Centrale solaire | Bourg | De l'Énergie en plus, surtout l'été |
 | Garage à chasse-neige | Bourg | Protège des tempêtes de neige |
 
-**Le rang Village, tel qu'il est construit** (lot B, nuit du 8 au 9 octobre 2026 ; choix de Claude, *à valider par Alex*, pas encore en ligne) :
+**Le rang Village, tel qu'il est construit** (lot B, nuit du 8 au 9 octobre 2026 ; choix de Claude, envoi accepté par Alex le 9 octobre au matin ; en ligne depuis, étiquette `v2.10`) :
 - les quatre bâtiments se posent sur la bande du Hameau (décision 38), un exemplaire chacun ; leurs piquets y paraissent avec la bande, et avant le 6e habitant leur fiche dit combien il en manque (« Village : encore 3 habitants. » au 3e). Prix : tour de guet 4 Énergie et 30 Matériaux ; scierie 6 Énergie et 35 Matériaux (il faut d'abord l'atelier) ; poulailler 25 Matériaux ; cabane à sucre 3 Énergie et 30 Matériaux ;
 - comme l'éolienne, les trois producteurs donnent à la première quête payée du jour, une fois par jour, et Remballer reprend leur part si le jour reste sans quête payée : la scierie 3 Matériaux ; le poulailler 1 Nourriture, toute l'année ; la cabane à sucre 4 Nourriture du 1er mars au 30 avril (le reste de l'année, elle dort ; au temps des sucres, sa vapeur sort du lanterneau). La Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'entre, et la quête payée suivante du même jour réessaie ;
 - la fiche de chacun dit, dans « Maintenant », ce qu'il a donné aujourd'hui, ou pourquoi rien encore (hors saison, réserve pleine) ; celle de la tour, la tempête annoncée (§8) ;
