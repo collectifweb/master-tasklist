@@ -6,7 +6,8 @@
 // constantes de départ. Le geste passe par data-action="bat-geste".
 // Quand le marchand est au quai (core/visiteurs.js), la fiche du quai devient son comptoir : une ligne par offre, ce
 // que tu donnes → ce que tu reçois, et « Échanger » (bouton secondaire, data-geste="echanger"), le cadenas et la raison
-// du cœur, ou « Fait cette semaine ». Au-dessus, la commande du visiteur de la semaine (lot C) : « Livrer », seul geste
+// du cœur, ou « Fait cette semaine ». Sous ces offres, l'échange du jour (lot T), dessiné pareil sous sa propre phrase,
+// avec « Fait aujourd'hui ». Au-dessus, la commande du visiteur de la semaine (lot C) : « Livrer », seul geste
 // principal de la fiche (data-geste="livrer", épinglé au lundi de la commande vue), ou le cadenas et la raison, ou
 // « Commande livrée ». Le pied de la fiche reste caché.
 // Un mauvais imprévu (core/imprevus.js, lot I) se lit dans « Maintenant » : ce qui s'est passé, ce que ça change, puis
@@ -100,8 +101,8 @@ function degatModel(game, id, now) {
 
 /**
  * Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null,
- * comptoir: [{ id, donne, recoit, prise, raison }] | null, commande, degat } (comptoir : le quai debout, quand le marchand
- * y est ; commande : voir commandeModel ; degat : voir degatModel).
+ * comptoir: [{ id, donne, recoit, prise, raison }] | null, duJour: { même forme } | null, commande, degat } (comptoir et
+ * duJour : le quai debout, quand le marchand y est ; commande : voir commandeModel ; degat : voir degatModel).
  */
 export function batimentModel(c, id) {
   const type = typeOf(id);
@@ -117,7 +118,7 @@ export function batimentModel(c, id) {
       loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
       n: type === 'eolienne' ? EOLIENNE_ENERGIE : GRENIER_STOCKAGE,
     }),
-    maintenant: '', raison: null, geste: null, comptoir: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
+    maintenant: '', raison: null, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };
   if (!bati) {
     m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
@@ -161,10 +162,12 @@ export function batimentModel(c, id) {
     const v = visiteurDeLaSemaine(game, now);
     if (v) {
       m.maintenant = t(`bat.quai.maintenant.${v.joursRestants === 1 ? 'one' : 'other'}`, { n: v.joursRestants });
-      m.comptoir = v.offres.map((o) => ({
+      const offre = (o) => ({
         id: o.id, donne: ressource(o.donne), recoit: ressource(o.recoit), prise: o.prise,
         raison: o.prise ? null : refusEchanger(game, { offre: o.id }, now),
-      }));
+      });
+      m.comptoir = v.offres.map(offre);
+      m.duJour = offre(v.duJour);
     }
     m.commande = commandeModel(game, ledger, now);
   } else if (type === 'grenier') {
@@ -200,11 +203,12 @@ const GESTE_ICON = { construire: 'chantier', semer: 'champs', recolter: 'nourrit
 
 const resHtml = (r) => `<span class="offre-res" data-res="${r.res}">${icon(r.res)}<b>${r.n}</b> ${esc(r.nom)}</span>`;
 
-// Une offre du marchand : le troc sur une ligne, puis « Échanger » (ou « Fait cette semaine ») ; la raison du cœur dessous.
-function offreHtml(o) {
+// Une offre du marchand : le troc sur une ligne, puis « Échanger » (ou « Fait cette semaine », « Fait aujourd'hui » pour
+// l'échange du jour) ; la raison du cœur dessous.
+function offreHtml(o, quand = t('bat.comptoir.fait.quand')) {
   const etat = o.prise ? 'fait' : o.raison ? 'verrou' : 'libre';
   const action = o.prise
-    ? `<p class="offre-fait" id="offre-${o.id}-etat" tabindex="-1">${icon('check')}<span>${esc(t('bat.comptoir.fait'))} <small>${esc(t('bat.comptoir.fait.quand'))}</small></span></p>`
+    ? `<p class="offre-fait" id="offre-${o.id}-etat" tabindex="-1">${icon('check')}<span>${esc(t('bat.comptoir.fait'))} <small>${esc(quand)}</small></span></p>`
     : `<button class="btn btn--small offre-go" type="button" data-action="bat-geste" data-geste="echanger"
       data-params="${esc(JSON.stringify({ offre: o.id }))}" aria-label="${esc(t('bat.comptoir.geste.label', { donne: o.donne.texte, recoit: o.recoit.texte }))}"${o.raison ? ` aria-disabled="true" aria-describedby="offre-${o.id}-raison"` : ''}>${icon(o.raison ? 'lock' : 'echange')}<span>${esc(t('bat.comptoir.geste'))}</span></button>`;
   return `<li class="offre" data-offre="${o.id}" data-etat="${etat}">
@@ -212,11 +216,13 @@ function offreHtml(o) {
     ${action}${o.raison ? `<p class="offre-raison" id="offre-${o.id}-raison">${icon('lock')}<span>${esc(o.raison)}</span></p>` : ''}</li>`;
 }
 
-function comptoirHtml(offres) {
+function comptoirHtml(offres, duJour) {
   return `<section class="comptoir" aria-labelledby="comptoir-t">
     <h3 class="comptoir-titre" id="comptoir-t">${icon('barque')}<span>${esc(t('bat.comptoir.titre'))}</span></h3>
     <p class="comptoir-intro">${esc(t('bat.comptoir.intro'))}</p>
-    <ul class="comptoir-offres" role="list">${offres.map(offreHtml).join('')}</ul></section>`;
+    <ul class="comptoir-offres" role="list">${offres.map((o) => offreHtml(o)).join('')}</ul>
+    <p class="comptoir-intro comptoir-jour">${esc(t('bat.comptoir.jour.intro'))}</p>
+    <ul class="comptoir-offres" role="list">${offreHtml(duJour, t('bat.comptoir.jour.fait.quand'))}</ul></section>`;
 }
 
 // Le visiteur à commande, au-dessus du comptoir : son nom et ses jours, qui il est, « Demande » et « Laisse » (picto teinté
@@ -257,7 +263,7 @@ function degatHtml(d) {
 function bodyHtml(m) {
   const line = (k, html) => `<div class="help-line"><dt>${esc(t(`bat.fiche.${k}`))}</dt><dd>${html}</dd></div>`;
   const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}${m.degat ? degatHtml(m.degat) : ''}`;
-  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.commande ? commandeHtml(m.commande) : ''}${m.comptoir ? comptoirHtml(m.comptoir) : ''}`;
+  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.commande ? commandeHtml(m.commande) : ''}${m.comptoir ? comptoirHtml(m.comptoir, m.duJour) : ''}`;
 }
 
 function footHtml(m) {

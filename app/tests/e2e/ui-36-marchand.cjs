@@ -68,7 +68,8 @@ const comptoir = (page) => page.evaluate(() => {
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', now: s(d.querySelector('#bat-now')?.textContent),
     debord: [...d.querySelectorAll('.comptoir *')].filter((e) => { const b = e.getBoundingClientRect(); return b.width && (b.left < r.left - 1 || b.right > r.right + 1); }).map((e) => e.className.baseVal ?? e.className),
-    offres: [...d.querySelectorAll('.offre')].map((li) => {
+    // les quatre offres de la semaine ; l'échange du jour (lot T), dessous, a son scénario (ui-42)
+    offres: [...d.querySelectorAll('.offre:not([data-offre="materiaux-energie-jour"])')].map((li) => {
       const b = li.querySelector('.offre-go');
       const br = b && b.getBoundingClientRect();
       return { id: li.dataset.offre, etat: li.dataset.etat, troc: s(li.querySelector('.offre-troc').textContent), raison: s(li.querySelector('.offre-raison')?.textContent), off: b ? b.getAttribute('aria-disabled') === 'true' : null, label: b ? b.getAttribute('aria-label') : null, h: br ? br.height : 0, w: br ? br.width : 0 };

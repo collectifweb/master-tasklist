@@ -546,6 +546,10 @@
   line-height: 1.4;
   color: var(--text-soft);
 }
+/* l'échange du jour (lot T) : sous les offres de la semaine, sa phrase puis sa ligne, dessinée pareil */
+.comptoir-jour {
+  margin-top: var(--sp-5);
+}
 .comptoir-offres {
   margin: 0;
   padding: 0;

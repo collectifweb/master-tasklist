@@ -1,5 +1,5 @@
 {
-  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I).",
+  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (ce que c’est), fait (ce que ça fait), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js); comptoir.jour : l’échange du jour, sous les offres de la semaine (lot T). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I).",
   "chalet": {
     "nom": "Chalet",
     "vide": "Chalet vide",
@@ -71,7 +71,9 @@
     "geste.label": "Échanger {donne} contre {recoit}",
     "contre": "contre",
     "fait": "Fait",
-    "fait.quand": "cette semaine"
+    "fait.quand": "cette semaine",
+    "jour.intro": "Chaque jour, il rachète aussi tes Matériaux en trop.",
+    "jour.fait.quand": "aujourd’hui"
   },
   "commande": {
     "convoi.nom": "Le convoi",

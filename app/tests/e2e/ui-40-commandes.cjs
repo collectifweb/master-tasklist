@@ -194,7 +194,7 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
     const e0 = commandes(srv);
     const paye = Object.entries(cmd0.demande).every(([k, n]) => Math.round((gA.resources[k] - gB.resources[k]) * 10) / 10 === n - (k === 'materials' ? (cmd0.recoit.materials || 0) : 0));
     R.check('double toucher : une seule livraison au serveur, la demande payée une fois', e0.length === 1 && e0[0].key === `commande:${LUNDI}` && e0[0].visiteur === v0 && paye, `${res(gA)} → ${res(gB)} ${JSON.stringify(e0)}`);
-    R.check('double toucher : aucune offre du comptoir prise par le second toucher', !gB.visite, JSON.stringify(gB.visite));
+    R.check('double toucher : aucune offre du comptoir prise par le second toucher', !gB.visite && !gB.echangeDuJour, JSON.stringify([gB.visite, gB.echangeDuJour]));
     R.check('livraison : ce que laisse le visiteur (Matériaux, une famille ou 1 permis)',
       v0 === 'convoi' ? e0[0].materials === cmd0.recoit.materials && Math.round((gB.resources.materials - gA.resources.materials) * 10) / 10 === cmd0.recoit.materials : v0 === 'famille' ? gB.habitants === gA.habitants + 1 : (gB.permis?.dispo ?? 0) === (gA.permis?.dispo ?? 0) + 1, JSON.stringify({ v0, h: [gA.habitants, gB.habitants], p: [gA.permis, gB.permis], e: e0[0] }));
     R.check('livraison : les tâches sont intactes', JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])));
