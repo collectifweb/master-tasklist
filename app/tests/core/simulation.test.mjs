@@ -50,6 +50,14 @@
 //     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus de 2 jours plus tard
 //     (mesuré le 8 octobre : jamais plus tard), le joueur le plus
 //     lent livre au moins une commande sur trois, et la taille suit l'allure de la semaine. VISITEURS se règle ici.
+// (m) (lot T) l'échange du jour au comptoir du marchand (ECHANGE_DU_JOUR, core/visiteurs.js) : les cinq joueurs de (l), aux
+//     mêmes départs, sans marchand ni commande (le cadre de (l) sans livrer) puis avec le marchand avisé et les commandes
+//     livrées. Trois façons d'échanger : 'avise' (en fin de soirée, seulement quand l'Énergie manque pour le prochain niveau
+//     et qu'il a les permis et les Matériaux de ce niveau), 'chaque' (chaque soir dès qu'il le peut, avant tout le reste),
+//     'presse' (dès que l'Énergie manque pour le prochain niveau, sans regarder ses Matériaux, avant tout le reste). Cibles :
+//     premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau au même jour, village
+//     plein jamais plus tard ; les joueurs à 2 ou 3 quêtes par jour et plus gagnent au moins un niveau en 16 semaines (avisé).
+//     ECHANGE_DU_JOUR (sa garde de 150 Matériaux) se règle ici.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -61,6 +69,7 @@ import {
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
   tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
   allureDe, ALLURE, daysBetween, weekStart, saisonDe, commandeDeLaSemaine, refusLivrer, livrer, VISITEURS,
+  ECHANGE_DU_JOUR, coutNiveau,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -88,16 +97,17 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
   // avec l'une des trois, le joueur bâtit aussi le quai.
   // commandes (l) : 'livre', le joueur livre la commande du visiteur dès qu'il le peut, après ses bâtiments et avant le
   // marchand et les niveaux ; avec elle, il bâtit aussi le quai.
+  // duJour (m) : 'avise', 'chaque' ou 'presse', sa façon de prendre l'échange du jour (voir l'en-tête).
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, monde: null };
   // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
   // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
@@ -151,6 +161,22 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     assert.ok(energy >= 0 && materials >= 0 && food >= 0 && w.game.habitants >= 0, `stock négatif le ${now} : ${JSON.stringify(w.game.resources)}`);
     assert.ok(food <= stockage(w.game), `Nourriture au-dessus du stockage le ${now}`);
   };
+  // (m) l'échange du jour, s'il le veut et si le marchand le permet ; vrai s'il l'a fait
+  const echangeDuJour = (politique, soir) => {
+    if (duJour !== politique || refusEchanger(w.game, { offre: ECHANGE_DU_JOUR.id }, soir)) return false;
+    if (politique !== 'chaque') {
+      const bas = QUARTIER_IDS.filter((x) => niveauDe(w.game, x) < (x === 'garage' ? 2 : 3)).sort((a, b) => niveauDe(w.game, a) - niveauDe(w.game, b))[0];
+      if (!bas) return false;
+      const c = coutNiveau(niveauDe(w.game, bas) + 1);
+      const r = w.game.resources;
+      if (r.energy >= c.energy) return false;
+      if (politique === 'avise' && (w.game.permis.dispo < c.permis || r.materials - ECHANGE_DU_JOUR.donne.materials < c.materials)) return false;
+    }
+    geste(echanger, { offre: ECHANGE_DU_JOUR.id }, soir);
+    log.duJour.soirs++;
+    log.duJour.premier ??= i + 1;
+    return true;
+  };
   for (i = 0; i < jours; i++) {
     const day = addDays(debut, i);
     geste(openApp, {}, heure(day, 12));
@@ -179,6 +205,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
         }
       }
     }
+    echangeDuJour('chaque', soir);
+    echangeDuJour('presse', soir);
     for (let guard = 0; guard < 20; guard++) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
       // réserve pleine (la récolte n'est plus refusée depuis le lot A) : il ne récolte que la serre l'hiver, pour l'objectif ;
@@ -222,6 +250,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       }
       const offre = marchand && marchand !== 'sans' && offreDuMarchand(w.game, soir, marchand);
       if (offre) { geste(echanger, { offre }, soir); log.echanges[offre] = (log.echanges[offre] || 0) + 1; continue; }
+      if (niveaux && echangeDuJour('avise', soir)) continue;
       const q = niveaux && moinsCher(w.game, w.ledger);
       if (q) { geste(monterQuartier, { quartier: q, niveau: niveauDe(w.game, q) + 1 }, soir); log.niveaux.push(i + 1); continue; }
       if (commandes && niveaux) { // (l) ce qui manque ce soir pour le niveau le moins cher : permis, Énergie, Matériaux
@@ -681,22 +710,29 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
 
 // ───────── (l) les visiteurs à commande ─────────
 
+// Les cinq joueurs de (k), (l) et (m), et les parties de (l) sans livrer, jouées une seule fois : (m) les reprend comme référence.
+const JOUEURS_L = [
+  ['(très lent) 1 quête tous les 4 jours', tresLent, quetes, false],
+  ['(lent) 1 quête un jour sur deux', lent, quetes, false],
+  ['(g) rythme de l’essai', rythmeEssai, parDefaut, true],
+  ['(f) 2 ou 3 par jour', regulier, quetes, false],
+  ['(rapide) 6 par jour', rapide, (n) => quetes(n * 3), false],
+];
+const DEPARTS_L = ['2026-07-01', '2026-10-07'];
+const OPTIONS_L = { imprevus: 'attend', hiver: 'quetes', marchand: 'sans' };
+const deja = new Map();
+const simulerUneFois = (cle, ...args) => { if (!deja.has(cle)) deja.set(cle, simuler(...args)); return deja.get(cle); };
+
 test('(l) les visiteurs à commande : livrer tout ne coûte au plus qu’un niveau, le plus lent en livre au moins une sur trois, la taille suit l’allure', (t) => {
   const total = (o) => Object.values(o).reduce((a, b) => a + b, 0);
   const offertes = (l) => { const o = {}; for (const id of l.commandes.offertes.values()) o[id] = (o[id] || 0) + 1; return o; };
   const fin16 = (l) => l.niveaux.filter((j) => j <= 16 * 7).length;
   const resume = (l) => `1er niveau j${l.niveaux[0] ?? '—'}, ${fin16(l)} niveaux en 16 semaines, ${l.niveaux.length} au 1er mars ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${l.monde.game.habitants} habitants`;
-  for (const [nom, rythme, profil, habitudes] of [
-    ['(très lent) 1 quête tous les 4 jours', tresLent, quetes, false],
-    ['(lent) 1 quête un jour sur deux', lent, quetes, false],
-    ['(g) rythme de l’essai', rythmeEssai, parDefaut, true],
-    ['(f) 2 ou 3 par jour', regulier, quetes, false],
-    ['(rapide) 6 par jour', rapide, (n) => quetes(n * 3), false],
-  ]) {
-    for (const debut of ['2026-07-01', '2026-10-07']) {
+  for (const [nom, rythme, profil, habitudes] of JOUEURS_L) {
+    for (const debut of DEPARTS_L) {
       const jours = daysBetween(debut, '2027-03-01');
-      const options = { profil, habitudes, imprevus: 'attend', hiver: 'quetes', marchand: 'sans' };
-      const sans = simuler(debut, jours, rythme, { ...options, commandes: 'jamais' });
+      const options = { profil, habitudes, ...OPTIONS_L };
+      const sans = simulerUneFois(`${nom} ${debut}`, debut, jours, rythme, { ...options, commandes: 'jamais' });
       const livre = simuler(debut, jours, rythme, { ...options, commandes: 'livre' });
       const c = livre.commandes;
       t.diagnostic(`${nom}, départ ${debut}`);
@@ -715,6 +751,39 @@ test('(l) les visiteurs à commande : livrer tout ne coûte au plus qu’un nive
       if (!nom.includes('lent') && !nom.includes('rapide')) assert.deepEqual(Object.keys(c.tailles), ['regulier'], qui);
       if (nom.includes('lent')) assert.ok(!c.tailles.plein && c.tailles.ralenti > 0, qui);
       if (nom.includes('rapide')) assert.ok(c.tailles.plein > 0 && !c.tailles.ralenti, qui);
+    }
+  }
+});
+
+test('(m) l’échange du jour : personne ne recule, même en échangeant chaque soir ; les joueurs rapides gagnent des niveaux', (t) => {
+  // Mesuré le 8 octobre 2026 (lot T) dans une copie hors du dépôt, l'échange ajouté directement aux ressources, puis ici
+  // avec le vrai geste. Sans les 150 Matériaux gardés, celui qui échange chaque soir n'achetait aucun niveau d'ici le 1er
+  // mars chez 6 joueurs sur 10 ; à 100, 120 ou 130 gardés, un joueur perdait des niveaux ou remplissait son village plus tard.
+  const fin16 = (l) => l.niveaux.filter((j) => j <= 16 * 7).length;
+  const resume = (l) => `1er niveau j${l.niveaux[0] ?? '—'}, ${fin16(l)} niveaux en 16 semaines, ${l.niveaux.length} au 1er mars ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${l.duJour.soirs} échanges du jour (le premier j${l.duJour.premier ?? '—'}) ; ${Math.round(l.monde.game.resources.materials)} Matériaux`;
+  for (const [cadre, extra, politiques] of [
+    ['sans marchand ni commande', { commandes: 'jamais' }, ['avise', 'chaque', 'presse']],
+    ['marchand avisé, commandes livrées', { marchand: 'avise', commandes: 'livre' }, ['avise', 'chaque']],
+  ]) {
+    for (const [nom, rythme, profil, habitudes] of JOUEURS_L) {
+      for (const debut of DEPARTS_L) {
+        const jours = daysBetween(debut, '2027-03-01');
+        const options = { profil, habitudes, ...OPTIONS_L, ...extra };
+        const sans = extra.marchand ? simuler(debut, jours, rythme, options) : simulerUneFois(`${nom} ${debut}`, debut, jours, rythme, options);
+        const qui = `${cadre}, ${nom}, départ ${debut}`;
+        t.diagnostic(`${qui}`);
+        t.diagnostic(`  sans échange : ${resume(sans)}`);
+        for (const duJour of politiques) {
+          const l = simuler(debut, jours, rythme, { ...options, duJour });
+          t.diagnostic(`  ${duJour.padEnd(6)} : ${resume(l)}`);
+          assert.equal(l.hameau, sans.hameau, `${qui}, ${duJour} : Hameau au jour ${l.hameau} contre ${sans.hameau}`);
+          assert.ok(sans.niveaux[0] === undefined || l.niveaux[0] <= sans.niveaux[0], `${qui}, ${duJour} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]}`);
+          assert.ok(fin16(l) >= fin16(sans), `${qui}, ${duJour} : ${fin16(l)} niveaux en 16 semaines contre ${fin16(sans)}`);
+          assert.ok(l.niveaux.length >= sans.niveaux.length, `${qui}, ${duJour} : ${l.niveaux.length} niveaux au 1er mars contre ${sans.niveaux.length}`);
+          assert.ok((l.plein ?? '9999') <= (sans.plein ?? '9999'), `${qui}, ${duJour} : village plein le ${l.plein} contre le ${sans.plein}`);
+          if (duJour === 'avise' && (nom.includes('(f)') || nom.includes('rapide'))) assert.ok(fin16(l) > fin16(sans), `${qui} : l'échange n'a rien apporté`);
+        }
+      }
     }
   }
 });
