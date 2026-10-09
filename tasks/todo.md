@@ -1355,3 +1355,10 @@ Hors dépôt, sur la simulation (n), jour travaillé par jour travaillé (les jo
 - Trouvé en route : la plaque du Garage couvrait la scierie, puis la tour (déplacée, mesurée) ; les souches du milieu sous les emplacements ; la phrase « première quête » ; deux scénarios anciens qui figeaient le catalogue.
 - Mes erreurs : le nom « lot V », déjà pris ; « le poulailler rapporte au moins autant qu'une serre », vrai au départ seulement, retiré avant le topo (lu dans le code : le poulailler donne 1 Nourriture par jour travaillé ; une serre de départ 4 toutes les 5 journées, 0,8 par jour ; avec l'Atelier au niveau 3 et le Garage au niveau 2, 7 toutes les 3 journées, 2,3 par jour).
 - À valider par Alex : les prix, les productions et les emplacements ; l'annonce « jusqu'à 7 jours » et l'alerte affichée près de deux jours d'hiver sur trois ; la tour qui compte les jours d'avant elle ; les souches ; la Nourriture du Village souvent bloquée par une réserve pleine (B2 bis) ; l'envoi.
+
+### Réponses d'Alex au topo (9 octobre, au matin)
+1. **Envoi** : « oui ». Envoi de la v2.10 (B6).
+2. **La Nourriture du Village** : « j'aimerais qu'on considère l'option C de trouver d'autres usages à la nourriture ». À proposer pour un lot suivant.
+3. **La tour qui compte les jours d'avant elle** : « c'est correct ». Gardé ; la bible §8 le dit, validé.
+4. **L'alerte affichée près de deux jours d'hiver sur trois avec la tour** : « c'est peut-être un petit peu trop haut. Si on peut faire de quoi, c'est bien. Sinon, c'est pas grave. » Options à mesurer et proposer après l'envoi.
+5. **Points visuels** (3 souches au lieu de 5, la cabane en partie derrière l'éolienne, la pastille du Garage sous la bulle de Fanal à 390 px) : « c'est OK ».
