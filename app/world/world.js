@@ -27,12 +27,13 @@
 //   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //
-// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape.
+// Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape, rang (la
+// forêt recule quand le rang gagne une bande de terrain, lot F).
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
-  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, DECOR, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
-  IMPREVU_SPOTS,
+  SECTOR_ORDER, SECTOR_CENTER, PLAQUE_ANCHOR, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
+  IMPREVU_SPOTS, decorFor,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -119,7 +120,7 @@ export function entitiesFor(v, tasks = []) {
     if (v.reflets?.has?.(b.id)) e.reluit = true;
     list.push(e);
   }
-  for (const d of DECOR) list.push(d);
+  for (const d of decorFor(v.bandes || [])) list.push(d); // la lisière recule avec les bandes gagnées (lot F)
   // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
   for (const id of v.imprevus || []) {
     const s = IMPREVU_SPOTS[id];
@@ -211,9 +212,16 @@ export function createWorld(container, options = {}) {
   stage.setAttribute('aria-hidden', 'false');
 
   const terrainHost = el('div', 'ow-terrain-host', { 'aria-hidden': 'true' });
-  terrainHost.innerHTML = terrainSVG();
-  const terrain = terrainHost.firstElementChild;
-  Object.assign(terrain.style, { left: TERRAIN.x + 'px', top: TERRAIN.y + 'px' });
+  // le terrain se redessine quand une bande de terrain est gagnée (lot F) ; dessiné une fois sinon
+  let terrainKey = null;
+  function syncTerrain(bandes = []) {
+    const k = bandes.join(' ');
+    if (k === terrainKey) return;
+    terrainKey = k;
+    terrainHost.innerHTML = terrainSVG(bandes);
+    Object.assign(terrainHost.firstElementChild.style, { left: TERRAIN.x + 'px', top: TERRAIN.y + 'px' });
+  }
+  syncTerrain();
 
   const veils = doc.createElementNS(SVGNS, 'svg');
   veils.setAttribute('class', 'ow-veils');
@@ -470,6 +478,7 @@ export function createWorld(container, options = {}) {
 
   function apply(v, { quiet = false, enter = true } = {}) {
     if (root.hasAttribute('data-neige') !== !!v.neige) root.toggleAttribute('data-neige', !!v.neige); // l'hiver : palette.js
+    syncTerrain(v.bandes);
     applyFront(v);
     const aur = !v.imprevus?.has?.('aurore');
     if (aurore.hidden !== aur) aurore.hidden = aur;
@@ -928,6 +937,8 @@ export function createWorld(container, options = {}) {
     get shown() { return shown; }, get target() { return target; }, get tasks() { return tasks; },
     get reduced() { return reduced; },
     updatePlaque, reveal,
+    /** Groupe d'une bande gagnée dans le terrain affiché (lot F), ou null. */
+    bande: (bid) => terrainHost.querySelector(`[data-bande="${bid}"]`),
     onImpact(ev) { options.onImpact?.(ev); bus.emit('impact', ev); },
     setActive,
     threadFrom: null,

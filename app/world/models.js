@@ -2,7 +2,7 @@
 // arrière de l'emprise. Chaque fonction renvoie { svg, x, y, w, h, shadow, anchors } (voir iso.js : Art.done).
 // Les modèles du décor fixe : lanterne, cloture, caisse, etabli, erable, glaciere. Bâtiments du joueur : chalet,
 // parcelle, atelier, serre, eolienne, grenier, quai, et piquets (chantier possible). Décor : epinette, arbre, buisson,
-// rocher. Fanal : characterSVG().
+// rocher, et souche (la bande gagnée sur la forêt, lot F). Fanal : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
 // ---------------------------------------------------------------- primitives
@@ -812,6 +812,38 @@ export function buisson(seed = 1, m = 'leaf') {
   return a.done();
 }
 
+/**
+ * Souche (lot F) : un arbre coupé sur la terre gagnée au Hameau, au centre de son emprise 1 × 1. Tronc court à huit
+ * pans d'écorce, coupe claire avec son cœur et deux cernes, trois racines qui s'évasent au pied, côté visible.
+ */
+export function souche(seed = 1) {
+  const a = new Art();
+  const R = rng(seed);
+  const cu = 0.5, cv = 0.5, rr = 0.13 + R() * 0.03, H = 4.5 + R() * 3, n = 8;
+  const ring = Array.from({ length: n }, (_, k) => { const t = (k / n) * Math.PI * 2 + 0.2; return [cu + Math.cos(t) * rr, cv + Math.sin(t) * rr, Math.cos(t), Math.sin(t)]; });
+  // racines : un coin d'écorce posé au sol, qui part du tronc vers +u, +v et entre les deux
+  for (const [du, dv] of [[1, 0.15], [0.2, 1], [0.8, 0.75]]) {
+    const L = Math.hypot(du, dv), eu = du / L, ev = dv / L;
+    const base = [cu + eu * rr * 0.8, cv + ev * rr * 0.8], tip = [cu + eu * (rr + 0.11), cv + ev * (rr + 0.11)];
+    a.poly([[base[0] - ev * 0.05, base[1] + eu * 0.05, 0], [tip[0], tip[1], 0], [base[0], base[1], 2.4]], 'woodd-l');
+    a.poly([[base[0] + ev * 0.05, base[1] - eu * 0.05, 0], [tip[0], tip[1], 0], [base[0], base[1], 2.4]], 'woodd-r');
+  }
+  // flancs visibles : leur normale regarde vers +u ou +v
+  for (let k = 0; k < n; k++) {
+    const p = ring[k], q = ring[(k + 1) % n];
+    const nu = (p[2] + q[2]) / 2, nv = (p[3] + q[3]) / 2;
+    if (nu + nv < -0.2) continue;
+    a.poly([[p[0], p[1], 0], [q[0], q[1], 0], [q[0], q[1], H], [p[0], p[1], H]], nv >= nu ? 'woodd-l' : 'woodd-r');
+  }
+  // la coupe : bois clair, deux cernes, le cœur
+  a.poly(ring.map(([u, v]) => [u, v, H]), 'woodb-t');
+  for (const s of [0.68, 0.38]) a.poly(ring.map(([u, v]) => [cu + (u - cu) * s, cv + (v - cv) * s, H]), 'k-woodd-t', ' stroke-width=".6" opacity=".55"');
+  a.poly(ring.map(([u, v]) => [cu + (u - cu) * 0.14, cv + (v - cv) * 0.14, H]), 'woodd-t', ' opacity=".7"');
+  for (const [u, v] of [[cu - rr, cv], [cu + rr, cv], [cu, cv + rr], [cu, cv - rr]]) a.cast(u, v, 0);
+  a.cast(cu, cv, H);
+  return a.done();
+}
+
 export function rocher(seed = 1) {
   const a = new Art();
   const R = rng(seed);
@@ -922,6 +954,7 @@ export function artFor(e) {
     case 'arbre': return arbre(e.seed || 1, e.m || 'leaf', e.s || 1);
     case 'buisson': return buisson(e.seed || 1, e.m || 'leaf');
     case 'rocher': return rocher(e.seed || 1);
+    case 'souche': return souche(e.seed || 1);
     default: return caisse(1);
   }
 }

@@ -2,7 +2,7 @@
 // grille dans un groupe par secteur (data-sector : la zone de carte d'un quartier), projeté par une matrice
 // affine. Chaque case est un <g class="ow-tile"> de deux triangles (aplats low-poly).
 import { P, f, pts, rng, HW, HH } from './iso.js';
-import { N, CELLS, SECTOR_ORDER, ROADS, groundDetails, sectorOutline } from './layout.js';
+import { N, CELLS, SECTOR_ORDER, ROADS, BANDES_ILE, bandeCells, groundDetails, sectorOutline } from './layout.js';
 
 export const D = 74; // épaisseur visible du socle
 export const TERRAIN = { x: -560, y: -90, w: 1120, h: 690 };
@@ -16,8 +16,11 @@ export function sectorPolygon(id) {
   return sectorOutline(id).map(([u, v]) => P(u, v));
 }
 
-function strata(o, A, Bp, side, seed) {
-  const r = rng(seed), n = 40;
+// part : longueur de la face rapportée au bord de l'île (1 pour l'île ; le bout de falaise d'une bande est plus court,
+// ses fissures, cailloux et racines le sont d'autant).
+function strata(o, A, Bp, side, seed, part = 1) {
+  const r = rng(seed), n = Math.max(8, Math.round(40 * part));
+  const nb = (k) => Math.round(k * part);
   const top = (i) => lerp(A, Bp, i / n);
   const line = (d, amp, ph) => Array.from({ length: n + 1 }, (_, i) => { const [x, y] = top(i); return [x, y + d + Math.sin(i * 0.62 + ph) * amp + (r() - 0.5) * amp * 0.9]; });
   const b1 = line(6.5, 1.2, 1).map((p, i) => ((i % 5 === 2 || i % 7 === 4) ? [p[0], p[1] + 3.5 + r() * 4] : p));
@@ -25,16 +28,16 @@ function strata(o, A, Bp, side, seed) {
   const bounds = [b1, line(24, 2.2, 2), line(42, 2.6, 4), line(57, 2, 5), bD];
   const mats = ['earth', 'ochre', 'clay', 'rock'];
   for (let k = 0; k < 4; k++) o.push(`<polygon points="${pts(bounds[k].concat(bounds[k + 1].slice().reverse()))}" class="${mats[k]}-${side}"/>`);
-  for (let k = 0; k < 9; k++) {
+  for (let k = 0; k < nb(9); k++) {
     const i = Math.floor(r() * (n - 6)), d = 30 + r() * 10, len = 3 + Math.floor(r() * 4);
     const seg = Array.from({ length: len }, (_, j) => { const [x, y] = top(i + j); return [x, y + d + (r() - 0.5) * 2]; });
     o.push(`<polyline points="${pts(seg)}" class="k-clay-${side}" stroke-width="1" opacity=".55"/>`);
   }
-  for (let k = 0; k < 26; k++) {
+  for (let k = 0; k < nb(26); k++) {
     const [x, y] = top(r() * n), d = 46 + r() * 24, rx = 2 + r() * 3.4, ry = 1.4 + r() * 2;
     o.push(`<ellipse cx="${f(x)}" cy="${f(y + d + 1)}" rx="${f(rx)}" ry="${f(ry)}" class="rock-r"/><ellipse cx="${f(x - 0.5)}" cy="${f(y + d)}" rx="${f(rx * 0.85)}" ry="${f(ry * 0.8)}" class="rock-${side === 'l' ? 't' : 'l'}"/>`);
   }
-  for (let k = 0; k < 7; k++) {
+  for (let k = 0; k < nb(7); k++) {
     const [x, y] = top(2 + r() * (n - 4));
     o.push(`<path d="M${f(x)},${f(y + 7)}q${f(-2 + r() * 4)},6 ${f(-1 + r() * 2)},${f(10 + r() * 8)}" class="k-earth-r" stroke-width=".9" opacity=".7"/>`);
   }
@@ -52,18 +55,31 @@ function lipStrip(A, Bp, b1, t0, t1) {
   return `<polygon points="${pts(top.concat(bottom))}" class="lip-SIDE"/>`;
 }
 
+// une case de sol : deux triangles, le second d'un des trois tons d'herbe (n entre 0 et 1)
+function tileSVG(r, c, n) {
+  const flip = (r + c) % 2 === 0;
+  const a = flip ? `${c},${r} ${c + 1},${r} ${c + 1},${r + 1}` : `${c},${r} ${c + 1},${r} ${c},${r + 1}`;
+  const b = flip ? `${c},${r} ${c + 1},${r + 1} ${c},${r + 1}` : `${c + 1},${r} ${c + 1},${r + 1} ${c},${r + 1}`;
+  const tb = n < 0.33 ? 'grassl' : n < 0.66 ? 'grass' : 'grassd';
+  return `<g class="ow-tile" data-cell="${r}-${c}"><polygon points="${a}" class="grass-t"/><polygon points="${b}" class="${tb}-t"/></g>`;
+}
+const GRID = `<g transform="matrix(${HW},${HH},${-HW},${HH},0,0)" stroke-width=".02">`;
+
+// détail debout (touffe d'herbe ou fleur) en coordonnées écran
+function detailSVG(d) {
+  const [x, y] = P(d.u, d.v);
+  if (d.flower) {
+    const c = ['fl1', 'fl2', 'fl3'][d.tone];
+    return `<path d="M${f(x)},${f(y)}v-3" class="k-leafd-l" stroke-width=".7"/><circle cx="${f(x)}" cy="${f(y - 3.4)}" r="1.5" class="${c}-t"/>`;
+  }
+  return `<path d="M${f(x - 2)},${f(y)}l-.8,-3.2M${f(x)},${f(y)}l0,-4.2M${f(x + 2)},${f(y)}l.9,-3.2" class="k-grassd-r" stroke-width=".9"/>`;
+}
+
 function sectorGround(id, details) {
   const R = rng(id.length * 31 + 7);
   const g = [];
-  g.push(`<g transform="matrix(${HW},${HH},${-HW},${HH},0,0)" stroke-width=".02">`);
-  for (const [r, c] of CELLS[id]) {
-    const flip = (r + c) % 2 === 0;
-    const a = flip ? `${c},${r} ${c + 1},${r} ${c + 1},${r + 1}` : `${c},${r} ${c + 1},${r} ${c},${r + 1}`;
-    const b = flip ? `${c},${r} ${c + 1},${r + 1} ${c},${r + 1}` : `${c + 1},${r} ${c + 1},${r + 1} ${c},${r + 1}`;
-    const n = R();
-    const tb = n < 0.33 ? 'grassl' : n < 0.66 ? 'grass' : 'grassd';
-    g.push(`<g class="ow-tile" data-cell="${r}-${c}"><polygon points="${a}" class="grass-t"/><polygon points="${b}" class="${tb}-t"/></g>`);
-  }
+  g.push(GRID);
+  for (const [r, c] of CELLS[id]) g.push(tileSVG(r, c, R()));
   // sols particuliers
   if (id === 'place') {
     g.push('<circle cx="6" cy="6" r="1.15" class="pathe-t" stroke="none"/><circle cx="6" cy="6" r="1.02" class="cobble-t" stroke="none"/>');
@@ -78,20 +94,32 @@ function sectorGround(id, details) {
   }
   g.push('</g>');
   // détails debout (herbes, fleurs) en coordonnées écran
-  for (const d of details.filter((x) => x.sector === id)) {
-    const [x, y] = P(d.u, d.v);
-    if (d.flower) {
-      const c = ['fl1', 'fl2', 'fl3'][d.tone];
-      g.push(`<path d="M${f(x)},${f(y)}v-3" class="k-leafd-l" stroke-width=".7"/><circle cx="${f(x)}" cy="${f(y - 3.4)}" r="1.5" class="${c}-t"/>`);
-    } else {
-      g.push(`<path d="M${f(x - 2)},${f(y)}l-.8,-3.2M${f(x)},${f(y)}l0,-4.2M${f(x + 2)},${f(y)}l.9,-3.2" class="k-grassd-r" stroke-width=".9"/>`);
-    }
-  }
+  for (const d of details.filter((x) => x.sector === id && !x.bande)) g.push(detailSVG(d));
   return g.join('');
 }
 
-/** SVG du terrain. Les groupes de secteur portent data-sector. */
-export function terrainSVG() {
+/**
+ * Bande gagnée sur la forêt (lot F), dans un groupe à part que le moment « la forêt recule » fait monter : son bout de
+ * falaise (la face +u, seule visible ; les autres regardent le fond), son sol et ses touffes. Dessinée avant le socle et
+ * le sol de l'île, qui en cachent le pied.
+ */
+function bandeSVG(id, details) {
+  const b = BANDES_ILE[id];
+  const o = [];
+  const A = P(b.c + b.w, b.r), Bp = P(b.c + b.w, b.r + b.h);
+  const b1 = strata(o, A, Bp, 'r', 11, b.h / N);
+  o.push(lipStrip(A, Bp, b1, 0, 1).replace('SIDE', 'r'));
+  const R = rng(b.c * 7 + b.r * 13 + 5);
+  o.push(GRID);
+  for (const [r, c] of bandeCells([id])) o.push(tileSVG(r, c, R()));
+  o.push('</g>');
+  for (const d of details.filter((x) => x.bande === id)) o.push(detailSVG(d));
+  return `<g class="ow-ground ow-bande" data-bande="${id}">${o.join('')}</g>`;
+}
+
+/** SVG du terrain. Les groupes de secteur portent data-sector ; chaque bande gagnée (lot F), data-bande. */
+export function terrainSVG(bandes = []) {
+  bandes = bandes.filter((id) => Object.hasOwn(BANDES_ILE, id));
   const R = rng(42);
   const o = [];
   const L = P(0, N), B = P(N, N), Rt = P(N, 0), T = P(0, 0);
@@ -109,6 +137,10 @@ export function terrainSVG() {
   o.push(`<polygon points="${pts([[Lb[0] - 18, Lb[1] + 1], [Bb[0], Bb[1] + 14], [Rb[0] + 18, Rb[1] + 1], Rb, Bb, Lb])}" class="ow-shallow"/>`);
   const rd = D * 0.38;
   o.push(`<polygon points="${pts([Lb, Bb, Rb, [Rb[0], Rb[1] + rd], [Bb[0], Bb[1] + rd], [Lb[0], Lb[1] + rd]])}" class="ow-reflect"/>`);
+
+  // ---- bandes gagnées, avant le socle de l'île : il cache le pied de leur falaise
+  const details = groundDetails(9, bandes);
+  for (const id of bandes) o.push(bandeSVG(id, details));
 
   // ---- socle (deux faces visibles) ; la bande d'herbe du rebord suit le secteur
   const b1L = strata(o, L, B, 'l', 5);
@@ -129,12 +161,21 @@ export function terrainSVG() {
   o.push(`<path d="M${f(bx - 17)},${f(by - 5.5)}Q${f(bx)},${f(by + 3)} ${f(bx + 17)},${f(by + 1)}Q${f(bx)},${f(by - 9)} ${f(bx - 17)},${f(by - 5.5)}Z" class="woodd-t"/>`);
 
   // ---- dessus, un groupe par secteur
-  const details = groundDetails(9);
   for (const id of SECTOR_ORDER) {
     o.push(`<g class="ow-ground" data-sector="${id}">${(lips[id] || []).join('')}${sectorGround(id, details)}</g>`);
   }
-  // liserés clairs des arêtes
-  o.push(`<path d="M${pts([L, T, Rt]).replace(/ /g, 'L')}" class="ow-edge"/>`);
+  // liserés clairs des arêtes. Une bande du bord du fond côté Mairie (r = 0) : le liseré du fond en fait le tour, et
+  // l'arête du haut de sa falaise est une arête avant.
+  const path = (list) => `M${pts(list).replace(/ /g, 'L')}`;
+  const fond = [[L, T]];
+  for (const id of bandes.slice().sort((x, y) => BANDES_ILE[x].c - BANDES_ILE[y].c)) {
+    const b = BANDES_ILE[id], u1 = b.c + b.w, v0 = b.r + b.h;
+    fond.at(-1).push(P(b.c, v0), P(b.c, b.r), P(u1, b.r));
+    o.push(`<path d="${path([P(u1, b.r), P(u1, v0)])}" class="ow-edge ow-edge-front"/>`);
+    fond.push([P(u1, v0)]);
+  }
+  fond.at(-1).push(Rt);
+  for (const s of fond) o.push(`<path d="${path(s)}" class="ow-edge"/>`);
   o.push(`<path d="M${pts([L, B, Rt]).replace(/ /g, 'L')}" class="ow-edge ow-edge-front"/>`);
   return `<svg class="ow-terrain" viewBox="${TERRAIN.x} ${TERRAIN.y} ${TERRAIN.w} ${TERRAIN.h}" width="${TERRAIN.w}" height="${TERRAIN.h}" aria-hidden="true" focusable="false">${o.join('')}</svg>`;
 }

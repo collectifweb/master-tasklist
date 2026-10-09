@@ -5,8 +5,9 @@
 //
 //   fil de lumière vers le quartier de la tâche (reward)   un quartier monte de niveau (quartier-monte, acheté)
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
+//   la forêt recule : un rang gagne une bande de terrain (rang, lot F)
 import { P, f } from './iso.js';
-import { SECTOR_CENTER } from './layout.js';
+import { SECTOR_CENTER, BANDES_ILE, decorFor } from './layout.js';
 import { quartierOfTask } from '../core/domains.js';
 
 export function cloneView(v) {
@@ -18,6 +19,7 @@ export function cloneView(v) {
     refletAnchors: new Set(v.refletAnchors || []),
     batiments: (v.batiments || []).map((b) => ({ ...b })),
     imprevus: new Set(v.imprevus || []),
+    bandes: [...(v.bandes || [])],
   };
 }
 
@@ -173,6 +175,56 @@ function etapeStep(ctx, ev) {
   return { apply: () => {}, run, text: () => '' };
 }
 
+// ----------------------------------------------------------------------------- la forêt recule (lot F)
+/**
+ * Un nouveau rang gagne une bande de terrain : les arbres du bord, au droit de la bande, s'effacent en s'enfonçant ; la
+ * terre monte de derrière l'île ; la lisière se replante au bord neuf, d'un bout à l'autre, et les souches restent.
+ * L'interface dit la phrase, le monde dessine. Une bande déjà là (gagnée sur un autre appareil) ne rejoue rien ; en
+ * mouvement réduit, la bande et ses arbres viennent en un fondu court.
+ */
+function bandeStep(ctx) {
+  const neuves = () => (ctx.target?.bandes || []).filter((id) => !(ctx.shown.bandes || []).includes(id));
+  const apply = () => { ctx.shown.bandes = [...(ctx.target?.bandes || [])]; ctx.apply({ enter: false }); };
+  const art = (n) => n.el.querySelector('.ow-art') || n.el;
+  const run = async () => {
+    const ids = neuves().filter((id) => BANDES_ILE[id]);
+    if (!ids.length) { apply(); return; }
+    const b = BANDES_ILE[ids[0]];
+    const [x, y] = P(b.c + b.w / 2, b.r + b.h);
+    ctx.reveal(x, y - 30, 110);
+    const avant = new Map(ctx.scene.nodes);
+    if (ctx.reduced) {
+      apply();
+      await Promise.all([ctx.bande(ids[0]), ...[...ctx.scene.nodes.values()].filter((n) => !avant.has(n.id)).map((n) => n.el)].map((el) => fade(ctx, el)));
+      return;
+    }
+    // 1. les arbres du bord s'effacent en s'enfonçant (ils partent avec l'apply, la scène les retire)
+    const reste = new Set(decorFor(ctx.target.bandes).map((d) => d.id));
+    const partent = [...avant.values()].filter((n) => /^d-/.test(n.id) && !reste.has(n.id));
+    for (const n of partent) {
+      ctx.fx.anim(art(n), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: 420, easing: 'ease-in', fill: 'forwards' });
+      n.shadow?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' });
+    }
+    await ctx.fx.wait(380);
+    // 2. la terre monte de derrière l'île (le socle et le sol de l'île, dessinés après, en cachent le pied)
+    apply();
+    const g = ctx.bande(ids[0]);
+    if (g) ctx.fx.anim(g, [{ opacity: 0, transform: 'translateY(22px)' }, { opacity: 1, transform: 'none' }], { duration: 760, easing: 'cubic-bezier(.16,1,.3,1)' });
+    ctx.fx.ring(x, y - 20, 70, { dur: 900, delay: 180 });
+    // 3. la lisière se replante d'un bout à l'autre, puis les souches
+    const neufs = [...ctx.scene.nodes.values()].filter((n) => !avant.has(n.id))
+      .sort((p, q) => (p.e.model === 'souche') - (q.e.model === 'souche') || p.e.c - q.e.c);
+    neufs.forEach((n, i) => {
+      const delay = 320 + i * 60;
+      ctx.fx.anim(art(n), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      n.shadow?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 460, delay, fill: 'backwards' });
+    });
+    ctx.fx.twinkle([[x - 60, y - 34], [x + 34, y - 52], [x - 8, y - 20]]);
+    await ctx.fx.wait(320 + neufs.length * 60 + 460);
+  };
+  return { apply, run, text: () => '' };
+}
+
 // ----------------------------------------------------------------------------- chef d'orchestre
 function stepsFor(ctx, ev) {
   switch (ev.type) {
@@ -181,6 +233,7 @@ function stepsFor(ctx, ev) {
     case 'reflet': return [refletStep(ctx, ev.objectId ?? ev.object ?? ev.anchor)];
     case 'veille': return [veilleStep(ctx)];
     case 'etape': return [etapeStep(ctx, ev)];
+    case 'rang': return [bandeStep(ctx)];
     default: return [];
   }
 }

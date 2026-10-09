@@ -1,7 +1,7 @@
 // Réaction d'un personnage : une bulle posée sur le monde, sous la voie d'annonce (elle ne couvre aucun bouton).
 import { esc, $ } from './dom.js';
 import { pickReply, replyVars, t } from '../content.js';
-import { quartierOfTask } from '../../core/index.js';
+import { quartierOfTask, BANDES } from '../../core/index.js';
 
 /** Quelle situation joue pour ce geste ? Une seule, la première de la liste de content/README.md. */
 export function situationFor(action, params, events, task) {
@@ -9,6 +9,11 @@ export function situationFor(action, params, events, task) {
   // un dégât réglé : la neige d'une tempête a sa propre réplique (lot H)
   const regle = () => (events.some((e) => e.type === 'reparation' && e.imprevu === 'neige') ? 'tempete.deneige' : 'imprevu.regle');
   const lengthOf = task ? (task.frozen ? task.frozen.length : task.length) : 0;
+  // un nouveau rang : sa réplique, ou celle de la bande de terrain qu'il gagne (le Hameau, lot F)
+  const rang = () => {
+    const r = events.find((e) => e.type === 'rang');
+    return r && BANDES.some((b) => b.rang === r.id) ? 'permis.rang.bande' : 'permis.rang';
+  };
   const doneFlow = () => {
     if (has('sans-gain')) return null;
     if (events.some((e) => e.type === 'permis' && e.source === 'jours')) return 'permis.gagne';
@@ -26,12 +31,12 @@ export function situationFor(action, params, events, task) {
     case 'openApp': return has('retour') ? 'return.after_absence' : null;
     // le quai rebâti : le marchand accoste aussitôt, Fanal l'annonce à la place du mot de chantier
     case 'construire': return events.some((e) => e.type === 'construction' && String(e.id).startsWith('quai')) ? 'marchand.arrive' : 'batiment.construit';
-    case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : 'famille.arrive';
+    case 'accueillir': return events.some((e) => e.type === 'permis' && e.source === 'rang') ? rang() : 'famille.arrive';
     // la commande livrée (lot C) : le merci de son visiteur, ou le nouveau rang quand la famille du Sud le fait monter
     case 'livrer': {
       const c = events.find((e) => e.type === 'commande');
       if (!c) return null;
-      return events.some((e) => e.type === 'permis' && e.source === 'rang') ? 'permis.rang' : `commande.livree.${c.visiteur}`;
+      return events.some((e) => e.type === 'permis' && e.source === 'rang') ? rang() : `commande.livree.${c.visiteur}`;
     }
     // une ligne par quartier, au niveau 1 seulement (ses variantes portent le quartier)
     case 'monterQuartier': return events.some((e) => e.type === 'quartier-monte' && e.niveau === 1) ? 'quartier.monte' : null;

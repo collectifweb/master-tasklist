@@ -192,6 +192,7 @@
     "famille": "Une famille s’installe. Le village compte {n} habitants.",
     "famille.one": "Une famille s’installe. Le village compte 1 habitant.",
     "rang": "Nouveau rang : {rang}.",
+    "rang.bande": "La forêt recule : l’île gagne une bande de terrain.",
     "echange": "Échange fait : {donne} contre {recoit}.",
     "commande": "Commande livrée {au} : {donne}.",
     "reparation.panne": "Éolienne réparée, pour {cout}.",

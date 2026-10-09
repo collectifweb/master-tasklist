@@ -232,15 +232,6 @@ export function bandeCells(bandes = []) {
   return out;
 }
 
-/** Cases de chaque secteur, bandes gagnées comprises (sans bande : CELLS). */
-export function cellsFor(bandes = []) {
-  const extra = bandeCells(bandes);
-  if (!extra.length) return CELLS;
-  const out = Object.fromEntries(SECTOR_ORDER.map((id) => [id, CELLS[id].slice()]));
-  for (const [r, c] of extra) out[sectorAt(r, c)].push([r, c]);
-  return out;
-}
-
 const ARBRES = new Set(['epinette', 'arbre', 'erable']);
 /**
  * Décor avec les bandes gagnées. La lisière recule : les arbres du bord, au droit de la bande, se replantent sur sa
@@ -257,7 +248,10 @@ export function decorFor(bandes = []) {
     const add = (model, r, c, extra = {}) => out.push({ id: `d-${model}-${r}-${c}`, model, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: Math.floor(R() * 1e6), ...extra });
     for (let c = b.c; c < b.c + b.w; c++) {
       if (!isFree(c + 0.5, b.r + 0.5)) continue;
-      add(c % 2 ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1 });
+      // l'ombre d'un arbre rond tombe à droite, dans l'eau au-delà du bord : sans voisin pour la couvrir (devant la
+      // trouée de la route), c'est une épinette
+      const voisin = c + 1 < b.c + b.w && isFree(c + 1.5, b.r + 0.5);
+      add(c % 2 || !voisin ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1 });
     }
     // une souche sur un arbre coupé sur deux, et deux au milieu de la bande
     coupes.filter((_, i) => i % 2 === 0).forEach((e) => add('souche', bord + 0.1, e.c + 0.15));
@@ -266,8 +260,8 @@ export function decorFor(bandes = []) {
   return out;
 }
 
-/** Touffes d'herbe et fleurs posées sur le sol, par secteur. */
-export function groundDetails(seed = 9) {
+/** Touffes d'herbe et fleurs posées sur le sol, par secteur ; sur une bande gagnée, elles portent `bande`. */
+export function groundDetails(seed = 9, bandes = []) {
   const R = rng(seed);
   const out = [];
   for (let i = 0; i < 260; i++) {
@@ -275,6 +269,17 @@ export function groundDetails(seed = 9) {
     if (!isFree(u, v)) continue;
     const flower = R() < 0.22;
     out.push({ u, v, flower, tone: Math.floor(R() * 3), sector: sectorAt(Math.floor(v), Math.floor(u)) });
+  }
+  // même densité sur la terre gagnée (260 essais pour 144 cases), hors de sa rangée d'arbres
+  for (const id of bandes) {
+    const b = bandeDe(id);
+    if (!b) continue;
+    const Rb = rng(seed + b.c * 17 + b.w);
+    for (let i = 0; i < Math.round((260 * b.w * b.h) / (N * N)); i++) {
+      const u = b.c + 0.3 + Rb() * (b.w - 0.6), v = b.r + 1 + Rb() * (b.h - 1.3);
+      const flower = Rb() < 0.22, tone = Math.floor(Rb() * 3);
+      if (isFree(u, v)) out.push({ u, v, flower, tone, sector: sectorAt(Math.floor(v), Math.floor(u)), bande: id });
+    }
   }
   return out;
 }

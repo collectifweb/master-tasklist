@@ -3,12 +3,14 @@
 // nombre d'habitants, qui ne baisse jamais. Logique pure du cœur, de la vue et de la carte de l'île.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { BANDES, bandesGagnees, rangDuVillage, createInitialState } from '../../core/index.js';
 import { deriveView } from '../../world/view.js';
 import {
-  N, CELLS, DECOR, EMPLACEMENTS, LANDMARKS, ROADS, BANDES_ILE, bandeCells, cellsFor, decorFor, sectorAt,
+  N, CELLS, DECOR, EMPLACEMENTS, LANDMARKS, ROADS, BANDES_ILE, bandeCells, decorFor, sectorAt,
 } from '../../world/layout.js';
 import { P } from '../../world/iso.js';
+import { promeneurs } from '../../world/habitants.js';
 
 const NOW = new Date('2026-10-20T15:00:00Z');
 const ARBRES = new Set(['epinette', 'arbre', 'erable']);
@@ -66,15 +68,6 @@ test('carte : avec la bande, l’île ne sort pas de son emprise actuelle à l�
   }
 });
 
-test('carte : les cases par secteur gardent l’île de départ, et y ajoutent la bande', () => {
-  assert.deepEqual(cellsFor([]), CELLS);
-  const avec = cellsFor(['hameau']);
-  for (const [id, cells] of Object.entries(CELLS)) {
-    const extra = avec[id].filter((x) => !cells.some((y) => key(x) === key(y)));
-    assert.deepEqual(extra.map(key).sort(), bandeCells(['hameau']).filter(([r, c]) => sectorAt(r, c) === id).map(key).sort(), id);
-  }
-});
-
 test('décor : sans bande, exactement celui d’aujourd’hui', () => {
   assert.deepEqual(decorFor([]), DECOR);
 });
@@ -113,4 +106,50 @@ test('décor : rien de neuf sur un emplacement, un repère ou une route', () => 
     assert.ok(Math.abs(u - 6) >= 0.6, `${e.id} sur la route du Garage`);
   }
   assert.ok(ROADS.length >= 5);
+});
+
+test('habitants : aucun chemin ne passe sur la bande, l’été comme l’hiver (la grille des trajets s’arrête au bord de départ)', () => {
+  const occupants = { 'chalet-1': 5, 'chalet-2': 5, 'chalet-3': 5 };
+  const lieux = ['parcelle-1', 'parcelle-2', 'parcelle-3', 'serre-1', 'serre-2', 'atelier-1', 'grenier-1'];
+  const batiments = [...Object.entries(occupants), ...lieux.map((id) => [id, 0])]
+    .map(([id, n]) => ({ id, type: id.split('-')[0], bati: true, occupants: n }));
+  for (const today of ['2026-07-10', '2026-12-10']) {
+    const p = promeneurs({ today, bandes: ['hameau'], batiments });
+    assert.equal(p.length, 15, today);
+    // les points du chemin sont ses sommets, reliés en ligne droite : tous devant le bord r = 0, donc tout le chemin
+    for (const x of p) for (const [u, v] of x.chemin) assert.ok(v >= 0, `${today} ${x.id} passe en ${u}, ${v}`);
+  }
+});
+
+// ---- textes : la phrase lue et la réplique de Fanal du Hameau (js/main.js, js/ui/speech.js)
+const lire = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
+const rep = lire('../../content/fr-CA/repliques.json');
+const bat = lire('../../content/fr-CA/batiments.json');
+
+test('réplique : le Hameau, qui gagne une bande, a la sienne ; les autres rangs gardent « permis.rang »', async () => {
+  globalThis.document ??= { baseURI: 'http://localhost/' }; // content.js lit l'adresse de la page à l'import
+  const { situationFor } = await import('../../js/ui/speech.js');
+  const rang = (id) => [{ type: 'rang', id, name: 'x', habitants: 3 }, { type: 'permis', source: 'rang', dispo: 1 }];
+  assert.equal(situationFor('accueillir', {}, [{ type: 'famille', habitants: 3 }, ...rang('hameau')]), 'permis.rang.bande');
+  assert.equal(situationFor('accueillir', {}, [{ type: 'famille', habitants: 6 }, ...rang('village')]), 'permis.rang');
+  assert.equal(situationFor('livrer', {}, [{ type: 'commande', visiteur: 'famille' }, ...rang('hameau')]), 'permis.rang.bande');
+  assert.equal(situationFor('accueillir', {}, [{ type: 'famille', habitants: 2 }]), 'famille.arrive');
+});
+
+test('réplique « permis.rang.bande » : 4 ou 5 variantes de Fanal, 20 mots et 86 caractères au plus, sans chiffre, {rang} seul gabarit', () => {
+  const vs = rep.situations['permis.rang.bande'].variantes;
+  assert.ok(vs.length >= 4 && vs.length <= 5, String(vs.length));
+  for (const v of vs) {
+    const s = v.texte.replace('{rang}', 'Hameau');
+    assert.ok(v.id.startsWith('permis.rang.bande.') && v.voix === 'fanal', v.id);
+    assert.ok(s.split(/\s+/).length <= rep.voix.fanal.motsMax && s.length <= 86, `${v.id} : ${s.length}`);
+    assert.ok(!/\d/.test(s) && !/\{(?!rang\})/.test(v.texte) && v.texte.includes('{rang}'), v.id);
+    assert.ok(!/village passe au rang/i.test(v.texte), v.id);
+  }
+  assert.equal(new Set(vs.map((v) => v.id)).size, vs.length);
+});
+
+test('phrase lue : « Nouveau rang : Hameau. » suivi de la forêt qui recule', () => {
+  assert.equal(bat.sr.rang, 'Nouveau rang : {rang}.');
+  assert.equal(bat.sr['rang.bande'], 'La forêt recule : l’île gagne une bande de terrain.');
 });

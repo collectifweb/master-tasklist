@@ -87,6 +87,17 @@
         {"id": "permis.rang.05", "voix": "fanal", "texte": "Les familles ont fait grandir l’Orée. {rang}, officiellement, avec un permis à la clé."}
       ]
     },
+    "permis.rang.bande": {
+      "quand": "Une famille fait passer le village à un rang qui gagne une bande de terrain sur la forêt (le Hameau, lot F), et donne un permis. Remplace permis.rang pour ce rang-là. La variable {rang} est le nom du nouveau rang. La bande arrive vide.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "permis.rang.bande.01", "voix": "fanal", "texte": "{rang}. La forêt a reculé d’une bande, et la Mairie envoie un permis. Grosse journée."},
+        {"id": "permis.rang.bande.02", "voix": "fanal", "texte": "La lisière a reculé au fond de l’île. {rang}, avec un permis par-dessus le marché."},
+        {"id": "permis.rang.bande.03", "voix": "fanal", "texte": "Les arbres du fond ont fait de la place. Demandé poliment. {rang}, et un permis."},
+        {"id": "permis.rang.bande.04", "voix": "fanal", "texte": "{rang}, officiellement. L’île gagne une bande de terre, et toi, un permis."},
+        {"id": "permis.rang.bande.05", "voix": "fanal", "texte": "Une bande de terre neuve au fond de l’île. Vide pour l’instant. {rang}, et un permis."}
+      ]
+    },
     "semaine.tenue": {
       "quand": "Le bonus de la semaine tenue tombe, avec la quête payée qui le déclenche (quête terminée ou ajoutée déjà faite). Passe après permis.gagne : un seul mot de Fanal par geste. Ne jamais dire un nombre de jours, ne jamais parler de série.",
       "frequence": 1,

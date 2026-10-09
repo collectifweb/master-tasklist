@@ -1,7 +1,7 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
 import {
   SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
-  findEntry, allureDe, commandeDeLaSemaine,
+  findEntry, allureDe, commandeDeLaSemaine, BANDES,
 } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
@@ -184,7 +184,8 @@ function objectifsSay(events) {
 }
 
 /**
- * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang, quartier monté,
+ * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang (et sa bande de
+ * terrain), quartier monté,
  * échange au comptoir du marchand, commande livrée au visiteur de la semaine.
  */
 function batimentSay(events) {
@@ -195,7 +196,8 @@ function batimentSay(events) {
     else if (e.type === 'semis') out.push(t('bat.sr.semis', { nom: nom(e.id), cout: coutText(e.cout) }));
     else if (e.type === 'recolte') out.push(t(entierGain(e.perdu) > 0 ? `bat.sr.recolte.${entierGain(e.nourriture) > 0 ? 'perdu' : 'plein'}` : 'bat.sr.recolte', { n: numGain(e.nourriture), perdu: numGain(e.perdu) }) + (e.ours ? ` ${t('bat.sr.recolte.ours', { n: numGain(e.ours) })}` : ''));
     else if (e.type === 'famille') out.push(t(e.habitants === 1 ? 'bat.sr.famille.one' : 'bat.sr.famille', { n: e.habitants }));
-    else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }));
+    // un rang qui gagne une bande de terrain (le Hameau, lot F) le dit dans la même phrase
+    else if (e.type === 'rang') out.push(t('bat.sr.rang', { rang: e.name }) + (BANDES.some((b) => b.rang === e.id) ? ` ${t('bat.sr.rang.bande')}` : ''));
     else if (e.type === 'quartier-monte') out.push(monteText(e));
     else if (e.type === 'echange') out.push(t('bat.sr.echange', { donne: ressource(e.donne).texte, recoit: ressource(e.recoit).texte }));
     else if (e.type === 'commande') out.push(t('bat.sr.commande', { au: t(`bat.commande.${e.visiteur}.au`), donne: ressourcesText(e.donne) }));
@@ -632,7 +634,11 @@ document.addEventListener('click', (e) => {
       let params = {};
       try { params = JSON.parse(target.dataset.params || '{}'); } catch { return; }
       markSpent(action, target);
-      return run(target.dataset.geste, params);
+      const dlg = target.closest('dialog'); // la fiche se redessine pendant le geste : le bouton n'y sera plus
+      const r = run(target.dataset.geste, params);
+      // un rang qui gagne une bande (lot F) : la fiche se ferme, la forêt qui recule se voit sur la carte, pas derrière
+      if (r && r.events.some((x) => x.type === 'rang' && BANDES.some((b) => b.rang === x.id))) closeSheet(dlg);
+      return r;
     }
   }
 });
