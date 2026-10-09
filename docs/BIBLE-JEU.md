@@ -131,7 +131,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 - rien ne tombe en panne ni sous la neige dans ce lot : seules l'éolienne et la serre le peuvent.
 
 **Ce que la Nourriture achète** (lot N, 9 octobre 2026 ; choix d'Alex du matin, valeurs réglées par la simulation (o) et
-*à valider par Alex* ; pas encore en ligne). Une fois le village plein, la réserve restait au plafond et la Nourriture en
+validées par Alex le 9 octobre à midi ; en ligne depuis, étiquette `v2.11`). Une fois le village plein, la réserve restait au plafond et la Nourriture en
 trop se perdait. Elle sert maintenant à trois choses de plus :
 - **le repas de la semaine**, depuis la fiche de la Place : une fois par semaine (du lundi au dimanche), le jour que tu
   choisis, le village mange ensemble ; 15 Nourriture contre 15 Énergie. Il attend une première famille. **Les familles
@@ -165,7 +165,7 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
 - objectif d'hiver, « Garder la serre allumée » : 10 récoltes de petite serre, comptées de décembre à février (en mars, le jeu passe au printemps). Récompense comme à l'automne : 3 Énergie, 10 Matériaux et 1 permis. Au ralenti (§9), 6 récoltes suffisent, et le grenier à moitié à l'automne. Sans serre, le bandeau dit comment en bâtir une. Une serre mûre se récolte même quand la réserve est pleine : ce qui ne tient pas est perdu, mais la récolte compte (lot A, 7 octobre au soir ; avant, un village plein ne pouvait plus l'atteindre). D'après les simulations (j) et (k), pour un joueur qui récolte et ressème aussitôt : du 12 au 31 janvier au rythme de l'essai, dès la mi-décembre à deux ou trois quêtes par jour (deux serres, pousse raccourcie par les niveaux) ;
 - les tempêtes de neige sont des alertes annoncées (§8) ; le poulailler (qui produit même l'hiver) et la tour de guet (qui prévient plus tôt) arrivent au rang Village (lot B, §5 et §8) ; le garage à chasse-neige viendra plus tard.
 
-**Le printemps, tel qu'il est construit** (lot N, 9 octobre 2026, choix d'Alex ; pas encore en ligne) :
+**Le printemps, tel qu'il est construit** (lot N, 9 octobre 2026, choix d'Alex ; en ligne depuis, étiquette `v2.11`) :
 - objectif de printemps, « Faire les sucres » : la partie de sucre, un geste à faire depuis la fiche de la Place, du
   1er mars au 30 avril, une fois par printemps. Avoir la Nourriture ne suffit pas. Pas besoin de cabane à sucre ;
 - son prix : la moitié de la réserve de base, soit 10 Nourriture au départ et 30 avec un grenier ; au ralenti (§9), le
