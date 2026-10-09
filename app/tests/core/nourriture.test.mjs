@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   REPAS, SIROP, PRODUCTION, OBJECTIFS_SAISON, repasDeLaSemaine, refusServirRepas, servirRepas, prixPartieDeSucre,
-  refusFaireLesSucres, faireLesSucres, objectifSaison, completeQuest, remballerQuest, stockage, weekStart, addDays,
+  refusFaireLesSucres, faireLesSucres, objectifSaison, completeQuest, remballerQuest, stockage, weekStart, addDays, prixFamille,
 } from '../../core/index.js';
 import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
@@ -48,6 +48,21 @@ test('repas : servi, la Nourriture part et l’Énergie arrive au registre sous 
   assert.throws(() => step(w, servirRepas, {}, at(addDays(lundi, 6))), /Déjà servi/);
   const suivant = step(w, servirRepas, {}, at(addDays(lundi, 7))).world;
   assert.deepEqual(suivant.ledger.filter((x) => x.type === 'repas').map((x) => x.key), [`repas:${lundi}`, `repas:${addDays(lundi, 7)}`]);
+});
+
+test('repas : les familles d’abord ; avec une place libre au chalet, il garde la Nourriture de la prochaine famille', () => {
+  const D = '2026-10-06';
+  const w = monde(D, { types: ['chalet', 'grenier'], habitants: 1 }); // 2 places, 1 habitant : une place libre
+  const pf = prixFamille(w.game);
+  const total = REPAS.donne.food + pf;
+  w.game.resources.food = total - 1;
+  assert.equal(refusServirRepas(w.game, w.ledger, {}, at(D)), `Les familles d’abord\u00a0: il faut ${total} Nourriture, ${pf} pour accueillir la prochaine et ${REPAS.donne.food} pour le repas.`);
+  w.game.resources.food = total;
+  assert.equal(refusServirRepas(w.game, w.ledger, {}, at(D)), null);
+  // la maison pleine, plus personne n'attend : le repas suffit
+  w.game.habitants = 2;
+  w.game.resources.food = REPAS.donne.food;
+  assert.equal(refusServirRepas(w.game, w.ledger, {}, at(D)), null);
 });
 
 test('repas : deux appareils la même semaine, le second est refusé (la clé est déjà au registre)', () => {
@@ -134,6 +149,16 @@ test('partie de sucre : du 1er mars au 30 avril, sans cabane ; assez de Nourritu
   assert.equal(refusFaireLesSucres(monde(MARS, { food: 7.5 }).game, [], {}, at(MARS)), 'Il manque 3 Nourriture.');
   assert.equal(refusFaireLesSucres(g, [], {}, at('2027-03-01')), null);
   assert.equal(refusFaireLesSucres(g, [], {}, at('2027-04-30')), null);
+});
+
+test('partie de sucre : les familles d’abord, comme le repas', () => {
+  const w = monde(MARS, { types: ['chalet'], habitants: 1 });
+  const pf = prixFamille(w.game);
+  const prix = prixPartieDeSucre(w.game);
+  w.game.resources.food = prix + pf - 1;
+  assert.equal(refusFaireLesSucres(w.game, w.ledger, {}, at(MARS)), `Les familles d’abord\u00a0: il faut ${prix + pf} Nourriture, ${pf} pour accueillir la prochaine et ${prix} pour la partie de sucre.`);
+  w.game.habitants = 2;
+  assert.equal(refusFaireLesSucres(w.game, w.ledger, {}, at(MARS)), null);
 });
 
 test('partie de sucre : faite, la Nourriture part, l’objectif est atteint (registre saison:printemps-AAAA, son permis) ; une seule fois', () => {

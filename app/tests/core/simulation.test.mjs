@@ -58,6 +58,20 @@
 //     premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau au même jour, village
 //     plein jamais plus tard ; les joueurs à 2 ou 3 quêtes par jour et plus gagnent au moins un niveau en 16 semaines (avisé).
 //     ECHANGE_DU_JOUR (sa garde de 150 Matériaux) se règle ici.
+// (o) (lot N) ce que la Nourriture achète (core/nourriture.js, objectifs.js, batiments.js) : les cinq joueurs, du 7 octobre
+//     au 1er mai, rang Village bâti, servent le repas de la semaine et font la partie de sucre de deux façons : 'avise' (le
+//     repas quand la réserve est presque pleine, les sucres quand aucune famille n'attend la Nourriture) ou 'toujours' (les
+//     deux dès que possible, avant tout le reste). Le sirop, lui, se vend tout seul. Cibles : personne ne recule (Hameau,
+//     premier niveau, niveaux au 1er mai, village plein, tempêtes tenues). REPAS et SIROP se règlent ici. Mesuré le 9 octobre
+//     2026 : sans « les familles d'abord » (familleDabord, nourriture.js), le joueur lent qui sert le repas chaque semaine
+//     atteignait le Hameau au jour 107 au lieu de 41, le très lent au jour 189 au lieu de 91 ; la partie de sucre faite le
+//     1er mars avant une famille repoussait le village plein du très lent au-delà du 1er mai. Avec elle, personne ne recule ;
+//     à 10 Énergie le repas, (g) avec le marchand finissait encore avec un niveau de moins (le sirop rapporte plus), à 15 et
+//     à 20 non. À 15 : un niveau de plus au 1er mai pour (f) sans marchand, pour le très lent avec, et pour le lent avec
+//     qui sert chaque semaine ; Nourriture perdue par semaine une fois le village plein, sans → avisé : de 0,3 à 0 (très
+//     lent), 3,3 à 1,1 (lent), 4,7 à 1,6 (g), 15,3 à 7,3 (f), 18,4 à 10,9 (rapide) sans marchand ni commande ; avec eux,
+//     de 0,1 à 0, 1,6 à 0,8, 1,2 à 1, 9 à 4,1 et 8,9 à 6,3. La partie de sucre se fait le 1er mars, sauf chez le très lent
+//     (le 1er avril sans marchand, le 12 mars avec).
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -69,7 +83,8 @@ import {
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
   tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
   allureDe, ALLURE, daysBetween, weekStart, saisonDe, commandeDeLaSemaine, refusLivrer, livrer, VISITEURS,
-  ECHANGE_DU_JOUR, coutNiveau,
+  ECHANGE_DU_JOUR, coutNiveau, REPAS, SIROP, PRODUCTION, produitCeJour, servirRepas, refusServirRepas, faireLesSucres,
+  refusFaireLesSucres, prixPartieDeSucre,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -97,7 +112,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -106,6 +121,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // marchand et les niveaux ; avec elle, il bâtit aussi le quai.
   // duJour (m) : 'avise', 'chaque' ou 'presse', sa façon de prendre l'échange du jour (voir l'en-tête).
   // village (n) : après ses autres bâtiments, il bâtit aussi ceux du rang Village dès qu'il le peut (lot B).
+  // nourriture (o) : 'avise' ou 'toujours', sa façon de servir le repas et de faire la partie de sucre (voir l'en-tête).
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
@@ -119,6 +135,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // (l) commandes : visiteur de chaque semaine où le quai était là (lundi → visiteur), commandes livrées par visiteur et par
   // taille, et ce qu'elles ont rapporté
   const cmd = log.commandes = { offertes: new Map(), livrees: {}, tailles: {}, materiaux: 0, permis: 0, familles: 0, jours: [], bloque: {} };
+  // (o) repas servis, jour de la partie de sucre, Nourriture perdue aux récoltes (jour → quantité)
+  const nour = log.nourriture = { repas: 0, sucres: null, perdu: new Map() };
   if (hiver === 'sans') w.ledger = tempetesDeLHiver(debut).map((j) => ({ key: `tempete:${j}` }));
   let n = 0;
   let i = 0;
@@ -126,6 +144,9 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     const s = step(w, fn, params, now);
     w = s.world;
     for (const e of s.r.events) {
+      if (e.type === 'repas') nour.repas++;
+      if (e.type === 'sucres') nour.sucres = addDays(debut, i);
+      if (e.type === 'recolte' && e.perdu > 0) nour.perdu.set(addDays(debut, i), (nour.perdu.get(addDays(debut, i)) || 0) + e.perdu);
       if (e.type === 'construction') log.construits[e.id] ??= addDays(debut, i); // (n) jour de chaque bâtiment
       if (e.type === 'objectif-saison') log.objectifs[e.cle] = addDays(debut, i); // (k) jour de chaque objectif de saison atteint
       if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
@@ -209,6 +230,10 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     }
     echangeDuJour('chaque', soir);
     echangeDuJour('presse', soir);
+    if (nourriture === 'toujours') {
+      if (!refusFaireLesSucres(w.game, w.ledger, {}, soir)) geste(faireLesSucres, {}, soir);
+      if (!refusServirRepas(w.game, w.ledger, {}, soir)) geste(servirRepas, {}, soir);
+    }
     for (let guard = 0; guard < 20; guard++) {
       const cultures = batimentsDuVillage(w.game).filter((b) => BATIMENTS[b.type].culture).map((b) => b.id);
       // réserve pleine (la récolte n'est plus refusée depuis le lot A) : il ne récolte que la serre l'hiver, pour l'objectif ;
@@ -250,6 +275,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
         geste(livrer, {}, soir);
         if (w.game.habitants >= BATIMENTS.chalet.max * placesParChalet(w.game)) log.plein ??= day; // la famille du Sud
         continue;
+      }
+      if (nourriture === 'avise') { // (o) les sucres quand aucune famille n'attend la Nourriture, le repas quand la réserve déborde
+        const prix = prixPartieDeSucre(w.game, allureDe(w.game, w.ledger, day).niveau === 'ralenti');
+        if (!refusFaireLesSucres(w.game, w.ledger, {}, soir) && (!logements(w.game).libres || w.game.resources.food - prix >= prixFamille(w.game))) { geste(faireLesSucres, {}, soir); continue; }
+        if (w.game.resources.food >= stockage(w.game) - 2 && !refusServirRepas(w.game, w.ledger, {}, soir)) { geste(servirRepas, {}, soir); continue; }
       }
       const offre = marchand && marchand !== 'sans' && offreDuMarchand(w.game, soir, marchand);
       if (offre) { geste(echanger, { offre }, soir); log.echanges[offre] = (log.echanges[offre] || 0) + 1; continue; }
@@ -813,4 +843,53 @@ test('(n) le rang Village : quand il arrive, ce que coûtent et rapportent ses b
     assert.ok(avec.niveaux.length >= sans.niveaux.length - 1, `${nom} : ${avec.niveaux.length} niveaux avec, ${sans.niveaux.length} sans`);
     assert.ok(avec.construits['tour-1'] && avec.construits['scierie-1'], `${nom} : le rang Village est atteint et bâti avant le 1er mai`);
   }
+});
+
+// ───────── (o) ce que la Nourriture achète ─────────
+
+test('(o) le repas, la partie de sucre et le sirop : personne ne recule ; ce qu’ils rapportent, la Nourriture encore perdue', (t) => {
+  const debut = '2026-10-07';
+  const jours = daysBetween(debut, '2027-05-01');
+  // Nourriture perdue après le village plein : récoltes qui débordent, plus ce que le poulailler et la cabane n'ont pas pu
+  // ranger (ni vendre en sirop) les jours où une quête les a fait produire ; par semaine.
+  const perdue = (l, rythme) => {
+    if (!l.plein) return null;
+    let n = 0;
+    for (const [day, x] of l.nourriture.perdu) if (day > l.plein) n += x;
+    for (const type of ['poulailler', 'cabane']) {
+      const bati = l.construits[`${type}-1`];
+      if (!bati) continue;
+      for (let i = 0; i < jours; i++) {
+        const day = addDays(debut, i);
+        if (day <= l.plein || day <= bati || !rythme(i) || !produitCeJour(type, day)) continue;
+        const recu = l.monde.ledger.filter((e) => e.type === 'prod' && e.batiment === type && e.day === day).reduce((s, e) => s + (e.food || 0) + (e.energy || 0) / SIROP.energie, 0);
+        n += Math.max(0, PRODUCTION[type].food - recu);
+      }
+    }
+    return Math.round((n / (daysBetween(l.plein, addDays(debut, jours)) / 7)) * 10) / 10;
+  };
+  const sirop = (l) => Math.round(l.monde.ledger.filter((e) => e.type === 'prod' && e.batiment === 'cabane').reduce((s, e) => s + (e.energy || 0), 0));
+  const tenues = (l) => l.hiver.issues.tenue || 0;
+  const resume = (l, rythme) => `1er niveau j${l.niveaux[0] ?? '—'}, ${l.niveaux.length} niveaux au 1er mai ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${tenues(l)} tempêtes tenues ; ${l.nourriture.repas} repas (+${l.nourriture.repas * REPAS.recoit.energy} Énergie) ; sucres ${l.nourriture.sucres ?? '—'} ; sirop +${sirop(l)} Énergie ; perdu ${perdue(l, rythme) ?? '—'} par semaine`;
+  const ecarts = [];
+  const exiger = (ok, msg) => { if (!ok) ecarts.push(msg); };
+  for (const [cadre, extra] of [['sans marchand ni commande', {}], ['marchand avisé, commandes livrées', { marchand: 'avise', commandes: 'livre' }]]) {
+    for (const [nom, rythme, profil, habitudes] of JOUEURS_L) {
+      const options = { profil, habitudes, ...OPTIONS_L, ...extra, village: true };
+      const sans = simuler(debut, jours, rythme, options);
+      const qui = `${cadre}, ${nom}`;
+      t.diagnostic(qui);
+      t.diagnostic(`  sans      : ${resume(sans, rythme)}`);
+      for (const nourriture of ['avise', 'toujours']) {
+        const l = simuler(debut, jours, rythme, { ...options, nourriture });
+        t.diagnostic(`  ${nourriture.padEnd(9)} : ${resume(l, rythme)}`);
+        exiger(l.hameau === sans.hameau, `${qui}, ${nourriture} : Hameau au jour ${l.hameau} contre ${sans.hameau}`);
+        exiger(sans.niveaux[0] === undefined || l.niveaux[0] <= sans.niveaux[0], `${qui}, ${nourriture} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]}`);
+        exiger(l.niveaux.length >= sans.niveaux.length, `${qui}, ${nourriture} : ${l.niveaux.length} niveaux au 1er mai contre ${sans.niveaux.length}`);
+        exiger((l.plein ?? '9999') <= (sans.plein ?? '9999'), `${qui}, ${nourriture} : village plein le ${l.plein} contre le ${sans.plein}`);
+        exiger(tenues(l) >= tenues(sans), `${qui}, ${nourriture} : ${tenues(l)} tempêtes tenues contre ${tenues(sans)}`);
+      }
+    }
+  }
+  assert.deepEqual(ecarts, []);
 });

@@ -59,8 +59,10 @@ async function call(method, payload) {
  * tour de guet et ne verserait pas la production de la scierie, du poulailler ni de la cabane à sucre.
  * Version 9 (lot B, annonce de 6 jours) : l'API refuse la version 8, qui réglerait une tempête avec 7 jours d'annonce au
  * lieu de 6 avec la tour de guet.
+ * Version 10 (lot N, la Nourriture) : l'API refuse la version 9, qui ne reprendrait pas au Remballer l'Énergie du sirop
+ * vendu au marchand.
  */
-export const CLIENT_VERSION = 9;
+export const CLIENT_VERSION = 10;
 
 export const api = {
   get: () => call('GET'),

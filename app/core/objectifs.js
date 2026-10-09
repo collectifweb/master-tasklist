@@ -15,6 +15,7 @@ import {
 import { Ctx } from './quests.js';
 import { annoncerPermisDeSaison } from './quartiers.js';
 import { allureDe, plusCourte } from './allure.js';
+import { familleDabord } from './nourriture.js';
 
 /**
  * Les cinq premiers pas, dans l'ordre de la bible. recompense : { energy?, materials?, food? }, réglée par la
@@ -243,7 +244,7 @@ export function suivreObjectifs(ctx) {
 
 // ───────── La partie de sucre (objectif de printemps) ─────────
 
-/** Pourquoi on ne peut pas faire la partie de sucre maintenant (ou null). Ordre : saison, déjà faite, Nourriture. */
+/** Pourquoi on ne peut pas faire la partie de sucre maintenant (ou null). Ordre : saison, déjà faite, familles d'abord, Nourriture. */
 export function refusFaireLesSucres(game, ledger, params, now) {
   const day = gameDay(now);
   const m = Number(day.slice(5, 7));
@@ -251,8 +252,9 @@ export function refusFaireLesSucres(game, ledger, params, now) {
   if (m > 4) return 'Le temps des sucres est fini\u00a0: il revient le 1er mars.';
   const { cle } = saisonDe(day);
   if (game.sucres === cle || hasKey(ledger, saisonKey(cle))) return 'La partie de sucre est déjà faite ce printemps.';
-  const manque = round1(prixPartieDeSucre(game, auRalenti(game, ledger, day)) - game.resources.food);
-  return manque > 0 ? `Il manque ${Math.ceil(manque)} Nourriture.` : null;
+  const prix = prixPartieDeSucre(game, auRalenti(game, ledger, day));
+  const manque = round1(prix - game.resources.food);
+  return familleDabord(game, prix, 'pour la partie de sucre') ?? (manque > 0 ? `Il manque ${Math.ceil(manque)} Nourriture.` : null);
 }
 
 /**
