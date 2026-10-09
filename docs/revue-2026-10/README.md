@@ -16,3 +16,5 @@ Revue complète du prototype 006 et exploration des directions possibles pour tr
 | [SPIKES.md](SPIKES.md) | Trois rendus de la même scène (DOM/SVG, PixiJS, three.js) avec mesures. Démos dans `sketches/007-spikes-rendu/`. |
 
 Les simulations d’économie sont dans `simulations/` (`node` ou `python3`). Les captures de `img/` montrent le prototype 006 et les trois spikes, uniquement avec des données fictives.
+
+Le prototype 006, les démos des spikes (`sketches/007-spikes-rendu/`) et l’app historique ont été retirés du dépôt le 9 octobre 2026. Ils restent dans l’étiquette `v2.10.1` (`git checkout v2.10.1`), d’où se lance aussi `simulations/village-calibrage.mjs`, qui lit les tâches de 006.
