@@ -7,9 +7,6 @@ tasks.json.*
 *.env
 !sync.env.example
 
-# Captures locales pouvant contenir des données de test privées
-sketches/**/review/
-
 # Outils et états locaux
 .agents/
 .claude/

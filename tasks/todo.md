@@ -1446,3 +1446,25 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
 3. Partie de sucre : « Objectif de printemps » — l'objectif « Faire les sucres ».
 4. Sirop : « Vendu tout seul » — ce qui ne rentre pas dans la réserve part au marchand, de l'Énergie en plus ce jour-là ; il faut le quai.
 5. Partie de sucre, avec ou sans cabane (question posée après les quatre premières) : « Sans cabane » — le village entaille les érables de l'île, la partie se fait même sans cabane bâtie. Prix : la moitié du stockage de base (10 sans grenier, 30 avec un), le quart au ralenti (5 et 15). La table de tire se pose près de la cabane si elle est bâtie, sinon près des érables.
+
+## Ménage du dépôt — pour qu'une autre personne installe le jeu (9 octobre 2026)
+
+Demande d'Alex : une amie veut installer l'app pour elle ; rendre le dépôt GitHub propre et documenté pour qu'elle le clone. Une autre session travaille en parallèle sur le jeu : ce ménage se fait sur la branche `chore/depot-propre`, partie de `v2.10.1`, dans une copie de travail séparée (`git worktree`), sans toucher `app/`.
+
+Constats (9 octobre, avant le ménage) :
+- l'app a besoin de PHP (`app/api/api.php`) ; Cloudflare Pages n'en fait pas tourner (doc de Cloudflare : Workers accepte JavaScript, TypeScript, Python, Rust). Vérifié en local : servie sans PHP, la v2.10.1 affiche « Impossible de charger tes quêtes » ;
+- `main` sur GitHub n'a pas `app/` (324 commits de retard sur `feat/village-v2`) ; description GitHub d'avant le jeu ; aucune licence ;
+- `deploy-prod.sh` n'expédie que `app/` (`git archive "$REF" app`) : la racine peut bouger sans effet sur la production.
+
+Décisions d'Alex (9 octobre) : hébergeur PHP pour son amie (le mode « un seul appareil » viendra plus tard) ; licence qui interdit l'usage commercial, au nom d'Alexandre Alves (PolyForm Noncommercial 1.0.0) ; retirer de `main` ce qui ne sert plus, garder tout ce qui touche Hermes (il ne sait pas si la machine d'Hermes tire le script depuis GitHub) ; une capture du jeu dans le README, quêtes fictives ; pousser `main` et changer la description GitHub.
+
+- [ ] Retirer l'app historique (`index.html`, `tasks-server.py`, `run-public-tunnel.sh`), `sketches/` et `CONTRIBUTING.md` ; mettre à jour `CLAUDE.md`, `.gitignore` et la revue d'octobre (où retrouver les maquettes : étiquette `v2.10.1`).
+- [ ] `LICENSE.md` : texte officiel de PolyForm Noncommercial 1.0.0, avis « Copyright 2026 Alexandre Alves ».
+- [ ] README neuf : le jeu, ce qu'il faut pour l'héberger, les dossiers, lancer et tester en local, Hermes en option, les archives.
+- [ ] `docs/INSTALLATION.md` : guide pas à pas pour un hébergeur PHP (fichier de quêtes et données hors du web, code d'accès, mise à jour, sauvegardes).
+- [ ] Captures du jeu avec des quêtes fictives (`docs/captures/`).
+- [ ] Passe /humanize sur le README et le guide.
+- [ ] Essai d'installation neuve en suivant le guide à la lettre (PHP 8.3 + Apache dans Docker), liste de quêtes vide.
+- [ ] Contrôle de confidentialité (motifs interdits) sur la branche.
+- [ ] Pousser `main` (avance rapide depuis l'ancienne `main`), description et sujets GitHub.
+- [ ] Reporter sur `feat/village-v2` (fusion préparée dans la copie séparée, puis avance rapide quand l'autre session a commité).
