@@ -143,7 +143,7 @@ test('bandeau, hiver : l’objectif « Garder la serre allumée » (lot H), comp
   assert.deepEqual(b.saison, { id: 'hiver', cle: 'hiver-2026', objectif: 'serre', atteint: false, stock: 0, max: OBJECTIFS_SAISON.hiver.recoltes, ralenti: false });
   const p = bandeau(w.tasks, w.game, w.ledger, at('2027-04-10'));
   // aucune quête depuis décembre : le village est au ralenti, la partie de sucre au quart du stockage de base
-  assert.deepEqual(p.saison, { id: 'printemps', cle: 'printemps-2027', objectif: 'sucres', atteint: false, stock: 5, max: 5, faite: false, geste: true, ralenti: true });
+  assert.deepEqual(p.saison, { id: 'printemps', cle: 'printemps-2027', objectif: 'sucres', atteint: false, stock: 5, max: 5, faite: false, geste: true, familles: false, ralenti: true });
   const e = bandeau(w.tasks, w.game, w.ledger, at('2027-07-10'));
   assert.deepEqual(e.saison, { id: 'ete', cle: 'ete-2027', objectif: null, atteint: false, aVenir: true });
 });

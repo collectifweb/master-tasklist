@@ -327,7 +327,7 @@
         {"id": "repas.servi.02", "voix": "fanal", "texte": "Ça sent la soupe jusqu’au quai. Bon appétit, tout le monde."},
         {"id": "repas.servi.03", "voix": "fanal", "texte": "Personne ne mange seul aujourd’hui. C’est ça, un village."},
         {"id": "repas.servi.04", "voix": "fanal", "texte": "Le pain passe de main en main. Moi, je garde les assiettes."},
-        {"id": "repas.servi.05", "voix": "fanal", "texte": "Rien ne se perd. Ce qui débordait du grenier nourrit la tablée."}
+        {"id": "repas.servi.05", "voix": "fanal", "texte": "Rien ne se perd. Ce qui dormait au grenier nourrit la tablée."}
       ]
     },
     "saison.sucres": {

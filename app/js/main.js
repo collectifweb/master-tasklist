@@ -465,7 +465,8 @@ const disabled = (el) => el.getAttribute('aria-disabled') === 'true';
 // Moins de 600 ms après l'ouverture de sa feuille, un geste touché au doigt (ou par le second clic d'un double clic)
 // est le second toucher de celui qui l'a ouverte (« Construire », une ligne du catalogue, une plaque) : ignoré. Le
 // clavier (detail 0) et un simple clic de souris passent. Puis le même geste n'est pas refait dans les 800 ms, et la
-// raison d'un bouton déjà mis à jour n'est pas relue.
+// raison d'un bouton déjà mis à jour n'est pas relue. La fiche de la Place n'a pas de batId : ses deux gestes (partie de
+// sucre, repas) partagent une clé, exprès, car le bloc des sucres rapetisse une fois faite et le repas remonte sous le doigt.
 const SPEND_OPEN_MS = 600;
 const SPEND_AGAIN_MS = 800;
 let spent = { key: '', at: 0 };

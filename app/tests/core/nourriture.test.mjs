@@ -151,14 +151,45 @@ test('partie de sucre : du 1er mars au 30 avril, sans cabane ; assez de Nourritu
   assert.equal(refusFaireLesSucres(g, [], {}, at('2027-04-30')), null);
 });
 
-test('partie de sucre : les familles d’abord, comme le repas', () => {
-  const w = monde(MARS, { types: ['chalet'], habitants: 1 });
+test('partie de sucre : les familles d’abord, comme le repas ; le bandeau le sait', () => {
+  const w = monde(MARS, { types: ['chalet', 'grenier'], habitants: 1 }); // 2 places, 1 habitant : une place libre
   const pf = prixFamille(w.game);
   const prix = prixPartieDeSucre(w.game);
+  assert.ok(prix + pf <= stockage(w.game), 'la réserve tient les deux');
   w.game.resources.food = prix + pf - 1;
   assert.equal(refusFaireLesSucres(w.game, w.ledger, {}, at(MARS)), `Les familles d’abord\u00a0: il faut ${prix + pf} Nourriture, ${pf} pour accueillir la prochaine et ${prix} pour la partie de sucre.`);
+  assert.deepEqual([objectifSaison(w.game, w.ledger, at(MARS)).stock, objectifSaison(w.game, w.ledger, at(MARS)).familles], [prix, true]);
   w.game.habitants = 2;
   assert.equal(refusFaireLesSucres(w.game, w.ledger, {}, at(MARS)), null);
+  assert.equal(objectifSaison(w.game, w.ledger, at(MARS)).familles, false);
+});
+
+test('les familles d’abord : quand la réserve ne peut pas garder les deux, la raison ne demande pas un total impossible', () => {
+  // un chalet à moitié plein, sans grenier : la réserve plafonne sous le prix plus une famille
+  const w = monde(MARS, { types: ['chalet'], habitants: 1 });
+  const pf = prixFamille(w.game);
+  w.game.resources.food = stockage(w.game);
+  assert.ok(prixPartieDeSucre(w.game) + pf > stockage(w.game) && REPAS.donne.food + pf > stockage(w.game));
+  const raison = `Les familles d’abord\u00a0: accueille la prochaine famille (${pf} Nourriture), la réserve ne peut pas garder les deux.`;
+  assert.equal(refusFaireLesSucres(w.game, w.ledger, {}, at(MARS)), raison);
+  assert.equal(refusServirRepas(w.game, w.ledger, {}, at(MARS)), raison);
+  // le bandeau ne dit pas « Faire la partie de sucre » : la Nourriture est là, mais elle attend la famille
+  const o = objectifSaison(w.game, w.ledger, at(MARS));
+  assert.deepEqual([o.stock >= o.max, o.familles], [true, true]);
+});
+
+test('le jour change à 4 h : la semaine du repas et le temps des sucres aussi, à l’heure d’hiver comme d’été', () => {
+  // lundi 12 octobre 2026 (UTC−4) : à 3 h 59, encore la semaine du 5 ; à 4 h, celle du 12
+  const g = monde('2026-10-12').game;
+  assert.equal(repasDeLaSemaine(g, [], '2026-10-12T07:59:00Z').semaine, '2026-10-05');
+  assert.equal(repasDeLaSemaine(g, [], '2026-10-12T08:00:00Z').semaine, '2026-10-12');
+  // 1er mars 2027 (UTC−5), 1er mai 2027 (UTC−4)
+  const s = monde(MARS).game;
+  assert.equal(refusFaireLesSucres(s, [], {}, '2027-03-01T08:59:00Z'), 'Le temps des sucres commence le 1er mars.');
+  assert.equal(refusFaireLesSucres(s, [], {}, '2027-03-01T09:00:00Z'), null);
+  assert.equal(refusFaireLesSucres(s, [], {}, '2027-04-30T07:59:00Z'), null);
+  assert.equal(refusFaireLesSucres(s, [], {}, '2027-05-01T07:59:00Z'), null, 'la nuit du 30 avril compte encore');
+  assert.match(refusFaireLesSucres(s, [], {}, '2027-05-01T08:00:00Z'), /^Le temps des sucres est fini/);
 });
 
 test('partie de sucre : faite, la Nourriture part, l’objectif est atteint (registre saison:printemps-AAAA, son permis) ; une seule fois', () => {

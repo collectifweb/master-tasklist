@@ -557,6 +557,7 @@
   "bandeau.saison.serre.sans": "Bâtir une petite serre",
   "bandeau.saison.sucres": "Sucres : {stock} sur {max} Nourriture",
   "bandeau.saison.sucres.pret": "Faire la partie de sucre",
+  "bandeau.saison.sucres.familles": "Sucres : les familles d’abord",
   "bandeau.saison.sucres.fini": "Sucres : de retour le 1er mars",
   "bandeau.saison.sucres.titre": "Faire les sucres",
   "bandeau.saison.sucres.detail": "Une partie de sucre, du 1er mars au 30 avril, depuis la fiche de la Place. Récompense : de l’Énergie, des Matériaux et un permis.",

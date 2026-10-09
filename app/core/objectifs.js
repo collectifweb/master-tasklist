@@ -90,14 +90,15 @@ export function noterRecolteHiver(g, lieu, day) {
 
 // Avancée de chaque objectif de saison : { stock, max } ; atteint quand stock ≥ max. Le grenier se mesure au stockage de
 // base (départ et greniers) : monter la Place ne rend pas l'objectif plus dur. `ralenti` : la cible réduite (allure).
-// Les sucres : { stock, max, faite, geste } ; la Nourriture prête sur le prix, mais atteint seulement une fois faite.
+// Les sucres : { stock, max, faite, geste, familles } ; la Nourriture prête sur le prix, mais atteint seulement une fois
+// faite ; `familles` : une place libre au chalet garde d'abord la Nourriture de la prochaine famille (familleDabord).
 const AVANCEE = {
   grenier: (game, cle, ralenti) => ({ stock: round1(game.resources.food), max: ralenti ? Math.ceil(stockageBase(game) * OBJECTIFS_SAISON.automne.partRalenti) : stockageBase(game) }),
   serre: (game, cle, ralenti) => ({ stock: recoltesHiver(game, cle), max: ralenti ? OBJECTIFS_SAISON.hiver.recoltesRalenti : OBJECTIFS_SAISON.hiver.recoltes }),
   sucres: (game, cle, ralenti) => {
     const max = prixPartieDeSucre(game, ralenti);
     const faite = game.sucres === cle;
-    return { stock: faite ? max : Math.min(round1(game.resources.food), max), max, faite, geste: true };
+    return { stock: faite ? max : Math.min(round1(game.resources.food), max), max, faite, geste: true, familles: !faite && !!familleDabord(game, max, '') };
   },
 };
 const auRalenti = (game, ledger, day) => allureDe(game, ledger, day).niveau === 'ralenti';

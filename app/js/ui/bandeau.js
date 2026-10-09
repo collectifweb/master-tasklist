@@ -12,7 +12,8 @@
 // (data-action="preparer", protégé du double toucher). Le jour même, l'issue : tenue, le bâtiment sous la neige (le bouton
 // ouvre sa fiche, data-action="tempete-voir"), puis déneigé une fois le dégât réglé, ou passée sans rien abîmer. L'objectif d'hiver compte les récoltes de serre ;
 // sans serre, il dit d'en bâtir une. L'objectif du printemps (lot N) : « Sucres : 8 sur 10 Nourriture », « Faire la partie de
-// sucre » quand la Nourriture y est, « Partie de sucre faite » ; en mai, s'il n'est pas fait, « de retour le 1er mars ». Du
+// sucre » quand la Nourriture y est, « Sucres : les familles d'abord » tant qu'une place libre au chalet la garde pour la
+// prochaine famille, « Partie de sucre faite » ; en mai, s'il n'est pas fait, « de retour le 1er mars ». Du
 // 1er mars au 30 avril, tant qu'il n'est pas fait, toute la case mène à la fiche de la Place (data-action="sucres-go"),
 // où la partie se fait, comme la ligne du visiteur mène au quai.
 import {
@@ -52,6 +53,7 @@ function saisonText(s, sansSerre, now) {
   if (s.atteint) return t(`bandeau.saison.${s.objectif}.atteint`);
   if (sansSerre) return t('bandeau.saison.serre.sans');
   if (s.objectif === 'sucres' && !tempsDesSucres(now)) return t('bandeau.saison.sucres.fini');
+  if (s.objectif === 'sucres' && s.familles) return t('bandeau.saison.sucres.familles');
   if (s.objectif === 'sucres' && s.stock >= s.max) return t('bandeau.saison.sucres.pret');
   return t(`bandeau.saison.${s.objectif}`, { stock: numPossede(s.stock), max: numPossede(s.max) });
 }

@@ -11,7 +11,7 @@ import { Ctx } from './quests.js';
 import { gameDay, weekStart } from './time.js';
 import { round1 } from './reward.js';
 import { hasKey } from './ledger.js';
-import { logements, entierHaut, prixFamille } from './batiments.js';
+import { logements, entierHaut, prixFamille, stockage } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 
 /**
@@ -32,10 +32,12 @@ export function repasDeLaSemaine(game, ledger, now) {
  * Les familles d'abord : avec une place libre au chalet, un geste qui dépense `prix` Nourriture garde celle de la prochaine
  * famille. Raison du refus (`pour` : « pour le repas »…), ou null. Sans elle, le joueur lent qui sert le repas chaque
  * semaine atteignait le Hameau au jour 107 au lieu de 41 (simulation (o), 9 octobre 2026). Sert aussi à la partie de sucre.
+ * Quand la réserve ne peut pas contenir les deux, la raison ne demande pas un total impossible : la famille d'abord.
  */
 export function familleDabord(game, prix, pour) {
   const pf = prixFamille(game);
   if (!logements(game).libres || round1(game.resources.food - prix) >= pf) return null;
+  if (prix + pf > stockage(game)) return `Les familles d’abord\u00a0: accueille la prochaine famille (${pf} Nourriture), la réserve ne peut pas garder les deux.`;
   return `Les familles d’abord\u00a0: il faut ${prix + pf} Nourriture, ${pf} pour accueillir la prochaine et ${prix} ${pour}.`;
 }
 
