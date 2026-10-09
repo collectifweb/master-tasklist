@@ -1261,3 +1261,62 @@ Le lot ne contient que la première bande. Hors du lot : les bâtiments du rang 
 ### Questions posées à Alex et réponses (8 octobre, au soir)
 1. **Ce qu'on pose sur la bande** : (a) les piquets de l'éolienne et du grenier y déménagent (ma recommandation), ou (b) elle arrive vide et attend les bâtiments du rang Village. Réponse : « je tends vers B. J'aime mieux que l'espace permette de mettre de nouveaux bâtiments plutôt que de jouer sur les bâtiments existants pour les mettre sur la bande. » **Retenu : (b).**
 2. **Envoi** : « oui, mise en ligne directement en production si tout est vert ».
+
+## Lot V — Le rang Village : tour de guet, scierie, poulailler, cabane à sucre
+
+Référence : bible §4 (« Village | 6 à 10 | Nouvelle bande de terrain ; tour de guet, scierie, poulailler, cabane à sucre »), §5 (tableau des bâtiments), §6 (hiver : « Serre et poulailler seuls produisent »), §8 (« la tour de guet prévient plus tôt »), décision 38 (la bande du Hameau attend les bâtiments du rang Village). **Statut : lancé en autonomie la nuit du 8 au 9 octobre 2026, à la demande d'Alex (« Continue alors. Autonome. Topo demain matin »).** Les choix ci-dessous sont les miens : chacun est marqué *à valider*. **Pas d'envoi en production sans l'accord d'Alex** : ses autorisations d'envoi ont été données lot par lot, et celui-ci porte des choix qu'il n'a pas vus. Tout est préparé pour un envoi en une commande.
+
+Ce qui existe déjà (lu dans le code la nuit du 9 octobre) :
+- le rang Village arrive au 6e habitant (`core/village.js:9`) ; trois chalets de deux places (`core/batiments.js:28`, `:79`) : un village plein, sans l'École, est au rang Village ;
+- le refus de construire est générique : « Village : encore 3 habitants. » vient du rang du catalogue (`core/batiments.js:178-193`) ; le catalogue et l'île parcourent `BATIMENT_IDS` (`js/ui/catalogue.js:17`, `world/view.js:43`) ;
+- l'éolienne inscrit sa production au registre à la première quête payée du jour (`prod:eolienne:{jour}`, `core/batiments.js:366-377`, appelée par `core/quests.js:236`) et Remballer la reprend si le jour reste sans quête payée (`:385-391`). Le registre porte déjà la Nourriture (`food`, `core/economy.js:21`), sans plafond : les premiers pas la plafonnent eux-mêmes à la place libre (`core/objectifs.js:206`). L'annonce d'un gain sait dire la Nourriture (`js/ui/announce.js:30`), pas celle de Remballer (`js/main.js:152`, Énergie et Matériaux seulement) ;
+- tempêtes : `TEMPETE.annonce = 3` (`core/hiver.js:32`), lu pour l'alerte (`:61`), la fenêtre des jours travaillés (`:70`), la règle « un cran acheté par jour d'annonce écoulé » (`:105`), « annonce vue » (`:150`) et le front de givre (`world/view.js:120`) ; écart de 7 à 14 jours entre deux tempêtes (`:32`, `:50`). Tout est lu de la date, rien n'est écrit sauf le règlement (`tempete:{jour}`) et les crans achetés (`game.prepa`) ;
+- la simulation ne construit que des listes écrites en dur (`tests/core/simulation.test.mjs:243-245`) : ajouter des types au catalogue ne change aucun de ses résultats ; aucune assertion ne porte sur le rang Village ;
+- le serveur ne contrôle pas le contenu du registre ni les types de bâtiments (`api/api.php`, recherche du 9 octobre) ; un client ancien garde les bâtiments qu'il ne connaît pas (`core/batiments.js:72`, `:253`), mais réglerait une tempête avec 3 jours d'annonce.
+
+Quand Alex y arrivera : *d'après la simulation du lot T (rapportée au plan du lot F ci-dessus), un joueur à 1 à 3 quêtes par jour, parti le 5 octobre, a ses logements pleins (rang Village) le 31 octobre ou le 2 novembre. La partie de production comptait 0 habitant le 9 octobre à 0 h 37 (lu par l'API).*
+
+### Ce que verra Alex (proposé, à valider)
+- Au Hameau, la bande de terre gagnée sur la forêt porte quatre piquets : les emplacements des quatre bâtiments du rang Village. Toucher un piquet ouvre sa fiche : « Village : encore 2 habitants. » Avant le Hameau, ils ne se voient pas (la bande n'est pas là).
+- Au rang Village, chacun se bâtit depuis sa fiche ou le catalogue, comme les autres :
+  - **Tour de guet** : les tempêtes de neige sont annoncées 7 jours d'avance au lieu de 3. La barre garde 3 crans : 7 jours pour les remplir.
+  - **Scierie** : +3 Matériaux les jours où tu as travaillé (comme l'éolienne donne 3 Énergie). Il faut d'abord l'atelier.
+  - **Poulailler** : +1 Nourriture les jours où tu as travaillé, toute l'année, l'hiver aussi.
+  - **Cabane à sucre** : au temps des sucres (1er mars au 30 avril), +4 Nourriture les jours où tu as travaillé ; le reste de l'année, elle dort et sa fiche le dit.
+- Coûts de départ, à régler par la simulation : tour 4 Énergie et 30 Matériaux ; scierie 6 et 35 ; poulailler 0 et 25 ; cabane 3 et 30.
+- La Nourriture du poulailler et de la cabane ne dépasse jamais la réserve : ce qui ne tient pas n'est pas donné.
+- Rien ne tombe en panne ni sous la neige dans ce lot (seules l'éolienne et la serre le peuvent, comme aujourd'hui).
+
+### Règles
+- Production par jour travaillé (une vraie quête payée, non remballée), une fois par jour, à la première quête payée ; Remballer la reprend si le jour reste sans quête payée. Même registre que l'éolienne : `prod:{type}:{jour}`, `reprise:{type}:{jour}:{n}`. Jamais une tâche touchée.
+- Tour de guet : l'annonce commence au plus 7 jours avant la tempête, jamais pendant la trêve des Fêtes ni avant le lendemain de la tempête précédente (deux tempêtes peuvent être à 7 jours l'une de l'autre). Les jours de tempête ne changent pas : leur tirage garde l'annonce de 3 jours (la liste des tempêtes ne dépend pas de la partie). Sans tour, tout reste identique à aujourd'hui.
+
+### Comment ça marche
+- `core/batiments.js` : quatre entrées au catalogue (`tour`, `scierie`, `poulailler`, `cabane`, rang `village`, un exemplaire chacun) ; une production générique pour les trois producteurs, à côté de celle de l'éolienne, qui ne change pas.
+- `core/hiver.js` : la longueur de l'annonce se lit dans la partie (tour bâtie ou non) ; un début d'annonce par tempête ; `TEMPETE.annonce` reste 3.
+- `world/layout.js` : quatre emplacements sur la bande du Hameau (rangée −1, de part et d'autre de la trouée de la route), marqués de leur bande ; `world/view.js` ne les montre que si la bande est gagnée. Le décor de l'île sans bande ne change pas.
+- `world/models.js` : quatre dessins [impeccable].
+- Fiches et textes : `content/fr-CA/batiments.json`, `js/ui/batiment.js` (ligne « Maintenant » de chacun), annonce de Remballer avec la Nourriture.
+- `CLIENT_VERSION` et `MIN_CLIENT` passent à 8 : un onglet resté sur la v2.9 réglerait une tempête avec 3 jours d'annonce au lieu de 7 ; il doit se recharger avant d'écrire. Cache `oree-coquille-v21`.
+- Hors du lot : la bande du rang Village (elle accueillera les bâtiments du Bourg, comme celle du Hameau accueille ceux du Village : *à valider*), un habitant au travail sur la bande (`world/habitants.js` lit `DECOR`), l'objectif de printemps « Faire les sucres », des pannes pour les nouveaux bâtiments.
+
+### V1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] Catalogue : quatre types, rang Village, emplacements = maximum ; refus « Village : encore N habitants » ; scierie sans atelier refusée.
+- [ ] Production : scierie, poulailler, cabane (hors saison : rien ; en mars et avril : oui) ; une fois par jour ; reprise par Remballer ; Nourriture plafonnée à la réserve ; l'éolienne inchangée.
+- [ ] Tour de guet : annonce de 7 jours ; crans et achats sur 7 jours ; jamais pendant la trêve ; jamais avant le lendemain de la tempête précédente ; « annonce vue » ; sans tour, tous les tests d'hiver d'aujourd'hui passent sans retouche.
+
+### V2 — Simulation (diagnostic)
+- [ ] Mesurer, pour les joueurs simulés qui atteignent le rang Village : le jour d'arrivée, les ressources ce jour-là, quand chaque bâtiment devient abordable, et ce que scierie et poulailler rapportent en un mois. Régler les coûts si besoin.
+
+### V3 — L'île [impeccable]
+- [ ] Quatre dessins, quatre emplacements sur la bande, cachés sans elle ; les piquets arrivent avec la bande dans le moment « la forêt recule ».
+- [ ] Captures aux trois largeurs, été et hiver, jour et soir.
+
+### V4 — Fiches, textes, annonces
+- [ ] Textes des quatre bâtiments (nom, ce que c'est, ce que ça fait, maintenant) ; annonce de la Nourriture à Remballer ; bible, `ARCHITECTURE.md`, `DESIGN.md`, `content/README.md`.
+
+### V5 — Vérification
+- [ ] Tests de logique ; scénario navigateur neuf (bâtir les quatre, production du jour, tour et alerte de 7 jours) ; série complète sur code figé ; relecture Opus en lecture seule.
+
+### V6 — Envoi (en attente de l'accord d'Alex)
+- [ ] Étiquette `v2.10` prête ; photo des données, `deploy-prod.sh v2.10`, comparaison des fichiers en ligne.
