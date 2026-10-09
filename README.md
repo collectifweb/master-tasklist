@@ -1,8 +1,10 @@
-# La lisière rallumée
+# L’Orée
 
-Une liste de tâches du foyer qui fait vivre un village. Chaque quête terminée rapporte de l’Énergie, des Matériaux ou de la Nourriture, et sert à bâtir un petit village du Nord : des chalets, une serre, une éolienne, un quai où passent des visiteurs. Des habitants arrivent, les saisons passent, l’hiver apporte ses tempêtes.
+Une liste de tâches qui rend le quotidien plus agréable à abattre, des petites corvées de cinq minutes aux gros chantiers. Chaque tâche terminée rapporte des ressources, d’autant plus qu’elle a demandé du temps et de l’effort. Ces ressources font tourner l’économie d’un village : un campement au départ, puis un hameau, un village, un bourg, une ville.
 
-Le jeu est pensé pour une personne qui gère les tâches d’une maison, surtout sur téléphone ou tablette. Il s’installe sur l’écran d’accueil comme une application. Les imprévus du jeu restent dans le jeu : ils ne touchent jamais une vraie tâche.
+L’idée est de te motiver à avancer dans ta journée, et de te sentir récompensé de l’avoir fait. Pendant que tu règles tes vraies affaires, ton village grandit.
+
+Le jeu s’utilise surtout sur téléphone ou tablette, et s’installe sur l’écran d’accueil comme une application. Son nom de code, dans le dépôt, est « La lisière rallumée ».
 
 <p>
   <img src="docs/captures/jeu-telephone.png" alt="Le jeu sur téléphone : l’île du village en haut, la quête du jour et le bouton Fait en bas" width="260">
@@ -10,6 +12,45 @@ Le jeu est pensé pour une personne qui gère les tâches d’une maison, surtou
 </p>
 
 *Captures faites avec les quêtes d’exemple de `tasks.example.json`.*
+
+## Une liste de tâches qui sait par où commencer
+
+Une tâche, ici, s’appelle une quête. Contrairement à une liste ordinaire, chacune porte trois réglages de 1 à 10, en plus de son titre : sa priorité, sa durée (de 5 minutes à 4 heures) et l’effort qu’elle demande.
+
+À partir de ces réglages, le jeu calcule une Cote sur 100 et range les quêtes dans cet ordre. La priorité pèse le plus, mais une quête courte, facile, dont l’échéance approche ou qui traîne depuis longtemps monte aussi. Dès qu’une quête de priorité 8 ou plus existe, au moins une reste parmi les trois premières, et un bouton « Pourquoi? » détaille le calcul.
+
+Le fil du jour propose jusqu’à trois quêtes : celle à faire d’abord, une victoire rapide et un grand chantier. Pour choisir autrement, la liste complète se filtre (« 15 min », « Peu d’énergie », « Cette semaine », par quartier), se trie de sept façons et se fouille par mots.
+
+Les quêtes couvrent toute la vie quotidienne, pas seulement la maison. Chaque catégorie a son quartier dans le village : l’Atelier pour la maison, les Champs pour le terrain, le Garage pour le véhicule, la Mairie pour les papiers et l’administratif, l’École pour les enfants, et la Place du village pour tout le reste. Le jeu devine le quartier d’après les mots du titre (« pneus » va au Garage, « impôts » à la Mairie) et on peut le corriger.
+
+Une quête peut aussi avoir des étapes (12 au plus), une échéance, une récurrence (chaque jour, chaque semaine, chaque mois…) et des notes. Une tâche faite sans être passée par la liste s’ajoute comme « Déjà faite aujourd’hui ». Une quête cochée par erreur se « remballe » dans les 24 heures.
+
+## Ce que rapporte une quête
+
+Une quête terminée donne de l’Énergie et des Matériaux. Plus elle est longue et exigeante, plus elle rapporte, et sa priorité y ajoute une prime. La Cote, elle, décide de l’ordre de la liste et pas du gain, à un détail près : finir une quête prioritaire qui était parmi les trois premières donne 2 Énergie de plus, une fois par jour.
+
+Le jeu ne pousse pas à gonfler ses tâches : passé un certain total d’effort dans la journée (à peu près deux quêtes moyennes), les gains baissent de moitié, puis davantage. Une échéance posée au moins 48 heures avant de finir la quête, et respectée, donne un petit bonus, et cocher les étapes d’une quête en paie une partie en chemin.
+
+## Comment s’en servir
+
+1. Ajoute une quête : son titre suffit, le jeu propose le quartier et des réglages par défaut que tu peux ajuster.
+2. Ouvre le fil du jour, fais la quête proposée, touche « Fait ». Les ressources arrivent tout de suite.
+3. Dépense-les sur l’île : rebâtir un chalet, semer le potager, construire une serre, accueillir une famille.
+4. Reviens quand tu as fini autre chose. Pas de série à tenir : aucun compteur de jours de suite, et une absence ne fait rien perdre.
+
+Cinq premiers pas guident le début de la partie, et trois écrans de bienvenue présentent le jeu au premier lancement.
+
+## Le village et ses règles
+
+L’Orée est un village du Nord, entre la forêt et un lac. Au départ, il ne reste que trois chalets vides et un potager ; la bible du jeu (`docs/BIBLE-JEU.md`) raconte que les gens sont partis vers le Sud après quelques hivers trop durs. Tu le relances avec des serres et des éoliennes, aidé de Fanal, un vieux robot de déneigement qui annonce les visiteurs et les tempêtes, et qui t’écrit une lettre à ta première visite de la journée.
+
+Le village vit de quatre ressources, l’Énergie, les Matériaux, la Nourriture et les Habitants, plus des permis. Les quêtes donnent l’Énergie et les Matériaux. Les récoltes et certains bâtiments donnent la Nourriture, qui sert à accueillir des familles. Les familles font monter le rang du village : Hameau à 3 habitants, Village à 6, Bourg à 11, Ville à 21. Le Hameau ouvre l’éolienne, le grenier, le quai et une deuxième serre ; le Village, la tour de guet, la scierie, le poulailler et la cabane à sucre. Les permis, gagnés entre autres tous les quatre jours travaillés, font monter les quartiers (il faut aussi de l’Énergie et des Matériaux). Cinq quartiers correspondent à une catégorie de tâches ; la Place du village prend le reste.
+
+Les saisons suivent le vrai calendrier. L’objectif d’automne est de remplir le grenier, celui d’hiver de garder la serre allumée. De la mi-novembre à la fin mars, sauf pendant la trêve des Fêtes, une tempête de neige arrive tous les 7 à 14 jours. Elle s’annonce 3 jours d’avance (6 avec une tour de guet), et chaque jour travaillé aide à s’y préparer.
+
+Des imprévus arrivent d’eux-mêmes, jusqu’à deux par semaine (jusqu’à quatre quand le village tourne à plein régime). Certains sont bons (une aurore, une bonne pêche, une trouvaille en forêt), d’autres non (une panne d’éolienne, un ours au potager, un gel précoce). Un dégât se règle en payant un peu, en faisant une vraie quête de la bonne catégorie, ou en attendant un à trois jours. Il ne touche jamais une vraie tâche ni ce que tu as en réserve, mais il peut priver d’un gain : l’ours mange une partie de la prochaine récolte, une éolienne en panne ne produit plus.
+
+Une fois le quai construit, un marchand y échange des ressources, et chaque semaine un visiteur arrive avec une commande : un convoi, une famille du Sud, une scientifique. Livrer n’est jamais obligatoire. Le jeu s’adapte aussi à ton rythme : si tu as fait peu de quêtes les deux semaines précédentes, il passe au ralenti, avec seulement de bons imprévus et des commandes plus petites. Après une absence de cinq jours ou plus, le village te laisse trois jours de répit.
 
 ## Ce qu’il faut pour l’héberger
 
