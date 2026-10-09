@@ -39,7 +39,7 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - Concevoir une gamification profonde et extensible: quêtes, progression, récompenses et futurs systèmes de jeu.
 - Donner aux points une utilité concrète: construire, améliorer, défendre, débloquer ou résoudre des événements dans le monde du jeu.
 - Inclure une boucle de gestion avec objectifs, ressources, aléas et obstacles. Exemples confirmés: ferme évolutive, récoltes menacées, insectes, réparations, dépenses de points et choix de développement.
-- Prévoir une narration (rangs du village, saisons réelles, visiteurs, chroniques hebdomadaires d’Hermes) et de vrais enjeux virtuels récupérables, sans toucher aux tâches ni données réelles en cas d’échec dans le jeu.
+- Prévoir une narration (rangs du village, saisons réelles, visiteurs, météo prévue chez le joueur) et de vrais enjeux virtuels récupérables, sans toucher aux tâches ni données réelles en cas d’échec dans le jeu.
 - Adapter le jeu au rythme d’usage : lever le pied après une absence ou à rythme lent, offrir plus de débouchés et de défis à rythme soutenu, sans jamais changer le prix de l’existant ni ce que rapporte une tâche.
 - Autoriser de petits bonus plafonnés pour certaines actions utiles autres que terminer une tâche, notamment l’ajout d’une vraie tâche, la planification et le retour quotidien. La « semaine tenue » (dès le 5e jour travaillé d’une semaine, 12 Matériaux, une fois par semaine) en est un : un bonus plafonné de retour régulier, sans série ni compteur de jours de suite.
 - Prévoir l’évolution du modèle de données au-delà de `tasks.json`, sans perdre les tâches actuelles.

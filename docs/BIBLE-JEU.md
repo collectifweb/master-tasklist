@@ -368,6 +368,8 @@ La version publique (un site sans compte, les données gardées dans l'appareil,
 
 ## 12. Hermes, l'auteur du village
 
+**Abandonné le 9 octobre 2026 (décision 44).** Le jeu tire lui-même imprévus, visiteurs et tempêtes ; aucune chronique n'a été construite. Hermes garde un seul rôle : recevoir les tâches d'Alex (texte ou vocal), les évaluer et les écrire dans la liste (`TASKS_WORKFLOW.md`). La suite de cette section reste pour mémoire.
+
 **Deux semaines d'avance.** Hermes garde toujours deux chroniques prêtes sur le serveur : celle de la semaine qui vient et celle d'après. Chaque dimanche soir (tâche planifiée), il :
 
 1. relit la chronique de la semaine qui vient et l'ajuste si besoin, selon l'allure du village (§9), ce que tu as accompli et la météo annoncée ;
@@ -432,14 +434,14 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 1 et 2 | Nouveau vocabulaire, quatre ressources, rang et habitants, bâtiments du campement et du hameau, fiches à trois lignes, quêtes d'initiation, bandeau d'objectifs, bilans passés, « Jour suivant » au bac à sable, rappel quotidien | Automne : premier gel, remplir le grenier |
 | 3 et 4 | Visiteurs et commandes (le marchand d'abord), catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
 | 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée (lot F, 8 octobre) | Prêt avant le 1er décembre |
-| 7 et 8 | La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance | Décembre |
+| 7 et 8 | ~~La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance~~ (abandonnée le 9 octobre, décision 44) | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
 ## 15. Décisions d'Alex du 5 au 8 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
-3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12).
+3. **Chroniques d'Hermes** : deux semaines d'avance, révisées chaque dimanche (§12). Abandonnées le 9 octobre (décision 44).
 4. **Le jeu suit le rythme d'usage** : allure du village et reprise après une absence (§9).
 5. **Calendrier** : le jeu garde le vrai calendrier. Pour que l'hiver ne bloque pas un village qui démarre (le potager dort de novembre à avril), la petite serre est construisible dès le campement. Elle produit l'hiver en consommant de l'Énergie, ce qui rend l'objectif « garder la serre allumée » jouable dès le premier hiver.
 6. **Les quartiers montent par permis** (5 octobre 2026, au soir). Le nom « permis » est retenu. Sur l'essai, les niveaux déjà atteints sont convertis en permis à placer où Alex veut. Le détail est dans `docs/conception-niveaux-quartiers.md` (§4).
@@ -507,3 +509,9 @@ Décisions du 9 octobre 2026 (matin), lot N :
 41. **Le repas de la semaine** : un jour au choix, une fois par semaine ; il rapporte de l'Énergie.
 42. **La partie de sucre est l'objectif de printemps** (« Faire les sucres »), et elle se fait sans cabane.
 43. **Le sirop est vendu tout seul** au marchand quand la réserve est pleine ; il faut le quai.
+
+Décisions du 9 octobre 2026 (soir) :
+
+44. **Hermes ne fait qu'ajouter les tâches** d'Alex, comme aujourd'hui (texte ou vocal, évaluées puis écrites dans la liste). Pas de chroniques : le jeu tire déjà seul imprévus, visiteurs et tempêtes. Les mentions d'Hermes comme auteur du village (§6, §9, §12) sont caduques.
+45. **La visite du jour fait tourner le village**, sans série. Dès la première ouverture du jour, les cultures poussent et les bâtiments produisent ; aucun compteur de jours de suite, une absence ne fait rien perdre. Les permis, la semaine tenue et la préparation des tempêtes restent aux jours travaillés (au moins une quête payée), pour qu'ouvrir l'app ne rapporte pas autant que faire une quête. Alex avait d'abord demandé une série de connexions ; cette version lui convient. À simuler avant de fixer les montants.
+46. **La vraie météo.** La ville du joueur dans les réglages ; le serveur lit la prévision d'Open-Meteo une fois par jour, et une neige prévue chez le joueur fait annoncer une tempête dans le jeu. Pas besoin d'être précis. Une annonce faite reste tenue même si la prévision change ; sans ville ou sans réseau, le tirage d'après la date (§8). Les conditions d'utilisation d'Open-Meteo restent à vérifier avant le lot.
