@@ -1431,7 +1431,7 @@ Référence : réponse d'Alex au topo du lot B (« j'aimerais qu'on considère l
     - La réplique de Fanal « Ce qui débordait du grenier » était dite même sans débordement : « Ce qui dormait au grenier ».
     - Gardé et expliqué : la protection contre le double toucher partage une clé pour les deux gestes de la Place (le bloc des sucres rapetisse une fois faite, le repas remonte sous le doigt) ; les emplacements des fêtes restent des obstacles toute l'année (7 trajets sur 24 contournent un coin vide, aucun ne devient impossible, mesuré ; écrit dans `ARCHITECTURE.md`).
     - Suite de logique après correctifs : 610 tests, 607 réussis, 2 « à faire » connus, 1 échec (`saisons.test.mjs` comparait l'avancée champ par champ et ne connaissait pas `familles`) ; attendu complété, fichier relancé seul : 11 sur 11.
-  - [ ] N4c — Série navigateur complète (42 scénarios).
+  - [x] N4c — Série navigateur complète (42 scénarios), sur le code du commit dd48a07, le 9 octobre vers midi : 41 réussis ; le 18 (écrans d'accueil) a échoué à 1280 px sur une seule vérification, « aucune erreur console », le serveur PHP de test ayant rendu une réponse vide (`net::ERR_EMPTY_RESPONSE` sur `api.php`) ; relancé seul, réussi (69 vérifications). Le 45 (Nourriture) : réussi, 78 vérifications.
   - [ ] N4d — Envoi, sur accord d'Alex : CLAUDE.md (étiquette, 42 scénarios), étiquette `v2.11`.
 
 ### Questions pour Alex (avant N1)
