@@ -1598,3 +1598,7 @@ Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au
 
 ### Questions pour Alex
 1. Pour régler la simulation sur tes vraies habitudes, je peux lire au registre de production, sans rien y écrire ni rien copier dans le dépôt, les jours où tu as ouvert le jeu et ceux où tu as fait une quête, depuis le 5 octobre. D'accord ?
+
+### Réponses d'Alex (10 octobre, après-midi)
+1. Plan : « je te laisse y aller ». **Plan validé.** Il proposait aussi la lettre de Fanal comme déclencheur. Retenu : la lettre devient l'endroit où Fanal dit ce que le village a produit à l'ouverture (réponse à la question d'affichage de J3) ; le jour de visite reste lu à la ligne d'ouverture du registre. Raison, lue dans `core/letters.js` : la partie ne garde que le dernier jour où chaque lettre a été montrée (`game.letters`), pas la liste des jours, et la lettre ne vient ni le premier jour de la partie ni le jour d'une lettre de passage ou de conversion ; la ligne d'ouverture, elle, en laisse une par jour. Production et lettre arrivent au même moment, à l'ouverture.
+2. Lecture du registre de production pour les habitudes réelles : « oui, tout à fait », lecture seule, rien copié dans le dépôt.
