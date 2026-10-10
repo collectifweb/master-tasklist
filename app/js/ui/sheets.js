@@ -1,7 +1,7 @@
 // Feuilles (dialog.sheet) : ajout rapide, fiche de quête, « Pourquoi ? », confirmation, code d'accès, aide d'une ressource.
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
-  QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, JOURS_PAR_PERMIS, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
+  QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, JOURS_PAR_PERMIS, PERMIS_EN_MAIN, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -473,7 +473,8 @@ export function openHelp(name) {
   if (!nom) return;
   const dlg = $('#dlg-help');
   // la phrase des Matériaux dit le bonus de la semaine tenue, celle des permis le nombre de jours travaillés pour un permis
-  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours, parPermis: JOURS_PAR_PERMIS };
+  // et le plafond des permis en main
+  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours, parPermis: JOURS_PAR_PERMIS, max: PERMIS_EN_MAIN };
   const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`, vars))}</dd></div>`;
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title help-title" id="help-t" data-res="${esc(name)}">${icon(name)}<span>${esc(t(nom))}</span></h2>

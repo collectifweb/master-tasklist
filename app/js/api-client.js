@@ -61,8 +61,10 @@ async function call(method, payload) {
  * lieu de 6 avec la tour de guet.
  * Version 10 (lot N, la Nourriture) : l'API refuse la version 9, qui ne reprendrait pas au Remballer l'Énergie du sirop
  * vendu au marchand.
+ * Version 11 (lot M, quatre permis en main au plus) : l'API refuse la version 10, qui tamponnerait encore le permis des
+ * jours au-delà de 4 en main.
  */
-export const CLIENT_VERSION = 10;
+export const CLIENT_VERSION = 11;
 
 export const api = {
   get: () => call('GET'),

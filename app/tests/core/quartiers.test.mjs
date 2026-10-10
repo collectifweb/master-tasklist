@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import {
   completeQuest, remballerQuest, toggleStep, accueillir, recolter, construire, advanceTime, markLetterShown,
   withoutStaleBodies, monterQuartier, refusMonter, coutNiveau, ECHELLE, EFFETS_QUARTIERS, niveauMax, valeur, placesParChalet,
-  progressionPermis, conversionLetter, passageLetter, JOURS_PAR_PERMIS, QUARTIER_IDS, PAS_IDS, STOCKAGE,
+  progressionPermis, conversionLetter, passageLetter, JOURS_PAR_PERMIS, PERMIS_EN_MAIN, QUARTIER_IDS, PAS_IDS, STOCKAGE,
   createInitialState, migrateState, objectifSaison, etatCulture, refusRecolter, refusAccueillir, logements, stockage,
   addDays,
 } from '../../core/index.js';
@@ -101,11 +101,101 @@ test('permis : une étape cochée seule ne fait pas un jour travaillé', () => {
 
 test('progressionPermis : permis en main, jours travaillés depuis le dernier, jours qui restent', () => {
   let w = fresh(quetes(10), at('2026-10-06', 12));
-  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-06')), { dispo: 0, depuis: '2026-10-05', jours: 0, restants: JOURS_PAR_PERMIS });
+  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-06')), { dispo: 0, depuis: '2026-10-05', jours: 0, restants: JOURS_PAR_PERMIS, plein: false });
   for (const day of ['2026-10-06', '2026-10-07']) w = faire(w, day).world;
-  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-08')), { dispo: 0, depuis: '2026-10-05', jours: 2, restants: 2 });
+  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-08')), { dispo: 0, depuis: '2026-10-05', jours: 2, restants: 2, plein: false });
   for (const day of ['2026-10-08', '2026-10-09']) w = faire(w, day).world;
-  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-09', 20)), { dispo: 1, depuis: '2026-10-09', jours: 0, restants: 4 });
+  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-09', 20)), { dispo: 1, depuis: '2026-10-09', jours: 0, restants: 4, plein: false });
+});
+
+// ───────── Plafond des permis en main (lot M, 10 octobre 2026) ─────────
+
+/** Partie neuve, premiers pas faits, de quoi payer les travaux ; `dispo` permis en main. */
+function enMain(dispo) {
+  const w = sansPas(fresh(quetes(30), at('2026-10-06', 12)));
+  w.game.permis.dispo = dispo;
+  w.game.resources = { energy: 999, materials: 999, food: 5 };
+  return w;
+}
+const monter = (w, quartier, h = 9, day = '2026-10-12') => step(w, monterQuartier, { quartier, niveau: w.game.niveaux[quartier] + 1 }, at(day, h)).world;
+
+test('plafond : à 4 permis en main, la Mairie ne tamponne plus, le compte attend ; un achat, et un seul permis revient', () => {
+  assert.equal(PERMIS_EN_MAIN, 4);
+  let w = enMain(PERMIS_EN_MAIN);
+  for (const day of ['2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11']) w = faire(w, day).world;
+  assert.equal(w.game.permis.dispo, 4);
+  assert.deepEqual(permisDuRegistre(w.ledger), []);
+  assert.equal(w.game.permis.depuis, '2026-10-05'); // le compte ne repart pas
+  assert.deepEqual(progressionPermis(w.game, w.ledger, at('2026-10-11', 20)), { dispo: 4, depuis: '2026-10-05', jours: 6, restants: 0, plein: true });
+  // un niveau acheté : 3 en main ; la quête payée suivante redonne 1 permis (les 6 jours attendaient) et le compte repart
+  w = monter(w, 'champs');
+  assert.equal(w.game.permis.dispo, 3);
+  assert.equal(progressionPermis(w.game, w.ledger, at('2026-10-12', 10)).plein, false);
+  const s = faire(w, '2026-10-12');
+  assert.deepEqual(s.r.events.filter((x) => x.type === 'permis'), [{ type: 'permis', source: 'jours', dispo: 4 }]);
+  assert.deepEqual(s.world.game.permis, { dispo: 4, depuis: '2026-10-12' });
+  // les jours en trop ne s'accumulent pas : deux niveaux de plus (2 en main), le jour suivant ne donne rien
+  w = monter(monter(s.world, 'atelier', 18), 'mairie', 19);
+  assert.equal(w.game.permis.dispo, 2);
+  w = faire(w, '2026-10-13').world;
+  assert.equal(w.game.permis.dispo, 2);
+  assert.deepEqual(permisDuRegistre(w.ledger), ['permis:2026-10-12']);
+});
+
+test('plafond : sous 4, rien ne change ; le permis qui fait 4 tombe, le suivant attend', () => {
+  let w = enMain(3);
+  for (const day of ['2026-10-06', '2026-10-07', '2026-10-08']) w = faire(w, day).world;
+  assert.equal(w.game.permis.dispo, 3);
+  w = faire(w, '2026-10-09').world;
+  assert.deepEqual(w.game.permis, { dispo: 4, depuis: '2026-10-09' });
+  for (const day of ['2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13']) w = faire(w, day).world;
+  assert.deepEqual(w.game.permis, { dispo: 4, depuis: '2026-10-09' });
+});
+
+test('plafond : une partie qui a plus de 4 permis les garde tous, et la Mairie attend qu’on repasse sous 4', () => {
+  let w = enMain(10);
+  for (const day of ['2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11']) w = faire(w, day).world;
+  assert.equal(w.game.permis.dispo, 10);
+  assert.equal(migrateState(structuredClone(w.game), at('2026-10-11', 20)).permis.dispo, 10);
+  w = monter(w, 'champs'); // 9
+  w = faire(w, '2026-10-12').world;
+  assert.equal(w.game.permis.dispo, 9);
+  assert.deepEqual(permisDuRegistre(w.ledger), []);
+});
+
+test('plafond : le permis d’un nouveau rang et celui de l’objectif de saison passent au-delà de 4', () => {
+  const D = '2026-10-06';
+  const w = fresh([], at(D));
+  w.game.permis.dispo = PERMIS_EN_MAIN;
+  w.game.batiments = ['chalet-1', 'chalet-2', 'chalet-3'].map((id) => ({ id, type: 'chalet' }));
+  w.game.habitants = 2;
+  w.game.resources.food = 18;
+  const rang = step(w, accueillir, {}, at(D));
+  assert.equal(rang.world.game.permis.dispo, 5);
+  assert.deepEqual(rang.r.events.find((x) => x.type === 'permis'), { type: 'permis', source: 'rang', dispo: 5 });
+
+  const OCT = '2026-10-20';
+  const s = sansPas(fresh([], at(OCT)));
+  s.game.permis.dispo = PERMIS_EN_MAIN;
+  s.game.resources.food = STOCKAGE - 2;
+  s.game.parcelles = [{ id: 'parcelle-1', semeLe: '2026-09-01' }];
+  s.ledger = Array.from({ length: 5 }, (_, k) => ({ key: `reward:x${k}:1`, type: 'reward', taskId: `x${k}`, occurrence: 1, day: `2026-09-0${k + 2}`, at: at(`2026-09-0${k + 2}`) }));
+  const saison = step(s, recolter, { id: 'parcelle-1' }, at(OCT));
+  assert.equal(saison.world.game.permis.dispo, 5);
+  assert.deepEqual(saison.r.events.find((x) => x.type === 'permis'), { type: 'permis', source: 'saison', dispo: 5 });
+});
+
+test('plafond : un geste hors ligne recalculé à son heure ne donne pas le permis qu’un autre appareil a rendu inutile', () => {
+  // l'appareil A, hors ligne, a payé la 4e journée avec 3 permis en main ; entre-temps, l'appareil B a reçu le permis du
+  // nouveau rang : la partie du serveur a 4 permis. Recalculé à l'envoi sur cette partie, le geste ne tamponne rien.
+  let w = enMain(3);
+  for (const day of ['2026-10-06', '2026-10-07', '2026-10-08']) w = faire(w, day).world;
+  const horsLigne = faire(w, '2026-10-09');
+  assert.equal(horsLigne.world.game.permis.dispo, 4); // ce que l'appareil A croyait
+  const serveur = { ...w, game: { ...w.game, permis: { ...w.game.permis, dispo: 4 } } };
+  const rejoue = faire(serveur, '2026-10-09');
+  assert.deepEqual(rejoue.r.entries.filter((e) => e.type === 'permis'), []);
+  assert.deepEqual(rejoue.world.game.permis, { dispo: 4, depuis: '2026-10-05' });
 });
 
 // ───────── Permis de rang et de saison ─────────

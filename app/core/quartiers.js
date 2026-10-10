@@ -1,9 +1,10 @@
 // Niveaux de quartier et permis (docs/conception-niveaux-quartiers.md, lot R). Un quartier ne monte plus tout seul :
 // le joueur y place des permis, plus des travaux payés en Énergie et en Matériaux. Chaque niveau change un seul
 // réglage du jeu, déjà présent dans batiments.js (récolte, jours de pousse, places, prix d'une famille, stockage).
-// Le permis vient des jours travaillés (un tous les 4), de chaque nouveau rang et de l'objectif de saison ; il est
-// inscrit au registre sous une clé unique (permis:{jour}, permis:rang:{palier}, saison:{clé}) et appliqué à l'état au
-// moment de l'inscription (applyEntry), jamais recompté depuis tout le registre. Remballer ne le reprend jamais.
+// Le permis vient des jours travaillés (un tous les 4, tant qu'on en a moins de 4 en main), de chaque nouveau rang et de
+// l'objectif de saison ; il est inscrit au registre sous une clé unique (permis:{jour}, permis:rang:{palier}, saison:{clé})
+// et appliqué à l'état au moment de l'inscription (applyEntry), jamais recompté depuis tout le registre. Remballer ne le
+// reprend jamais.
 // La « semaine tenue » (5 jours travaillés dans la semaine du lundi au dimanche) paie des Matériaux de la même façon,
 // sous la clé semaine:{lundi} : aucun compteur de jours de suite, la semaine se relit au registre.
 // Monter un quartier n'écrit rien au registre ni dans les tâches : game.set suffit.
@@ -17,6 +18,14 @@ import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 
 /** Jours travaillés pour un permis. */
 export const JOURS_PAR_PERMIS = 4;
+/**
+ * Permis en main à partir desquels la Mairie ne tamponne plus le permis des jours (lot M, 10 octobre 2026). Le compte
+ * attend : `depuis` ne bouge pas, et dès qu'on repasse sous le plafond, la quête payée suivante en redonne un (un seul,
+ * si JOURS_PAR_PERMIS jours travaillés ont passé). Rang, saison et commande passent au-delà. Mesuré sur 10 parties
+ * simulées (5 joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars) : chaque niveau acheté le même jour,
+ * la partie identique hors permis, et 4 à 11 permis en main au 1er mars au lieu de 11 à 47 (tasks/todo.md, lot M).
+ */
+export const PERMIS_EN_MAIN = 4;
 /** Échelle des travaux : niveau n = n permis + n × ECHELLE × (4 Énergie + 3 Matériaux), soit n × 80 et n × 60 à 20. */
 export const ECHELLE = 20;
 /**
@@ -133,10 +142,12 @@ function inscrirePermis(ctx, key, source) {
 /**
  * Permis des jours travaillés, appelé par quests.js après une quête payée (juste après l'éolienne) : au 4e jour
  * travaillé après game.permis.depuis, inscrit permis:{jour} et repart de ce jour. Au plus un par jour (clé unique).
+ * Rien à PERMIS_EN_MAIN permis en main ou plus : `depuis` ne bouge pas, le compte attend.
  * Événement { type: 'permis', source: 'jours', dispo }.
  */
 export function suivrePermis(ctx) {
   const p = permisDe(ctx.game);
+  if (p.dispo >= PERMIS_EN_MAIN) return;
   if (joursTravailles(ctx.ledger, p.depuis, ctx.day) < JOURS_PAR_PERMIS) return;
   const key = `permis:${ctx.day}`;
   if (hasKey(ctx.ledger, key)) return;
@@ -181,10 +192,10 @@ export function annoncerPermisDeSaison(ctx) {
 
 /**
  * Où en est le prochain permis : { dispo (permis en main), depuis, jours (travaillés depuis le dernier), restants
- * (jours travaillés qui manquent pour le prochain) }. Lecture pure.
+ * (jours travaillés qui manquent pour le prochain), plein (PERMIS_EN_MAIN en main ou plus : la Mairie attend) }. Lecture pure.
  */
 export function progressionPermis(game, ledger, now) {
   const p = permisDe(game);
   const jours = joursTravailles(ledger, p.depuis, gameDay(now));
-  return { dispo: p.dispo, depuis: p.depuis, jours, restants: Math.max(0, JOURS_PAR_PERMIS - jours) };
+  return { dispo: p.dispo, depuis: p.depuis, jours, restants: Math.max(0, JOURS_PAR_PERMIS - jours), plein: p.dispo >= PERMIS_EN_MAIN };
 }

@@ -10,7 +10,7 @@
 //     plafond quotidien des points d'effort et ce que « l'effort paie » change au rythme du village.
 // (f) (lot R) les permis et les niveaux de quartier (docs/conception-niveaux-quartiers.md §11) : une fois ses premiers
 //     pas et ses bâtiments faits, le joueur simulé achète le niveau le moins cher qu'il peut payer. Un permis tous les
-//     4 jours travaillés, le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
+//     4 jours travaillés, jamais au-delà de 4 en main (lot M), le premier niveau vers la 2e semaine, pas les 17 niveaux avant la semaine 16, et des Matériaux
 //     nettement plus bas qu'une partie sans niveaux. ECHELLE (quartiers.js) se règle ici. (a) se mesure sans niveaux ;
 //     (a′) mesure la même chose avec niveaux, cible élargie à 15-25 (voir plus bas).
 // (g) (lot R2) un joueur simulé qui reprend les comptes de l'essai d'Alex (24 jours : 17 à une quête, 4 à deux, 3 sans, dans
@@ -78,7 +78,7 @@ import assert from 'node:assert/strict';
 import {
   openApp, completeQuest, construire, semer, recolter, accueillir, refusConstruire, refusSemer, refusRecolter,
   refusAccueillir, batimentsDuVillage, logements, stockage, BATIMENTS, ACCUEIL_NOURRITURE, STOCKAGE, addDays, rangDuVillage,
-  prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS,
+  prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS, PERMIS_EN_MAIN,
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
   tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
@@ -124,7 +124,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // nourriture (o) : 'avise' ou 'toujours', sa façon de servir le repas et de faire la partie de sucre (voir l'en-tête).
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], permisJours: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
   // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
   // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
@@ -147,6 +147,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       if (e.type === 'repas') nour.repas++;
       if (e.type === 'sucres') nour.sucres = addDays(debut, i);
       if (e.type === 'recolte' && e.perdu > 0) nour.perdu.set(addDays(debut, i), (nour.perdu.get(addDays(debut, i)) || 0) + e.perdu);
+      if (e.type === 'permis' && e.source === 'jours') log.permisJours.push(e.dispo); // (f) permis en main juste après le permis des jours
       if (e.type === 'construction') log.construits[e.id] ??= addDays(debut, i); // (n) jour de chaque bâtiment
       if (e.type === 'objectif-saison') log.objectifs[e.cle] = addDays(debut, i); // (k) jour de chaque objectif de saison atteint
       if (e.type === 'premier-pas') log.pas[e.id] = i + 1;
@@ -410,13 +411,16 @@ test('(f) permis et niveaux : un permis tous les 4 jours travaillés, le premier
   const f = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
   const permisDesJours = (ledger) => ledger.filter((e) => /^permis:\d/.test(e.key)).length;
   const permisTous = (ledger) => ledger.filter((e) => e.type === 'permis' || e.permis > 0).length;
-  // rythme des permis : environ 1,5 à 1,75 par semaine à 6 ou 7 jours travaillés, environ 0,9 à un jour sur deux
+  // rythme des permis : jamais plus d'un tous les 4 jours travaillés (1,75 par semaine à 7 jours sur 7) ; depuis le lot M,
+  // la Mairie s'arrête à PERMIS_EN_MAIN en main, donc moins dès que le joueur garde ses permis (l'Énergie manque)
   const sixSurSept = (i) => (i % 7 === 6 ? 0 : regulier(i));
-  for (const [nom, rythme, min, max] of [['7 jours sur 7', regulier, 1.4, 1.8], ['6 jours sur 7', sixSurSept, 1.4, 1.8], ['un jour sur deux', (i) => (i % 2 ? 0 : 1), 0.8, 1]]) {
+  for (const [nom, rythme, max] of [['7 jours sur 7', regulier, 1.8], ['6 jours sur 7', sixSurSept, 1.8], ['un jour sur deux', (i) => (i % 2 ? 0 : 1), 1]]) {
     const log = simuler('2026-10-25', SEMAINES * 7, rythme);
     const parSemaine = permisDesJours(log.monde.ledger) / SEMAINES;
-    t.diagnostic(`permis, ${nom} : ${f(parSemaine)} par semaine des jours travaillés, ${f(permisTous(log.monde.ledger) / SEMAINES)} toutes sources`);
-    assert.ok(parSemaine >= min && parSemaine <= max, `${nom} : ${parSemaine} permis par semaine`);
+    t.diagnostic(`permis, ${nom} : ${f(parSemaine)} par semaine des jours travaillés, ${f(permisTous(log.monde.ledger) / SEMAINES)} toutes sources, `
+      + `${log.monde.game.permis.dispo} en main à la semaine ${SEMAINES}`);
+    assert.ok(permisDesJours(log.monde.ledger) >= PERMIS_EN_MAIN && parSemaine <= max, `${nom} : ${parSemaine} permis par semaine`);
+    assert.ok(log.permisJours.every((d) => d <= PERMIS_EN_MAIN), `${nom} : permis des jours donné au-delà de ${PERMIS_EN_MAIN} en main (${log.permisJours.join(', ')})`);
   }
   for (const debut of ['2026-06-01', '2026-10-25']) {
     // premier niveau entre les jours 7 et 14 au rythme régulier, avant le jour 30 à une quête par jour

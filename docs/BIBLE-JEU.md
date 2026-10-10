@@ -75,11 +75,13 @@ Chaque domaine de ta vie a son quartier au village. Le domaine d'une tâche ne c
 
 **Les quartiers montent par permis, au choix du joueur.** Rien ne monte tout seul. Le permis est délivré par la Mairie :
 
-- un tous les 4 jours travaillés (un jour travaillé est un jour avec au moins une quête payée et non remballée ; une journée à 5 quêtes compte comme une journée à 1) ;
+- un tous les 4 jours travaillés (un jour travaillé est un jour avec au moins une quête payée et non remballée ; une journée à 5 quêtes compte comme une journée à 1), tant qu'on en a moins de 4 en main ;
 - un à chaque nouveau rang du village ;
 - un pour l'objectif de saison réussi.
 
 Il n'y a pas de date limite : un jour sans quête ne fait rien perdre, le compte attend. Remballer une quête ne reprend jamais un permis.
+
+**La Mairie garde 4 permis au plus** (décision 47). À 4 permis en main, elle ne tamponne plus celui des jours travaillés : le compte attend. Dès qu'on en place un, la quête payée suivante en redonne un, si 4 jours travaillés ont passé depuis le dernier ; les jours en trop ne s'accumulent pas. Les permis de rang, d'objectif de saison et de la scientifique arrivent toujours, même au-delà de 4, et une partie qui en a plus les garde. La fiche d'un quartier le dit : « Le prochain attend : la Mairie s'arrête à 4 permis en main. » Raison : ce qui freine les niveaux, c'est l'Énergie et les Matériaux, presque jamais le permis ; sans plafond, les permis s'entassaient (de 11 à 47 en main au 1er mars selon le joueur simulé). Avec le plafond, chaque niveau est acheté le même jour dans les 10 parties simulées, et on finit avec 4 à 11 permis en main (mesure du 10 octobre 2026, `tasks/todo.md`, lot M).
 
 **La semaine tenue.** Dès le 5e jour travaillé d'une semaine (du lundi au dimanche, en jours de jeu), le village reçoit 12 Matériaux, une seule fois par semaine. C'est un bonus de retour régulier, plafonné : un 6e ou un 7e jour ne paie pas davantage, et remballer une quête ne le reprend pas. Il n'y a ni série ni compteur de jours de suite : une semaine manquée ne coûte rien, la suivante repart à neuf, sans reproche. Le jour où il tombe, l'annonce de gain dit « Semaine tenue », Fanal glisse un mot (jamais un nombre de jours) et le bilan de la semaine affiche « Semaine tenue : +12 Matériaux ». Le montant de 12 est une valeur de départ, à ajuster à l'usage.
 
@@ -437,7 +439,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 7 et 8 | ~~La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance~~ (abandonnée le 9 octobre, décision 44) | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex du 5 au 8 octobre 2026
+## 15. Décisions d'Alex du 5 au 10 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -515,3 +517,7 @@ Décisions du 9 octobre 2026 (soir) :
 44. **Hermes ne fait qu'ajouter les tâches** d'Alex, comme aujourd'hui (texte ou vocal, évaluées puis écrites dans la liste). Pas de chroniques : le jeu tire déjà seul imprévus, visiteurs et tempêtes. Les mentions d'Hermes comme auteur du village (introduction, §6, §9, §11, §12) sont caduques.
 45. **La visite du jour fait tourner le village**, sans série. Dès la première ouverture du jour, les cultures poussent et les bâtiments produisent ; aucun compteur de jours de suite, une absence ne fait rien perdre. Les permis, la semaine tenue et la préparation des tempêtes restent aux jours travaillés (au moins une quête payée), pour qu'ouvrir l'app ne rapporte pas autant que faire une quête. Alex avait d'abord demandé une série de connexions ; cette version lui convient. À simuler avant de fixer les montants.
 46. **La vraie météo.** La ville du joueur dans les réglages ; le serveur lit la prévision d'Open-Meteo une fois par jour, et une neige prévue chez le joueur fait annoncer une tempête dans le jeu. Pas besoin d'être précis. Une annonce faite reste tenue même si la prévision change ; sans ville ou sans réseau, le tirage d'après la date (§8). Les conditions d'utilisation d'Open-Meteo restent à vérifier avant le lot.
+
+Décision du 10 octobre 2026 :
+
+47. **La Mairie garde 4 permis au plus** (§4). Alex m'a laissé le choix, d'après la simulation : un plafond de 4 permis en main pour le permis des jours travaillés, plutôt qu'un permis tous les 5 ou 6 jours (le joueur rapide perdait des niveaux) ou un plafond qui suit le prix du prochain niveau (des niveaux retardés jusqu'à 6 jours). Rang, saison et scientifique passent au-delà.

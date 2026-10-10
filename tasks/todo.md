@@ -1508,7 +1508,7 @@ Décisions d'Alex (9 octobre) : hébergeur PHP pour son amie (le mode « un seul
 
 Référence : décision 1 du topo du lot R (« les permis s'accumulent »), reprise par Alex le 10 octobre : « choisis le best, c'est toi qui sais simuler l'impact ». Le prix des niveaux reste celui du 6 octobre (ÉCHELLE 20).
 
-**Statut : option choisie par mesure, plan *à valider* par Alex avant d'écrire le code.**
+**Statut : plan validé par Alex le 10 octobre (« Oui », plafond de 4) ; code et tests faits, envoi sur son accord.**
 
 ### Mesure (10 octobre, hors dépôt, copie détachée sur daa0245)
 Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange du jour avisé ; les cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars. Critères, pour chacune des 10 parties : premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau le même jour, village plein jamais plus tard. Chiffres relancés par moi après l'agent : identiques.
@@ -1525,17 +1525,20 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 - Personne ne perd un permis : une partie qui en a plus de 4 les garde, la Mairie attend seulement qu'on repasse sous 4.
 
 ### M1 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `core/quartiers.js` : `PERMIS_EN_MAIN = 4`, le garde-fou dans `suivrePermis`, `progressionPermis` dit si on est au plafond.
-- [ ] Tests : au plafond, aucun permis des jours, le compte ne repart pas ; sous le plafond, le permis revient au prochain jour payé ; rang, saison et commande passent au-delà de 4 ; une partie à 10 permis les garde ; deux appareils et un geste hors ligne recalculé à son heure ne donnent rien de plus.
-- [ ] Simulation : le plafond dans `simulation.test.mjs`, avec la ligne « aucun niveau plus tard » qui le garde.
-- [ ] Version du client et cache, si un vieil onglet donnerait un permis au-delà du plafond.
+- [x] `core/quartiers.js` : `PERMIS_EN_MAIN = 4`, le garde-fou dans `suivrePermis`, `progressionPermis` dit si on est au plafond (`plein`).
+- [x] Tests : au plafond, aucun permis des jours, le compte ne repart pas ; sous le plafond, le permis revient au prochain jour payé ; rang, saison et commande passent au-delà de 4 ; une partie à 10 permis les garde ; un geste hors ligne recalculé à son heure ne donne rien de plus.
+  *Fait le 10 octobre : 5 tests dans `quartiers.test.mjs`, 1 dans `commandes.test.mjs` (la scientifique). Vus en échec avant le garde-fou : les 5 tests du plafond et celui de `progressionPermis` ; ceux du rang, de la saison et de la scientifique passaient déjà (ils gardent le comportement).*
+- [x] Simulation : le plafond dans `simulation.test.mjs`.
+  *Le test (f) mesurait le rythme des permis (1,4 à 1,8 par semaine) : avec le plafond, 0,81 au rythme régulier. Il vérifie maintenant qu'il n'y en a jamais plus d'un tous les 4 jours, au moins 4 en 16 semaines, et que le permis des jours n'est jamais donné au-delà de 4 en main. Comparé au code d'avant, dans une copie : mêmes niveaux, mêmes jours, mêmes ressources, même Hameau, même village plein ; permis en main à la semaine 16, 16 → 3 et 19 → 4. La comparaison « aucun niveau plus tard » sur les 10 parties reste hors dépôt : elle demande de retirer le plafond du cœur.*
+- [x] Version du client et cache : version 11, `MIN_CLIENT` 11 (un onglet en version 10 tamponnerait au-delà de 4), cache `oree-coquille-v24`. Tests de l'API passés au client 11.
 
 ### M2 — Écran (texte seulement, dans la ligne existante)
-- [ ] Fiche d'un quartier, au plafond : « Tu as 4 permis. La Mairie n'en garde pas plus : places-en un, elle en tamponne un autre au prochain jour de travail. » (au lieu de « Le prochain : encore 0 jour travaillé »).
-- [ ] L'aide du compteur « Permis » le dit en une phrase.
+- [x] Fiche d'un quartier et catalogue, au plafond : « Tu as 4 permis. Le prochain attend : la Mairie s'arrête à 4 permis en main. » (au lieu de « Le prochain : avec ta prochaine quête payée »).
+  *Texte changé par rapport à la proposition faite à Alex : « elle en tamponne un autre au prochain jour de travail » n'est vrai que si 4 jours travaillés ont passé ; la nouvelle phrase est vraie à 4 comme à 10. Vérifié dans le navigateur aux trois largeurs (scénario 31, 177 vérifications, capture à 390 px).*
+- [x] L'aide du compteur « Permis » : « Un tous les 4 jours travaillés, tant que tu en as moins de 4 en main. Et toujours : un à chaque nouveau rang… ».
 
 ### M3 — Vérification, documents, envoi
 - [ ] Suite de logique ; scénarios navigateur des permis (31 et 33) aux trois largeurs, puis la série complète.
-- [ ] Bible §4 (« le compte attend », un plafond de 4) et décision 47 ; `app/ARCHITECTURE.md` ; CLAUDE.md.
+- [x] Bible §4 (« le compte attend », un plafond de 4) et décision 47 ; `app/ARCHITECTURE.md` ; annexe de `docs/conception-niveaux-quartiers.md`. CLAUDE.md : à l'envoi (étiquette).
 - [ ] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
 - [ ] Envoi sur accord d'Alex.

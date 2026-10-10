@@ -259,6 +259,25 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.keyboard.press('Escape');
   await closed(page, 'dlg-plan');
   R.check('aucun défilement horizontal', await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+
+  // ───── plafond des permis (lot M) : à 4 en main, la fiche dit que la Mairie attend, sans « encore 0 jour »
+  const gf = require('path').join(srv.root, 'app', 'api', 'data', 'game-state.json');
+  const g4 = JSON.parse(require('fs').readFileSync(gf, 'utf8'));
+  g4.permis = { ...g4.permis, dispo: 4 };
+  require('fs').writeFileSync(gf, JSON.stringify(g4));
+  await page.reload();
+  await L.ready(page);
+  await L.closeWelcome(page);
+  await page.waitForTimeout(500);
+  if (!(await hit(page, 'champs'))) { await page.click('[data-ow="quetes"]'); await page.waitForTimeout(450); }
+  const p4 = await hit(page, 'champs');
+  if (compact && p4) await page.touchscreen.tap(p4[0], p4[1]); else await page.click('.ow-plaque[data-sector="champs"]');
+  await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-quartier').open), 2000);
+  await page.waitForTimeout(450);
+  f = await fiche(page);
+  R.check('plafond : « Tu as 4 permis. Le prochain attend : la Mairie s’arrête à 4 permis en main. »', f.permis === 'Tu as 4 permis. Le prochain attend : la Mairie s’arrête à 4 permis en main.', f.permis);
+  R.check('plafond : la fiche ne déborde pas', !f.wide && !f.scroll, JSON.stringify({ wide: f.wide, scroll: f.scroll }));
+  await shot(page, '31-plafond');
 }, {
   tasks: TASKS,
   game: (core) => {

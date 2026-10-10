@@ -217,6 +217,14 @@ test('la scientifique laisse exactement un permis, par le registre', () => {
   assert.deepEqual(w2.game.resources, { energy: 200 - (d.energy || 0), materials: 200 - (d.materials || 0), food: 25 - (d.food || 0) });
 });
 
+test('la scientifique laisse son permis même à 4 en main (le plafond du lot M ne touche que le permis des jours)', () => {
+  const w = village();
+  w.game.permis = { ...w.game.permis, dispo: 4 };
+  const { world: w2, r } = step(w, livrer, {}, at('2026-10-23'));
+  assert.equal(w2.game.permis.dispo, 5);
+  assert.ok(r.events.some((x) => x.type === 'permis' && x.source === 'commande' && x.dispo === 5));
+});
+
 test('la taille suit l’allure de la semaine : la moitié au ralenti, une fois et demie au plein régime, la même récompense', () => {
   const regulier = commandeDeLaSemaine(village().game, [], at(MARDI));
   const r = auRalenti(village());
