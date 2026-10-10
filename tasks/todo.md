@@ -1503,3 +1503,39 @@ Décisions d'Alex (9 octobre) : hébergeur PHP pour son amie (le mode « un seul
    - Aujourd'hui, les tempêtes sont tirées d'après la date pour que tous les appareils voient la même, même hors ligne (bible §8).
    - Retenu (décision 46) : le serveur lit la prévision une fois par jour et la garde dans la partie ; une tempête annoncée reste tenue même si la prévision change ; sans réseau ou sans ville, le tirage actuel. La ville part vers un service de météo : le dire dans les réglages. Service choisi par Alex : Open-Meteo, gratuit et sans clé pour un usage non commercial (conditions *à vérifier* avant le lot).
 3. **Hermes.** Son rôle prévu d'auteur du village (chroniques deux semaines d'avance, bible §12, calendrier « Décembre ») n'est pas construit (aucune mention de « chronique » dans `app/`), et le jeu tire déjà lui-même imprévus, visiteurs et tempêtes. Décision : il garde seulement l'ajout des tâches. Sa réponse du 9 octobre (rapportée, non vérifiée de notre côté) : aucun clone Git actif, aucune mise à jour automatique depuis GitHub ; il travaille sur ses propres copies de `tasks.json`, `sync-tasks-remote.sh`, `TASKS_WORKFLOW.md` et `PRODUCT.md`, hors Git ; minuteur de synchronisation actif ; 11 tâches ajoutées depuis le 5 octobre ; aucune tâche planifiée liée au jeu ; les trois branches GitHub à son nom ne lui servent plus. Empreinte SHA-256 de sa copie de `sync-tasks-remote.sh` donnée par Hermes : identique à celle du dépôt (comparée le 9 octobre au soir).
+
+## Lot M — La Mairie garde quatre permis au plus (proposé le 10 octobre 2026, à valider)
+
+Référence : décision 1 du topo du lot R (« les permis s'accumulent »), reprise par Alex le 10 octobre : « choisis le best, c'est toi qui sais simuler l'impact ». Le prix des niveaux reste celui du 6 octobre (ÉCHELLE 20).
+
+**Statut : option choisie par mesure, plan *à valider* par Alex avant d'écrire le code.**
+
+### Mesure (10 octobre, hors dépôt, copie détachée sur daa0245)
+Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange du jour avisé ; les cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars. Critères, pour chacune des 10 parties : premier niveau jamais plus tard, aucun niveau de moins en 16 semaines ni au 1er mars, Hameau le même jour, village plein jamais plus tard. Chiffres relancés par moi après l'agent : identiques.
+- État actuel : les permis ne bloquent un achat que chez le joueur rapide (47 soirs parti en juillet, 22 en octobre) ; 0 soir dans les 8 autres parties. En main au 1er mars : de 11 (très lent, octobre) à 47 (rythme de l'essai, juillet).
+- A, un permis tous les 5 ou 6 jours travaillés : écartée. Chez le rapide, 1 ou 2 niveaux de moins en 16 semaines, et des niveaux jusqu'à 39 jours plus tard.
+- B, un plafond de permis en main pour le permis des jours : 3, 4, 6 et 9 ne cassent aucun critère. À 3, des niveaux arrivent 1 à 3 jours plus tard chez (f) et le rapide ; à 4, 6 et 9, aucun niveau ne bouge et la partie est identique hors permis dans les 10 parties.
+- C, un plafond égal au prix du prochain niveau : aucun critère cassé, mais des niveaux jusqu'à 6 jours plus tard chez le rapide.
+- **Retenu : B à 4.** En main au 1er mars, avant → après : très lent 19 → 8 et 11 → 7 ; lent 31 → 5 et 21 → 7 ; essai 47 → 5 et 30 → 4 ; (f) 43 → 9 et 17 → 4 ; rapide 43 → 11 et 14 → 6. Contre-épreuve dans deux autres cadres (sans échange du jour ; sans marchand ni commande) : aucun niveau déplacé.
+- Non mesuré : la partie réelle d'Alex (lue avant l'envoi, voir M3) ; un joueur qui garde ses permis pour un quartier précis.
+
+### La règle
+- La Mairie ne tamponne plus le permis des jours travaillés quand on en a 4 en main. Le compte attend : dès qu'on en place un, le prochain jour avec une quête payée en redonne un (si 4 jours travaillés ont passé depuis le dernier). Les jours en trop ne s'accumulent pas.
+- Les permis de rang, d'objectif de saison et de la scientifique arrivent toujours, même au-delà de 4.
+- Personne ne perd un permis : une partie qui en a plus de 4 les garde, la Mairie attend seulement qu'on repasse sous 4.
+
+### M1 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `core/quartiers.js` : `PERMIS_EN_MAIN = 4`, le garde-fou dans `suivrePermis`, `progressionPermis` dit si on est au plafond.
+- [ ] Tests : au plafond, aucun permis des jours, le compte ne repart pas ; sous le plafond, le permis revient au prochain jour payé ; rang, saison et commande passent au-delà de 4 ; une partie à 10 permis les garde ; deux appareils et un geste hors ligne recalculé à son heure ne donnent rien de plus.
+- [ ] Simulation : le plafond dans `simulation.test.mjs`, avec la ligne « aucun niveau plus tard » qui le garde.
+- [ ] Version du client et cache, si un vieil onglet donnerait un permis au-delà du plafond.
+
+### M2 — Écran (texte seulement, dans la ligne existante)
+- [ ] Fiche d'un quartier, au plafond : « Tu as 4 permis. La Mairie n'en garde pas plus : places-en un, elle en tamponne un autre au prochain jour de travail. » (au lieu de « Le prochain : encore 0 jour travaillé »).
+- [ ] L'aide du compteur « Permis » le dit en une phrase.
+
+### M3 — Vérification, documents, envoi
+- [ ] Suite de logique ; scénarios navigateur des permis (31 et 33) aux trois largeurs, puis la série complète.
+- [ ] Bible §4 (« le compte attend », un plafond de 4) et décision 47 ; `app/ARCHITECTURE.md` ; CLAUDE.md.
+- [ ] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
+- [ ] Envoi sur accord d'Alex.
