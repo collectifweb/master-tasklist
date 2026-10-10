@@ -1542,3 +1542,59 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 - [x] Bible §4 (« le compte attend », un plafond de 4) et décision 47 ; `app/ARCHITECTURE.md` ; annexe de `docs/conception-niveaux-quartiers.md`. CLAUDE.md : à l'envoi (étiquette).
 - [ ] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
 - [ ] Envoi sur accord d'Alex.
+
+## Lot J — La visite du jour fait tourner le village (proposé le 10 octobre 2026, à valider)
+
+Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », plus haut ; PRODUCT.md, ligne 23 : « Les tâches accomplies restent la source principale de progression », le retour quotidien peut donner « de petits bonus plafonnés, sans permettre de fabriquer artificiellement de la progression ». Travail dans une copie séparée (`git worktree`, branche `feat/visite-du-jour`, partie de `7313a42`) : une autre session finit le lot M dans le dossier principal.
+
+**Statut : proposé, à valider par Alex.**
+
+### Aujourd'hui (lu dans le code, rien de mesuré)
+- Une culture mûrit après 5 jours travaillés depuis le semis (`CULTURE.jours`, `etatCulture`, `core/batiments.js:49` et `:147`). Un jour travaillé : au moins une quête payée et non remballée (`joursTravailles`, `:132`). Un jour de gel ou de neige sur la culture ne compte pas (`joursGeles`, `core/imprevus.js:128`).
+- L'éolienne (3 Énergie), la scierie (3 Matériaux), le poulailler (1 Nourriture) et la cabane à sucre (4 Nourriture en mars et avril) produisent à la première quête payée du jour (`core/quests.js:236-237`). Remballer reprend cette production si le jour reste sans quête payée (`:424-425`).
+- Chaque ouverture écrit déjà au registre une ligne datée, une fois par jour : le bonus d'ouverture, +1 Énergie (`bonus:ouverture:{jour}`, `openApp`, `core/quests.js:480`).
+- La simulation fait ouvrir le jeu chaque jour à tous ses joueurs, même les jours où ils ne font rien (`simulation.test.mjs:206`) : avec la nouvelle règle, il faudra lui donner des habitudes de visite.
+
+### Ce que verra Alex
+- En ouvrant le jeu, avant toute quête : l'éolienne, la scierie, le poulailler (et la cabane au temps des sucres) ont déjà donné leur part du jour. Une culture mûrit après 5 jours où il est passé au village, quête faite ou non.
+- Une quête faite ne fait plus tourner l'éolienne, et Remballer ne reprend plus rien aux bâtiments.
+- Un jour sans ouvrir le jeu, rien ne pousse ni ne produit, et rien n'est perdu : au retour, le village repart où il en était. Pas de rattrapage des jours manqués, pas de série.
+- Inchangés, toujours liés à une quête payée : les permis (un tous les 4 jours travaillés, 4 en main au plus), la semaine tenue (12 Matériaux au 5e jour travaillé), les crans de préparation des tempêtes, l'allure. Le bonus d'ouverture (+1 Énergie) reste.
+- Comment il apprend ce que le village a produit à l'ouverture : à décider avec /impeccable (lettre du matin, phrase courte, île). Rien de bruyant, aucun son.
+
+### Règles proposées
+- Jour de visite : un jour de jeu (il commence à 4 h) où le jeu a été ouvert, lu au registre par la ligne d'ouverture ; un jour avec une quête payée compte aussi. Aucune donnée neuve si la ligne d'ouverture suffit (à vérifier en J2).
+- La pousse compte les jours de visite depuis le semis, moins les jours de gel ou de neige. Une culture déjà en terre à l'envoi compte aussi ses jours de visite d'avant : elle peut mûrir d'un coup, rien ne se perd.
+- La production se fait à la première visite du jour (passage du temps, `advanceTime`), une fois par jour, sous les mêmes clés de registre (`prod:{type}:{jour}`) : jamais deux fois, même avec deux appareils. Réserve pleine : le passage suivant du même jour réessaie, comme la quête suivante aujourd'hui. Une éolienne en panne ou sous la neige ne produit pas, comme aujourd'hui.
+- Montants : ceux d'aujourd'hui au départ ; la mesure J1 dit s'il faut les baisser.
+
+### J1 — Mesure d'abord (copie de la simulation hors dépôt, puis dans `simulation.test.mjs`)
+- [ ] Habitudes de visite pour les cinq joueurs : (a) n'ouvre le jeu que les jours où il fait une quête ; (b) ouvre chaque jour ; (c) un jour sans quête sur deux. Avec l'accord d'Alex, (d) ses vraies habitudes, lues au registre de production (question 1).
+- [ ] Règle d'aujourd'hui contre règle du lot, cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars : premier niveau, Hameau, Village, village plein, objectif d'hiver (10 récoltes de serre, 6 au ralenti), permis en main.
+- [ ] Part des gains venus des jours sans quête (Énergie, Matériaux, Nourriture), joueur par joueur : c'est elle qui dit si la visite reste un « petit bonus » au sens de PRODUCT.md.
+- [ ] Tableau montré à Alex avant J2, avec, s'il le faut, des montants ajustés et mesurés de la même façon.
+
+### J2 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `core/batiments.js` : `joursVisites(ledger, apres, jusqua)` ; `etatCulture` le lit ; `joursGeles` (`core/imprevus.js`) compte les jours de visite gelés.
+- [ ] `core/quests.js` : `advanceTime` fait produire l'éolienne et les bâtiments (et annonce l'éolienne arrêtée) ; `completeQuest` ne les appelle plus ; Remballer ne reprend plus rien (`reprendreEolienne` et `reprendreBatiments` retirées si plus rien ne les appelle).
+- [ ] Vérifier que chaque jour où le jeu est ouvert porte sa ligne d'ouverture, y compris l'app restée ouverte au changement de jour et le plafond des bonus (5 Énergie par jour) ; sinon, une clé à part `visite:{jour}`.
+- [ ] Geste hors ligne rejoué en retard (leçon du lot H) : une visite hors ligne produit pour son propre jour, une seule fois.
+- [ ] Version du client 12, `MIN_CLIENT` 12 (un onglet en version 11 reprendrait la production au Remballer et ferait pousser au jour travaillé), cache `oree-coquille-v25`.
+- [ ] Avant de dire quels tests le lot touche, chercher dans tous les tests ceux qui figent l'ancienne règle (leçon du lot B).
+
+### J3 — Écran et textes [impeccable]
+- [ ] Textes des cultures (`content/fr-CA/batiments.json` : fiches, « Maintenant », « mûr dans N jours travaillés ») et de l'effet du Garage (`interface.json`, « jours travaillés pour qu'une culture mûrisse ») ; fiches de l'éolienne et du rang Village (« ce qu'il a donné aujourd'hui »).
+- [ ] Ce que le joueur voit de la production à l'ouverture (/impeccable) : phrase lue par le lecteur d'écran, sans son, sans cacher la carte.
+- [ ] Textes mesurés dans leur vraie case, aux trois largeurs, avec leur variante la plus longue (leçon du lot C).
+
+### J4 — Vérification et documents
+- [ ] Suite de logique ; scénarios touchés (production à la quête : 44 et 45 ; gel : 37 ; parcelle mûre : 39 ; et tout scénario qui vérifie un montant exact après l'ouverture avec un bâtiment producteur, cherchés avant la série, leçon du lot I) ; puis la série complète, quand aucune autre session ne fait tourner la sienne.
+- [ ] Relecture indépendante.
+- [ ] Bible (§5, décision 45), `app/ARCHITECTURE.md` (registre : `prod` à la première visite, plus de `reprise` neuve), README (/humanize), PRODUCT.md si la règle du retour quotidien y change.
+
+### J5 — Envoi
+- [ ] Après l'envoi du lot M, sur accord d'Alex.
+- [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts.
+
+### Questions pour Alex
+1. Pour régler la simulation sur tes vraies habitudes, je peux lire au registre de production, sans rien y écrire ni rien copier dans le dépôt, les jours où tu as ouvert le jeu et ceux où tu as fait une quête, depuis le 5 octobre. D'accord ?
