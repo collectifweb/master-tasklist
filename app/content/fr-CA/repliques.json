@@ -265,12 +265,12 @@
       ]
     },
     "tempete.meteo": {
-      "quand": "Une tempête venue de la vraie météo est annoncée (lot Q : au moins 3 cm de neige prévus dans la ville réglée) : remplace tempete.annonce, au même moment. {ville} est le nom de la ville réglée; sans ville (retirée depuis), tempete.annonce la remplace. Rassure, ne chiffre rien.",
+      "quand": "Une tempête venue de la vraie météo est annoncée (lot Q : au moins 3 cm de neige prévus dans la ville réglée) : remplace tempete.annonce, au même moment. {ville} est le nom de la ville réglée. Sans ville (retirée depuis), tempete.annonce la remplace. Rassure, ne chiffre rien.",
       "frequence": 1,
       "variantes": [
         {"id": "tempete.meteo.01", "voix": "fanal", "texte": "La météo annonce de la neige à {ville}. Une tempête s’en vient, on a le temps."},
         {"id": "tempete.meteo.02", "voix": "fanal", "texte": "Neige prévue à {ville}. Ici, ça donne une tempête. Je sors ma pelle."},
-        {"id": "tempete.meteo.03", "voix": "fanal", "texte": "À {ville}, on annonce de la neige. Le village l’a entendue aussi. Une quête par jour, et on est parés."},
+        {"id": "tempete.meteo.03", "voix": "fanal", "texte": "À {ville}, on annonce de la neige. Une quête par jour, et on est parés."},
         {"id": "tempete.meteo.04", "voix": "fanal", "texte": "Le ciel de {ville} se charge. Le nôtre suit. Rien ne presse encore."}
       ]
     },
