@@ -34,7 +34,7 @@ Un gabarit s'écrit `{nom}`. Le code le remplace avant l'affichage.
 | `{cout}` | Coût lisible, tiré des données de jeu (« 20 Matériaux et 6 Énergie ») |
 | `{rang}` | Nom du nouveau rang du village (« Hameau »), pour `permis.rang` et `permis.rang.bande` seulement ; hors d'un changement de rang, il n'est pas rempli et la variante est écartée |
 | `{n}`, `{p}`, `{l}`, `{d}`, `{points}`, `{cote}`, `{duree}`… | Nombres et valeurs de l'interface, nommés dans chaque clé |
-| `{n}`, `{jours}` (`help.materiaux.source`), `{parPermis}` (`help.permis.source`) | Valeurs lues dans le code au moment d'afficher, jamais écrites dans le texte : `{n}` = les Matériaux de la semaine tenue (`SEMAINE_TENUE.materials`), `{jours}` = les jours travaillés qu'elle demande (`SEMAINE_TENUE.jours`), `{parPermis}` = les jours travaillés pour un permis (`JOURS_PAR_PERMIS`). Si le réglage change dans le code, le texte suit |
+| `{n}`, `{jours}` (`help.materiaux.source`), `{parPermis}` (`help.permis.source`), `{max}` (`help.permis.source`, `quartier.prochain.plein`) | Valeurs lues dans le code au moment d'afficher, jamais écrites dans le texte : `{n}` = les Matériaux de la semaine tenue (`SEMAINE_TENUE.materials`), `{jours}` = les jours travaillés qu'elle demande (`SEMAINE_TENUE.jours`), `{parPermis}` = les jours travaillés pour un permis (`JOURS_PAR_PERMIS`), `{max}` = les permis en main à partir desquels la Mairie ne tamponne plus (`PERMIS_EN_MAIN`, lot M). Si le réglage change dans le code, le texte suit |
 
 Dans les textes `monde.*` d'`interface.json`, `{secteur}`, `{du_secteur}` et `{au_secteur}` gardent leur ancien nom mais reçoivent les formes d'un quartier (`the`, `of`, `in`). Les textes des bâtiments (`bat.<groupe>.<clé>`) viennent de `batiments.json`, pas d'`interface.json`.
 
@@ -78,7 +78,7 @@ Trois règles :
 | `quest.undo` | « Remballer » dans les 24 h |
 | `deadline.soon` | Une fois par quête, quand l'échéance passe à 7 jours ou moins |
 | `deadline.passed` | Une fois par quête, à la première visite après la date |
-| `permis.gagne` | Un permis tombe après quatre jours travaillés, avec la quête payée qui le donne (quête terminée ou ajoutée déjà faite) |
+| `permis.gagne` | Un permis tombe après quatre jours travaillés, avec la quête payée qui le donne (quête terminée ou ajoutée déjà faite), tant qu'on a moins de 4 permis en main (lot M) |
 | `permis.rang` | Une famille fait passer le village à un nouveau rang, qui donne un permis (geste « Accueillir une famille », ou « Livrer » pour la famille du Sud) |
 | `permis.rang.bande` | Comme `permis.rang`, pour un rang qui gagne aussi une bande de terrain sur la forêt (le Hameau, lot F) : la réplique le dit, la bande arrive vide |
 | `semaine.tenue` | La semaine tenue est payée, avec la quête payée qui la déclenche (quête terminée ou ajoutée déjà faite). Ne dit jamais un nombre de jours et ne parle jamais de série |
@@ -169,10 +169,10 @@ Un objet plat `clé → texte`. Les clés sont stables, en anglais minuscule ave
 | `state` | Chargement, vide, hors ligne, synchronisation, conflit, erreurs |
 | `confirm` | Confirmations (suppression, remballage) |
 | `visit`, `letter`, `plan`, `review` | Écrans de jeu : fin de visite, lettre du matin, plan de la journée et carte en liste, bilan de la semaine et semaines passées (dont `review.tenue`, la ligne « Semaine tenue : +{n} Matériaux », écrite seulement pour une semaine qui l'a payée) |
-| `quartier` | Formes de chaque nom de quartier (`name`, `the`, `of`, `in`) et domaine regroupé (`domain`) ; la fiche d'un quartier : `fiche` (lignes, boutons, raisons), `effet` (une phrase par réglage que les niveaux changent), `cout`, `permis` et `prochain` (permis en main, jours travaillés qui manquent pour le prochain), `sr` (phrase lue après l'achat) ; `catalogue` (section « Quartiers » du catalogue « Construire ») |
+| `quartier` | Formes de chaque nom de quartier (`name`, `the`, `of`, `in`) et domaine regroupé (`domain`) ; la fiche d'un quartier : `fiche` (lignes, boutons, raisons), `effet` (une phrase par réglage que les niveaux changent), `cout`, `permis` et `prochain` (permis en main, jours travaillés qui manquent pour le prochain ; `prochain.plein` à 4 permis en main ou plus), `sr` (phrase lue après l'achat) ; `catalogue` (section « Quartiers » du catalogue « Construire ») |
 | `accueil`, `pas`, `bandeau`, `saison` | Les trois écrans d'accueil, les cinq premiers pas (`pas.<id>.nom`, `pas.geste.*`), le bandeau d'objectifs, les saisons |
 | `monde` | La carte : région, commandes (Construire, Quêtes, Vue, Rapprocher, Éloigner, Toute l'île, Carte en liste), plaques de quartier (`monde.niveau.court`, « niv. 2 »), noms des objets, carte en liste (quêtes à faire par quartier : `monde.quetes.*` ; bouton « Ouvrir la fiche » : `monde.plan.open*`) |
-| `help`, `res` | Aide des cinq puces de la barre (Énergie, Matériaux, Nourriture, Habitants, Permis : `help.permis.*`) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue, celle du Permis le nombre de jours par permis (gabarits, voir plus haut) |
+| `help`, `res` | Aide des cinq puces de la barre (Énergie, Matériaux, Nourriture, Habitants, Permis : `help.permis.*`) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue, celle du Permis le nombre de jours par permis et le plafond de 4 en main (gabarits, voir plus haut) |
 | `essai` | Version d'essai : texte du décalage de date et bouton « Jour suivant » |
 | `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom ; « Quête par défaut » : `settings.quete`, `settings.quete.hint`, `settings.quete.attente` pour la feuille ouverte avant la lecture de la partie, `settings.saved.quete` ; « Économie de batterie », lot E : `settings.batterie`, `settings.batterie.hint`, et l'annonce de l'enregistrement, `settings.saved.batterie` quand elle est cochée, `settings.saved.vivante` quand elle est décochée) |
 
