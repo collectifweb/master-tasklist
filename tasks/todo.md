@@ -1661,3 +1661,100 @@ Accord d'Alex (11 octobre) : « Cest parti pour j5! 1. Après paiement 2. Ok ».
 ### Réponses d'Alex (10 octobre, après-midi)
 1. Plan : « je te laisse y aller ». **Plan validé.** Il proposait aussi la lettre de Fanal comme déclencheur. Retenu : la lettre devient l'endroit où Fanal dit ce que le village a produit à l'ouverture (réponse à la question d'affichage de J3) ; le jour de visite reste lu à la ligne d'ouverture du registre. Raison, lue dans `core/letters.js` : la partie ne garde que le dernier jour où chaque lettre a été montrée (`game.letters`), pas la liste des jours, et la lettre ne vient ni le premier jour de la partie ni le jour d'une lettre de passage ou de conversion ; la ligne d'ouverture, elle, en laisse une par jour. Production et lettre arrivent au même moment, à l'ouverture.
 2. Lecture du registre de production pour les habitudes réelles : « oui, tout à fait », lecture seule, rien copié dans le dépôt.
+
+## Lot Q — La vraie météo (proposé le 11 octobre 2026, à valider)
+
+Référence : décision 46 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », point 2 ; bible §8 (la tempête telle qu'elle est construite) ; `core/hiver.js`. Travail dans une copie séparée (`git worktree` `../Master Tasklist-meteo`, branche `feat/vraie-meteo`, partie de `f2f3989`, dont le dossier `app/` est celui de la v2.13 en ligne).
+
+**Statut : plan à valider par Alex. Rien n'est codé.**
+
+**Échéance.** La première neige du jeu tombe le 15 novembre. Une tempête du 15 novembre serait annoncée dès le 9 avec une tour de guet (6 jours), dès le 12 sans (3 jours) : lu dans `debutAnnonce`. Cible : en ligne le 1er novembre ; limite : le 8.
+
+### Vérifié avant le plan (11 octobre)
+1. **Conditions d'Open-Meteo** (pages « Terms », « Licence » et « Pricing » lues le 11 octobre, appels faits le même jour) :
+   - l'API gratuite sert à un usage non commercial, sans clé : un appel sans clé répond 200, depuis ce poste comme depuis le serveur. Non commercial, au sens de Creative Commons : leurs exemples sont un site ou une app privés, sans abonnement ni publicité, et la domotique personnelle. Le jeu d'Alex entre dans ce cadre ;
+   - limites : moins de 10 000 appels par jour, 5 000 par heure, 600 par minute (et 300 000 par mois dans leur tableau). Le jeu en ferait un par jour, plus quelques recherches de ville ;
+   - les données sont sous licence CC BY 4.0 : il faut créditer Open-Meteo, avec un lien « à côté de tout endroit où les données sont affichées » (leur exemple : « Weather data by Open-Meteo.com »), et dire qu'elles sont transformées ;
+   - aucune garantie de service ; ils peuvent bloquer sans préavis une adresse qui abuse ; les conditions peuvent changer à tout moment (changements suivis sur GitHub) ;
+   - vie privée : ils gardent 90 jours leurs journaux, qui peuvent contenir les coordonnées demandées ;
+   - prévision : 16 jours au plus (17 est refusé), neige du jour en centimètres (`snowfall_sum`), au fuseau America/Montreal. La recherche de ville répond en français (« Montréal », « Québec », « Canada »). Les deux services acceptent les appels faits depuis un navigateur (en-tête `access-control-allow-origin: *`) ;
+   - à reposer plus tard : quelqu'un qui installe le jeu chez lui (`docs/INSTALLATION.md`) est soumis aux mêmes conditions ; un site public (PRODUCT.md, Horizons 1) ferait passer tous ses joueurs par une même adresse, sous une même limite.
+2. **L'hébergement peut-il appeler un service extérieur ?** Contrôles en lecture seule, rien écrit :
+   - vérifié : le PHP 8.3 du serveur, en ligne de commande, joint Open-Meteo. Prévision : 200 en 0,06 s, 16 jours reçus (cURL) ; recherche de ville : réponse lue (`file_get_contents`). `allow_url_fopen` actif, cURL et OpenSSL chargés, aucune fonction désactivée ;
+   - lu : le site tourne sous la même version de PHP (8.3.33, en-tête de l'API), celle que désigne le sélecteur de PHP du compte ; le réglage propre au compte ne touche ni `allow_url_fopen` ni les fonctions désactivées. Le rappel du matin (`app/serveur/rappel.php`) appelle déjà ntfy avec cURL, depuis une tâche planifiée ;
+   - pas vérifié : un appel sortant fait pendant une requête web. Le vérifier avant l'envoi demanderait de poser un script en production. Il se vérifiera au premier chargement après l'envoi, une fois la ville choisie (le fichier de prévision paraît, daté du jour). S'il échouait, le jeu reste sur le tirage : rien ne casse.
+
+### Mesure : combien de tempêtes la vraie neige donnerait (11 octobre)
+Historique de neige des archives d'Open-Meteo (une réanalyse, pas des prévisions), dix hivers de 2015-2016 à 2024-2025, trois villes génériques du sud au nord. Règle comptée : un jour avec au moins le seuil de neige, du 15 novembre au 31 mars, hors trêve (le jour et le début d'une annonce de 3 jours), à 7 jours au moins de la tempête précédente. Script hors dépôt.
+
+| Tempêtes par hiver (moyenne) | 1 cm | 2 cm | 5 cm |
+|---|---|---|---|
+| Montréal | 8 à 13 (10,4) | 6 à 13 (8,8) | 2 à 9 (5,1) |
+| Québec | 10 à 15 (12,5) | 8 à 14 (10,5) | 4 à 9 (6,8) |
+| Chibougamau | 11 à 15 (13,5) | 9 à 14 (11,2) | 3 à 8 (5,7) |
+
+- Tirage d'aujourd'hui, mêmes dix hivers : 10 à 12 (10,9). Hiver 2026-2027 : 11, du 25 novembre au 22 mars.
+- Jours avec 1 cm ou plus : 20 à 38 par hiver à Montréal, 28 à 49 à Québec, 36 à 52 à Chibougamau. C'est l'écart de 7 jours qui garde le rythme d'aujourd'hui.
+- Plus long écart entre deux tempêtes, trêve comprise : à 1 cm, 42 jours (Montréal), 31 (Québec), 28 (Chibougamau) ; tirage, 35.
+- Limite : ce sont des neiges comptées après coup. Une prévision à 3 ou 6 jours peut en annoncer plus ou moins ; pas mesuré. À regarder le premier hiver.
+
+### Ce que verra Alex
+- Dans Réglages, « Météo du village » : il écrit sa ville, touche « Chercher », choisit dans la liste (« Montréal, Québec, Canada »). Une phrase dit que le nom de la ville part vers Open-Meteo, un service de météo gratuit, pour lire la prévision de neige ; un lien vers Open-Meteo. « Retirer la ville » remet le tirage.
+- L'hiver, quand la prévision annonce de la neige chez lui dans les jours d'annonce (3, ou 6 avec la tour de guet), le jeu annonce une tempête pour ce jour-là. Même bandeau, même barre de trois crans, même récompense, mêmes dégâts qu'aujourd'hui. Fanal dit d'où elle vient (« La météo annonce de la neige à Montréal ») et le crédit d'Open-Meteo est à côté : place exacte à décider avec /impeccable.
+- Une tempête annoncée reste, même si la prévision change ou si la neige ne tombe pas.
+- Sans ville, rien ne change. Si le serveur ne lit plus la prévision depuis plus de 2 jours, le tirage d'après la date reprend jusqu'à son retour.
+- Rien d'autre ne bouge : l'île blanche du 15 novembre au 30 avril, la trêve des Fêtes, les premiers pas, la reprise après une absence, la tour de guet, les prix.
+
+### Règles proposées
+1. Jour de neige : au moins 1 cm prévu ce jour-là (question 1).
+2. Saison : du 15 novembre au 31 mars ; ni tempête pendant la trêve, ni annonce qui y commence, comme aujourd'hui (question 2).
+3. Écart : 7 jours au moins avec toute autre tempête, comme le tirage.
+4. Moment : à chaque passage du temps, le jeu regarde de demain jusqu'au dernier jour d'annonce ; le premier jour de neige permis devient une tempête, notée dans la partie. L'annonce commence ce jour-là, jamais plus de 3 (ou 6) jours avant. Une neige vue seulement la veille donne une annonce d'un jour : les crans manquants s'achètent alors tous, comme la veille aujourd'hui. Rien pour le jour même.
+5. Une tempête notée ne bouge plus.
+6. Prévision absente, plus vieille que 2 jours de jeu ou d'une autre ville : le tirage d'après la date propose les jours à la place, notés de la même façon.
+7. Changer ou retirer la ville : une tempête déjà annoncée reste.
+8. Sans ville : le tirage d'aujourd'hui, rien n'est noté.
+
+### Comment ça marche
+- **La ville** : `game.reglages.ville` (`{ nom, region, pays, lat, lon }`, coordonnées arrondies au centième, environ 1 km), écrite par un `game.set` comme la quête par défaut : la même sur tous les appareils. La recherche part de l'appareil, directement au service de recherche d'Open-Meteo (accepté par le navigateur, vérifié) ; le service worker laisse passer les autres origines (`bypass`, `sw.js`). Pas de recherche hors ligne.
+- **Le serveur** (`api/api.php`) : à une lecture authentifiée (GET), si une ville est réglée et que la prévision gardée (`api/data/meteo.json`) n'est pas du jour de jeu (4 h, Montréal) ou pas de ces coordonnées, il lit la prévision : 16 jours, neige du jour, 4 s au plus, sous un verrou à part qu'il n'attend pas (s'il est pris, l'ancienne prévision sert), écriture atomique. En cas d'échec, l'ancienne reste et un nouvel essai attend une heure : au plus 25 appels par jour, même en panne. Jamais d'appel sans code d'accès. Réponses (lectures et écritures) : `meteo: { lat, lon, lue, jours: { 'AAAA-MM-JJ': cm } }`, ou `null`. Réglages `METEO_URL` (un faux service local pour les essais) et `METEO` (éteint au besoin). Une lecture écrit donc désormais un fichier de cache : changement voulu, qui ne touche ni les tâches, ni la partie, ni le registre. Écarté : une tâche planifiée comme le rappel. Il faudrait poser une ligne dans la table des tâches planifiées (leçon du 5 octobre), une ville changée attendrait la nuit, et l'installation compterait une étape de plus.
+- **Le cœur** : `noterTempetes(ctx, meteo)` dans `advanceTime`, juste avant `suivreTempetes` ; les tempêtes notées dans `game.meteo = { tempetes: [{ jour, le, source: 'meteo' | 'tirage' }] }`, hiver en cours et précédent. `tempetesDeLHiver(day, game)` : sans ville et sans tempête notée, le tirage, inchangé ; avec une ville, les tempêtes notées ; ville retirée, les notées plus le tirage, hors des 7 jours d'une notée. `debutAnnonce` part du jour où la tempête a été notée (`le`) s'il est plus tard. `estJourDeTempete(jour, game)` pour les imprévus. La prévision arrive en paramètre (le cœur ne lit rien) ; un appareil hors ligne garde la dernière, dans la copie de la réponse du serveur que `js/store.js` garde déjà. L'écran (bandeau, île, fiches) ne lit que la partie.
+- **Deux appareils** : la tempête est notée par un `game.set` à révision ; le second appareil est refusé, relit la partie et y trouve la tempête du premier.
+- **Version** : client 13, `MIN_CLIENT` 13 (un onglet en version 12 ignorerait les tempêtes notées et tirerait les siennes), cache `oree-coquille-v26`.
+
+### Q1 — Mesure d'abord (simulation, hors dépôt puis dans `simulation.test.mjs`)
+- [ ] Simulation (j) avec, à la place du tirage, les tempêtes de la vraie neige des trois villes (dix hivers d'archives, seuil de la question 1) : premier niveau, objectif d'hiver, tempêtes tenues et ensevelissements, chez les cinq joueurs. Cible d'aujourd'hui pour (j) : premier niveau à 0 ou 1 jour près. Tableau montré à Alex avant Q2 si une cible bouge.
+
+### Q2 — Cœur (tests écrits d'abord et vus en échec)
+- [ ] `noterTempetes` et le calendrier : fenêtre d'annonce (3 et 6 jours), saison, trêve, écart de 7 jours des deux côtés, premier jour retenu, rien le jour même ; une tempête notée tient quand la prévision change ; prévision vieille ou d'une autre ville, le tirage ; ville réglée pendant une annonce, l'annonce reste ; ville retirée ; sans ville, sortie identique à aujourd'hui (tests de `hiver.test.mjs` et `tour-de-guet.test.mjs` inchangés).
+- [ ] `debutAnnonce`, barre, « Rentrer du bois », ensevelissement et imprévus avec une tempête notée tard (la veille).
+- [ ] Geste hors ligne rejoué en retard ; deux appareils qui notent chacun une tempête.
+- [ ] Chercher dans tous les tests la liste des tempêtes écrite en dur avant de dire quels tests le lot touche (leçon du lot B).
+- [ ] Version 13, `MIN_CLIENT` 13, cache v26.
+
+### Q3 — Serveur (tests de l'API sur un faux Open-Meteo local)
+- [ ] Une lecture par jour de jeu et par ville ; aucune sans ville, sans code, ou avec `METEO` éteint ; échec : l'ancienne prévision reste, nouvel essai après une heure ; service lent : la réponse part en 4 s au plus ; deux lectures en même temps : un seul appel ; forme de `meteo` dans les lectures et les écritures.
+- [ ] Aucun scénario navigateur n'appelle le vrai Open-Meteo : le serveur des scénarios pointe vers un faux, la recherche de ville est interceptée.
+
+### Q4 — Écran et textes [impeccable]
+- [ ] Réglages : « Météo du village » (champ, « Chercher », liste de choix, « Retirer la ville », la phrase sur Open-Meteo et le lien), cibles de 44 px, lecteur d'écran, hors ligne (« La recherche demande le réseau »).
+- [ ] La tempête venue de la météo : la phrase de Fanal, la carte en liste et le crédit d'Open-Meteo. Le texte de la rangée d'alerte se mesure dans la vraie case, variante la plus longue (nom de ville long), aux trois largeurs, avant d'être écrit (leçon du lot C).
+- [ ] Typographie selon `app/content/README.md`.
+
+### Q5 — Vérification et documents
+- [ ] Suite de logique et de l'API ; nouveaux scénarios (réglage de la ville, tempête annoncée par la météo, rien sans ville) ; série complète avant l'envoi, sur un état figé.
+- [ ] Relecture indépendante (sous-agent Opus, lecture seule).
+- [ ] Bible §8 et décision 50 ; `app/ARCHITECTURE.md` (partie, API, `meteo.json`, réglages) ; `app/content/README.md` ; `app/DESIGN.md` si un élément visible est nouveau ; PRODUCT.md (la ville part vers Open-Meteo) ; `docs/INSTALLATION.md` (appel sortant nécessaire, conditions d'Open-Meteo, crédit) ; `api/config.example.php` ; leçons.
+
+### Q6 — Envoi (sur accord d'Alex)
+- [ ] Contrôle de confidentialité, étiquette `v2.14`, photo de la production, `deploy-prod.sh v2.14`, contrôles habituels (retour : `deploy-prod.sh v2.13`).
+- [ ] Après l'envoi : Alex recharge ses onglets, puis règle sa ville ; je lis ensuite, sans rien écrire, que `api/data/meteo.json` existe, daté du jour, pour sa ville. C'est là que l'appel sortant depuis le web est vérifié.
+
+### Questions pour Alex
+Où on en est : aujourd'hui, les tempêtes tombent à des jours tirés d'après la date, une tous les 7 à 14 jours, du 15 novembre à la fin de mars (11 cet hiver). Avec ta ville, ce serait la prévision de neige chez toi qui fixerait ces jours. Le reste ne change pas : bandeau, barre, « Rentrer du bois », récompense, bâtiment enseveli.
+
+1. **À partir de combien de neige prévue le jeu annonce-t-il une tempête ?** Je recommande 1 cm : avec l'écart de 7 jours, cela donne 8 à 15 tempêtes par hiver selon la ville, proche des 10 à 12 d'aujourd'hui. À 2 cm, 6 à 14 : de 1,6 à 2,3 tempêtes de moins par hiver en moyenne, selon la ville. À 5 cm, 2 à 9, en moyenne 5,1 à 6,8 : entre la moitié et les deux tiers du tirage d'aujourd'hui (10,9).
+2. **Une neige prévue avant le 15 novembre, ou en avril, compte-t-elle ?** Je recommande non : la saison du jeu reste celle d'aujourd'hui, du 15 novembre au 31 mars, et l'île blanchit toujours le 15 novembre. Si oui, une neige d'octobre ferait une tempête sur une île encore verte.
+3. **Envoi direct en production si tout est vert**, comme les derniers lots ?
+
+Le plan peut aussi passer à /confront-codex (second avis) avant de coder.
