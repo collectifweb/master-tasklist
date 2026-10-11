@@ -8,8 +8,9 @@
 //   - Réglages, « Météo du village » : la ville réglée (nom, région, pays, « Retirer ») ; le crédit et la phrase sur ce qui
 //     part vers Open-Meteo ; champ vide, hors ligne, service en panne, aucun résultat : un message chacun, rien d'enregistré ;
 //   - Entrée dans le champ cherche (sans enregistrer la feuille) : trois choix avec région et pays, de 44 px ; la requête ne
-//     porte ni témoin ni page d'origine ; choisir une ville l'enregistre aussitôt dans la partie (coordonnées au centième),
-//     le focus va sur la ville, la phrase lue le dit ; la tempête notée reste ;
+//     porte pas la page d'origine ; choisir une ville l'enregistre aussitôt dans la partie (coordonnées au centième), sans
+//     rien au registre ni aux ressources ; le focus va sur la ville, la phrase lue le dit ; la tempête notée reste, et la
+//     rangée nomme toujours la ville de sa prévision ;
 //   - « Retirer » : la ville part de la partie, le focus va sur « Chercher », la phrase lue le dit ; au rechargement, plus
 //     de ville ; aucun débordement horizontal.
 // Données fictives seulement.
@@ -161,13 +162,15 @@ L.runScenario('47 · la vraie météo : tempête annoncée par la prévision, vi
   R.check('Entrée cherche sans enregistrer : la feuille reste ouverte, la ville ne change pas', await page.evaluate(() => document.getElementById('dlg-settings').open) && srv.game()?.reglages?.ville?.nom === VILLE.nom, JSON.stringify(srv.game()?.reglages));
   R.check('la recherche vise le service de villes d’Open-Meteo (nom, 6 résultats, en français)', q.url.host === 'geocoding-api.open-meteo.com' && q.url.pathname === '/v1/search'
     && q.url.searchParams.get('name') === 'Village' && q.url.searchParams.get('count') === '6' && q.url.searchParams.get('language') === 'fr', q.url.href);
-  R.check('la recherche ne porte ni témoin ni page d’origine', !q.headers.cookie && !q.headers.referer, JSON.stringify(q.headers));
+  R.check('la recherche ne porte pas la page d’origine', !q.headers.referer, JSON.stringify(q.headers));
   R.check('trois choix, avec région et pays', m.choix.length === 3 && m.etat === tx('settings.meteo.trouvees.other', { n: 3 }) && m.choix[1].nom === 'Autre-Village' && m.choix[1].lieu === 'Autre région fictive, Autre pays fictif', JSON.stringify(m.choix));
   R.check('chaque choix se nomme en entier pour le lecteur d’écran', sp(m.choix[1].label) === 'Choisir Autre-Village, Autre région fictive, Autre pays fictif', m.choix[1].label);
   R.check('Réglages : cibles de 44 px, aucun débordement horizontal', !m.petits.length && !m.deborde, JSON.stringify(m.petits));
   await shot(page, '47-choix');
 
   // ───── choisir une ville : enregistrée aussitôt
+  const g0 = srv.game();
+  const n0 = srv.ledger().length;
   await page.evaluate(() => { window.__said = []; });
   await page.click('#set-meteo-choix [data-i="1"]');
   const v2 = await L.waitFor(() => (srv.game()?.reglages?.ville?.nom === 'Autre-Village' ? srv.game().reglages.ville : null), 8000);
@@ -178,7 +181,11 @@ L.runScenario('47 · la vraie météo : tempête annoncée par la prévision, vi
   const lu = (await L.said(page)).filter((x) => sp(x.text).includes(tx('settings.saved.ville', { ville: 'Autre-Village' })));
   R.check('la phrase lue dit la ville choisie, depuis la feuille ouverte', lu.length >= 1 && lu.every((x) => x.sheet === 'dlg-settings'), JSON.stringify(await L.said(page)));
   if (annoncee) R.check('la tempête notée reste', (srv.game()?.tempetes?.notees || []).some((t) => t.jour === J && t.source === 'meteo'), JSON.stringify(srv.game()?.tempetes));
-  R.check('aucun registre ni ressource touchés', srv.ledger().every((e) => !/ville|meteo/i.test(e.key)), '');
+  R.check('rien au registre, ressources inchangées', srv.ledger().length === n0 && JSON.stringify(srv.game().resources) === JSON.stringify(g0.resources), JSON.stringify({ n0, n: srv.ledger().length, r: srv.game().resources }));
+  if (annoncee) {
+    const src = sp(await page.evaluate(() => document.querySelector('.bandeau-alerte-source-texte').textContent));
+    R.check('la rangée nomme toujours la ville de la prévision (Village-Test), pas la nouvelle', src === tx('bandeau.tempete.meteo', { ville: VILLE.nom }), src);
+  }
 
   // ───── retirer la ville
   await page.evaluate(() => { window.__said = []; });

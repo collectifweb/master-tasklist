@@ -9,7 +9,6 @@ import { placesParChalet } from '../core/quartiers.js';
 import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
 import { alerteTempete } from '../core/hiver.js';
-import { villeDe } from '../core/meteo.js';
 import { bandesGagnees } from '../core/village.js';
 import { saisonDe } from '../core/objectifs.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
@@ -80,7 +79,7 @@ export function batimentsView(game, ledger = [], now = new Date()) {
  * ledger (registre, pour les cultures et les imprévus ; facultatif) }. Ne lit que des champs connus et tolère un état
  * partiel. imprevus : les bons imprévus reçus aujourd'hui (aurore, peche, trouvaille, orignal), que l'île montre le jour même.
  * Hiver (lot H) : neige, l'île sous la neige (du 15 novembre au 30 avril) ; tempete, l'alerte en cours { jour,
- * joursRestants, crans, max, ville (lot Q : la ville réglée, pour une tempête venue de la vraie météo, sinon null) } ou null ; avis, son front de givre { sector, progress (0 à l'annonce, 1 le jour même) } ;
+ * joursRestants, crans, max, ville (lot Q : la ville de la prévision, notée avec une tempête venue de la vraie météo, sinon null) } ou null ; avis, son front de givre { sector, progress (0 à l'annonce, 1 le jour même) } ;
  * bandes (lot F) : les bandes de terrain gagnées sur la forêt, selon les habitants (core/village.js). fetes (lot N) :
  * 'repas' la semaine où le repas est servi (registre, repas:{lundi}), 'tire' ou 'tire-cabane' (cabane bâtie) une fois la
  * partie de sucre faite (game.sucres), jusqu'à la fin du temps des sucres (30 avril : la neige fond) ; places : FETE_SPOTS.
@@ -125,7 +124,7 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   for (const e of reg) if (e && e.type === 'imprevu' && e.day === today && Object.hasOwn(IMPREVUS.bons, e.imprevu)) imprevus.add(e.imprevu);
   const a = alerteTempete(list, g, reg, now ?? new Date());
   // ville : celle de la prévision, pour une tempête venue de la vraie météo (lot Q)
-  const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max, ville: a.source === 'meteo' ? villeDe(g)?.nom ?? null : null } : null;
+  const tempete = a ? { jour: a.jour, joursRestants: a.joursRestants, crans: a.crans, max: a.max, ville: a.ville } : null;
   const avis = a ? { sector: TEMPETE_BORD, progress: 1 - a.joursRestants / daysBetween(a.debut, a.jour) } : null; // 3 ou 6 jours (tour de guet)
   const fetes = new Set();
   const lundi = weekStart(today);

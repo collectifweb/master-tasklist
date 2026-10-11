@@ -17,7 +17,7 @@
 // 1er mars au 30 avril, tant qu'il n'est pas fait, toute la case mène à la fiche de la Place (data-action="sucres-go"),
 // où la partie se fait, comme la ligne du visiteur mène au quai.
 import {
-  bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire, villeDe,
+  bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
   degatsActifs, gameDay,
 } from '../../core/index.js';
 import { t, tn } from '../content.js';
@@ -72,7 +72,7 @@ function alerteModel(c) {
     titre: t(`bandeau.tempete.titre.${a.joursRestants === 0 ? 'zero' : a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants }),
     crans: a.crans, max: a.max, etat: '', aide: '', issue: '', go: null,
     // une tempête venue de la vraie météo (lot Q) dit d'où elle vient, avec le crédit d'Open-Meteo
-    source: a.source === 'meteo' && villeDe(c.game) ? t('bandeau.tempete.meteo', { ville: villeDe(c.game).nom }) : '',
+    source: a.ville ? t('bandeau.tempete.meteo', { ville: a.ville }) : '', // la ville de la prévision (lot Q)
     label: t(`bandeau.tempete.crans.label${a.crans <= 1 ? '' : '.other'}`, { n: a.crans, max: a.max }), // « 0 cran », comme fr-CA
   };
   if (a.joursRestants === 0) {

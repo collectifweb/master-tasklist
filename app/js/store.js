@@ -185,11 +185,19 @@ export class Store {
     let { tasks, game, ledger } = this.server;
     for (const e of this.queue) {
       try {
-        const r = action(e.name)(tasks, game, ledger, { ...e.params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, new Date(e.at));
+        const r = action(e.name)(tasks, game, ledger, this.paramsDe(e), new Date(e.at));
         tasks = r.tasks; game = r.game; ledger = r.entries.length ? [...ledger, ...r.entries] : ledger;
       } catch { /* sera écartée à l'envoi */ }
     }
     this.view = { tasks, game, ledger };
+  }
+
+  /**
+   * Paramètres d'un geste en file, rejoué : la prévision qu'il a vue (lot Q), pour qu'un geste hors ligne rejoué plus tard
+   * ne note pas une tempête que l'appareil n'a jamais annoncée ; celle du serveur pour un geste mis en file sans elle.
+   */
+  paramsDe(e) {
+    return { meteo: this.server.meteo, ...e.params, gameRevision: this.server.gameRevision };
   }
 
   // ───────── Actions ─────────
@@ -202,9 +210,10 @@ export class Store {
     const run = action(name);
     const now = maintenant();
     const base = this.view;
-    const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, now);
+    const meteo = this.server.meteo;
+    const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision, meteo }, now);
     if (result.ops.length) {
-      const queue = [...loadQueue(), { opId: newOpId(), name, params, at: now.toISOString() }];
+      const queue = [...loadQueue(), { opId: newOpId(), name, params: { ...params, meteo }, at: now.toISOString() }];
       // la file est la seule trace de l'action jusqu'à l'envoi : sans elle, l'action serait perdue à la relecture
       if (!saveQueue(queue)) throw new Error(t('notice.storage_full'));
       this.queue = queue;
@@ -269,7 +278,7 @@ export class Store {
           // migrateGame compare à la partie brute du serveur (encore v1 ?), les autres actions à la partie convertie
           const game = e.name === 'migrateGame' ? this.server.raw : this.server.game;
           try {
-            r = action(e.name)(this.server.tasks, game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, new Date(e.at));
+            r = action(e.name)(this.server.tasks, game, this.server.ledger, this.paramsDe(e), new Date(e.at));
           } catch (err) {
             this.dropHead(e.opId);
             this.recompute();

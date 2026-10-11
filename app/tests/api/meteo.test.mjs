@@ -158,6 +158,24 @@ test('jours sans valeur (null) : absents de la prévision', () => avecMeteo({}, 
   assert.equal(m.jours[addDays(gameDay(new Date()), 1)], undefined);
 }));
 
+test('réponse trop longue ou trop grosse : 16 jours gardés au plus ; au-delà de 256 Kio, un échec, l’ancienne prévision reste', () => avecMeteo({}, async (s, om) => {
+  const auj = gameDay(new Date());
+  om.repondre(() => {
+    const time = Array.from({ length: 40 }, (_, k) => addDays(auj, k));
+    return { status: 200, body: { daily: { time, snowfall_sum: time.map(() => 1) } } };
+  });
+  const m = await lecture(s);
+  assert.equal(Object.keys(m.jours).length, 16);
+  assert.equal(m.jours[addDays(auj, 15)], 1);
+  assert.equal(m.jours[addDays(auj, 16)], undefined);
+  const vieille = { ...m, lue: new Date(Date.now() - 30 * 3600000).toISOString() };
+  ecrireCache(s, vieille);
+  om.repondre(() => ({ status: 200, body: { ...corps([20]), bourrage: 'x'.repeat(300 * 1024) } }));
+  assert.deepEqual(await lecture(s), vieille);
+  assert.equal(om.appels.length, 2);
+  assert.equal(typeof lireCache(s).echec?.le, 'number');
+}));
+
 test('service lent : la réponse part en 4 s au plus, sans prévision', () => avecMeteo({}, async (s, om) => {
   om.repondre(() => ({ status: 200, body: corps(), delai: 8000 }));
   const t0 = Date.now();

@@ -59,8 +59,8 @@ function tirageDeLHiver(y) {
 
 /**
  * Tempêtes notées dans la partie (lot Q) : [{ jour, source ('meteo' : neige prévue chez le joueur ; 'tirage' : jour du
- * tirage), des? (premier jour d'annonce, quand elle a été notée moins de jours d'avance que l'annonce) }]. Une entrée
- * illisible est ignorée.
+ * tirage), ville? (nom de la ville de la prévision, pour 'meteo'), des? (premier jour d'annonce, quand elle a été notée
+ * moins de jours d'avance que l'annonce) }]. Une entrée illisible est ignorée.
  */
 export function tempetesNotees(game) {
   const t = isObj(game?.tempetes) && Array.isArray(game.tempetes.notees) ? game.tempetes.notees : [];
@@ -73,11 +73,12 @@ const ecartOk = (a, b) => Math.abs(daysBetween(a, b)) >= TEMPETE.ecart[0];
  * Jours de tempête de l'hiver qui contient `day` (de juillet à juin), dans l'ordre. Sans `game` ni tempête notée : le
  * tirage. Avec une ville (lot Q) : les tempêtes notées dans la partie, rien d'autre. Sans ville : les notées, plus le
  * tirage à 7 jours au moins d'elles, sans les tirées dont l'annonce commencerait avant le retrait de la ville
- * (`tempetes.tirageDepuis`). Lecture pure de la date et de la partie.
+ * (`tempetes.tirageDepuis`). Les notées sont toutes rendues (la partie ne garde que cet hiver et le précédent) : le
+ * 1er juillet ne sépare pas deux tempêtes de la ville. Lecture pure de la date et de la partie.
  */
 export function tempetesDeLHiver(day, game) {
   const y = anneeHiver(day);
-  const notees = tempetesNotees(game).map((t) => t.jour).filter((j) => anneeHiver(j) === y);
+  const notees = tempetesNotees(game).map((t) => t.jour);
   if (villeDe(game)) return [...new Set(notees)].sort();
   const depuis = isObj(game?.tempetes) && isDayString(game.tempetes.tirageDepuis) ? game.tempetes.tirageDepuis : null;
   const tirees = tirageDeLHiver(y).filter((j) => (!depuis || addDays(j, -TEMPETE.annonce) >= depuis) && notees.every((k) => ecartOk(k, j)));
@@ -130,16 +131,19 @@ const premiersPasAvant = (ctx, jour) => etatPremiersPas(ctx.tasks, ctx.game, ctx
 
 /**
  * Alerte à montrer (bandeau, île, Fanal) : { jour, joursRestants, debut (premier jour d'annonce), source ('meteo' pour
- * une neige prévue chez le joueur, sinon 'tirage'), travailles, achetes, crans, max, prix } pendant l'annonce et le jour
- * même ; null hors alerte et pendant les premiers pas.
+ * une neige prévue chez le joueur, sinon 'tirage'), ville (nom de la ville de la prévision, ou null), travailles,
+ * achetes, crans, max, prix } pendant l'annonce et le jour même ; null hors alerte et pendant les premiers pas.
  */
 export function alerteTempete(tasks, game, ledger, now) {
   const day = gameDay(now);
   const annonce = annonceDe(game);
   const v = tempeteEnVue(day, annonce, game);
   if (!v || !premiersPasFaits(tasks, game, ledger)) return null;
-  const source = noteeDe(game, v.jour)?.source === 'meteo' ? 'meteo' : 'tirage';
-  return { ...v, debut: debutAnnonce(v.jour, annonce, game), source, ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
+  const n = noteeDe(game, v.jour);
+  const source = n?.source === 'meteo' ? 'meteo' : 'tirage';
+  // la ville de la prévision, notée avec la tempête : la ville réglée a pu changer depuis
+  const ville = source === 'meteo' && typeof n.ville === 'string' && n.ville.trim() ? n.ville : null;
+  return { ...v, debut: debutAnnonce(v.jour, annonce, game), source, ville, ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
 }
 
 /**

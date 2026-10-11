@@ -28,6 +28,7 @@ const METEO_URL_DEFAUT = 'https://api.open-meteo.com/v1/forecast'; // prévision
 const METEO_DELAI_S = 4;              // la réponse part en 4 s au plus, même si Open-Meteo traîne
 const METEO_REESSAI_S = 3600;         // après un échec, nouvel essai une heure plus tard : au plus 25 appels par jour
 const METEO_JOURS = 16;               // jours de prévision (le maximum d'Open-Meteo)
+const METEO_TAILLE_MAX = 262144;      // octets au plus dans la réponse d'Open-Meteo (256 Kio) ; au-delà, un échec
 const GAME_V1_COPY = 'game-state.v1.json'; // copie de la partie v1, dans backups/ : hors de l'élagage (backup_names)
 
 ini_set('display_errors', '0');
@@ -554,22 +555,29 @@ function meteo_appeler(string $url): ?array
 {
     if (!function_exists('curl_init')) return null;
     $ch = curl_init($url);
+    $raw = '';
     curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => METEO_DELAI_S,
         CURLOPT_TIMEOUT => METEO_DELAI_S,
         CURLOPT_FOLLOWLOCATION => false,
+        // réponse reçue par morceaux, coupée au-delà de METEO_TAILLE_MAX (cURL échoue alors) : jamais toute la mémoire
+        CURLOPT_WRITEFUNCTION => function ($ch, string $morceau) use (&$raw): int {
+            if (strlen($raw) + strlen($morceau) > METEO_TAILLE_MAX) return 0;
+            $raw .= $morceau;
+            return strlen($morceau);
+        },
     ]);
-    $raw = curl_exec($ch);
+    $ok = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    if (!is_string($raw) || $code !== 200) return null;
+    if ($ok !== true || $code !== 200) return null;
     $d = json_decode($raw, true);
     $time = $d['daily']['time'] ?? null;
     $neige = $d['daily']['snowfall_sum'] ?? null;
     if (!is_array($time) || !is_array($neige) || count($time) !== count($neige)) return null;
+    $neige = array_values($neige);
     $jours = [];
-    foreach (array_values($time) as $k => $j) {
-        $cm = array_values($neige)[$k];
+    foreach (array_slice(array_values($time), 0, METEO_JOURS) as $k => $j) { // les METEO_JOURS premiers jours, pas plus
+        $cm = $neige[$k];
         if (is_string($j) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $j) && (is_int($cm) || is_float($cm)) && is_finite((float)$cm)) $jours[$j] = $cm;
     }
     return $jours ?: null;

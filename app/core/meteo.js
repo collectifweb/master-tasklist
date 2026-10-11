@@ -68,7 +68,7 @@ export function noterTempetes(ctx) {
     if (tempetesDeLHiver(jour, ctx.game).some((k) => Math.abs(daysBetween(k, jour)) < TEMPETE.ecart[0])) continue;
     // notée moins de jours d'avance que l'annonce (neige vue tard, ou personne n'est passé) : l'annonce part d'aujourd'hui
     const des = daysBetween(ctx.day, jour) < annonce ? { des: ctx.day } : {};
-    ctx.game = noter(ctx.game, ctx.day, [{ jour, source: prev ? 'meteo' : 'tirage', ...des }]);
+    ctx.game = noter(ctx.game, ctx.day, [{ jour, source: prev ? 'meteo' : 'tirage', ...(prev ? { ville: ville.nom } : {}), ...des }]);
   }
 }
 
@@ -103,7 +103,9 @@ export function reglerVille(tasks, game, ledger, params, now) {
     const garder = tempetesDeLHiver(ctx.day, g).filter((j) => (j <= ctx.day || j === enVue) && !deja.has(j));
     if (garder.length) g = noter(g, ctx.day, garder.map((jour) => ({ jour, source: 'tirage' })));
   }
-  if (!ville && avant) g = { ...g, tempetes: { ...(isObj(g.tempetes) ? g.tempetes : {}), notees: tempetesNotees(g), tirageDepuis: ctx.day } };
+  // le tirage reprend avec les tempêtes dont l'annonce (3 jours, 6 avec la tour) commence aujourd'hui ou après ; le
+  // calendrier compare tirageDepuis au début d'une annonce de 3 jours (hiver.js)
+  if (!ville && avant) g = { ...g, tempetes: { ...(isObj(g.tempetes) ? g.tempetes : {}), notees: tempetesNotees(g), tirageDepuis: addDays(ctx.day, annonceDe(g) - TEMPETE.annonce) } };
   const { ville: _ancienne, ...reglages } = isObj(g.reglages) ? g.reglages : {};
   ctx.game = { ...g, reglages: ville ? { ...reglages, ville } : reglages };
   ctx.events.push({ type: 'reglage-ville', ville });

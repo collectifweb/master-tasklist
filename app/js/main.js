@@ -1,7 +1,7 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
 import {
   SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
-  findEntry, allureDe, commandeDeLaSemaine, BANDES, villeDe,
+  findEntry, allureDe, commandeDeLaSemaine, BANDES,
 } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
@@ -732,7 +732,7 @@ function annonceTempete() {
   if (!a) return;
   const dite = etapeDite(a.jour);
   let etape = 0, sit = null, sr = '';
-  const ville = a.source === 'meteo' ? villeDe(c.game)?.nom : null; // tempête venue de la vraie météo (lot Q) : Fanal nomme la ville
+  const ville = a.ville; // tempête venue de la vraie météo (lot Q) : Fanal nomme la ville de la prévision
   if (a.joursRestants === 0) {
     const e = findEntry(c.ledger, `tempete:${a.jour}`);
     if (!e || dite >= 3) return;

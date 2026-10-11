@@ -67,7 +67,7 @@ test('avec une ville : 3 cm prévus dans 3 jours font une tempête notée dans l
   const day = '2026-11-10';
   const J = addDays(day, 3);
   const { world } = avance(village(day), day, prevision(day, { [J]: 3 }));
-  assert.deepEqual(notees(world.game), [{ jour: J, source: 'meteo' }]);
+  assert.deepEqual(notees(world.game), [{ jour: J, source: 'meteo', ville: VILLE.nom }]);
   assert.deepEqual(tempetesDeLHiver(day, world.game), [J], 'les jours du tirage (25 novembre…) ne sont plus des tempêtes');
   assert.equal(debutAnnonce(J, TEMPETE.annonce, world.game), day);
   const a = alerteTempete(world.tasks, world.game, world.ledger, at(day));
@@ -92,22 +92,22 @@ test('fenêtre : de demain au dernier jour d’annonce (3 jours, 6 avec la tour 
   let w = avance(village(day), day, prevision(day, { [addDays(day, 4)]: 10 })).world;
   assert.deepEqual(notees(w.game), []);
   w = avance(w, addDays(day, 1), prevision(addDays(day, 1), { [addDays(day, 4)]: 10 })).world;
-  assert.deepEqual(notees(w.game), [{ jour: addDays(day, 4), source: 'meteo' }]);
+  assert.deepEqual(notees(w.game), [{ jour: addDays(day, 4), source: 'meteo', ville: VILLE.nom }]);
   // avec la tour : 6 jours, pas 7
   const tour = { batiments: [...CHALETS, TOUR] };
-  assert.deepEqual(notees(avance(village(day, tour), day, prevision(day, { [addDays(day, 6)]: 5 })).world.game), [{ jour: addDays(day, 6), source: 'meteo' }]);
+  assert.deepEqual(notees(avance(village(day, tour), day, prevision(day, { [addDays(day, 6)]: 5 })).world.game), [{ jour: addDays(day, 6), source: 'meteo', ville: VILLE.nom }]);
   assert.deepEqual(notees(avance(village(day, tour), day, prevision(day, { [addDays(day, 7)]: 5 })).world.game), []);
   // le jour même : rien
   assert.deepEqual(notees(avance(village(day), day, prevision(day, { [day]: 30 })).world.game), []);
   // le premier jour de neige permis : un seul, le second est trop près
-  assert.deepEqual(notees(avance(village(day, tour), day, prevision(day, { [addDays(day, 2)]: 4, [addDays(day, 5)]: 40 })).world.game), [{ jour: addDays(day, 2), source: 'meteo', des: day }], 'notée 2 jours d’avance sur 6 : annoncée depuis aujourd’hui');
+  assert.deepEqual(notees(avance(village(day, tour), day, prevision(day, { [addDays(day, 2)]: 4, [addDays(day, 5)]: 40 })).world.game), [{ jour: addDays(day, 2), source: 'meteo', ville: VILLE.nom, des: day }], 'notée 2 jours d’avance sur 6 : annoncée depuis aujourd’hui');
 });
 
 test('neige vue seulement la veille : annonce d’un jour, et la veille tous les crans manquants s’achètent', () => {
   const day = '2026-11-10';
   const J = addDays(day, 1);
   let w = avance(village(day), day, prevision(day, { [J]: 8 })).world;
-  assert.deepEqual(notees(w.game), [{ jour: J, source: 'meteo', des: day }], 'annoncée depuis aujourd’hui');
+  assert.deepEqual(notees(w.game), [{ jour: J, source: 'meteo', ville: VILLE.nom, des: day }], 'annoncée depuis aujourd’hui');
   assert.equal(debutAnnonce(J, TEMPETE.annonce, w.game), day);
   const a = alerteTempete(w.tasks, w.game, w.ledger, at(day));
   assert.equal(a.joursRestants, 1);
@@ -150,16 +150,16 @@ test('trêve des Fêtes : ni tempête pendant elle, ni annonce qui y commence', 
   // 6 janvier : son annonce de 3 jours commencerait le 3, dans la trêve
   assert.deepEqual(notees(avance(village('2027-01-05'), '2027-01-05', prevision('2027-01-05', { '2027-01-06': 20 })).world.game), []);
   // 8 janvier : l'annonce commence le 5, après la trêve
-  assert.deepEqual(notees(avance(village('2027-01-05'), '2027-01-05', prevision('2027-01-05', { '2027-01-08': 20 })).world.game), [{ jour: '2027-01-08', source: 'meteo' }]);
+  assert.deepEqual(notees(avance(village('2027-01-05'), '2027-01-05', prevision('2027-01-05', { '2027-01-08': 20 })).world.game), [{ jour: '2027-01-08', source: 'meteo', ville: VILLE.nom }]);
 });
 
 test('toute l’année avec une ville : une neige d’octobre ou d’avril fait une tempête, annoncée et réglée comme en hiver', () => {
   const oct = '2026-10-20';
   const w = avance(village(oct), oct, prevision(oct, { '2026-10-23': 6 })).world;
-  assert.deepEqual(notees(w.game), [{ jour: '2026-10-23', source: 'meteo' }]);
+  assert.deepEqual(notees(w.game), [{ jour: '2026-10-23', source: 'meteo', ville: VILLE.nom }]);
   assert.equal(alerteTempete(w.tasks, w.game, w.ledger, at(oct)).jour, '2026-10-23');
   const avr = '2027-04-20';
-  assert.deepEqual(notees(avance(village(avr), avr, prevision(avr, { '2027-04-23': 4 })).world.game), [{ jour: '2027-04-23', source: 'meteo' }]);
+  assert.deepEqual(notees(avance(village(avr), avr, prevision(avr, { '2027-04-23': 4 })).world.game), [{ jour: '2027-04-23', source: 'meteo', ville: VILLE.nom }]);
 });
 
 test('prévision vieille de plus de 2 jours, d’une autre ville ou absente : le tirage propose ses jours, notés de la même façon', () => {
@@ -212,7 +212,7 @@ test('régler la ville pendant une annonce tirée : la tempête annoncée reste,
   assert.deepEqual(tempetesDeLHiver(dec, g.game), [TIRAGE[0], TIRAGE[1]]);
   // une neige 5 jours après le 7 décembre est trop près ; 7 jours après, elle compte
   assert.deepEqual(notees(avance(g, '2026-12-10', prevision('2026-12-10', { '2026-12-12': 9 })).world.game).length, 2);
-  assert.deepEqual(notees(avance(g, '2026-12-11', prevision('2026-12-11', { '2026-12-14': 9 })).world.game).at(-1), { jour: '2026-12-14', source: 'meteo' });
+  assert.deepEqual(notees(avance(g, '2026-12-11', prevision('2026-12-11', { '2026-12-14': 9 })).world.game).at(-1), { jour: '2026-12-14', source: 'meteo', ville: VILLE.nom });
 });
 
 test('retirer la ville : les tempêtes notées restent ; le tirage reprend, sans faire revenir une tempête d’avant le retrait', () => {
@@ -267,7 +267,7 @@ test('deux appareils, file hors ligne : une tempête déjà notée n’est jamai
   const day = '2026-11-10';
   const J = addDays(day, 3);
   const a = avance(village(day), day, prevision(day, { [J]: 10 })).world;
-  // l'autre appareil a une prévision un peu différente (neige le lendemain de J) : rien de plus
+  // l'autre appareil a une prévision un peu différente (neige la veille de J) : rien de plus
   const b = avance(a, day, prevision(day, { [addDays(J, -1)]: 10, [J]: 2 }));
   assert.deepEqual(notees(b.world.game), notees(a.game));
   assert.equal(b.r.ops.length, 0, 'rejoué avec le même instant : rien à envoyer');
@@ -299,4 +299,50 @@ test('sans ville et sans tempête notée : calendrier, annonce et jour de tempê
       assert.equal(debutAnnonce(j, TEMPETE.annonce, g), debutAnnonce(j, TEMPETE.annonce));
     }
   }
+});
+
+test('changer ou retirer la ville : la tempête notée garde le nom de la ville de sa prévision', () => {
+  const day = '2026-11-10';
+  const J = addDays(day, 3);
+  const w = avance(village(day), day, prevision(day, { [J]: 5 })).world;
+  const b = step(w, reglerVille, { ville: { nom: 'Autre-Village', lat: 47.25, lon: -71.25 } }, at(day)).world;
+  assert.equal(villeDe(b.game).nom, 'Autre-Village');
+  const a = alerteTempete(b.tasks, b.game, b.ledger, at(day));
+  assert.equal(a.jour, J);
+  assert.equal(a.source, 'meteo');
+  assert.equal(a.ville, 'Village-Test', 'la neige était prévue à l’ancienne ville');
+  const sans = step(b, reglerVille, { ville: null }, at(day)).world;
+  assert.equal(alerteTempete(sans.tasks, sans.game, sans.ledger, at(day)).ville, 'Village-Test', 'ville retirée : la tempête et son nom restent');
+  // une tempête du tirage n'a pas de ville
+  const D = TIRAGE[0];
+  const t = village(addDays(D, -2), { ville: null });
+  assert.equal(alerteTempete(t.tasks, t.game, t.ledger, at(addDays(D, -2))).ville, null);
+});
+
+test('le 1er juillet ne sépare pas deux tempêtes de la ville : écart de 7 jours, et la tempête de juin se règle en juillet', () => {
+  const juin = { jour: '2027-06-28', source: 'meteo', ville: VILLE.nom };
+  // neige prévue le 1er juillet, 3 jours après la tempête du 28 juin : trop près
+  const w = avance(village('2027-06-29', { tempetes: { notees: [juin] } }), '2027-06-29', prevision('2027-06-29', { '2027-07-01': 10 })).world;
+  assert.deepEqual(notees(w.game), [juin]);
+  assert.deepEqual(tempetesDeLHiver('2027-07-01', w.game), ['2027-06-28']);
+  // une tempête du 30 juin, joueur revenu le vendredi 2 juillet (même semaine) : elle est réglée
+  const v = village('2027-07-02', { tempetes: { notees: [{ jour: '2027-06-30', source: 'meteo', ville: VILLE.nom }] }, lastSeenDay: '2027-06-29', lastOpenDay: '2027-06-29' });
+  const r = avance(v, '2027-07-02', prevision('2027-07-02')).r;
+  assert.ok(r.entries.some((e) => e.key === 'tempete:2027-06-30'), JSON.stringify(r.entries.map((e) => e.key)));
+});
+
+test('retirer la ville avec la tour de guet : le tirage reprend avec les tempêtes dont l’annonce de 6 jours commence au plus tôt ce jour-là', () => {
+  const D = TIRAGE[1]; // le 7 décembre ; avant lui, le 25 novembre, noté pendant que la ville était réglée
+  const R = addDays(D, -4);
+  const avant = [{ jour: TIRAGE[0], source: 'tirage' }];
+  const tour = step(village(R, { batiments: [...CHALETS, TOUR], tempetes: { notees: avant } }), reglerVille, { ville: null }, at(R)).world;
+  assert.equal(alerteTempete(tour.tasks, tour.game, tour.ledger, at(R)), null, 'pas de tempête du tirage qui paraît en cours d’annonce');
+  const cal = tempetesDeLHiver(R, tour.game);
+  assert.ok(!cal.includes(D), JSON.stringify(cal));
+  assert.ok(cal.includes(TIRAGE[2]), JSON.stringify(cal));
+  assert.equal(alerteTempete(tour.tasks, tour.game, tour.ledger, at(addDays(TIRAGE[2], -6))).debut, addDays(TIRAGE[2], -6));
+  // sans tour : la tempête du 7 décembre reste, annoncée 3 jours d'avance, après le retrait
+  const sans = step(village(R, { tempetes: { notees: avant } }), reglerVille, { ville: null }, at(R)).world;
+  assert.equal(alerteTempete(sans.tasks, sans.game, sans.ledger, at(R)), null);
+  assert.equal(alerteTempete(sans.tasks, sans.game, sans.ledger, at(addDays(D, -3))).debut, addDays(D, -3));
 });
