@@ -1569,10 +1569,11 @@ Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au
 - Montants : ceux d'aujourd'hui au départ ; la mesure J1 dit s'il faut les baisser.
 
 ### J1 — Mesure d'abord (copie de la simulation hors dépôt, puis dans `simulation.test.mjs`)
-- [ ] Habitudes de visite pour les cinq joueurs : (a) n'ouvre le jeu que les jours où il fait une quête ; (b) ouvre chaque jour ; (c) un jour sans quête sur deux. Avec l'accord d'Alex, (d) ses vraies habitudes, lues au registre de production (question 1).
-- [ ] Règle d'aujourd'hui contre règle du lot, cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars : premier niveau, Hameau, Village, village plein, objectif d'hiver (10 récoltes de serre, 6 au ralenti), permis en main.
-- [ ] Part des gains venus des jours sans quête (Énergie, Matériaux, Nourriture), joueur par joueur : c'est elle qui dit si la visite reste un « petit bonus » au sens de PRODUCT.md.
-- [ ] Tableau montré à Alex avant J2, avec, s'il le faut, des montants ajustés et mesurés de la même façon.
+- [x] Habitudes de visite pour les cinq joueurs : (a) n'ouvre le jeu que les jours où il fait une quête ; (b) ouvre chaque jour ; (c) un jour sans quête sur deux. Avec l'accord d'Alex, (d) ses vraies habitudes, lues au registre de production (question 1).
+- [x] Règle d'aujourd'hui contre règle du lot, cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars : premier niveau, Hameau, Village, village plein, objectif d'hiver (10 récoltes de serre, 6 au ralenti), permis en main.
+- [x] Part des gains venus des jours sans quête (Énergie, Matériaux, Nourriture), joueur par joueur : c'est elle qui dit si la visite reste un « petit bonus » au sens de PRODUCT.md.
+- [x] Tableau montré à Alex avant J2, avec, s'il le faut, des montants ajustés et mesurés de la même façon.
+  *Réponse d'Alex (10 octobre, au soir), après la mesure : « A : cultures + bâtiments ». Règle retenue : la décision 45 telle quelle.*
 
 #### Mesure du 10 octobre (copie hors dépôt sur `7313a42`, règle derrière un interrupteur)
 Cadre : celui du lot M (simulation (o), marchand avisé, commandes livrées, échange du jour avisé, rang Village bâti, imprévus et hiver « attend ») ; cinq joueurs, départs du 1er juillet et du 7 octobre, jusqu'au 1er mars. Trois règles : actuelle ; A, cultures et bâtiments au jour de visite (décision 45) ; B, cultures seules. Chiffres lus dans la sortie de la simulation.
