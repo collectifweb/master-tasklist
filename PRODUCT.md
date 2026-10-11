@@ -45,6 +45,7 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - Prévoir l’évolution du modèle de données au-delà de `tasks.json`, sans perdre les tâches actuelles.
 - Rester sans courriel.
 - Les notifications sont facultatives, discrètes et configurables. Le rappel quotidien passe par l’app gratuite ntfy (téléphone sans services Google), avec un texte général sans titre de tâche.
+- La vraie météo est facultative (lot Q, 11 octobre 2026). Si le joueur règle sa ville, le nom qu’il cherche part de l’appareil vers le service de recherche de villes d’Open-Meteo, puis le serveur envoie à Open-Meteo, une fois par jour, la position de la ville arrondie à environ 1 km, pour lire la prévision de neige. Aucune tâche ni rien de la partie ne part vers Open-Meteo. Sans ville, aucun appel. Le crédit d’Open-Meteo (données sous licence CC BY 4.0) est affiché à côté de ce qui en vient.
 - L’interface doit être ergonomique, lisible et attrayante sur mobile et tablette.
 - L’hébergement actuel est un environnement web LiteSpeed/PHP avec fichiers statiques et endpoint d’écriture PHP. Une évolution technique doit préserver un déploiement fiable sur cet environnement ou fournir une migration explicitement vérifiée.
 - Le produit n’est pas multiutilisateur à ce stade.

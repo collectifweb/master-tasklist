@@ -137,6 +137,17 @@ php /home/ton-compte/public_html/jeu/serveur/rappel.php
 
 Il n’envoie qu’un rappel par jour, et il refuse de tourner depuis le web.
 
+## En option : la vraie météo
+
+Dans les Réglages du jeu, tu peux choisir ta ville sous « Météo du village ». Les tempêtes de neige du jeu suivent alors la neige prévue chez toi : quand au moins 3 cm sont prévus, le jeu annonce une tempête pour ce jour-là, quelques jours d’avance. Sans ville, elles suivent un calendrier tiré d’après la date.
+
+La prévision vient d’[Open-Meteo](https://open-meteo.com/). Le serveur du jeu la lit une fois par jour, quand le jeu se charge, et la garde dans `oree-donnees/jeu/meteo.json`. Il lui faut l’extension cURL de PHP et le droit d’appeler un site extérieur. Si l’appel échoue, le serveur réessaie une heure plus tard ; sans prévision récente, le jeu revient au calendrier.
+
+- Open-Meteo est gratuit et sans clé pour un usage non commercial, sous 10 000 appels par jour. Ses données sont sous licence CC BY 4.0 : le jeu affiche le crédit.
+- Ce qui part chez Open-Meteo : le nom que tu cherches, envoyé par ton appareil, puis la position de ta ville arrondie à environ 1 km, envoyée par le serveur. Ni tes quêtes ni ta partie.
+- Pour vérifier : choisis ta ville, puis recharge le jeu. `meteo.json` doit apparaître dans `oree-donnees/jeu/`, et son champ `lue` porte la date du jour. S’il manque, ou s’il ne contient qu’un `echec`, ton hébergeur bloque sans doute l’appel.
+- Pour tout couper côté serveur : `define('METEO', false);` dans `api/config.php`.
+
 ## Si quelque chose coince
 
 - Le jeu affiche « Impossible de charger tes quêtes » dès le premier lancement ? Le serveur du jeu ne trouve pas ses fichiers. Vérifie la version de PHP, les chemins de `config.php`, que `tasks.json` existe et contient `[]`, et que PHP a le droit d’écrire dans `oree-donnees/`.
