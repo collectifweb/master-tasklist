@@ -1557,7 +1557,7 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 
 Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », plus haut ; PRODUCT.md, ligne 23 : « Les tâches accomplies restent la source principale de progression », le retour quotidien peut donner « de petits bonus plafonnés, sans permettre de fabriquer artificiellement de la progression ». Travail dans une copie séparée (`git worktree`, branche `feat/visite-du-jour`, partie de `7313a42`) : une autre session finit le lot M dans le dossier principal.
 
-**Statut : plan validé par Alex le 10 octobre ; J1 à J4 faits ; envoi (J5) accordé le 11 octobre, étiquette `v2.13`.**
+**Statut : plan validé par Alex le 10 octobre ; J1 à J4 faits ; J5 fait, en production le 11 octobre (`v2.13`).**
 
 ### Aujourd'hui (lu dans le code, rien de mesuré)
 - Une culture mûrit après 5 jours travaillés depuis le semis (`CULTURE.jours`, `etatCulture`, `core/batiments.js:49` et `:147`). Un jour travaillé : au moins une quête payée et non remballée (`joursTravailles`, `:132`). Un jour de gel ou de neige sur la culture ne compte pas (`joursGeles`, `core/imprevus.js:128`).
@@ -1645,8 +1645,15 @@ Accord d'Alex (11 octobre) : « Cest parti pour j5! 1. Après paiement 2. Ok ».
 - [x] Fiche d'une parcelle semée : « Semé le 8 oct., mûr dans 5 jours de passage » (une seule phrase, plus de « .. »). Scénarios 15, 34, 37 et 38 relancés seuls : tous réussis (51, 157, 194 et 146 vérifications) ; tests de l'API : 65 réussis, 0 échec.
 - [x] Fusion de `feat/village-v2`, suite de logique et série complète sur la branche fusionnée.
   *Fusion du 11 octobre (81202fc) : trois conflits, tous dans des textes (README, leçons, plan), aucun dans le code ; le README garde la phrase de la visite du jour et prend celle du plafond de 4 permis. Suite de logique et de l'API : 628 tests, 626 réussis, 0 échec, 2 en attente. Série navigateur complète (1 h 44 à 2 h 29) : 43 scénarios sur 43 réussis aux trois largeurs.*
-- [ ] Envoi `v2.13` (retour : `deploy-prod.sh v2.12`), contrôles du site en ligne.
-- [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts.
+- [x] Envoi `v2.13` (retour : `deploy-prod.sh v2.12`), contrôles du site en ligne.
+  *Envoyé le 11 octobre à 2 h 30 : étiquette `v2.13` = ab962cd (code de l'app identique à 81202fc, celui de la série ; depuis, seuls CLAUDE.md et le plan ont changé), poussée avec la branche. Contrôle de confidentialité avant l'étiquette : 38 motifs, rien trouvé. Photo de la production `api/data/backups/avant-v2.13-20261011-023029/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques). `deploy-prod.sh v2.13` : app 200, API sans code 401, avec code 200, données 403, config vide vue de l'extérieur, cache `oree-coquille-v25`, pas de bac à sable, `main` sur GitHub avancée à v2.13. En ligne : les 86 fichiers de l'étiquette, identiques, plus 3 fichiers propres au serveur ; données inchangées depuis la photo. Page chargée dans un navigateur neuf à 390 px, sans code et toute écriture bloquée : 200, demande du code, cache v25, client 12, aucune écriture tentée, seule erreur le refus 401 attendu. Non vérifié : l'app ouverte avec le code en production (elle écrit dans la partie) ; le refus d'un client 11 en production (couvert par les tests de l'API ; `api/api.php` en ligne est identique à l'étiquette). Retour arrière : `deploy-prod.sh v2.12`, et la photo pour les données.*
+- [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts (version 12 : un onglet en version 11 est refusé à l'écriture jusqu'au rechargement).
+
+### Bilan du lot J (11 octobre 2026)
+- Fait : les cultures poussent et l'éolienne, la scierie, le poulailler et la cabane à sucre donnent leur part dès la première ouverture du jour, une fois par jour, sans série ni rattrapage (décision 45). Une quête ne fait plus tourner les bâtiments et Remballer ne leur reprend plus rien. Fanal dit la production du jour dans un P.-S. de la lettre du matin ; les textes disent « passes au village » et « jours de passage ». Permis, semaine tenue et barre de tempête restent aux jours travaillés. En J5, à la demande d'Alex : l'éolienne réparée ou déneigée en payant tourne aussitôt (décision 49), et la fiche d'une parcelle semée se lit en une phrase.
+- Mesuré : suite de logique et de l'API, 628 tests, 626 réussis, 0 échec, 2 en attente ; série navigateur, 43 scénarios sur 43 réussis sur la branche fusionnée. La mesure de la simulation (J1) et les trois cibles revues avec Alex sont plus haut.
+- Changé en route : trois cibles de la simulation fixées sous l'ancienne règle, revues avec Alex (objectif d'hiver, allure, commandes) ; le défaut d'onglet caché annoncé par la relecture (faux gains) ne s'est pas reproduit, le vrai doublon était la lettre du matin, corrigé ; l'échec du samedi du scénario 19, d'avant le lot, repris de l'autre session.
+- Reste : Alex recharge ses onglets ; une reprise de la veille écrite le jour de l'envoi par la version 11 n'est pas reversée (noté en J4, laissé tel quel).
 
 ### Questions pour Alex
 1. Pour régler la simulation sur tes vraies habitudes, je peux lire au registre de production, sans rien y écrire ni rien copier dans le dépôt, les jours où tu as ouvert le jeu et ceux où tu as fait une quête, depuis le 5 octobre. D'accord ?
