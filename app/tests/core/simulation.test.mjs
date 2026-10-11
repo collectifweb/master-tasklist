@@ -84,6 +84,10 @@
 //     jour sans quête sur deux) ; ses quatre cultures mûrissent le même jour, cette récolte part dans une famille, et la
 //     commande famille de la semaine est manquée faute de 6 Nourriture (la suivante revient trois semaines plus tard).
 //     Mesuré le 10 octobre 2026.
+// (q) (lot Q) la vraie météo (core/meteo.js) : les joueurs et les départs de (j), une ville réglée au départ, et chaque jour
+//     la prévision d'un hiver réel (jours de 3 cm de neige ou plus de deux villes témoins, pas celle d'Alex). Mêmes modes et
+//     mêmes cibles que (j) : premier niveau à 4 jours près de l'hiver sans tempête, au plus un niveau d'écart, objectif
+//     d'hiver atteint dans l'hiver ; seules les neiges prévues deviennent des tempêtes.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -96,7 +100,7 @@ import {
   tempetesDeLHiver, estJourDeTempete, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
   allureDe, ALLURE, daysBetween, weekStart, saisonDe, commandeDeLaSemaine, refusLivrer, livrer, VISITEURS,
   ECHANGE_DU_JOUR, coutNiveau, REPAS, SIROP, PRODUCTION, produitCeJour, servirRepas, refusServirRepas, faireLesSucres,
-  refusFaireLesSucres, prixPartieDeSucre,
+  refusFaireLesSucres, prixPartieDeSucre, reglerVille,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -124,7 +128,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null, visite = 'chaque' } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null, visite = 'chaque', meteo = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -136,6 +140,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // nourriture (o) : 'avise' ou 'toujours', sa façon de servir le repas et de faire la partie de sucre (voir l'en-tête).
   // visite (J) : 'chaque', il ouvre le jeu chaque jour ; 'quetes', seulement les jours où il fait une quête ; 'moitie', ces
   // jours-là et un jour sans quête sur deux. Un jour où il n'ouvre pas le jeu, il ne fait rien.
+  // meteo (q) : { ville, neiges }, il règle sa ville au départ ; à chaque ouverture, la prévision reçue couvre 16 jours,
+  // lue le jour même : 10 cm les jours de `neiges`, rien les autres.
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
   const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], permisJours: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, village: null, monde: null };
@@ -144,8 +150,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
   // (j) hiver : issues des tempêtes, raisons du passage sans dégât, bâtiments ensevelis, crans achetés et leur prix,
   // récompenses des tempêtes tenues, Énergie que l'éolienne ensevelie n'a pas donnée, jours de pousse perdus sous la neige,
-  // déneigements payés et par quête, jour de l'objectif d'hiver
-  const hiv = log.hiver = { issues: {}, raisons: {}, cibles: {}, crans: 0, coutCrans: 0, recompense: 0, eolienne: 0, serre: 0, deneige: { paiement: 0, quete: 0, energie: 0 }, objectif: null };
+  // déneigements payés et par quête, jour de l'objectif d'hiver, jours des tempêtes réglées
+  const hiv = log.hiver = { jours: [], issues: {}, raisons: {}, cibles: {}, crans: 0, coutCrans: 0, recompense: 0, eolienne: 0, serre: 0, deneige: { paiement: 0, quete: 0, energie: 0 }, objectif: null };
   // (l) commandes : visiteur de chaque semaine où le quai était là (lundi → visiteur), commandes livrées par visiteur et par
   // taille, et ce qu'elles ont rapporté
   const cmd = log.commandes = { offertes: new Map(), livrees: {}, tailles: {}, materiaux: 0, permis: 0, familles: 0, jours: [], bloque: {} };
@@ -187,6 +193,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       } else if (e.type === 'eolienne-arretee' && degatsActifs(w.game, now).some((d) => d.type === 'neige' && d.cible.startsWith('eolienne'))) hiv.eolienne += e.energy;
       else if (e.type === 'eolienne-arretee') imp.eolienne += e.energy;
       else if (e.type === 'tempete') {
+        hiv.jours.push(e.jour);
         hiv.issues[e.resultat] = (hiv.issues[e.resultat] || 0) + 1;
         if (e.raison) hiv.raisons[e.raison] = (hiv.raisons[e.raison] || 0) + 1;
         if (e.cible) hiv.cibles[e.cible.replace(/-\d+$/, '')] = (hiv.cibles[e.cible.replace(/-\d+$/, '')] || 0) + 1;
@@ -226,12 +233,15 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
     log.duJour.premier ??= i + 1;
     return true;
   };
+  const prevision = (day) => ({ lat: meteo.ville.lat, lon: meteo.ville.lon, lue: heure(day, 12),
+    jours: Object.fromEntries(Array.from({ length: 16 }, (_, k) => addDays(day, k)).map((j) => [j, meteo.neiges.includes(j) ? 10 : 0])) });
+  if (meteo) geste(reglerVille, { ville: meteo.ville }, heure(debut, 12));
   for (i = 0; i < jours; i++) {
     const day = addDays(debut, i);
     if (visite === 'quetes' && !rythme(i)) continue;
     if (visite === 'moitie' && !rythme(i) && sansQuete++ % 2) continue;
     geste(openApp, {}, heure(day, 12));
-    geste(advanceTime, {}, heure(day, 12)); // comme l'interface à l'ouverture
+    geste(advanceTime, meteo ? { meteo: prevision(day) } : {}, heure(day, 12)); // comme l'interface à l'ouverture
     // 'paie' : il règle chaque dégât dès qu'il le voit, s'il en a les moyens
     if (imprevus === 'paie') for (const d of degatsActifs(w.game, heure(day, 12))) if (!refusReparer(w.game, { id: d.id }, heure(day, 12))) geste(reparer, { id: d.id }, heure(day, 12));
     for (let k = 0; k < rythme(i); k++) {
@@ -966,4 +976,52 @@ test('(J) la visite du jour : ouvrir le jeu plus souvent ne fait jamais reculer 
     }
   }
   assert.deepEqual(ecarts, []);
+});
+
+// (q) Hivers réels : jours de 3 cm de neige ou plus d'après les archives d'Open-Meteo.com (CC BY 4.0), transformés : de
+// septembre à mai, hors trêve des Fêtes et de son annonce, à 7 jours au moins l'un de l'autre, ramenés sur 2026-2027. Deux
+// villes témoins, dix hivers chacune (2015-2016 à 2024-2025, mesure du 11 octobre 2026) : les deux hivers de Montréal en ont
+// le moins (6, le premier le 12 décembre, l'autre dès le 7 novembre), celui de Québec le plus (13).
+const HIVERS_REELS = [
+  ['Montréal 2017-2018', ['2026-12-12', '2027-01-08', '2027-01-22', '2027-02-04', '2027-03-08', '2027-04-04']],
+  ['Montréal 2019-2020', ['2026-11-07', '2027-01-18', '2027-01-25', '2027-02-06', '2027-02-27', '2027-03-23']],
+  ['Québec 2019-2020', ['2026-11-07', '2026-11-28', '2027-01-11', '2027-01-19', '2027-01-26', '2027-02-06', '2027-02-18',
+    '2027-02-27', '2027-03-09', '2027-03-17', '2027-03-29', '2027-04-09', '2027-05-12']],
+];
+const VILLE_TEMOIN = { nom: 'Ville témoin', lat: 46.5, lon: -73.5 };
+
+test('(q) la vraie météo : un hiver réel ne déplace le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint dans l’hiver', (t) => {
+  const jours = 25 * 7;
+  for (const [nom, rythme, profil, habitudes, departs] of [
+    ['(g)', rythmeEssai, parDefaut, true, ['2026-10-07', '2026-11-15']],
+    ['(f)', regulier, quetes, false, ['2026-10-07', '2026-11-15']],
+    ['(lent)', lent, quetes, false, ['2026-10-07']],
+  ]) {
+    for (const debut of departs) {
+      const sans = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'attend', hiver: 'sans' });
+      for (const [hiverReel, neiges] of HIVERS_REELS) {
+        const meteo = { ville: VILLE_TEMOIN, neiges };
+        const quetesSeules = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'attend', hiver: 'quetes', meteo });
+        const prepare = simuler(debut, jours, rythme, { profil, habitudes, imprevus: 'paie', hiver: 'prepare', meteo });
+        const pire = simuler(debut, jours, rythme, { profil: enfants(profil), habitudes, imprevus: 'attend', hiver: 'quetes', meteo });
+        t.diagnostic(`${nom} ${debut}, ${hiverReel} : 1er niveau j${sans.niveaux[0]} sans tempête, j${quetesSeules.niveaux[0]} quêtes seules, j${prepare.niveaux[0]} se prépare, j${pire.niveaux[0]} pire ; `
+          + `niveaux ${sans.niveaux.length} / ${quetesSeules.niveaux.length} / ${prepare.niveaux.length} / ${pire.niveaux.length} ; `
+          + `tempêtes ${JSON.stringify(quetesSeules.hiver.issues)} / ${JSON.stringify(prepare.hiver.issues)} / ${JSON.stringify(pire.hiver.issues)}`);
+        const fin = addDays(debut, jours);
+        for (const [qui, l] of [['quêtes seules', quetesSeules], ['se prépare', prepare], ['pire', pire]]) {
+          // toutes les neiges de la période, sauf celles des semaines d'avant l'ouverture qui suit le dernier premier pas
+          // (hiver.js : aucune tempête ne se règle avant, puis seulement celles de la semaine, comme avec le tirage)
+          assert.equal(Object.keys(l.pas).length, PAS_IDS.length, `${nom} ${debut}, ${hiverReel}, ${qui} : premiers pas`);
+          const lundi = weekStart(addDays(debut, Math.max(...Object.values(l.pas))));
+          const attendues = neiges.filter((j) => j > debut && j < fin && j >= lundi);
+          assert.deepEqual(l.hiver.jours, attendues, `${nom} ${debut}, ${hiverReel}, ${qui} : tempêtes réglées`);
+          if (sans.niveaux[0] === undefined) assert.ok(l.niveaux.length <= 1, `${nom} ${debut}, ${hiverReel}, ${qui}`);
+          else assert.ok(Math.abs(l.niveaux[0] - sans.niveaux[0]) <= 4, `${nom} ${debut}, ${hiverReel}, ${qui} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]} sans tempête`);
+          assert.ok(Math.abs(l.niveaux.length - sans.niveaux.length) <= 1, `${nom} ${debut}, ${hiverReel}, ${qui} : ${l.niveaux.length} niveaux contre ${sans.niveaux.length}`);
+          const jour = l.hiver.objectif && addDays(debut, l.hiver.objectif - 1);
+          assert.ok(jour && jour >= '2026-12-01' && jour <= '2027-02-28', `${nom} ${debut}, ${hiverReel}, ${qui} : objectif d'hiver le ${jour}`);
+        }
+      }
+    }
+  }
 });

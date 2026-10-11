@@ -26,6 +26,7 @@ import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
 import { suivreImprevus, reparerParQuete, rouvrirParQuete } from './imprevus.js';
 import { suivreTempetes } from './hiver.js';
+import { noterTempetes } from './meteo.js';
 
 const RECURRENCE_EVERY = ['day', 'week', 'month'];
 
@@ -512,6 +513,7 @@ export function advanceTime(tasks, game, ledger, params, now) {
     if (bilans !== ctx.game.bilans) ctx.game = { ...ctx.game, bilans };
   }
   suivreObjectifs(ctx);
+  noterTempetes(ctx); // la vraie météo (meteo.js, lot Q) : une neige prévue chez le joueur devient une tempête
   suivreTempetes(ctx, seen); // la tempête du jour (hiver.js), avant les imprévus : jamais deux coups le même jour
   suivreImprevus(ctx, seen); // après les premiers pas (validés juste avant), avant que le jour de présence soit noté
   // la visite du jour fait tourner le village (lot J) : après les dégâts du jour (une éolienne en panne ne produit pas)

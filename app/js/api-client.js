@@ -65,8 +65,10 @@ async function call(method, payload) {
  * jours au-delà de 4 en main.
  * Version 12 (lot J, la visite du jour) : l'API refuse la version 11, qui ferait produire les bâtiments à la quête, reprendrait
  * leur production au Remballer et ferait pousser les cultures aux seuls jours travaillés.
+ * Version 13 (lot Q, la vraie météo) : l'API refuse la version 12, qui ignorerait les tempêtes notées d'après la neige
+ * prévue (et la ville réglée) et réglerait celles du tirage à leur place.
  */
-export const CLIENT_VERSION = 12;
+export const CLIENT_VERSION = 13;
 
 export const api = {
   get: () => call('GET'),

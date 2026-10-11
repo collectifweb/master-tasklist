@@ -16,8 +16,10 @@
 // Jamais une tâche touchée, jamais une ressource retirée. Rien avant la fin des premiers pas.
 // Objectif d'hiver « Garder la serre allumée » (objectifs.js) : les récoltes de serre de décembre à février, comptées dans
 // game.recoltesHiver = { cle (hiver-AAAA), n }.
+// La vraie météo (lot Q, meteo.js) : avec une ville, les jours de tempête sont ceux notés dans la partie
+// (game.tempetes.notees) ; sans ville, le tirage, plus les tempêtes notées avant le retrait de la ville.
 // Montants : à régler par la simulation (tests/core/simulation.test.mjs) et à montrer à Alex avant l'écran.
-// Cycle d'import avec quests.js, imprevus.js et objectifs.js : tout est lu à l'appel.
+// Cycle d'import avec quests.js, imprevus.js, objectifs.js et meteo.js : tout est lu à l'appel.
 import { Ctx } from './quests.js';
 import { gameDay, addDays, weekStart, daysBetween, isTruce, isDayString, seasonDates } from './time.js';
 import { round1 } from './reward.js';
@@ -25,6 +27,7 @@ import { hasKey } from './ledger.js';
 import { tirage, DEGATS, degatsActifs, enReprise } from './imprevus.js';
 import { batimentsDuVillage, etatCulture, joursTravailles, manque, compte } from './batiments.js';
 import { etatPremiersPas } from './objectifs.js';
+import { villeDe } from './meteo.js';
 
 /**
  * annonce : jours d'avance ; ecart : [min, max] jours entre deux tempêtes ; fin : dernier jour possible (mois-jour) ;
@@ -39,16 +42,12 @@ export const annonceDe = (game) => (compte(game, 'tour') ? TOUR_ANNONCE : TEMPET
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const cle = (jour) => `tempete:${jour}`;
 
-// Année de la première neige de l'hiver qui contient `day` (de juillet à juin).
-const anneeHiver = (day) => Number(day.slice(0, 4)) - (Number(day.slice(5, 7)) >= 7 ? 0 : 1);
+/** Année de la première neige de l'hiver qui contient `day` (de juillet à juin). */
+export const anneeHiver = (day) => Number(day.slice(0, 4)) - (Number(day.slice(5, 7)) >= 7 ? 0 : 1);
 
-/**
- * Jours de tempête de l'hiver qui contient `day` (de juillet à juin), dans l'ordre. Chaîne tirée depuis la première neige :
- * chaque tempête tire l'écart jusqu'à la suivante. Une tempête dont l'annonce ou le jour tombe dans la trêve est retirée
- * (la chaîne continue). Lecture pure de la date.
- */
-export function tempetesDeLHiver(day) {
-  const y = anneeHiver(day);
+// Le tirage de l'hiver `y` : chaîne tirée depuis la première neige, chaque tempête tire l'écart jusqu'à la suivante. Une
+// tempête dont l'annonce ou le jour tombe dans la trêve est retirée (la chaîne continue). Lecture pure de la date.
+function tirageDeLHiver(y) {
   const fin = `${y + 1}-${TEMPETE.fin}`;
   const [a, b] = TEMPETE.ecart;
   const out = [];
@@ -58,28 +57,58 @@ export function tempetesDeLHiver(day) {
   return out;
 }
 
+/**
+ * Tempêtes notées dans la partie (lot Q) : [{ jour, source ('meteo' : neige prévue chez le joueur ; 'tirage' : jour du
+ * tirage), des? (premier jour d'annonce, quand elle a été notée moins de jours d'avance que l'annonce) }]. Une entrée
+ * illisible est ignorée.
+ */
+export function tempetesNotees(game) {
+  const t = isObj(game?.tempetes) && Array.isArray(game.tempetes.notees) ? game.tempetes.notees : [];
+  return t.filter((x) => isObj(x) && isDayString(x.jour));
+}
+const noteeDe = (game, jour) => tempetesNotees(game).find((t) => t.jour === jour);
+const ecartOk = (a, b) => Math.abs(daysBetween(a, b)) >= TEMPETE.ecart[0];
+
+/**
+ * Jours de tempête de l'hiver qui contient `day` (de juillet à juin), dans l'ordre. Sans `game` ni tempête notée : le
+ * tirage. Avec une ville (lot Q) : les tempêtes notées dans la partie, rien d'autre. Sans ville : les notées, plus le
+ * tirage à 7 jours au moins d'elles, sans les tirées dont l'annonce commencerait avant le retrait de la ville
+ * (`tempetes.tirageDepuis`). Lecture pure de la date et de la partie.
+ */
+export function tempetesDeLHiver(day, game) {
+  const y = anneeHiver(day);
+  const notees = tempetesNotees(game).map((t) => t.jour).filter((j) => anneeHiver(j) === y);
+  if (villeDe(game)) return [...new Set(notees)].sort();
+  const depuis = isObj(game?.tempetes) && isDayString(game.tempetes.tirageDepuis) ? game.tempetes.tirageDepuis : null;
+  const tirees = tirageDeLHiver(y).filter((j) => (!depuis || addDays(j, -TEMPETE.annonce) >= depuis) && notees.every((k) => ecartOk(k, j)));
+  return notees.length ? [...new Set([...notees, ...tirees])].sort() : tirees;
+}
+
 /** Vrai le jour d'une tempête. */
-export const estJourDeTempete = (day) => tempetesDeLHiver(day).includes(day);
+export const estJourDeTempete = (day, game) => tempetesDeLHiver(day, game).includes(day);
 
 /**
  * Premier jour d'annonce de la tempête du `jour`, pour une annonce de `annonce` jours : jamais avant le lendemain de la
- * tempête précédente, ni pendant la trêve des Fêtes (alors le lendemain de la trêve). Avec l'annonce de base, toujours
- * `jour` − 3 : le tirage écarte une annonce dans la trêve, et deux tempêtes sont à 7 jours au moins. Lecture pure.
+ * tempête précédente, ni avant le jour où elle a été notée tard (`des`, lot Q), ni pendant la trêve des Fêtes (alors le
+ * lendemain de la trêve). Avec l'annonce de base, pour le tirage, toujours `jour` − 3 : le tirage écarte une annonce dans
+ * la trêve, et deux tempêtes sont à 7 jours au moins. Lecture pure.
  */
-export function debutAnnonce(jour, annonce = TEMPETE.annonce) {
-  const prec = tempetesDeLHiver(jour).filter((j) => j < jour).at(-1);
+export function debutAnnonce(jour, annonce = TEMPETE.annonce, game) {
+  const prec = tempetesDeLHiver(jour, game).filter((j) => j < jour).at(-1);
   let d = addDays(jour, -annonce);
   if (prec && d <= prec) d = addDays(prec, 1);
+  const des = noteeDe(game, jour)?.des;
+  if (isDayString(des) && des > d) d = des;
   while (isTruce(d)) d = addDays(d, 1);
   return d;
 }
 
 /**
  * La tempête annoncée (ou celle du jour) : { jour, joursRestants (0 le jour même) }, ou null. `annonce` : jours d'annonce
- * (annonceDe). Lecture pure de la date.
+ * (annonceDe). Lecture pure de la date et de la partie.
  */
-export function tempeteEnVue(day, annonce = TEMPETE.annonce) {
-  const jour = tempetesDeLHiver(day).find((j) => j >= day && daysBetween(day, j) <= annonce && day >= debutAnnonce(j, annonce));
+export function tempeteEnVue(day, annonce = TEMPETE.annonce, game) {
+  const jour = tempetesDeLHiver(day, game).find((j) => j >= day && daysBetween(day, j) <= annonce && day >= debutAnnonce(j, annonce, game));
   return jour ? { jour, joursRestants: daysBetween(day, jour) } : null;
 }
 
@@ -88,7 +117,7 @@ export function tempeteEnVue(day, annonce = TEMPETE.annonce) {
  * tempête), achetes (crans achetés pour elle), crans (au plus max), max }.
  */
 export function preparation(game, ledger, jour, day) {
-  const avant = addDays(debutAnnonce(jour, annonceDe(game)), -1);
+  const avant = addDays(debutAnnonce(jour, annonceDe(game), game), -1);
   const jusqua = day < jour ? day : addDays(jour, -1);
   const travailles = jusqua > avant ? joursTravailles(ledger, avant, jusqua) : 0;
   const p = isObj(game.prepa) && game.prepa.jour === jour ? Math.max(0, Math.floor(Number(game.prepa.achetes)) || 0) : 0;
@@ -100,22 +129,24 @@ const premiersPasFaits = (tasks, game, ledger) => !etatPremiersPas(tasks, game, 
 const premiersPasAvant = (ctx, jour) => etatPremiersPas(ctx.tasks, ctx.game, ctx.ledger).pas.every((p) => p.fait && p.fait < jour);
 
 /**
- * Alerte à montrer (bandeau, île, Fanal) : { jour, joursRestants, debut (premier jour d'annonce), travailles, achetes,
- * crans, max, prix } pendant l'annonce et le jour même ; null hors alerte et pendant les premiers pas.
+ * Alerte à montrer (bandeau, île, Fanal) : { jour, joursRestants, debut (premier jour d'annonce), source ('meteo' pour
+ * une neige prévue chez le joueur, sinon 'tirage'), travailles, achetes, crans, max, prix } pendant l'annonce et le jour
+ * même ; null hors alerte et pendant les premiers pas.
  */
 export function alerteTempete(tasks, game, ledger, now) {
   const day = gameDay(now);
   const annonce = annonceDe(game);
-  const v = tempeteEnVue(day, annonce);
+  const v = tempeteEnVue(day, annonce, game);
   if (!v || !premiersPasFaits(tasks, game, ledger)) return null;
-  return { ...v, debut: debutAnnonce(v.jour, annonce), ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
+  const source = noteeDe(game, v.jour)?.source === 'meteo' ? 'meteo' : 'tirage';
+  return { ...v, debut: debutAnnonce(v.jour, annonce, game), source, ...preparation(game, ledger, v.jour, day), prix: { ...TEMPETE.cran } };
 }
 
 /**
  * Pourquoi on ne peut pas rentrer ce cran (ou null). params : { jour (la tempête), n (le cran acheté : achetés + 1) }.
- * Seul un cran manqué s'achète : jamais plus de crans que de jours d'annonce écoulés, aujourd'hui compris (la veille, tout
- * ce qui manque). Jamais pour une tempête déjà réglée (un geste hors ligne rejoué à son heure, après qu'un autre appareil
- * l'a réglée).
+ * Seul un cran manqué s'achète : jamais plus de crans que de jours d'annonce écoulés, aujourd'hui compris ; la veille, tout
+ * ce qui manque, même après une annonce d'un seul jour (une neige prévue tard, lot Q). Jamais pour une tempête déjà réglée
+ * (un geste hors ligne rejoué à son heure, après qu'un autre appareil l'a réglée).
  */
 export function refusPreparer(tasks, game, ledger, params, now) {
   const a = alerteTempete(tasks, game, ledger, now);
@@ -124,7 +155,7 @@ export function refusPreparer(tasks, game, ledger, params, now) {
   if (a.joursRestants === 0) return 'La tempête est là : trop tard pour se préparer.';
   if (a.crans >= a.max) return 'La barre est déjà pleine.';
   if (params.n !== a.achetes + 1) return 'Ce cran est déjà rentré.';
-  if (a.travailles + a.achetes >= daysBetween(a.debut, gameDay(now)) + 1) return 'Le prochain cran se gagne demain.';
+  if (a.joursRestants > 1 && a.travailles + a.achetes >= daysBetween(a.debut, gameDay(now)) + 1) return 'Le prochain cran se gagne demain.';
   return manque(game, TEMPETE.cran);
 }
 
@@ -169,7 +200,7 @@ function regler(ctx, jour, resultat, extra = {}, gain = {}) {
 
 // La tempête du jour ensevelit un bâtiment, si elle le peut. Renvoie la raison de ne pas le faire, ou null.
 function ensevelir(ctx, jour, seen) {
-  const vue = isDayString(seen) && seen >= debutAnnonce(jour, annonceDe(ctx.game)) && seen < jour;
+  const vue = isDayString(seen) && seen >= debutAnnonce(jour, annonceDe(ctx.game), ctx.game) && seen < jour;
   if (!vue) return 'pas-vue';
   if (enReprise(ctx.game, ctx.now)) return 'reprise';
   const jours = DEGATS.neige.jours;
@@ -191,7 +222,7 @@ export function suivreTempetes(ctx, seen) {
   if (!premiersPasFaits(ctx.tasks, ctx.game, ctx.ledger)) return;
   const day = ctx.day;
   const lundi = weekStart(day);
-  for (const jour of tempetesDeLHiver(day)) {
+  for (const jour of tempetesDeLHiver(day, ctx.game)) {
     if (jour > day || jour < lundi || hasKey(ctx.ledger, cle(jour))) continue;
     if (!premiersPasAvant(ctx, jour)) {
       regler(ctx, jour, 'passee', { raison: 'premiers-pas' });

@@ -17,7 +17,7 @@ const ACTIONS = {
   construire: core.construire, semer: core.semer, recolter: core.recolter, accueillir: core.accueillir,
   voirAccueil: core.voirAccueil, monterQuartier: core.monterQuartier, reglerQueteDefaut: core.reglerQueteDefaut,
   echanger: core.echanger, reparer: core.reparer, preparer: core.preparer, livrer: core.livrer,
-  servirRepas: core.servirRepas, faireLesSucres: core.faireLesSucres,
+  servirRepas: core.servirRepas, faireLesSucres: core.faireLesSucres, reglerVille: core.reglerVille,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */
@@ -85,7 +85,9 @@ function fromResponse(r) {
     raw: r.game ?? null,
     gameRevision: r.gameRevision ?? null,
     ledger,
-    sig: JSON.stringify([r.revision, r.gameRevision ?? null, (r.ledgerKeys || []).length]),
+    // la prévision du jour (lot Q) : le cœur la reçoit à chaque geste (params.meteo) et note la neige annoncée
+    meteo: r.meteo ?? null,
+    sig: JSON.stringify([r.revision, r.gameRevision ?? null, (r.ledgerKeys || []).length, r.meteo?.lue ?? null]),
     sandbox: r.sandbox === true, // version d'essai (réglage du serveur) : l'horloge lit alors le décalage de la partie
   };
 }
@@ -183,7 +185,7 @@ export class Store {
     let { tasks, game, ledger } = this.server;
     for (const e of this.queue) {
       try {
-        const r = action(e.name)(tasks, game, ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
+        const r = action(e.name)(tasks, game, ledger, { ...e.params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, new Date(e.at));
         tasks = r.tasks; game = r.game; ledger = r.entries.length ? [...ledger, ...r.entries] : ledger;
       } catch { /* sera écartée à l'envoi */ }
     }
@@ -200,7 +202,7 @@ export class Store {
     const run = action(name);
     const now = maintenant();
     const base = this.view;
-    const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision }, now);
+    const result = run(base.tasks, base.game, base.ledger, { ...params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, now);
     if (result.ops.length) {
       const queue = [...loadQueue(), { opId: newOpId(), name, params, at: now.toISOString() }];
       // la file est la seule trace de l'action jusqu'à l'envoi : sans elle, l'action serait perdue à la relecture
@@ -267,7 +269,7 @@ export class Store {
           // migrateGame compare à la partie brute du serveur (encore v1 ?), les autres actions à la partie convertie
           const game = e.name === 'migrateGame' ? this.server.raw : this.server.game;
           try {
-            r = action(e.name)(this.server.tasks, game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision }, new Date(e.at));
+            r = action(e.name)(this.server.tasks, game, this.server.ledger, { ...e.params, gameRevision: this.server.gameRevision, meteo: this.server.meteo }, new Date(e.at));
           } catch (err) {
             this.dropHead(e.opId);
             this.recompute();

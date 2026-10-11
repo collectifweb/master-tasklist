@@ -18,5 +18,6 @@ export * from './reglages.js';
 export * from './visiteurs.js';
 export * from './imprevus.js';
 export * from './hiver.js';
+export * from './meteo.js';
 export * from './allure.js';
 export * from './nourriture.js';

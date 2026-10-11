@@ -240,7 +240,7 @@ function cibles(ctx) {
 // déjà dépassé (`seen` après lui : un passage du temps rejoué depuis une file hors ligne), ni un dégât qui serait encore là
 // quand la trêve commence, ni le jour d'une tempête (hiver.js : jamais deux coups le même jour).
 function frapper(ctx, jour, seen) {
-  if (isTruce(jour) || repriseLe(ctx.game, jour) || (isDayString(seen) && seen > jour) || estJourDeTempete(jour)) return false;
+  if (isTruce(jour) || repriseLe(ctx.game, jour) || (isDayString(seen) && seen > jour) || estJourDeTempete(jour, ctx.game)) return false;
   const possibles = cibles(ctx).filter((c) => !isTruce(addDays(jour, IMPREVUS.mauvais[c.type].jours - 1)));
   if (!possibles.length) return false;
   const types = [...new Set(possibles.map((c) => c.type))];
