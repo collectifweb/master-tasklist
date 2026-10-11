@@ -8,6 +8,7 @@ import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
 import { num, numGain, shortDate, durationText } from './format.js';
 import { openSheet, closeSheet, stepperRow, syncStepper, stepValue } from './sheets.js';
+import { psProduction } from './batiment.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
 const KEEP_DAYS = 28; // « Garder » : la quête ne revient pas dans le bilan avant 4 semaines
@@ -35,7 +36,8 @@ export function createStory(app) {
   const voiceName = (v) => content.repliques?.voix?.[v]?.nom || null;
 
   // ───────── Lettre du matin ─────────
-  function openLetter(letter, onDone) {
+  /** `ps` : le P.-S. de la lettre du matin (ce que le village a produit aujourd'hui, lot J), ou rien. */
+  function openLetter(letter, onDone, ps = null) {
     const dlg = $('#dlg-letter');
     const sign = voiceName(content.lettres?.signature) || content.lettres?.signature || '';
     const p = prenom();
@@ -48,6 +50,7 @@ export function createStory(app) {
         <div class="letter-paper">
           ${letter.lignes.map((l) => `<p>${esc(l)}</p>`).join('')}
           ${sign ? `<p class="letter-sign">${esc(sign)}</p>` : ''}
+          ${ps ? `<p class="letter-ps">${esc(ps)}</p>` : ''}
         </div>
         <p class="letter-prenom">${glyph('personne')}<button class="link-btn" type="button" data-action="open-settings">${esc(p ? t('letter.prenom.change', { prenom: p }) : t('letter.prenom.add'))}</button></p>
       </div>
@@ -334,7 +337,7 @@ export function createStory(app) {
       .some((l) => (c.game.letters ?? {})[l.id] === today);
     if (content.lettres && c.game.startDay !== today && !passageToday) {
       const letter = morningLetter(content.lettres, c.tasks, c.game, c.now, { prenom: prenom() || null, ledger: c.ledger });
-      if (letter && !letter.seen) { welcoming = true; openLetter(letter, next); return; }
+      if (letter && !letter.seen) { welcoming = true; openLetter(letter, next, psProduction(c.ledger, today)); return; }
     }
     const r = readReview();
     if (r.shown !== today && weeklyReview(c.tasks, c.game, c.ledger, c.now).dimanche) {

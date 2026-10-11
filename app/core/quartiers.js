@@ -46,7 +46,7 @@ export const EFFETS_QUARTIERS = {
   atelier: { reglage: 'recolteSerre', niveaux: [5, 6, 7] }, // Nourriture par récolte de la petite serre
   mairie: { reglage: 'prixFamille', niveaux: [15, 12, 9] }, // Nourriture pour accueillir une famille
   ecole: { reglage: 'placesParChalet', niveaux: [3, 4, 5] }, // places par chalet
-  garage: { reglage: 'joursPousse', niveaux: [4, 3] }, // jours travaillés avant qu'une culture soit mûre
+  garage: { reglage: 'joursPousse', niveaux: [4, 3] }, // jours de visite avant qu'une culture soit mûre (lot J)
   place: { reglage: 'stockagePlace', niveaux: [20, 40, 60] }, // Nourriture gardée en plus
 };
 

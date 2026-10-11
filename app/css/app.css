@@ -814,6 +814,11 @@
   font-weight: var(--w-bold);
   color: var(--c-glass-ink);
 }
+.letter-ps {
+  margin-top: var(--sp-1);
+  font-size: var(--text-16);
+  color: var(--text-soft);
+}
 .letter-prenom {
   display: flex;
   align-items: center;

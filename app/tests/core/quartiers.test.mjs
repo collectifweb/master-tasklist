@@ -378,14 +378,14 @@ test('Champs 1 : 5 Nourriture au potager, la serre reste à 4 ; Atelier 1 : 5 à
   assert.equal(recolte(recoltesDeMai({ champs: 3 }), 'parcelle-1'), 7);
 });
 
-test('Garage 1 puis 2 : les cultures mûrissent en 4 puis 3 jours travaillés, au potager comme à la serre', () => {
+test('Garage 1 puis 2 : les cultures mûrissent en 4 puis 3 jours de visite, au potager comme à la serre', () => {
   const now = at('2026-05-08');
   for (const id of ['parcelle-1', 'serre-1']) {
     assert.equal(etatCulture(recoltesDeMai({}, 4).game, recoltesDeMai({}, 4).ledger, id, now).mure, false);
     const w1 = recoltesDeMai({ garage: 1 }, 4);
     assert.deepEqual([etatCulture(w1.game, w1.ledger, id, now).mure, etatCulture(w1.game, w1.ledger, id, now).reste], [true, 0]);
     const w1b = recoltesDeMai({ garage: 1 }, 3);
-    assert.equal(refusRecolter(w1b.game, w1b.ledger, id, now), 'Pas encore mûr : encore 1 jour travaillé.');
+    assert.equal(refusRecolter(w1b.game, w1b.ledger, id, now), 'Pas encore mûr : encore 1 jour de passage.');
     const w2 = recoltesDeMai({ garage: 2 }, 3);
     assert.equal(etatCulture(w2.game, w2.ledger, id, now).mure, true);
   }

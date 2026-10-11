@@ -25,7 +25,7 @@ import {
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
   saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer, PRODUCTION, netDuJour, produitCeJour, TOUR_ANNONCE,
-  TEMPETE, alerteTempete, SIROP, compte,
+  TEMPETE, alerteTempete, SIROP, compte, productionsDuJour,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -353,4 +353,17 @@ export function refreshBatiment(c) {
   if (!dlg || !dlg.open || !dlg.dataset.batId) return;
   const m = batimentModel(c, dlg.dataset.batId);
   if (m) fill(dlg, m);
+}
+
+// ───────── P.-S. de la lettre du matin (lot J) ─────────
+const enListe = new Intl.ListFormat('fr-CA', { type: 'conjunction' });
+
+/** Ce que les producteurs ont donné ce jour-là, en une phrase de Fanal, ou null si rien de montrable (gains arrondis à 0). */
+export function psProduction(ledger, day) {
+  const morceaux = [];
+  for (const p of productionsDuJour(ledger, day)) {
+    const gains = p.type === 'eolienne' ? [['', p.energy]] : p.type === 'cabane' ? [['', p.food], ['.sirop', p.energy]] : [['', p.materials || p.food]];
+    for (const [suite, n] of gains) if (entierGain(n) > 0) morceaux.push(t(`bat.${p.type}.ps${suite}`, { n: numGain(n) }));
+  }
+  return morceaux.length ? t('letter.ps', { liste: enListe.format(morceaux) }) : null;
 }

@@ -25,7 +25,7 @@ let n = 0;
 const travaille = (w, day) => step(w, completeQuest, { id: `q${n++ % 12}` }, at(day, 15)).world;
 const plusJours = (day, k) => new Date(Date.parse(day + 'T12:00:00Z') + k * 86400000).toISOString().slice(0, 10);
 
-test('constantes : une culture pousse en jours travaillés, rapporte de la Nourriture ; stockage et grenier', () => {
+test('constantes : une culture pousse en jours de visite (lot J), rapporte de la Nourriture ; stockage et grenier', () => {
   assert.ok(Number.isInteger(CULTURE.jours) && CULTURE.jours >= 2);
   assert.ok(CULTURE.recolte > 0);
   assert.ok(SEMIS.potager > 0 && SEMIS.serre > 0 && CHAUFFAGE > 0);
@@ -79,10 +79,10 @@ test('« Jour suivant » (version d’essai) : la date avance et, avec une quêt
 
 test('récolter : +Nourriture, la parcelle se libère ; pas avant d’être mûre (raison écrite)', () => {
   let w = step(monde(), semer, { id: 'parcelle-1' }, at(MAI)).world;
-  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI, 20)), `Pas encore mûr\u00a0: encore ${CULTURE.jours} jours travaillés.`);
+  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(MAI, 20)), `Pas encore mûr\u00a0: encore ${CULTURE.jours} jours de passage.`);
   let day = MAI;
   for (let k = 0; k < CULTURE.jours - 1; k++) { day = plusJours(day, 1); w = travaille(w, day); }
-  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(day, 20)), 'Pas encore mûr\u00a0: encore 1 jour travaillé.');
+  assert.equal(refusRecolter(w.game, w.ledger, 'parcelle-1', at(day, 20)), 'Pas encore mûr\u00a0: encore 1 jour de passage.');
   day = plusJours(day, 1);
   w = travaille(w, day);
   const { world, r } = step(w, recolter, { id: 'parcelle-1' }, at(day, 20));

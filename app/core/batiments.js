@@ -243,7 +243,7 @@ export function refusSemer(game, ledger, id, now) {
 export function refusRecolter(game, ledger, id, now) {
   const st = etatCulture(game, ledger, id, now);
   if (!st.semee) return 'Rien n’est semé ici.';
-  if (!st.mure) return `Pas encore mûr\u00a0: encore ${st.reste} jour${st.reste > 1 ? 's' : ''} travaillé${st.reste > 1 ? 's' : ''}.`;
+  if (!st.mure) return `Pas encore mûr\u00a0: encore ${st.reste} jour${st.reste > 1 ? 's' : ''} de passage.`;
   return null; // réserve pleine : la récolte se fait quand même, ce qui ne tient pas est perdu (recolter)
 }
 
@@ -422,6 +422,14 @@ export function netDuJour(ledger, day, type) {
   return net;
 }
 const aDonne = (net) => net.energy > 0 || net.materials > 0 || net.food > 0;
+
+/**
+ * Ce que chaque producteur a donné et qui reste acquis ce jour-là, l'éolienne puis ceux de PRODUCTION, sans ceux qui n'ont
+ * rien donné : [{ type, energy, materials, food }]. Le P.-S. de la lettre du matin le dit (lot J).
+ */
+export function productionsDuJour(ledger, day) {
+  return ['eolienne', ...Object.keys(PRODUCTION)].map((type) => ({ type, ...netDuJour(ledger, day, type) })).filter(aDonne);
+}
 
 /** Vrai si ce bâtiment producteur travaille ce jour-là (la cabane à sucre dort hors du temps des sucres). */
 export const produitCeJour = (type, day) => !PRODUCTION[type].mois || PRODUCTION[type].mois.includes(mois(day));
