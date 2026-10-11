@@ -1557,7 +1557,7 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 
 Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », plus haut ; PRODUCT.md, ligne 23 : « Les tâches accomplies restent la source principale de progression », le retour quotidien peut donner « de petits bonus plafonnés, sans permettre de fabriquer artificiellement de la progression ». Travail dans une copie séparée (`git worktree`, branche `feat/visite-du-jour`, partie de `7313a42`) : une autre session finit le lot M dans le dossier principal.
 
-**Statut : plan validé par Alex le 10 octobre ; J1 à J4 faits ; envoi (J5) sur accord d'Alex.**
+**Statut : plan validé par Alex le 10 octobre ; J1 à J4 faits ; envoi (J5) accordé le 11 octobre, étiquette `v2.13`.**
 
 ### Aujourd'hui (lu dans le code, rien de mesuré)
 - Une culture mûrit après 5 jours travaillés depuis le semis (`CULTURE.jours`, `etatCulture`, `core/batiments.js:49` et `:147`). Un jour travaillé : au moins une quête payée et non remballée (`joursTravailles`, `:132`). Un jour de gel ou de neige sur la culture ne compte pas (`joursGeles`, `core/imprevus.js:128`).
@@ -1643,7 +1643,8 @@ Choix d'Alex (10 octobre, au soir) : le mot « passes au village » (« chaque j
 Accord d'Alex (11 octobre) : « Cest parti pour j5! 1. Après paiement 2. Ok ».
 - [x] Décision 49 : l'éolienne réparée ou déneigée en payant tourne aussitôt, si elle n'a pas encore donné sa part du jour (`reparer`, `core/imprevus.js`). Tests de logique : réparer et déneiger en payant rapportent l'Énergie une fois, le passage suivant n'en redonne pas ; ancien test « juste assez » mis à jour. Suite de logique : 0 échec.
 - [x] Fiche d'une parcelle semée : « Semé le 8 oct., mûr dans 5 jours de passage » (une seule phrase, plus de « .. »). Scénarios 15, 34, 37 et 38 relancés seuls : tous réussis (51, 157, 194 et 146 vérifications) ; tests de l'API : 65 réussis, 0 échec.
-- [ ] Fusion de `feat/village-v2`, suite de logique et série complète sur la branche fusionnée.
+- [x] Fusion de `feat/village-v2`, suite de logique et série complète sur la branche fusionnée.
+  *Fusion du 11 octobre (81202fc) : trois conflits, tous dans des textes (README, leçons, plan), aucun dans le code ; le README garde la phrase de la visite du jour et prend celle du plafond de 4 permis. Suite de logique et de l'API : 628 tests, 626 réussis, 0 échec, 2 en attente. Série navigateur complète (1 h 44 à 2 h 29) : 43 scénarios sur 43 réussis aux trois largeurs.*
 - [ ] Envoi `v2.13` (retour : `deploy-prod.sh v2.12`), contrôles du site en ligne.
 - [ ] Après l'envoi, Alex recharge ou ferme ses onglets ouverts.
 
