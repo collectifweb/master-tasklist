@@ -517,6 +517,7 @@ export function advanceTime(tasks, game, ledger, params, now) {
   // la visite du jour fait tourner le village (lot J) : après les dégâts du jour (une éolienne en panne ne produit pas)
   produireEolienne(ctx, !seen || ctx.day > seen);
   produireBatiments(ctx);
+  suivreObjectifs(ctx); // les œufs du jour peuvent remplir le grenier de l'automne : validé au même passage
   if (!seen || ctx.day > seen) ctx.game = { ...ctx.game, lastSeenDay: ctx.day };
   return ctx.result();
 }

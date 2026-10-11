@@ -122,7 +122,7 @@ const repriseLe = (game, day) => isObj(game.reprise) && isDayString(game.reprise
 export const enReprise = (game, now) => repriseLe(game, gameDay(now));
 
 /**
- * Jours travaillés perdus par une culture à cause du gel ou de la neige (serre ensevelie) : ceux de la fenêtre du dégât (de
+ * Jours de visite (lot J) perdus par une culture à cause du gel ou de la neige (serre ensevelie) : ceux de la fenêtre du dégât (de
  * son jour à sa fin, réglé ou non), après le semis et jusqu'à aujourd'hui. Lu par etatCulture (batiments.js).
  */
 export function joursGeles(game, ledger, id, semeLe, today) {
@@ -181,7 +181,7 @@ export function reparer(tasks, game, ledger, params, now) {
 
 /**
  * Une quête payée règle les dégâts en cours de son domaine (Maison : la panne ; Terrain : le potager et la neige), sans rien changer
- * à la quête ni à son gain. Appelée par quests.js juste après le gain, avant l'éolienne. Événement { type: 'reparation',
+ * à la quête ni à son gain. Appelée par quests.js juste après le gain ; l'éolienne réparée tourne au passage du temps qui suit (lot J). Événement { type: 'reparation',
  * degat, imprevu, cible, par: 'quete', taskId } par dégât réglé.
  */
 export function reparerParQuete(ctx, task) {

@@ -149,7 +149,7 @@ function react(payload) {
     return;
   }
   if (action === 'remballerQuest') {
-    // l'écriture inverse de la quête, et celles de l'éolienne et des producteurs du Village si le jour reste sans quête payée
+    // l'écriture inverse de la quête (depuis le lot J, Remballer ne reprend plus rien aux bâtiments)
     const e = (result.entries || []).reduce((a, x) => ({ energy: a.energy + (x.energy || 0), materials: a.materials + (x.materials || 0), food: a.food + (x.food || 0) }), { energy: 0, materials: 0, food: 0 });
     const list = [entierGain(e.energy) && `${numGain(e.energy)} ${t('resource.energy')}`, entierGain(e.materials) && `${numGain(e.materials)} ${t('resource.materials.other')}`, entierGain(e.food) && `${numGain(e.food)} ${t('resource.food')}`].filter(Boolean);
     const rouverts = events.filter((e) => e.type === 'degat-rouvert').map((e) => ` ${t(`bat.sr.rouvert.${e.imprevu}`)}`).join('');
@@ -164,8 +164,9 @@ function react(payload) {
     createQuest: () => t('sr.added', { quete: title }),
   }[action];
   if (say) return announce.say(remember(say() + replyText));
-  // geste du village sans gain (réparer, rentrer du bois), ou passage du temps sans gain (orignal, mauvais imprévu, tempête)
-  const bat = [batimentSay(events), imprevuSay(events, now || maintenant()), tempeteSay(events)].filter(Boolean).join(' ');
+  // geste du village sans gain (réparer, rentrer du bois), ou passage du temps sans gain (orignal, mauvais imprévu, tempête,
+  // éolienne arrêtée quand rien d'autre ne produit)
+  const bat = [batimentSay(events), imprevuSay(events, now || maintenant()), tempeteSay(events), degatsSay(events)].filter(Boolean).join(' ');
   if (bat) announce.say(remember(action === 'advanceTime' ? after(bat + replyText) : bat + replyText));
 }
 
@@ -901,9 +902,13 @@ setInterval(() => { if (started && document.visibilityState === 'visible') store
 // le jour de jeu ne passe que page visible : un onglet caché pendant une absence ne fait pas passer le temps (lot I : pas de
 // mauvais imprévu ni de reprise effacée sans que le joueur soit là) ; au retour, visibilitychange s'en charge
 setInterval(() => { if (started) { if (document.visibilityState === 'visible') tickDay(); renderAll(); } }, 60000); // durées « En cours depuis… », jour de jeu
-document.addEventListener('visibilitychange', () => {
+// au retour, la relecture d'abord (au plus RETOUR_MS) : un autre appareil a peut-être déjà joué le jour ; sans elle, l'onglet
+// resté caché rouvrirait la lettre du matin déjà lue ailleurs. Sans réseau ou serveur lent, le jour se joue quand même.
+const RETOUR_MS = 3000;
+document.addEventListener('visibilitychange', async () => {
   if (!started || document.visibilityState !== 'visible') return;
-  store.refresh({ force: true });
+  await Promise.race([store.refresh({ force: true }), new Promise((ok) => setTimeout(ok, RETOUR_MS))]);
+  if (document.visibilityState !== 'visible') return;
   if (gameDay(maintenant()) !== playedDay) tickDay();
   else {
     const ev = advanceTime()?.events || []; // idempotente : ne fait rien si rien n'a bougé

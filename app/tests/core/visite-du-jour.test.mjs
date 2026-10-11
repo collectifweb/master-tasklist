@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   EOLIENNE_ENERGIE, PRODUCTION, CULTURE, addDays, openApp, advanceTime, completeQuest, remballerQuest, semer, etatCulture,
-  joursVisites, stockage, construire,
+  joursVisites, stockage, construire, objectifSaison,
 } from '../../core/index.js';
 import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
@@ -142,4 +142,15 @@ test('un producteur bâti pendant la visite donne sa part du jour tout de suite,
   assert.deepEqual(prod(w.ledger, 'eolienne').map((e) => e.energy), [EOLIENNE_ENERGIE]);
   const tour = step(w, construire, { type: 'tour' }, at(D, 18));
   assert.equal(tour.r.entries.filter((e) => e.type === 'prod').length, 0);
+});
+
+test('l’automne, les œufs de la visite qui remplissent le grenier valident l’objectif au même passage', () => {
+  const w0 = monde(['poulailler']);
+  const o = objectifSaison(w0.game, w0.ledger, at(D));
+  w0.game.resources.food = o.max - PRODUCTION.poulailler.food;
+  assert.equal(objectifSaison(w0.game, w0.ledger, at(D)).atteint, false, 'pas encore atteint avant la visite');
+  const { world, r } = visite(w0, D);
+  assert.ok(world.ledger.some((e) => e.key === `prod:poulailler:${D}`));
+  assert.ok(world.ledger.some((e) => e.key === `saison:${o.cle}`), 'objectif inscrit au même passage');
+  assert.equal(r.events.filter((e) => e.type === 'objectif-saison').length, 1);
 });

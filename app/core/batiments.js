@@ -4,7 +4,7 @@
 // refusAccueillir (les fiches de l'interface l'écrivent sous le bouton).
 // Construire, semer, récolter et accueillir n'écrivent rien au registre : ils dépensent ou convertissent ce qui a déjà
 // été gagné (game.set suffit). L'éolienne et les producteurs du rang Village (PRODUCTION) y inscrivent leur production,
-// une fois par jour travaillé ; un geste qui accomplit un premier pas ou l'objectif de la saison y inscrit son coup de
+// une fois par jour de visite (lot J) ; un geste qui accomplit un premier pas ou l'objectif de la saison y inscrit son coup de
 // pouce (objectifs.js) ; et l'accueil qui fait passer un nouveau rang y inscrit son permis (quartiers.js).
 // Les nombres sont des exemples de départ (bible), réglés par la simulation de tests/core/simulation.test.mjs. Les
 // niveaux de quartier changent cinq d'entre eux (quartiers.js) : récolte du potager et de la serre, jours de pousse,
