@@ -1666,9 +1666,9 @@ Accord d'Alex (11 octobre) : « Cest parti pour j5! 1. Après paiement 2. Ok ».
 
 Référence : décision 46 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », point 2 ; bible §8 (la tempête telle qu'elle est construite) ; `core/hiver.js`. Travail dans une copie séparée (`git worktree` `../Master Tasklist-meteo`, branche `feat/vraie-meteo`, partie de `f2f3989`, dont le dossier `app/` est celui de la v2.13 en ligne).
 
-**Statut : plan à valider par Alex. Rien n'est codé.**
+**Statut : plan validé par Alex le 11 octobre (réponses plus bas) : 3 cm de neige prévue, toute l'année, envoi direct si tout est vert. Q1 en cours.**
 
-**Échéance.** La première neige du jeu tombe le 15 novembre. Une tempête du 15 novembre serait annoncée dès le 9 avec une tour de guet (6 jours), dès le 12 sans (3 jours) : lu dans `debutAnnonce`. Cible : en ligne le 1er novembre ; limite : le 8.
+**Échéance.** La première neige du jeu tombe le 15 novembre. Une tempête du 15 novembre serait annoncée dès le 9 avec une tour de guet (6 jours), dès le 12 sans (3 jours) : lu dans `debutAnnonce`. Cible : en ligne le 1er novembre ; limite : le 8. La neige hors saison comptant (réponse 2), une tempête peut venir dès la fin d'octobre (certains hivers, à 3 cm) : une neige tombée avant l'envoi n'en fait simplement pas une.
 
 ### Vérifié avant le plan (11 octobre)
 1. **Conditions d'Open-Meteo** (pages « Terms », « Licence » et « Pricing » lues le 11 octobre, appels faits le même jour) :
@@ -1700,14 +1700,14 @@ Historique de neige des archives d'Open-Meteo (une réanalyse, pas des prévisio
 
 ### Ce que verra Alex
 - Dans Réglages, « Météo du village » : il écrit sa ville, touche « Chercher », choisit dans la liste (« Montréal, Québec, Canada »). Une phrase dit que le nom de la ville part vers Open-Meteo, un service de météo gratuit, pour lire la prévision de neige ; un lien vers Open-Meteo. « Retirer la ville » remet le tirage.
-- L'hiver, quand la prévision annonce de la neige chez lui dans les jours d'annonce (3, ou 6 avec la tour de guet), le jeu annonce une tempête pour ce jour-là. Même bandeau, même barre de trois crans, même récompense, mêmes dégâts qu'aujourd'hui. Fanal dit d'où elle vient (« La météo annonce de la neige à Montréal ») et le crédit d'Open-Meteo est à côté : place exacte à décider avec /impeccable.
+- Quand la prévision annonce au moins 3 cm de neige chez lui dans les jours d'annonce (3, ou 6 avec la tour de guet), à n'importe quel moment de l'année, le jeu annonce une tempête pour ce jour-là. Même bandeau, même barre de trois crans, même récompense, mêmes dégâts qu'aujourd'hui. Fanal dit d'où elle vient (« La météo annonce de la neige à Montréal ») et le crédit d'Open-Meteo est à côté : place exacte à décider avec /impeccable.
 - Une tempête annoncée reste, même si la prévision change ou si la neige ne tombe pas.
 - Sans ville, rien ne change. Si le serveur ne lit plus la prévision depuis plus de 2 jours, le tirage d'après la date reprend jusqu'à son retour.
-- Rien d'autre ne bouge : l'île blanche du 15 novembre au 30 avril, la trêve des Fêtes, les premiers pas, la reprise après une absence, la tour de guet, les prix.
+- Rien d'autre ne bouge : l'île blanche du 15 novembre au 30 avril, la trêve des Fêtes, les premiers pas, la reprise après une absence, la tour de guet, les prix. Une tempête d'octobre tombe donc sur une île encore verte (une première neige qui fond vite) : mon choix, à revoir si ça choque à l'écran.
 
-### Règles proposées
-1. Jour de neige : au moins 1 cm prévu ce jour-là (question 1).
-2. Saison : du 15 novembre au 31 mars ; ni tempête pendant la trêve, ni annonce qui y commence, comme aujourd'hui (question 2).
+### Règles (validées le 11 octobre)
+1. Jour de neige : au moins 3 cm prévus ce jour-là (réponse 1 et mesure plus bas).
+2. Avec une ville, toute l'année (réponse 2) ; ni tempête pendant la trêve, ni annonce qui y commence, comme aujourd'hui. Le tirage de secours garde la saison d'aujourd'hui, du 15 novembre au 31 mars.
 3. Écart : 7 jours au moins avec toute autre tempête, comme le tirage.
 4. Moment : à chaque passage du temps, le jeu regarde de demain jusqu'au dernier jour d'annonce ; le premier jour de neige permis devient une tempête, notée dans la partie. L'annonce commence ce jour-là, jamais plus de 3 (ou 6) jours avant. Une neige vue seulement la veille donne une annonce d'un jour : les crans manquants s'achètent alors tous, comme la veille aujourd'hui. Rien pour le jour même.
 5. Une tempête notée ne bouge plus.
@@ -1723,10 +1723,10 @@ Historique de neige des archives d'Open-Meteo (une réanalyse, pas des prévisio
 - **Version** : client 13, `MIN_CLIENT` 13 (un onglet en version 12 ignorerait les tempêtes notées et tirerait les siennes), cache `oree-coquille-v26`.
 
 ### Q1 — Mesure d'abord (simulation, hors dépôt puis dans `simulation.test.mjs`)
-- [ ] Simulation (j) avec, à la place du tirage, les tempêtes de la vraie neige des trois villes (dix hivers d'archives, seuil de la question 1) : premier niveau, objectif d'hiver, tempêtes tenues et ensevelissements, chez les cinq joueurs. Cible d'aujourd'hui pour (j) : premier niveau à 0 ou 1 jour près. Tableau montré à Alex avant Q2 si une cible bouge.
+- [ ] Simulation (j) avec, à la place du tirage, les tempêtes de la vraie neige de la ville d'Alex et des trois villes témoins (dix hivers d'archives, 3 cm, toute l'année) : premier niveau, objectif d'hiver, tempêtes tenues et ensevelissements, chez les cinq joueurs. Cible d'aujourd'hui pour (j) : premier niveau à 0 ou 1 jour près. Tableau montré à Alex avant Q2 si une cible bouge.
 
 ### Q2 — Cœur (tests écrits d'abord et vus en échec)
-- [ ] `noterTempetes` et le calendrier : fenêtre d'annonce (3 et 6 jours), saison, trêve, écart de 7 jours des deux côtés, premier jour retenu, rien le jour même ; une tempête notée tient quand la prévision change ; prévision vieille ou d'une autre ville, le tirage ; ville réglée pendant une annonce, l'annonce reste ; ville retirée ; sans ville, sortie identique à aujourd'hui (tests de `hiver.test.mjs` et `tour-de-guet.test.mjs` inchangés).
+- [ ] `noterTempetes` et le calendrier : fenêtre d'annonce (3 et 6 jours), toute l'année avec une ville et la saison d'aujourd'hui pour le tirage de secours, trêve, écart de 7 jours des deux côtés, premier jour retenu, rien le jour même ; une tempête notée tient quand la prévision change ; prévision vieille ou d'une autre ville, le tirage ; ville réglée pendant une annonce, l'annonce reste ; ville retirée ; sans ville, sortie identique à aujourd'hui (tests de `hiver.test.mjs` et `tour-de-guet.test.mjs` inchangés).
 - [ ] `debutAnnonce`, barre, « Rentrer du bois », ensevelissement et imprévus avec une tempête notée tard (la veille).
 - [ ] Geste hors ligne rejoué en retard ; deux appareils qui notent chacun une tempête.
 - [ ] Chercher dans tous les tests la liste des tempêtes écrite en dur avant de dire quels tests le lot touche (leçon du lot B).
@@ -1737,7 +1737,7 @@ Historique de neige des archives d'Open-Meteo (une réanalyse, pas des prévisio
 - [ ] Aucun scénario navigateur n'appelle le vrai Open-Meteo : le serveur des scénarios pointe vers un faux, la recherche de ville est interceptée.
 
 ### Q4 — Écran et textes [impeccable]
-- [ ] Réglages : « Météo du village » (champ, « Chercher », liste de choix, « Retirer la ville », la phrase sur Open-Meteo et le lien), cibles de 44 px, lecteur d'écran, hors ligne (« La recherche demande le réseau »).
+- [ ] Réglages : « Météo du village » (champ, « Chercher », liste de choix, « Retirer la ville », la phrase sur Open-Meteo et le lien), cibles de 44 px, région et pays sur chaque choix (deux villes peuvent porter le même nom), lecteur d'écran, hors ligne (« La recherche demande le réseau »).
 - [ ] La tempête venue de la météo : la phrase de Fanal, la carte en liste et le crédit d'Open-Meteo. Le texte de la rangée d'alerte se mesure dans la vraie case, variante la plus longue (nom de ville long), aux trois largeurs, avant d'être écrit (leçon du lot C).
 - [ ] Typographie selon `app/content/README.md`.
 
@@ -1758,3 +1758,20 @@ Où on en est : aujourd'hui, les tempêtes tombent à des jours tirés d'après 
 3. **Envoi direct en production si tout est vert**, comme les derniers lots ?
 
 Le plan peut aussi passer à /confront-codex (second avis) avant de coder.
+
+### Réponses d'Alex (11 octobre)
+1. « 1 cm c'est peu pour considérer ça tempête. Mais on peut essayer si tu veux. » Chez lui, il tombe bien plus que 1 cm (ville gardée hors du dépôt). **Retenu : 3 cm**, d'après la mesure ci-dessous : chez lui, le rythme d'aujourd'hui.
+2. « Oui ça compte » : **une neige prévue hors du 15 novembre au 31 mars fait une tempête**, avec une ville.
+3. « Yes sir » : **envoi direct en production si tout est vert.**
+
+### Mesure après ses réponses (11 octobre)
+Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septembre au 31 mai), dix hivers de 2015-2016 à 2024-2025, la ville d'Alex en plus des trois villes témoins. Tempêtes par hiver (moyenne) :
+
+| | 1 cm | 2 cm | 3 cm | 4 cm | 5 cm |
+|---|---|---|---|---|---|
+| Montréal | 9 à 15 (12,2) | 7 à 13 (10,4) | 6 à 11 (8,4) | 5 à 9 (6,9) | 3 à 9 (5,6) |
+| Québec | 12 à 19 (15,0) | 10 à 16 (12,5) | 7 à 13 (10,1) | 6 à 13 (9,1) | 6 à 10 (7,9) |
+| Chibougamau | 15 à 25 (20,6) | 13 à 20 (16,4) | 7 à 19 (13,5) | 7 à 14 (11,2) | 5 à 12 (8,4) |
+
+- Tirage d'aujourd'hui, mêmes hivers : 10 à 12 (10,9). À 3 cm, la ville d'Alex garde à peu près ce rythme (chiffres gardés hors du dépôt).
+- Chez Alex, à 3 cm, des tempêtes tombent aussi hors de la saison d'aujourd'hui, certains hivers dès octobre (détail gardé hors du dépôt).
