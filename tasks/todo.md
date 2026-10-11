@@ -1538,7 +1538,9 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 - [x] L'aide du compteur « Permis » : « Un tous les 4 jours travaillés, tant que tu en as moins de 4 en main. Et toujours : un à chaque nouveau rang… ».
 
 ### M3 — Vérification, documents, envoi
-- [ ] Suite de logique ; scénarios navigateur des permis (31 et 33) aux trois largeurs, puis la série complète.
+- [x] Suite de logique ; scénarios navigateur des permis (31 et 33) aux trois largeurs, puis la série complète.
+  *Fait le 10 octobre. Suite de logique et de l'API : 616 tests, 614 réussis, 2 « à faire » connus, 0 échec. Série navigateur complète sur 7313a42 (19 h 22 à 20 h 07) : 41 scénarios sur 42 réussis. Le 19 (lettre du matin) échouait aux trois largeurs, aussi sur la v2.11 : lancé un samedi, le lendemain est un dimanche et le bilan de la semaine s'ouvrait après la lettre. Corrigé dans le scénario (commit 6601631, leçon notée), relancé seul : réussi, 63 vérifications.*
 - [x] Bible §4 (« le compte attend », un plafond de 4) et décision 47 ; `app/ARCHITECTURE.md` ; annexe de `docs/conception-niveaux-quartiers.md`. CLAUDE.md : à l'envoi (étiquette).
-- [ ] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
+- [x] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
+  *Lu le 10 octobre au soir : 2 permis en main (compte depuis le 9 octobre), aucun niveau acheté, 46,4 Énergie et 33,3 Matériaux. Le plafond ne change rien pour lui tant qu'il reste sous 4.*
 - [ ] Envoi sur accord d'Alex.
