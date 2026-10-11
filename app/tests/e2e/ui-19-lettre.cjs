@@ -48,10 +48,16 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
   R.check('rechargement le même jour : pas de seconde lettre', !(await letter(page)).open);
 
   // ───── le lendemain
+  // le bilan du dimanche n'est pas l'objet de ce scénario : noté comme déjà montré le lendemain (sinon, lancé un samedi,
+  // le bilan s'ouvre après la lettre, prend le focus et reste ouvert)
+  const tomorrow = core.addDays(today, 1);
+  await page.evaluate((jour) => {
+    const v = JSON.parse(localStorage.getItem('oree.recycle.v1') || '{}');
+    localStorage.setItem('oree.recycle.v1', JSON.stringify({ ...v, shown: jour }));
+  }, tomorrow);
   await page.clock.fastForward(DAY);
   R.check('le lendemain : une nouvelle lettre', await L.waitFor(async () => (await letter(page)).open, 5000));
   l = await letter(page);
-  const tomorrow = core.addDays(today, 1);
   await L.waitFor(() => Object.values(srv.game()?.letters || {}).includes(tomorrow), 4000);
   const secondId = Object.keys(srv.game().letters).find((k) => srv.game().letters[k] === tomorrow);
   R.check('ce n’est pas la même lettre qu’hier', secondId && secondId !== firstId, `${firstId} / ${secondId}`);
