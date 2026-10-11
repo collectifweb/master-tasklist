@@ -146,10 +146,13 @@ test('panne d’éolienne : le jour prévu seulement, un dégât dans la partie,
   assert.deepEqual(world.game.resources, w.game.resources, 'un mauvais imprévu ne retire rien');
   assert.deepEqual(r.events.filter((x) => x.type === 'imprevu').map((x) => [x.nature, x.imprevu, x.cible]), [['mauvais', 'panne', 'eolienne-1']]);
   assert.equal(degatDe(world.game, 'eolienne-1', at(jour)).id, d.id);
-  // le même jour, un autre domaine que Maison : l'éolienne ne tourne pas
-  const { world: w2, r: r2 } = step(world, completeQuest, { id: 'q-enfants' }, at(jour, 16));
+  // à la visite du jour (lot J), l'éolienne ne tourne pas, et l'avis le dit une fois
+  assert.equal(r.entries.filter((x) => x.type === 'prod').length, 0);
+  assert.deepEqual(r.events.filter((x) => x.type === 'eolienne-arretee').map((x) => x.energy), [EOLIENNE_ENERGIE]);
+  // le même jour, une quête d'un autre domaine que Maison, puis le passage du temps : toujours en panne, rien ne tourne
+  const { world: w2, r: r2 } = step(step(world, completeQuest, { id: 'q-enfants' }, at(jour, 16)).world, advanceTime, {}, at(jour, 16));
   assert.equal(r2.entries.filter((x) => x.type === 'prod').length, 0);
-  assert.deepEqual(r2.events.filter((x) => x.type === 'eolienne-arretee').map((x) => x.energy), [EOLIENNE_ENERGIE]);
+  assert.equal(r2.events.filter((x) => x.type === 'eolienne-arretee').length, 0);
   assert.ok(degatDe(w2.game, 'eolienne-1', at(jour)), 'toujours en panne');
 });
 
@@ -160,11 +163,11 @@ test('la panne se répare seule au bout de ses jours, sans rien écrire ; l’é
   assert.ok(degatDe(world.game, 'eolienne-1', at(addDays(fin, -1))));
   assert.equal(degatDe(world.game, 'eolienne-1', at(fin)), null);
   assert.deepEqual(degatsActifs(world.game, at(fin)), []);
-  const { r } = step(world, completeQuest, { id: 'q-enfants' }, at(fin));
+  const { r } = step(world, advanceTime, {}, at(fin)); // la visite du jour où elle est réparée
   assert.deepEqual(r.entries.filter((x) => x.type === 'prod').map((x) => x.energy), [EOLIENNE_ENERGIE]);
 });
 
-test('une quête Maison payée répare l’éolienne, sans changer la quête ni ce qu’elle rapporte, et l’éolienne tourne ce jour-là', () => {
+test('une quête Maison payée répare l’éolienne, sans changer la quête ni ce qu’elle rapporte ; l’éolienne tourne au passage du temps qui suit', () => {
   const jour = mauvaisJour('2026-10-05');
   const { world } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(jour));
   const avec = step(world, completeQuest, { id: 'q-maison' }, at(jour, 16));
@@ -172,7 +175,8 @@ test('une quête Maison payée répare l’éolienne, sans changer la quête ni 
   assert.deepEqual(avec.r.tasks, sans.r.tasks, 'la quête est la même');
   const gain = (r) => r.entries.find((x) => x.type === 'reward');
   assert.deepEqual(gain(avec.r), gain(sans.r), 'elle rapporte la même chose');
-  assert.deepEqual(avec.r.entries.filter((x) => x.type === 'prod').map((x) => x.energy), [EOLIENNE_ENERGIE]);
+  assert.equal(avec.r.entries.filter((x) => x.type === 'prod').length, 0, 'la quête ne fait plus tourner l’éolienne (lot J)');
+  assert.deepEqual(step(avec.world, advanceTime, {}, at(jour, 16)).r.entries.filter((x) => x.type === 'prod').map((x) => x.energy), [EOLIENNE_ENERGIE]);
   assert.deepEqual(avec.r.events.filter((x) => x.type === 'reparation').map((x) => [x.imprevu, x.cible, x.par]), [['panne', 'eolienne-1', 'quete']]);
   assert.equal(degatDe(avec.world.game, 'eolienne-1', at(jour, 16)), null);
   // une quête d'un autre domaine ne répare pas ; une quête Terrain non plus
@@ -180,7 +184,7 @@ test('une quête Maison payée répare l’éolienne, sans changer la quête ni 
   assert.ok(degatDe(t.world.game, 'eolienne-1', at(jour, 16)));
 });
 
-test('réparer en payant : le prix, une seule fois ; ensuite l’éolienne tourne à la prochaine quête payée', () => {
+test('réparer en payant : le prix, une seule fois ; ensuite l’éolienne tourne au prochain passage du temps', () => {
   const jour = mauvaisJour('2026-10-05');
   const { world } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(jour));
   const [d] = degatsActifs(world.game, at(jour));
@@ -195,7 +199,7 @@ test('réparer en payant : le prix, une seule fois ; ensuite l’éolienne tourn
   // un second toucher, ou un second appareil qui a déjà la réparation : refusé, rien ne bouge
   assert.equal(refusReparer(w2.game, { id: d.id }, at(jour, 15)), 'Déjà réparé.');
   assert.throws(() => step(w2, reparer, { id: d.id }, at(jour, 15)), { message: 'Déjà réparé.' });
-  const { r: r3 } = step(w2, completeQuest, { id: 'q-enfants' }, at(jour, 16));
+  const { r: r3 } = step(w2, advanceTime, {}, at(jour, 16));
   assert.deepEqual(r3.entries.filter((x) => x.type === 'prod').map((x) => x.energy), [EOLIENNE_ENERGIE]);
 });
 

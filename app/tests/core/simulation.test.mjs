@@ -44,12 +44,15 @@
 //     1er juillet (avec le marchand) ou du 7 octobre (sans) jusqu'à la fin de l'hiver, avec l'allure et sans elle (forcée à
 //     « régulier »). Cibles : les deux lents passent au ralenti, le rapide au plein régime, l'essai et (f) restent réguliers
 //     et leur partie ne change en rien ; jamais plus d'imprévus que l'allure de la semaine n'en permet ; l'objectif de saison
-//     réduit n'arrive jamais plus tard, et celui d'hiver est atteint au ralenti. OBJECTIFS_SAISON (objectifs.js) se règle ici.
+//     réduit n'arrive jamais plus tard, et celui d'hiver est atteint au ralenti ; le premier niveau n'est jamais retardé de
+//     plus de quelques jours. OBJECTIFS_SAISON (objectifs.js) se règle ici.
 // (l) (lot C) les visiteurs à commande (core/visiteurs.js) : les cinq joueurs de (k), aux mêmes départs, quai bâti, livrent
 //     chaque commande dès qu'ils le peuvent ('livre') ou jamais ('jamais'). Cibles : livrer tout ne coûte jamais plus d'un
-//     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus de 2 jours plus tard
-//     (mesuré le 8 octobre : jamais plus tard), le joueur le plus
-//     lent livre au moins une commande sur trois, et la taille suit l'allure de la semaine. VISITEURS se règle ici.
+//     niveau et n'en donne pas plus de deux de plus au 1er mars, le premier niveau n'arrive pas plus de 7 jours plus tard
+//     (mesuré le 8 octobre : jamais plus tard ; depuis le lot J, 6 jours chez (g) parti le 1er juillet : le scientifique
+//     livré au jour 32 lui prend 20 Matériaux, ce qui manque au niveau, pour un 6e permis ; 7 jours, décision d'Alex du
+//     10 octobre), le joueur le plus lent livre au moins une commande sur trois, et la taille suit l'allure de la semaine.
+//     VISITEURS se règle ici.
 // (m) (lot T) l'échange du jour au comptoir du marchand (ECHANGE_DU_JOUR, core/visiteurs.js) : les cinq joueurs de (l), aux
 //     mêmes départs, sans marchand ni commande (le cadre de (l) sans livrer) puis avec le marchand avisé et les commandes
 //     livrées. Trois façons d'échanger : 'avise' (en fin de soirée, seulement quand l'Énergie manque pour le prochain niveau
@@ -72,6 +75,15 @@
 //     lent), 3,3 à 1,1 (lent), 4,7 à 1,6 (g), 15,3 à 7,3 (f), 18,4 à 10,9 (rapide) sans marchand ni commande ; avec eux,
 //     de 0,1 à 0, 1,6 à 0,8, 1,2 à 1, 9 à 4,1 et 8,9 à 6,3. La partie de sucre se fait le 1er mars, sauf chez le très lent
 //     (le 1er avril sans marchand, le 12 mars avec).
+// (J) (lot J) la visite du jour (décision 45 de la bible) : les trois joueurs qui ont des jours sans quête (très lent, lent,
+//     (g)), aux départs de (l), jusqu'au 1er mars, dans le cadre du lot M (marchand avisé, commandes livrées, échange du
+//     jour avisé, rang Village bâti, repas et sucres avisés), avec trois habitudes : il n'ouvre le jeu que les jours où il
+//     fait une quête ('quetes'), ces jours-là et un jour sans quête sur deux ('moitie'), ou chaque jour ('chaque'). Cibles :
+//     ouvrir le jeu plus souvent ne fait jamais reculer : Hameau jamais plus tard, jamais moins de niveaux au 1er mars. Le
+//     rang Village est relevé, pas exigé : chez (g) parti le 7 octobre, ouvrir chaque jour le repousse au jour 51 (33 un
+//     jour sans quête sur deux) ; ses quatre cultures mûrissent le même jour, cette récolte part dans une famille, et la
+//     commande famille de la semaine est manquée faute de 6 Nourriture (la suivante revient trois semaines plus tard).
+//     Mesuré le 10 octobre 2026.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -81,7 +93,7 @@ import {
   prochainGeste, PAS_IDS, cappedPe, monterQuartier, refusMonter, niveauDe, placesParChalet, QUARTIER_IDS, PERMIS_EN_MAIN,
   SEMAINE_TENUE, createQuest, MARCHAND, echanger, refusEchanger, prixFamille,
   advanceTime, reparer, refusReparer, degatsActifs, joursGeles, IMPREVUS,
-  tempetesDeLHiver, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
+  tempetesDeLHiver, estJourDeTempete, alerteTempete, refusPreparer, preparer, recoltesHiver, TEMPETE, DEGATS, OBJECTIFS_SAISON,
   allureDe, ALLURE, daysBetween, weekStart, saisonDe, commandeDeLaSemaine, refusLivrer, livrer, VISITEURS,
   ECHANGE_DU_JOUR, coutNiveau, REPAS, SIROP, PRODUCTION, produitCeJour, servirRepas, refusServirRepas, faireLesSucres,
   refusFaireLesSucres, prixPartieDeSucre,
@@ -112,7 +124,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null, visite = 'chaque' } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -122,9 +134,11 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // duJour (m) : 'avise', 'chaque' ou 'presse', sa façon de prendre l'échange du jour (voir l'en-tête).
   // village (n) : après ses autres bâtiments, il bâtit aussi ceux du rang Village dès qu'il le peut (lot B).
   // nourriture (o) : 'avise' ou 'toujours', sa façon de servir le repas et de faire la partie de sucre (voir l'en-tête).
+  // visite (J) : 'chaque', il ouvre le jeu chaque jour ; 'quetes', seulement les jours où il fait une quête ; 'moitie', ces
+  // jours-là et un jour sans quête sur deux. Un jour où il n'ouvre pas le jeu, il ne fait rien.
   const liste = profil(jours * 3 + 10);
   let w = fresh(habitudes ? [] : liste, heure(debut, 12));
-  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], permisJours: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, monde: null };
+  const log = { hameau: null, familles: [], recoltes: [], plein: null, pas: {}, premiereFamille: null, niveaux: [], permisJours: [], echanges: {}, objectifs: {}, duJour: { soirs: 0, premier: null }, construits: {}, village: null, monde: null };
   // (i) imprévus : tirés par type, gains des bons, dégâts réglés (paiement, quête), prix payés, Énergie que l'éolienne en
   // panne n'a pas donnée, Nourriture mangée par l'ours, jours de pousse perdus au gel
   const imp = log.imp = { bon: {}, mauvais: {}, gains: { energy: 0, materials: 0, food: 0 }, par: { paiement: 0, quete: 0 }, paye: { energy: 0, materials: 0 }, eolienne: 0, ours: 0, gel: 0 };
@@ -138,8 +152,18 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // (o) repas servis, jour de la partie de sucre, Nourriture perdue aux récoltes (jour → quantité)
   const nour = log.nourriture = { repas: 0, sucres: null, perdu: new Map() };
   if (hiver === 'sans') w.ledger = tempetesDeLHiver(debut).map((j) => ({ key: `tempete:${j}` }));
+  // sans imprévus : le temps passe quand même à chaque ouverture, comme dans l'interface (la production du jour, lot J),
+  // mais les imprévus, et sans hiver choisi les tempêtes, sont déjà réglés au registre
+  if (!imprevus) {
+    for (let k = -7; k <= jours; k++) {
+      const j = addDays(debut, k);
+      w.ledger.push({ key: `imprevu:${j}` });
+      if (!hiver && estJourDeTempete(j)) w.ledger.push({ key: `tempete:${j}` });
+    }
+  }
   let n = 0;
   let i = 0;
+  let sansQuete = 0;
   const geste = (fn, params, now) => {
     const s = step(w, fn, params, now);
     w = s.world;
@@ -181,6 +205,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
         cmd.jours.push(i + 1);
       }
     }
+    if (!log.village && rangDuVillage(w.game.habitants).id === 'village') log.village = i + 1; // (J) jour du rang Village
     const { energy, materials, food } = w.game.resources;
     assert.ok(energy >= 0 && materials >= 0 && food >= 0 && w.game.habitants >= 0, `stock négatif le ${now} : ${JSON.stringify(w.game.resources)}`);
     assert.ok(food <= stockage(w.game), `Nourriture au-dessus du stockage le ${now}`);
@@ -203,12 +228,12 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   };
   for (i = 0; i < jours; i++) {
     const day = addDays(debut, i);
+    if (visite === 'quetes' && !rythme(i)) continue;
+    if (visite === 'moitie' && !rythme(i) && sansQuete++ % 2) continue;
     geste(openApp, {}, heure(day, 12));
-    if (imprevus) {
-      geste(advanceTime, {}, heure(day, 12));
-      // 'paie' : il règle chaque dégât dès qu'il le voit, s'il en a les moyens
-      if (imprevus === 'paie') for (const d of degatsActifs(w.game, heure(day, 12))) if (!refusReparer(w.game, { id: d.id }, heure(day, 12))) geste(reparer, { id: d.id }, heure(day, 12));
-    }
+    geste(advanceTime, {}, heure(day, 12)); // comme l'interface à l'ouverture
+    // 'paie' : il règle chaque dégât dès qu'il le voit, s'il en a les moyens
+    if (imprevus === 'paie') for (const d of degatsActifs(w.game, heure(day, 12))) if (!refusReparer(w.game, { id: d.id }, heure(day, 12))) geste(reparer, { id: d.id }, heure(day, 12));
     for (let k = 0; k < rythme(i); k++) {
       if (habitudes) {
         const { id, task, domain, difficulty, length, priority } = liste[n];
@@ -640,7 +665,7 @@ test('(i) les imprévus : le premier niveau ne bouge que de quelques jours sur 1
 // (j) Rythme lent : une quête un jour sur deux.
 const lent = (i) => (i % 2 ? 0 : 1);
 
-test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint dans l’hiver, pas avant Noël au rythme de l’essai ou plus lent', (t) => {
+test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau que de quelques jours, qu’on se prépare ou non ; l’objectif d’hiver est atteint dans l’hiver', (t) => {
   const f = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
   const resume = (l) => { const h = l.hiver; return `tempêtes ${JSON.stringify(h.issues)} (sans dégât : ${JSON.stringify(h.raisons)}), ensevelis ${JSON.stringify(h.cibles)}, `
     + `${h.crans} crans achetés (${h.coutCrans} M), récompenses ${h.recompense} M, déneigés ${h.deneige.paiement} payés (${h.deneige.energie} É) et ${h.deneige.quete} par quête, `
@@ -669,12 +694,13 @@ test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau 
         if (sans.niveaux[0] === undefined) assert.ok(l.niveaux.length <= 1, `${nom} ${debut}, ${qui}`);
         else assert.ok(Math.abs(l.niveaux[0] - sans.niveaux[0]) <= 4, `${nom} ${debut}, ${qui} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]} sans tempête`);
         assert.ok(Math.abs(l.niveaux.length - sans.niveaux.length) <= 1, `${nom} ${debut}, ${qui} : ${l.niveaux.length} niveaux contre ${sans.niveaux.length}`);
-        // « Garder la serre allumée » : atteint dans l'hiver ; au rythme de l'essai ou plus lent, pas dès décembre. Le joueur
-        // (f), avec deux serres et des jours de pousse raccourcis par ses niveaux, l'atteint dès le 18 décembre depuis que la
-        // réserve pleine ne bloque plus la récolte (lot A ; avant, elle l'arrêtait jusqu'au 20 janvier)
+        // « Garder la serre allumée » : atteint dans l'hiver, dès le 1er décembre. Le joueur (f), avec deux serres et des jours
+        // de pousse raccourcis par ses niveaux, l'atteint dès le 18 décembre depuis que la réserve pleine ne bloque plus la
+        // récolte (lot A ; avant, elle l'arrêtait jusqu'au 20 janvier). Jusqu'au lot J, au rythme de l'essai ou plus lent, pas
+        // avant Noël ; depuis que la serre pousse aux jours de visite, le joueur lent qui ouvre chaque jour l'atteint du 12 au
+        // 17 décembre (le 28 avant), mesuré le 10 octobre 2026 et accepté par Alex le même jour
         const jour = l.hiver.objectif && addDays(debut, l.hiver.objectif - 1);
-        const debutMin = nom === '(f)' ? '2026-12-01' : '2026-12-25';
-        assert.ok(jour && jour >= debutMin && jour <= '2027-02-28', `${nom} ${debut}, ${qui} : objectif d'hiver le ${jour}`);
+        assert.ok(jour && jour >= '2026-12-01' && jour <= '2027-02-28', `${nom} ${debut}, ${qui} : objectif d'hiver le ${jour}`);
       }
     }
   }
@@ -685,7 +711,7 @@ test('(j) l’hiver : tempêtes, barre et neige ne déplacent le premier niveau 
 const rapide = () => 6;
 const tresLent = (i) => (i % 4 ? 0 : 1);
 
-test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régime, les autres restent réguliers ; premier niveau inchangé, objectif d’hiver réduit atteint', (t) => {
+test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régime, les autres restent réguliers ; premier niveau jamais retardé, objectif d’hiver réduit atteint', (t) => {
   const lettre = { ralenti: 'r', regulier: 'g', plein: 'P' };
   // allure de chaque semaine jouée, lue après coup sur le registre final : r au ralenti, g régulier, P plein régime
   const semaines = (debut) => { const w = []; for (let d = debut; d < '2027-03-01'; d = addDays(d, 7)) w.push(d); return w; };
@@ -733,10 +759,12 @@ test('(k) l’allure : le joueur lent passe au ralenti, le rapide au plein régi
       // une partie qui reste régulière est exactement celle d'avant l'allure
       const trace = (l) => ({ imp: l.imp, objectifs: l.objectifs, niveaux: l.niveaux, hameau: l.hameau, familles: l.familles, recoltes: l.recoltes });
       if (!suite.includes('r') && !suite.includes('P')) assert.deepEqual(trace(avec), trace(sans), qui);
-      // le premier niveau ne bouge que de quelques jours, le nombre de niveaux d'un au plus. Au ralenti, les deux imprévus
-      // restent, tous deux bons (décision d'Alex du 7 octobre au soir) : avec un seul, le joueur très lent parti le 1er
-      // juillet avait son premier niveau au jour 85 au lieu de 57, mesuré le même soir
-      if (sans.niveaux[0] !== undefined) assert.ok(Math.abs(avec.niveaux[0] - sans.niveaux[0]) <= 4, `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
+      // l'allure ne retarde le premier niveau que de quelques jours au plus, le nombre de niveaux bouge d'un au plus. Au
+      // ralenti, les deux imprévus restent, tous deux bons (décision d'Alex du 7 octobre au soir) : avec un seul, le joueur
+      // très lent parti le 1er juillet avait son premier niveau au jour 85 au lieu de 57, mesuré le même soir. L'avancer est
+      // permis depuis le lot J (décision d'Alex du 10 octobre) : le très lent parti le 7 octobre a son premier niveau au jour
+      // 73 au lieu de 82 grâce au ralenti ; l'allure ne le retarde dans aucune des dix parties
+      if (sans.niveaux[0] !== undefined) assert.ok(avec.niveaux[0] - sans.niveaux[0] <= 4, `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
       assert.ok(Math.abs(avec.niveaux.length - sans.niveaux.length) <= 1, `${qui} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
       // au ralenti, l'objectif réduit n'arrive jamais plus tard, et celui d'hiver est atteint avant la fin de l'hiver
       for (const cle of ['automne-2026', 'hiver-2026']) if (avec.objectifs[cle] && sans.objectifs[cle]) assert.ok(avec.objectifs[cle] <= sans.objectifs[cle], `${qui}, ${cle}`);
@@ -781,7 +809,7 @@ test('(l) les visiteurs à commande : livrer tout ne coûte au plus qu’un nive
       assert.equal(livre.hameau, sans.hameau, `${qui} : le quai vient après le Hameau`);
       assert.ok(livre.niveaux.length >= sans.niveaux.length - 1 && livre.niveaux.length <= sans.niveaux.length + 2,
         `${qui} : ${livre.niveaux.length} niveaux en livrant, ${sans.niveaux.length} sans`);
-      assert.ok(livre.niveaux[0] <= sans.niveaux[0] + 2, `${qui} : premier niveau au jour ${livre.niveaux[0]} contre ${sans.niveaux[0]}`);
+      assert.ok(livre.niveaux[0] <= sans.niveaux[0] + 7, `${qui} : premier niveau au jour ${livre.niveaux[0]} contre ${sans.niveaux[0]}`);
       assert.ok(3 * total(c.livrees) >= c.offertes.size, `${qui} : ${total(c.livrees)} commandes livrées sur ${c.offertes.size}`);
       assert.ok(c.permis <= (c.livrees.scientifique || 0), `${qui} : un permis par scientifique au plus`);
       // la taille suit l'allure : les joueurs qui restent réguliers ne voient que la taille « régulier »
@@ -855,8 +883,8 @@ test('(o) le repas, la partie de sucre et le sirop : personne ne recule ; ce qu�
   const debut = '2026-10-07';
   const jours = daysBetween(debut, '2027-05-01');
   // Nourriture perdue après le village plein : récoltes qui débordent, plus ce que le poulailler et la cabane n'ont pas pu
-  // ranger (ni vendre en sirop) les jours où une quête les a fait produire ; par semaine.
-  const perdue = (l, rythme) => {
+  // ranger (ni vendre en sirop) les jours de visite (lot J ; ici, chaque jour) ; par semaine.
+  const perdue = (l) => {
     if (!l.plein) return null;
     let n = 0;
     for (const [day, x] of l.nourriture.perdu) if (day > l.plein) n += x;
@@ -865,7 +893,7 @@ test('(o) le repas, la partie de sucre et le sirop : personne ne recule ; ce qu�
       if (!bati) continue;
       for (let i = 0; i < jours; i++) {
         const day = addDays(debut, i);
-        if (day <= l.plein || day <= bati || !rythme(i) || !produitCeJour(type, day)) continue;
+        if (day <= l.plein || day <= bati || !produitCeJour(type, day)) continue;
         const recu = l.monde.ledger.filter((e) => e.type === 'prod' && e.batiment === type && e.day === day).reduce((s, e) => s + (e.food || 0) + (e.energy || 0) / SIROP.energie, 0);
         n += Math.max(0, PRODUCTION[type].food - recu);
       }
@@ -874,7 +902,7 @@ test('(o) le repas, la partie de sucre et le sirop : personne ne recule ; ce qu�
   };
   const sirop = (l) => Math.round(l.monde.ledger.filter((e) => e.type === 'prod' && e.batiment === 'cabane').reduce((s, e) => s + (e.energy || 0), 0));
   const tenues = (l) => l.hiver.issues.tenue || 0;
-  const resume = (l, rythme) => `1er niveau j${l.niveaux[0] ?? '—'}, ${l.niveaux.length} niveaux au 1er mai ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${tenues(l)} tempêtes tenues ; ${l.nourriture.repas} repas (+${l.nourriture.repas * REPAS.recoit.energy} Énergie) ; sucres ${l.nourriture.sucres ?? '—'} ; sirop +${sirop(l)} Énergie ; perdu ${perdue(l, rythme) ?? '—'} par semaine`;
+  const resume = (l) => `1er niveau j${l.niveaux[0] ?? '—'}, ${l.niveaux.length} niveaux au 1er mai ; Hameau j${l.hameau ?? '—'} ; plein ${l.plein ?? '—'} ; ${tenues(l)} tempêtes tenues ; ${l.nourriture.repas} repas (+${l.nourriture.repas * REPAS.recoit.energy} Énergie) ; sucres ${l.nourriture.sucres ?? '—'} ; sirop +${sirop(l)} Énergie ; perdu ${perdue(l) ?? '—'} par semaine`;
   const ecarts = [];
   const exiger = (ok, msg) => { if (!ok) ecarts.push(msg); };
   for (const [cadre, extra] of [['sans marchand ni commande', {}], ['marchand avisé, commandes livrées', { marchand: 'avise', commandes: 'livre' }]]) {
@@ -883,15 +911,57 @@ test('(o) le repas, la partie de sucre et le sirop : personne ne recule ; ce qu�
       const sans = simuler(debut, jours, rythme, options);
       const qui = `${cadre}, ${nom}`;
       t.diagnostic(qui);
-      t.diagnostic(`  sans      : ${resume(sans, rythme)}`);
+      t.diagnostic(`  sans      : ${resume(sans)}`);
       for (const nourriture of ['avise', 'toujours']) {
         const l = simuler(debut, jours, rythme, { ...options, nourriture });
-        t.diagnostic(`  ${nourriture.padEnd(9)} : ${resume(l, rythme)}`);
+        t.diagnostic(`  ${nourriture.padEnd(9)} : ${resume(l)}`);
         exiger(l.hameau === sans.hameau, `${qui}, ${nourriture} : Hameau au jour ${l.hameau} contre ${sans.hameau}`);
         exiger(sans.niveaux[0] === undefined || l.niveaux[0] <= sans.niveaux[0], `${qui}, ${nourriture} : premier niveau au jour ${l.niveaux[0]} contre ${sans.niveaux[0]}`);
         exiger(l.niveaux.length >= sans.niveaux.length, `${qui}, ${nourriture} : ${l.niveaux.length} niveaux au 1er mai contre ${sans.niveaux.length}`);
         exiger((l.plein ?? '9999') <= (sans.plein ?? '9999'), `${qui}, ${nourriture} : village plein le ${l.plein} contre le ${sans.plein}`);
         exiger(tenues(l) >= tenues(sans), `${qui}, ${nourriture} : ${tenues(l)} tempêtes tenues contre ${tenues(sans)}`);
+      }
+    }
+  }
+  assert.deepEqual(ecarts, []);
+});
+
+// ───────── (J) la visite du jour ─────────
+
+test('(J) la visite du jour : ouvrir le jeu plus souvent ne fait jamais reculer (Hameau, niveaux au 1er mars)', (t) => {
+  const fin16 = (l) => l.niveaux.filter((j) => j <= 16 * 7).length;
+  const visites = (l) => l.monde.ledger.filter((e) => typeof e.key === 'string' && e.key.startsWith('bonus:ouverture:')).length;
+  // part de l'Énergie et des Matériaux gagnés qui vient des quêtes (gains et étapes), d'après le registre
+  const parQuetes = (l) => {
+    let tout = 0;
+    let quete = 0;
+    for (const e of l.monde.ledger) {
+      const v = Math.max(0, Number(e.energy) || 0) + Math.max(0, Number(e.materials) || 0);
+      tout += v;
+      if (e.type === 'reward' || e.type === 'step') quete += v;
+    }
+    return tout ? Math.round((100 * quete) / tout) : 0;
+  };
+  const resume = (l) => `${visites(l)} visites ; 1er niveau j${l.niveaux[0] ?? '—'}, ${fin16(l)} niveaux en 16 semaines, ${l.niveaux.length} au 1er mars ; `
+    + `Hameau j${l.hameau ?? '—'}, Village j${l.village ?? '—'}, plein ${l.plein ?? '—'} ; objectif d'hiver ${l.objectifs['hiver-2026'] ?? 'non'} ; `
+    + `${parQuetes(l)} % de l'Énergie et des Matériaux par les quêtes`;
+  const jour = (x) => x ?? Infinity;
+  const ecarts = [];
+  const exiger = (ok, msg) => { if (!ok) ecarts.push(msg); };
+  for (const [nom, rythme, profil, habitudes] of JOUEURS_L.slice(0, 3)) { // (f) et le rapide font des quêtes chaque jour
+    for (const debut of DEPARTS_L) {
+      const jours = daysBetween(debut, '2027-03-01');
+      const options = { profil, habitudes, ...OPTIONS_L, marchand: 'avise', commandes: 'livre', duJour: 'avise', village: true, nourriture: 'avise' };
+      const qui = `${nom}, départ ${debut}`;
+      t.diagnostic(qui);
+      const l = {};
+      for (const visite of ['quetes', 'moitie', 'chaque']) {
+        l[visite] = simuler(debut, jours, rythme, { ...options, visite });
+        t.diagnostic(`  ${visite.padEnd(6)} : ${resume(l[visite])}`);
+      }
+      for (const [plus, moins] of [['moitie', 'quetes'], ['chaque', 'moitie']]) {
+        exiger(jour(l[plus].hameau) <= jour(l[moins].hameau), `${qui} : Hameau au jour ${l[plus].hameau} (${plus}) contre ${l[moins].hameau} (${moins})`);
+        exiger(l[plus].niveaux.length >= l[moins].niveaux.length, `${qui} : ${l[plus].niveaux.length} niveaux au 1er mars (${plus}) contre ${l[moins].niveaux.length} (${moins})`);
       }
     }
   }

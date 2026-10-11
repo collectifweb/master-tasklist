@@ -1,12 +1,14 @@
 // Ce que la Nourriture achète (lot N, choix d'Alex du 9 octobre 2026) : le repas de la semaine (de la Nourriture contre de
 // l'Énergie, une fois par semaine, le jour choisi), la partie de sucre (objectif de printemps « Faire les sucres », sans
 // cabane, en mars et avril) et le sirop (ce que la cabane à sucre ne peut pas ranger dans une réserve pleine part au
-// marchand, contre de l'Énergie ; il faut le quai). Titres fictifs génériques, aucune donnée réelle.
+// marchand, contre de l'Énergie ; il faut le quai ; depuis le lot J, à la visite du jour). Titres fictifs génériques, aucune
+// donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   REPAS, SIROP, PRODUCTION, OBJECTIFS_SAISON, repasDeLaSemaine, refusServirRepas, servirRepas, prixPartieDeSucre,
   refusFaireLesSucres, faireLesSucres, objectifSaison, completeQuest, remballerQuest, stockage, weekStart, addDays, prixFamille,
+  openApp, advanceTime,
 } from '../../core/index.js';
 import { fresh, step, task, avantLeChalet } from './helpers.mjs';
 
@@ -21,6 +23,8 @@ const monde = (day, { types = [], habitants = 3, food = 20 } = {}) => {
   return w;
 };
 const prod = (ledger, type) => ledger.filter((e) => e.type === 'prod' && e.batiment === type);
+// ce que fait l'interface à l'ouverture : openApp, puis le passage du temps
+const visite = (w, day, h = 14) => step(step(w, openApp, {}, at(day, h)).world, advanceTime, {}, at(day, h));
 
 // ───────── Le repas de la semaine
 
@@ -86,48 +90,48 @@ test('repas : il ne touche à aucune tâche', () => {
 test('sirop : réserve pleine, la cabane vend au marchand ce qu’elle ne peut pas ranger, contre de l’Énergie', () => {
   const w = monde(MARS, { types: ['cabane', 'quai'] });
   w.game.resources.food = stockage(w.game);
-  const { world, r } = step(w, completeQuest, { id: 'q0' }, at(MARS));
+  const { world, r } = visite(w, MARS);
   const p = prod(world.ledger, 'cabane');
   assert.equal(p.length, 1);
   assert.deepEqual([p[0].food, p[0].energy], [0, PRODUCTION.cabane.food * SIROP.energie]);
   assert.ok(r.events.some((e) => e.type === 'reward' && e.source === 'cabane' && e.energy === PRODUCTION.cabane.food * SIROP.energie));
-  // une deuxième quête le même jour ne refait pas de sirop
-  const again = step(world, completeQuest, { id: 'q1' }, at(MARS, 15)).world;
+  // une quête et une seconde visite le même jour ne refont pas de sirop
+  const again = visite(step(world, completeQuest, { id: 'q1' }, at(MARS, 15)).world, MARS, 15).world;
   assert.equal(prod(again.ledger, 'cabane').length, 1);
 });
 
 test('sirop : la place qui reste prend la Nourriture, le reste part en sirop', () => {
   const w = monde(MARS, { types: ['cabane', 'quai'] });
   w.game.resources.food = stockage(w.game) - 1;
-  const p = prod(step(w, completeQuest, { id: 'q0' }, at(MARS)).world.ledger, 'cabane');
+  const p = prod(visite(w, MARS).world.ledger, 'cabane');
   assert.deepEqual([p[0].food, p[0].energy], [1, (PRODUCTION.cabane.food - 1) * SIROP.energie]);
 });
 
 test('sirop : sans quai, pas de marchand, rien ne part ; le poulailler, lui, ne fait jamais de sirop ; hors saison, rien', () => {
   const sans = monde(MARS, { types: ['cabane'] });
   sans.game.resources.food = stockage(sans.game);
-  assert.equal(prod(step(sans, completeQuest, { id: 'q0' }, at(MARS)).world.ledger, 'cabane').length, 0);
+  assert.equal(prod(visite(sans, MARS).world.ledger, 'cabane').length, 0);
   const poules = monde(MARS, { types: ['poulailler', 'quai'] });
   poules.game.resources.food = stockage(poules.game);
-  assert.equal(prod(step(poules, completeQuest, { id: 'q0' }, at(MARS)).world.ledger, 'poulailler').length, 0);
+  assert.equal(prod(visite(poules, MARS).world.ledger, 'poulailler').length, 0);
   const mai = monde('2027-05-04', { types: ['cabane', 'quai'] });
   mai.game.resources.food = stockage(mai.game);
-  assert.equal(prod(step(mai, completeQuest, { id: 'q0' }, at('2027-05-04')).world.ledger, 'cabane').length, 0);
+  assert.equal(prod(visite(mai, '2027-05-04').world.ledger, 'cabane').length, 0);
+  // contre-épreuve : la place libre, la cabane donne bien à la visite
+  const place = monde(MARS, { types: ['cabane'] });
+  place.game.resources.food = 0;
+  assert.equal(prod(visite(place, MARS).world.ledger, 'cabane').length, 1);
 });
 
-test('sirop : Remballer la seule quête du jour reprend aussi l’Énergie du sirop', () => {
+test('sirop : Remballer la seule quête du jour ne reprend plus l’Énergie du sirop', () => {
   const w0 = monde(MARS, { types: ['cabane', 'quai'] });
   w0.game.resources.food = stockage(w0.game) - 1;
-  const w = step(w0, completeQuest, { id: 'q0' }, at(MARS)).world;
+  const w = step(visite(w0, MARS).world, completeQuest, { id: 'q0' }, at(MARS, 15)).world;
   const avant = w.game.resources.energy;
   const quete = w.ledger.find((e) => e.key === 'reward:q0:1');
-  const { world, r } = step(w, remballerQuest, { id: 'q0' }, at(MARS, 15));
-  const reprise = r.entries.find((e) => e.type === 'prod' && e.batiment === 'cabane');
-  assert.deepEqual([reprise.key, reprise.food, reprise.energy], [`reprise:cabane:${MARS}:1`, -1, -(PRODUCTION.cabane.food - 1) * SIROP.energie]);
-  assert.equal(world.game.resources.energy, Math.round((avant - quete.energy - (PRODUCTION.cabane.food - 1) * SIROP.energie) * 10) / 10);
-  // une nouvelle quête ce jour-là refait la production, sous une nouvelle clé
-  const encore = step(world, completeQuest, { id: 'q1' }, at(MARS, 16)).world;
-  assert.equal(prod(encore.ledger, 'cabane').filter((e) => !e.reprise).length, 2);
+  const { world, r } = step(w, remballerQuest, { id: 'q0' }, at(MARS, 16));
+  assert.equal(r.entries.filter((e) => e.type === 'prod').length, 0);
+  assert.equal(world.game.resources.energy, Math.round((avant - quete.energy) * 10) / 10);
 });
 
 // ───────── La partie de sucre, objectif de printemps

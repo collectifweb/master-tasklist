@@ -182,10 +182,13 @@ test('bâtiment enseveli : annonce vue, barre pas pleine, ouverture le jour mêm
   const e = cle(r, j);
   assert.deepEqual([e.resultat, e.cible, e.materials, e.energy], ['neige', 'eolienne-1', 0, 0]);
   assert.deepEqual(issue(r).map((x) => [x.resultat, x.cible, x.degat, x.jusqua]), [['neige', 'eolienne-1', d.id, d.jusqua]]);
-  const { r: r2 } = step(world, completeQuest, { id: 'q-enfants' }, at(j, 16));
+  // à la visite du jour (lot J), l'éolienne ensevelie ne tourne pas ; la phrase lue dit « ensevelie », pas « en panne »
+  assert.equal(r.entries.filter((x) => x.type === 'prod').length, 0, 'l’éolienne ensevelie ne tourne pas');
+  assert.deepEqual(r.events.filter((x) => x.type === 'eolienne-arretee').map((x) => [x.energy, x.neige]), [[EOLIENNE_ENERGIE, true]]);
+  // une quête dans la journée, puis le passage du temps : toujours rien, et l'avis n'est pas répété
+  const { r: r2 } = step(step(world, completeQuest, { id: 'q-enfants' }, at(j, 16)).world, advanceTime, {}, at(j, 16));
   assert.equal(r2.entries.filter((x) => x.type === 'prod').length, 0, 'l’éolienne ensevelie ne tourne pas');
-  // la phrase lue dit « ensevelie », pas « en panne »
-  assert.deepEqual(r2.events.filter((x) => x.type === 'eolienne-arretee').map((x) => [x.energy, x.neige]), [[EOLIENNE_ENERGIE, true]]);
+  assert.equal(r2.events.filter((x) => x.type === 'eolienne-arretee').length, 0);
 });
 
 test('serre ensevelie : une culture pas mûre ; les jours travaillés sous la neige ne comptent pas pour la pousse', () => {

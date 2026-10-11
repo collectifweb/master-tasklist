@@ -26,7 +26,7 @@ import { round1 } from './reward.js';
 import { hasKey } from './ledger.js';
 import { hash } from './letters.js';
 import { quartierOfTask } from './domains.js';
-import { batimentsDuVillage, etatCulture, joursTravailles, stockage, potagerOuvert, manque } from './batiments.js';
+import { batimentsDuVillage, etatCulture, joursVisites, stockage, potagerOuvert, manque } from './batiments.js';
 import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 import { estJourDeTempete } from './hiver.js';
 import { allureDe } from './allure.js';
@@ -131,7 +131,7 @@ export function joursGeles(game, ledger, id, semeLe, today) {
     if ((d.type !== 'gel' && d.type !== 'neige') || d.cible !== id || d.semeLe !== semeLe) continue;
     const debut = addDays(d.le, -1) > semeLe ? addDays(d.le, -1) : semeLe;
     const fin = addDays(d.fin ?? d.jusqua, -1) < today ? addDays(d.fin ?? d.jusqua, -1) : today;
-    if (fin > debut) n += joursTravailles(ledger, debut, fin);
+    if (fin > debut) n += joursVisites(ledger, debut, fin);
   }
   return n;
 }

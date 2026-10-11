@@ -63,8 +63,10 @@ async function call(method, payload) {
  * vendu au marchand.
  * Version 11 (lot M, quatre permis en main au plus) : l'API refuse la version 10, qui tamponnerait encore le permis des
  * jours au-delà de 4 en main.
+ * Version 12 (lot J, la visite du jour) : l'API refuse la version 11, qui ferait produire les bâtiments à la quête, reprendrait
+ * leur production au Remballer et ferait pousser les cultures aux seuls jours travaillés.
  */
-export const CLIENT_VERSION = 11;
+export const CLIENT_VERSION = 12;
 
 export const api = {
   get: () => call('GET'),

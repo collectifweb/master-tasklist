@@ -43,7 +43,7 @@ export const BATIMENT_IDS = Object.keys(BATIMENTS);
 export const DEPART = { parcelle: 1 };
 
 /**
- * Une culture mûrit après `jours` jours travaillés (une quête payée) après celui du semis, et rapporte `recolte`. Valeurs
+ * Une culture mûrit après `jours` jours de visite (joursVisites, lot J) après celui du semis, et rapporte `recolte`. Valeurs
  * de départ : le Garage raccourcit la pousse, les Champs et l'Atelier font monter la récolte du potager et de la serre.
  */
 export const CULTURE = { jours: 5, recolte: 4 };
@@ -55,10 +55,10 @@ export const STOCKAGE = 20;
 export const GRENIER_STOCKAGE = 40;
 /** Nourriture dépensée pour accueillir une famille (+1 habitant), au départ (la Mairie la fait baisser). */
 export const ACCUEIL_NOURRITURE = 18;
-/** Énergie d'une éolienne, par jour travaillé. */
+/** Énergie d'une éolienne, par jour de visite (lot J). */
 export const EOLIENNE_ENERGIE = 3;
 /**
- * Bâtiments du rang Village qui produisent les jours travaillés (lot B), comme l'éolienne : ce qu'ils donnent par jour
+ * Bâtiments du rang Village qui produisent les jours de visite (lot B, puis lot J), comme l'éolienne : ce qu'ils donnent par jour
  * ({ materials } ou { food }) ; mois : seulement ces mois-là (la cabane à sucre, au temps des sucres).
  */
 export const PRODUCTION = {
@@ -140,16 +140,33 @@ export function joursTravailles(ledger, apres, jusqua) {
 }
 
 /**
+ * Jours de visite (lot J) : jours avec une ligne d'ouverture au registre (bonus:ouverture:{jour}, lue sur la clé, donc
+ * aussi pour une entrée de plus de 60 jours réduite à sa clé) ou une quête payée non remballée, après `apres` et
+ * jusqu'à `jusqua` inclus.
+ */
+export function joursVisites(ledger, apres, jusqua) {
+  const keys = new Set(ledger.map((e) => e.key));
+  const days = new Set();
+  for (const e of ledger) {
+    let d = null;
+    if (typeof e.key === 'string' && e.key.startsWith('bonus:ouverture:')) d = e.key.slice('bonus:ouverture:'.length);
+    else if (e.type === 'reward' && typeof e.day === 'string' && !keys.has(reverseKey(e.taskId, e.occurrence))) d = e.day;
+    if (d && d > apres && d <= jusqua) days.add(d);
+  }
+  return days.size;
+}
+
+/**
  * État d'un emplacement de culture : { id, lieu, semee, semeLe, jours, reste, mure }. Au potager, ce qui est en terre
- * mûrit d'un coup le 1er novembre (sans perte) ; la serre suit seulement les jours travaillés. Un jour travaillé pendant
- * un gel (imprevus.js) ne compte pas.
+ * mûrit d'un coup le 1er novembre (sans perte) ; la serre suit seulement les jours de visite. Un jour de visite pendant
+ * un gel ou sous la neige (imprevus.js) ne compte pas.
  */
 export function etatCulture(game, ledger, id, now) {
   const today = gameDay(now);
   const lieu = lieuDe(id);
   const c = list(game.parcelles).find((p) => p.id === id);
   if (!c || typeof c.semeLe !== 'string') return { id, lieu, semee: false, semeLe: null, jours: 0, reste: 0, mure: false };
-  const jours = joursTravailles(ledger, c.semeLe, today) - joursGeles(game, ledger, id, c.semeLe, today);
+  const jours = joursVisites(ledger, c.semeLe, today) - joursGeles(game, ledger, id, c.semeLe, today);
   const pousse = valeur(game, 'joursPousse');
   const gel = lieu === 'potager' && today >= `${c.semeLe.slice(0, 4)}-11-01`;
   const mure = gel || jours >= pousse;
@@ -248,7 +265,8 @@ function pay(g, cout) {
 
 /**
  * Construit. params : { type, id } ; id (facultatif) = l'emplacement touché sur la carte (chalet-3…), sinon le premier
- * libre. Événement { type: 'construction', id, batiment, cout }.
+ * libre. Événement { type: 'construction', id, batiment, cout }. Un producteur (éolienne, PRODUCTION) bâti pendant la
+ * visite donne aussitôt sa part du jour (lot J), une fois par jour comme au passage du temps.
  */
 export function construire(tasks, game, ledger, params, now) {
   const ctx = new Ctx(tasks, game, ledger, params, now);
@@ -272,6 +290,8 @@ export function construire(tasks, game, ledger, params, now) {
   g.batiments = [...list(g.batiments), { id, type }];
   ctx.game = g;
   ctx.events.push({ type: 'construction', id, batiment: type, cout });
+  if (type === 'eolienne') produireEolienne(ctx, false);
+  else if (Object.hasOwn(PRODUCTION, type)) produireBatiments(ctx);
   suivreObjectifs(ctx);
   return ctx.result();
 }
@@ -354,40 +374,33 @@ export function installerFamille(ctx, nourriture, extra = {}) {
   }
 }
 
-/** Jour travaillé : au moins une quête payée ce jour-là et pas remballée. */
-function jourPaye(ledger, day) {
-  const keys = new Set(ledger.map((e) => e.key));
-  return ledger.some((e) => e.type === 'reward' && e.day === day && !keys.has(reverseKey(e.taskId, e.occurrence)));
-}
-
 /** Énergie de l'éolienne qui reste acquise pour ce jour : productions moins reprises (0, ou celle d'un jour). */
 export function eolienneDuJour(ledger, day) {
   return round1(ledger.filter((e) => e.type === 'prod' && e.batiment === 'eolienne' && e.day === day)
     .reduce((s, e) => s + (Number(e.energy) || 0), 0));
 }
 
-// Première clé libre de la série : base, puis base:2, base:3… (ou base:1, base:2… si `depuis` vaut 1).
-function cleLibre(ledger, base, depuis = 2) {
-  if (depuis > 1 && !hasKey(ledger, base)) return base;
-  let k = depuis;
+// Première clé libre de la série : base, puis base:2, base:3… (après une reprise d'avant le lot J).
+function cleLibre(ledger, base) {
+  if (!hasKey(ledger, base)) return base;
+  let k = 2;
   while (hasKey(ledger, `${base}:${k}`)) k++;
   return `${base}:${k}`;
 }
 
 /**
- * Production de l'éolienne, appelée par quests.js après une quête payée : la première du jour inscrit
- * prod:eolienne:{jour} au registre. Jamais deux fois en même temps : rien si l'Énergie du jour est déjà acquise. Si
- * elle a été reprise (Remballer), une nouvelle quête payée ce jour-là la reverse sous prod:eolienne:{jour}:2, :3…
- * Une éolienne en panne ou sous la neige (imprevus.js) ne produit rien : à la première quête payée du jour, événement
- * { type: 'eolienne-arretee', energy (ce qu'elle aurait donné), neige (vrai si toutes celles qui sont arrêtées sont sous la
- * neige) }.
+ * Production de l'éolienne, appelée par advanceTime (quests.js) à chaque passage du temps (lot J) : le premier du jour
+ * inscrit prod:eolienne:{jour} au registre. Jamais deux fois : rien si l'Énergie du jour est déjà acquise (une reprise
+ * d'avant le lot J la fait reverser sous prod:eolienne:{jour}:2, :3…). Une éolienne en panne ou sous la neige
+ * (imprevus.js) ne produit rien : au premier passage du jour (`premier`), événement { type: 'eolienne-arretee', energy
+ * (ce qu'elle aurait donné), neige (vrai si toutes celles qui sont arrêtées sont sous la neige) }.
  */
-export function produireEolienne(ctx) {
+export function produireEolienne(ctx, premier) {
   const eoliennes = batimentsDuVillage(ctx.game).filter((b) => b.type === 'eolienne');
   if (!eoliennes.length || eolienneDuJour(ctx.ledger, ctx.day) > 0) return;
   const arretees = eoliennes.map((b) => degatDe(ctx.game, b.id, ctx.now)).filter(Boolean);
   const enPanne = arretees.length;
-  if (enPanne && ctx.ledger.filter((e) => e.type === 'reward' && e.day === ctx.day).length === 1) {
+  if (enPanne && premier) {
     ctx.events.push({ type: 'eolienne-arretee', energy: EOLIENNE_ENERGIE * enPanne, neige: arretees.every((d) => d.type === 'neige') });
   }
   const n = eoliennes.length - enPanne;
@@ -414,9 +427,10 @@ const aDonne = (net) => net.energy > 0 || net.materials > 0 || net.food > 0;
 export const produitCeJour = (type, day) => !PRODUCTION[type].mois || PRODUCTION[type].mois.includes(mois(day));
 
 /**
- * Production des bâtiments du rang Village, appelée par quests.js après une quête payée, comme celle de l'éolienne :
- * la première du jour inscrit prod:{type}:{jour} au registre, une fois par jour (après une reprise, :2, :3…). La
- * Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'est inscrit et la quête payée suivante réessaie.
+ * Production des bâtiments du rang Village, appelée par advanceTime (quests.js), comme celle de l'éolienne : le
+ * premier passage du temps du jour inscrit prod:{type}:{jour} au registre, une fois par jour (après une reprise d'avant le
+ * lot J, :2, :3…). La Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'est inscrit et le passage suivant
+ * du même jour réessaie.
  */
 export function produireBatiments(ctx) {
   for (const [type, def] of Object.entries(PRODUCTION)) {
@@ -434,29 +448,4 @@ export function produireBatiments(ctx) {
     const key = cleLibre(ctx.ledger, `prod:${type}:${ctx.day}`);
     ctx.append({ key, at: toISO(ctx.now), day: ctx.day, type: 'prod', batiment: type, pe: 0, energy: 0, ...gain }, type);
   }
-}
-
-/** Reprise, appelée par Remballer, comme celle de l'éolienne : reprise:{type}:{jour}:{n}, si le jour reste sans quête payée. */
-export function reprendreBatiments(ctx, day) {
-  if (jourPaye(ctx.ledger, day)) return;
-  for (const [type, def] of Object.entries(PRODUCTION)) {
-    const net = netDuJour(ctx.ledger, day, type);
-    if (!aDonne(net)) continue;
-    const key = cleLibre(ctx.ledger, `reprise:${type}:${day}`, 1);
-    const inverse = def.materials ? { materials: -net.materials } : { materials: 0, food: net.food > 0 ? -net.food : 0, ...(net.energy > 0 ? { energy: -net.energy } : {}) };
-    ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: type, reprise: true, pe: 0, energy: 0, ...inverse }, type);
-  }
-}
-
-/**
- * Reprise, appelée par Remballer : si le jour du gain annulé n'a plus aucune quête payée, l'Énergie de l'éolienne de
- * ce jour est reprise par une écriture inverse reprise:eolienne:{jour}:{n} (le registre n'est jamais réécrit).
- * Événement { type: 'eolienne-reprise', day, energy }.
- */
-export function reprendreEolienne(ctx, day) {
-  const net = eolienneDuJour(ctx.ledger, day);
-  if (net <= 0 || jourPaye(ctx.ledger, day)) return;
-  const key = cleLibre(ctx.ledger, `reprise:eolienne:${day}`, 1);
-  ctx.append({ key, at: toISO(ctx.now), day, type: 'prod', batiment: 'eolienne', reprise: true, pe: 0, energy: -net, materials: 0 }, 'eolienne');
-  ctx.events.push({ type: 'eolienne-reprise', day, energy: net });
 }
