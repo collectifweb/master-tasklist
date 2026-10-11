@@ -46,7 +46,7 @@ function quietState(core, now = new Date(), { letters = true, accueil = true } =
  * meteoUrl : adresse de la prévision (OREE_METEO_URL) ; par défaut un port fermé, pour qu'aucun scénario n'appelle le vrai
  * Open-Meteo (une prévision se pose dans data/meteo.json avant le premier appel).
  */
-async function startServer({ tasks, game, ledger, sandbox = false, meteoUrl = 'http://127.0.0.1:9/v1/forecast' } = {}) {
+async function startServer({ tasks, game, ledger, meteo, sandbox = false, meteoUrl = 'http://127.0.0.1:9/v1/forecast' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'oree-ui-'));
   fs.cpSync(path.join(REPO, 'app'), path.join(root, 'app'), {
     recursive: true,
@@ -57,7 +57,8 @@ async function startServer({ tasks, game, ledger, sandbox = false, meteoUrl = 'h
   else fs.copyFileSync(path.join(REPO, 'tasks.example.json'), tasksFile);
   // état du jeu et registre de départ, posés avant le premier appel à l'API
   const dataDir = path.join(root, 'app', 'api', 'data');
-  if (game || ledger) fs.mkdirSync(dataDir, { recursive: true });
+  if (game || ledger || meteo) fs.mkdirSync(dataDir, { recursive: true });
+  if (meteo) fs.writeFileSync(path.join(dataDir, 'meteo.json'), JSON.stringify(meteo)); // prévision gardée (lot Q)
   if (game) fs.writeFileSync(path.join(dataDir, 'game-state.json'), JSON.stringify(game));
   if (ledger) fs.writeFileSync(path.join(dataDir, 'ledger.jsonl'), ledger.map((e) => JSON.stringify(e)).join('\n') + (ledger.length ? '\n' : ''));
   const port = await freePort();
@@ -276,14 +277,14 @@ const QUIET_REVIEW = (day) => { try { if (!localStorage.getItem('oree.recycle.v1
  * quietReview (vrai sauf avec fresh) : le bilan du dimanche est noté comme déjà vu sur l'appareil.
  * sandbox : serveur en version d'essai (voir startServer).
  */
-async function runScenario(name, fn, { tasks, game, ledger, fresh = false, quietReview = !fresh, sandbox = false } = {}) {
+async function runScenario(name, fn, { tasks, game, ledger, meteo, fresh = false, quietReview = !fresh, sandbox = false } = {}) {
   const R = reporter(name);
   const b = await launch();
   const core = await import(require('node:url').pathToFileURL(path.join(REPO, 'app', 'core', 'index.js')).href);
   for (const size of sizes) {
     console.log(`-- ${size[0]}x${size[1]}`);
     const seed = typeof game === 'function' ? game(core) : game || (fresh ? null : quietState(core));
-    const srv = await startServer({ tasks, game: seed, ledger: typeof ledger === 'function' ? ledger(core) : ledger, sandbox });
+    const srv = await startServer({ tasks, game: seed, ledger: typeof ledger === 'function' ? ledger(core) : ledger, meteo: typeof meteo === 'function' ? meteo(core) : meteo, sandbox });
     const pages = [];
     const mk = async (opts, ctxOpts) => {
       const c = await newPage(b, size, ctxOpts);

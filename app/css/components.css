@@ -1708,6 +1708,91 @@ button.quest-check:active .quest-check-ring {
   clear: both;
 }
 
+/* Réglages : « Météo du village » (lot Q), même titre de section que « Quête par défaut ». La ville réglée sur un fond
+   creusé (nom, puis région et pays), « Retirer » discret ; la recherche (champ et « Chercher ») ; les villes trouvées en
+   boutons pleine largeur de 56 px ; la note sur Open-Meteo et son lien de 44 px. */
+.set-meteo .input-row > .btn {
+  flex: none;
+}
+.meteo-ville {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: 60px;
+  padding: var(--sp-2) var(--sp-1) var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-sunken);
+}
+.meteo-ville:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.meteo-ville-text,
+.meteo-choix-btn {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.meteo-ville-text b,
+.meteo-choix-btn b {
+  font-weight: var(--w-bold);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.meteo-ville-text small,
+.meteo-choix-btn small {
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.meteo-etat:empty {
+  display: none;
+}
+.meteo-choix {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.meteo-choix[hidden] {
+  display: none;
+}
+.meteo-choix-btn {
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  text-align: left;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .meteo-choix-btn:hover {
+    border-color: var(--c-sage-deep);
+    background: var(--c-sage-wash);
+  }
+}
+.meteo-choix-btn:active {
+  background: var(--c-sage-wash);
+}
+.meteo-choix-btn:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.meteo-credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+}
+.meteo-credit .link-btn {
+  white-space: nowrap;
+}
+
 /* Réglages P / L / D : pas à pas, 44 px par bouton */
 .stepper-row {
   display: grid;

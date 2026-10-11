@@ -17,7 +17,7 @@
 // 1er mars au 30 avril, tant qu'il n'est pas fait, toute la case mène à la fiche de la Place (data-action="sucres-go"),
 // où la partie se fait, comme la ligne du visiteur mène au quai.
 import {
-  bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire,
+  bandeau as lireBandeau, commandeDeLaSemaine, alerteTempete, refusPreparer, findEntry, batimentsDuVillage, refusConstruire, villeDe,
   degatsActifs, gameDay,
 } from '../../core/index.js';
 import { t, tn } from '../content.js';
@@ -71,6 +71,8 @@ function alerteModel(c) {
   const m = {
     titre: t(`bandeau.tempete.titre.${a.joursRestants === 0 ? 'zero' : a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants }),
     crans: a.crans, max: a.max, etat: '', aide: '', issue: '', go: null,
+    // une tempête venue de la vraie météo (lot Q) dit d'où elle vient, avec le crédit d'Open-Meteo
+    source: a.source === 'meteo' && villeDe(c.game) ? t('bandeau.tempete.meteo', { ville: villeDe(c.game).nom }) : '',
     label: t(`bandeau.tempete.crans.label${a.crans <= 1 ? '' : '.other'}`, { n: a.crans, max: a.max }), // « 0 cran », comme fr-CA
   };
   if (a.joursRestants === 0) {
@@ -178,6 +180,8 @@ export function createBandeau(root) {
     q('.bandeau-crans').querySelectorAll('i').forEach((el, k) => setAttr(el, 'data-on', k < m.crans ? 'true' : null));
     setText(q('.bandeau-alerte-etat'), m.etat);
     setText(q('.bandeau-alerte-aide'), m.aide ? `${m.label}. ${m.aide}` : m.label);
+    setText(q('.bandeau-alerte-source-texte'), m.source);
+    q('.bandeau-alerte-source').hidden = !m.source;
     setText(q('#bandeau-alerte-raison'), m.go?.raison || '');
     const go = q('.bandeau-alerte-go');
     go.hidden = !m.go;

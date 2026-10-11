@@ -105,6 +105,7 @@ export function createWorldPlan(container, options = {}) {
     if (v.tempete) {
       const n = v.tempete.joursRestants;
       sum.push(t(`monde.plan.tempete.${n === 0 ? 'zero' : n === 1 ? 'one' : 'other'}`, { n }));
+      if (v.tempete.ville) sum.push(t('monde.plan.tempete.meteo', { ville: v.tempete.ville }));
     }
     if (v.neige) sum.push(t('monde.plan.neige'));
     if (v.crates.length) sum.push(v.crates.length === 1 ? t('monde.plan.crates.one') : t('monde.plan.crates.other', { n: v.crates.length }));

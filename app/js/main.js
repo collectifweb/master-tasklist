@@ -1,7 +1,7 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
 import {
   SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
-  findEntry, allureDe, commandeDeLaSemaine, BANDES,
+  findEntry, allureDe, commandeDeLaSemaine, BANDES, villeDe,
 } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
@@ -565,6 +565,9 @@ document.addEventListener('click', (e) => {
       return run('completeQuest', { id });
     }
     case 'open-settings': return story.openSettings();
+    case 'meteo-chercher': return story.chercherVille();
+    case 'meteo-choisir': return story.choisirVille(target.dataset.i);
+    case 'meteo-retirer': return story.retirerVille();
     case 'open-review': return story.openReview();
     case 'review-keep': case 'review-archive': return story.reviewAction(action, target.dataset.id);
     case 'split':
@@ -729,6 +732,7 @@ function annonceTempete() {
   if (!a) return;
   const dite = etapeDite(a.jour);
   let etape = 0, sit = null, sr = '';
+  const ville = a.source === 'meteo' ? villeDe(c.game)?.nom : null; // tempête venue de la vraie météo (lot Q) : Fanal nomme la ville
   if (a.joursRestants === 0) {
     const e = findEntry(c.ledger, `tempete:${a.jour}`);
     if (!e || dite >= 3) return;
@@ -736,7 +740,7 @@ function annonceTempete() {
     sit = e.resultat === 'tenue' ? 'tempete.tenue' : e.resultat === 'neige' ? 'tempete.neige' : null;
   } else if (!dite) {
     etape = a.joursRestants === 1 ? 2 : 1;
-    sit = 'tempete.annonce';
+    sit = ville ? 'tempete.meteo' : 'tempete.annonce';
     sr = t(`sr.tempete.annonce.${a.joursRestants === 1 ? 'one' : 'other'}`, { n: a.joursRestants, max: a.max, cout: coutText(a.prix) });
   } else if (a.joursRestants === 1 && dite < 2) {
     etape = 2;
@@ -744,7 +748,7 @@ function annonceTempete() {
   } else return;
   if (sit && (!$('#speech').hidden || document.querySelector('dialog[open]'))) { setTimeout(annonceTempete, 7500); return; }
   try { localStorage.setItem(TEMPETE_KEY, `${a.jour}:${etape}`); } catch { /* sans stockage : pas d'annonce répétée */ }
-  const reply = sit && pickReply(sit, { now: c.now, quartier: 'place', length: 0, vars: replyVars(null, 'place') });
+  const reply = sit && pickReply(sit, { now: c.now, quartier: 'place', length: 0, vars: { ...replyVars(null, 'place'), ville } });
   if (reply) speech.showText(reply.nom, reply.texte);
   const text = [reply ? `${reply.nom}\u00a0: ${reply.texte}` : '', sr].filter(Boolean).join(' ');
   if (text) announce.say(remember(after(text)));
@@ -807,6 +811,7 @@ document.addEventListener('submit', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'fiche-step-new') { e.preventDefault(); addStepFromInput($('#dlg-fiche').dataset.taskId); }
+  if (e.key === 'Enter' && e.target.id === 'set-ville') { e.preventDefault(); story.chercherVille(); } // chercher, pas enregistrer
   if (e.key === 'Escape' && e.defaultPrevented) return; // déjà traitée (rangée « Vue » de la carte, animation…)
   if (e.key === 'Escape' && $('#bandeau').dataset.open === 'true' && !document.querySelector('dialog[open]')) {
     bandeau.toggle(false);

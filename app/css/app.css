@@ -1405,6 +1405,55 @@
   white-space: normal;
 }
 
+/* Tempête venue de la vraie météo (lot Q) : d'où elle vient et le crédit d'Open-Meteo (lien de 44 px), dans la rangée
+   dépliée, sous l'aide */
+.bandeau-alerte-source {
+  display: none;
+}
+.bandeau[data-open="true"] .bandeau-alerte-source:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+  font-size: var(--text-12);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.bandeau-alerte-source .link-btn {
+  flex: none;
+  font-size: var(--text-12);
+  white-space: nowrap;
+}
+/* à partir de 700 px, sans carte à déplier : la source se lit dans la rangée, entre le titre et « Rentrer du bois » (deux
+   lignes au plus pour un nom de ville long) */
+@media (min-width: 700px) {
+  .bandeau-alerte-text {
+    grid-template-columns: minmax(10rem, 1fr) minmax(0, max-content);
+    column-gap: var(--sp-3);
+  }
+  .bandeau-alerte-text > :not(.bandeau-alerte-source) {
+    grid-column: 1;
+  }
+  .bandeau-alerte-source:not([hidden]) {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-items: center;
+    justify-content: flex-end;
+    column-gap: var(--sp-2);
+    font-size: var(--text-12);
+    line-height: 1.3;
+    color: var(--text-soft);
+    text-align: right;
+  }
+  .bandeau-alerte-source-texte {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
 /* Déplier (compact seulement) */
 .bandeau-more {
   display: grid;

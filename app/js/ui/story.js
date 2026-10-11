@@ -2,7 +2,7 @@
 // Une seule feuille à la fois : l'accueil (welcome) les enchaîne et attend qu'aucune autre feuille ne soit ouverte.
 // Le cœur choisit (morningLetter, weeklyReview) ; l'interface montre, puis note (markLetterShown).
 // Tout texte dynamique passe par esc(), titres de quêtes compris.
-import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE, objectifSaison } from '../../core/index.js';
+import { morningLetter, passageLetter, conversionLetter, weeklyReview, gameDay, daysBetween, queteDefaut, fusionQuete, SEMAINE_TENUE, objectifSaison, villeDe, METEO } from '../../core/index.js';
 import { t, tn, content, prenom, setPrenom, economieBatterie, setEconomieBatterie } from '../content.js';
 import { $, $$, esc, icon } from './dom.js';
 import { glyph } from './glyphs.js';
@@ -22,6 +22,13 @@ function writeReview(v) {
 }
 
 const anyOpen = () => document.querySelector('dialog[open]');
+
+// Météo du village (lot Q) : la ville se cherche depuis l'appareil, directement chez Open-Meteo (le service accepte les
+// appels d'un navigateur), puis se règle dans la partie (reglerVille) ; c'est le serveur qui lit ensuite la prévision.
+const RECHERCHE_VILLE = 'https://geocoding-api.open-meteo.com/v1/search';
+const RECHERCHE_MS = 8000;
+const OPEN_METEO = 'https://open-meteo.com/';
+const lieuDe = (v) => [v.region, v.pays].filter(Boolean).join(', ');
 
 /**
  * app : { ctx() → { tasks, game, ledger, now }, run(action, params) → résultat ou null, attempt(action, params) → null ou
@@ -86,6 +93,7 @@ export function createStory(app) {
           <p class="field-hint" id="set-quete-hint">${esc(t('settings.quete.hint'))}${charge ? '' : ` ${esc(t('settings.quete.attente'))}`}</p>
           ${stepperRow('set', 'priority', quete.priority)}${stepperRow('set', 'length', quete.length)}${stepperRow('set', 'difficulty', quete.difficulty)}
         </fieldset>
+        ${meteoHtml(charge)}
         <p class="field-error" id="set-err" role="alert" hidden>${icon('why')}<span></span></p>
       </form>
       <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="settings-form">${esc(t('settings.save'))}</button></footer>`;
@@ -94,6 +102,100 @@ export function createStory(app) {
     // clavier virtuel : il ne s'ouvre que si l'on vient écrire le prénom, sinon il cacherait les trois rangées
     (depuisLettre ? $('#set-prenom', dlg) : $('[data-close]', dlg)).focus();
   }
+  // ───────── Météo du village : chercher, choisir ou retirer la ville (gardée dans la partie dès le choix) ─────────
+  let villes = []; // villes trouvées par la dernière recherche
+  let recherche = null; // AbortController de la recherche en cours
+  function meteoHtml(charge) {
+    const ville = villeDe(app.ctx()?.game);
+    const off = charge ? '' : ' disabled';
+    const lieu = ville && lieuDe(ville);
+    return `
+        <fieldset class="field set-quete set-meteo" id="set-meteo" aria-describedby="set-meteo-hint">
+          <legend class="field-label">${esc(t('settings.meteo'))}</legend>
+          <p class="field-hint" id="set-meteo-hint">${esc(t('settings.meteo.hint', { cm: METEO.seuil }))}${charge ? '' : ` ${esc(t('settings.meteo.attente'))}`}</p>
+          ${ville ? `<div class="meteo-ville" tabindex="-1">
+            <span class="meteo-ville-text"><span class="sr-only">${esc(t('settings.meteo.ville'))}\u00a0: </span><b>${esc(ville.nom)}</b>${lieu ? `<small>${esc(lieu)}</small>` : ''}</span>
+            <button class="btn btn--quiet btn--small" type="button" data-action="meteo-retirer" aria-label="${esc(t('settings.meteo.retirer.label', { ville: ville.nom }))}">${esc(t('settings.meteo.retirer'))}</button>
+          </div>` : ''}
+          <label class="field-label meteo-cherche-label" for="set-ville">${esc(t(ville ? 'settings.meteo.changer.label' : 'settings.meteo.chercher.label'))}</label>
+          <div class="input-row">
+            <input class="input" id="set-ville" type="search" maxlength="80" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="search"${off}>
+            <button class="btn btn--secondary" type="button" data-action="meteo-chercher"${off}>${icon('search')}<span>${esc(t('settings.meteo.chercher'))}</span></button>
+          </div>
+          <p class="field-hint meteo-etat" id="set-meteo-etat" role="status" aria-live="polite"></p>
+          <ul class="meteo-choix" id="set-meteo-choix" hidden></ul>
+          <p class="field-hint">${esc(t('settings.meteo.confidentialite'))}</p>
+          <p class="field-hint meteo-credit">${esc(t('settings.meteo.credit'))} <a class="link-btn" href="${OPEN_METEO}" target="_blank" rel="noopener noreferrer">${esc(t('meteo.credit.lien'))}</a></p>
+        </fieldset>`;
+  }
+  async function chercherVille() {
+    const dlg = $('#dlg-settings');
+    const input = $('#set-ville', dlg);
+    if (!input || input.disabled) return;
+    const nom = input.value.trim();
+    const etat = $('#set-meteo-etat', dlg);
+    const liste = $('#set-meteo-choix', dlg);
+    const btn = $('[data-action="meteo-chercher"]', dlg);
+    villes = [];
+    liste.hidden = true;
+    liste.replaceChildren();
+    recherche?.abort();
+    recherche = null;
+    if (!nom) { etat.textContent = t('settings.meteo.vide'); input.focus(); return; }
+    if (!navigator.onLine) { etat.textContent = t('settings.meteo.hors_ligne'); return; }
+    const ctl = new AbortController();
+    recherche = ctl;
+    const delai = setTimeout(() => ctl.abort(), RECHERCHE_MS);
+    etat.textContent = t('settings.meteo.cherche');
+    btn.setAttribute('aria-busy', 'true');
+    try {
+      const url = `${RECHERCHE_VILLE}?${new URLSearchParams({ name: nom, count: '6', language: 'fr', format: 'json' })}`;
+      const r = await fetch(url, { signal: ctl.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+      if (!r.ok) throw new Error(`recherche ${r.status}`);
+      const j = await r.json();
+      if (recherche !== ctl) return;
+      villes = (Array.isArray(j?.results) ? j.results : [])
+        .filter((x) => x && typeof x.name === 'string' && Number.isFinite(x.latitude) && Number.isFinite(x.longitude))
+        .map((x) => ({ nom: x.name, region: typeof x.admin1 === 'string' ? x.admin1 : '', pays: typeof x.country === 'string' ? x.country : '', lat: x.latitude, lon: x.longitude }));
+      if (!villes.length) { etat.textContent = t('settings.meteo.aucune', { nom }); return; }
+      liste.innerHTML = villes.map((v, i) => {
+        const lieu = lieuDe(v);
+        return `<li><button class="meteo-choix-btn" type="button" data-action="meteo-choisir" data-i="${i}" aria-label="${esc(t('settings.meteo.choix.label', { lieu: [v.nom, lieu].filter(Boolean).join(', ') }))}"><b>${esc(v.nom)}</b>${lieu ? `<small>${esc(lieu)}</small>` : ''}</button></li>`;
+      }).join('');
+      liste.hidden = false;
+      etat.textContent = tn('settings.meteo.trouvees', villes.length, { n: villes.length });
+    } catch {
+      if (recherche === ctl) etat.textContent = t(navigator.onLine ? 'settings.meteo.echec' : 'settings.meteo.hors_ligne');
+    } finally {
+      clearTimeout(delai);
+      if (recherche === ctl) { recherche = null; btn.removeAttribute('aria-busy'); }
+    }
+  }
+  /** Redessine la section après un choix ; le focus va sur `focus` (jamais sur le champ : le clavier virtuel s'ouvrirait). */
+  function redessinerMeteo(focus) {
+    const f = $('#set-meteo');
+    if (!f) return;
+    recherche?.abort();
+    recherche = null;
+    villes = [];
+    f.outerHTML = meteoHtml(!!app.ctx());
+    $(focus, $('#dlg-settings'))?.focus();
+  }
+  function reglerVille(ville) {
+    $('#set-err').hidden = true;
+    const refus = app.attempt('reglerVille', { ville });
+    if (refus) {
+      const err = $('#set-err');
+      $('span', err).textContent = refus;
+      err.hidden = false;
+      return;
+    }
+    redessinerMeteo(ville ? '.meteo-ville' : '[data-action="meteo-chercher"]');
+    app.announce(ville ? t('settings.saved.ville', { ville: ville.nom }) : t('settings.saved.ville.retiree'));
+  }
+  const choisirVille = (i) => { const v = villes[Number(i)]; if (v) reglerVille(v); };
+  const retirerVille = () => reglerVille(null);
+
   function saveSettings(form) {
     const lu = { priority: stepValue(form, 'priority'), length: stepValue(form, 'length'), difficulty: stepValue(form, 'difficulty') };
     const avant = queteOuverte || queteDefaut(app.ctx()?.game); // ce que la feuille montrait : seul ce que le joueur change part
@@ -351,6 +453,9 @@ export function createStory(app) {
     accueilSuivant,
     openSettings,
     saveSettings,
+    chercherVille,
+    choisirVille,
+    retirerVille,
     openReview: () => openReview(app.ctx()),
     refreshReview: () => refreshReview(app.ctx()),
     reviewAction: (action, id) => reviewAction(action, id, app.ctx()),
