@@ -7,7 +7,7 @@
 //     semaines plus anciennes (non tenue, ou sans le champ) n'en portent aucune ; aide des Matériaux, couleur du compteur Permis ;
 //   - largeur 360 : rien ne déborde (barre, bilan).
 //   Partie B (un lundi de janvier, village au Hameau) : la 2e serre se bâtit par le catalogue, se sème l'hiver (chauffage
-//   compris) depuis sa fiche, mûrit après 5 jours travaillés et se récolte.
+//   compris) depuis sa fiche, mûrit après 5 jours de passage (la visite du jour, lot J) et se récolte.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -340,14 +340,14 @@ const jourSuivant = async (page, srv, k) => {
         const g = srvB.game();
         return (g?.parcelles || []).some((p) => p.id === 'serre-2' && p.semeLe === ymdJ(0)) && g.resources.energy === e0 - 5;
       }, 5000), JSON.stringify([srvB.game()?.parcelles, srvB.game()?.resources]));
-      f = await L.waitFor(async () => { const x = await fiche(pb); return /Mûr dans 5 jours travaillés/.test(x.now) ? x : null; }, 3000);
-      R.check('serre-2 en terre : « Mûr dans 5 jours travaillés », « Récolter » en attente', f && f.geste?.label === 'Récolter' && f.geste.off, JSON.stringify(f));
+      f = await L.waitFor(async () => { const x = await fiche(pb); return /Mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
+      R.check('serre-2 en terre : « Mûr dans 5 jours de passage », « Récolter » en attente', f && f.geste?.label === 'Récolter' && f.geste.off, JSON.stringify(f));
       await closeBat(pb);
       const un = await openBat(pb, 'serre-1');
       R.check('serre-1 reste vide : la 2e serre se sème seule', un && /^Rien n’est semé\./.test(un.now), JSON.stringify(un));
       await closeBat(pb);
 
-      // cinq jours travaillés, puis la récolte de serre-2
+      // cinq jours de passage (une quête chacun, sans effet sur la pousse), puis la récolte de serre-2
       for (let k = 1; k <= 5; k++) {
         await jourSuivant(pb, srvB, k);
         await L.openPanel(pb);
@@ -358,7 +358,7 @@ const jourSuivant = async (page, srv, k) => {
       }
       const food0 = srvB.game().resources.food;
       f = await openBat(pb, 'serre-2');
-      R.check('après 5 jours travaillés : serre-2 est mûre, 4 Nourriture à récolter', f && f.now === 'C’est mûr : 4 Nourriture à récolter.' && !f.geste?.off, JSON.stringify(f));
+      R.check('après 5 jours de passage : serre-2 est mûre, 4 Nourriture à récolter', f && f.now === 'C’est mûr : 4 Nourriture à récolter.' && !f.geste?.off, JSON.stringify(f));
       await shot(pb, '34-serre-2-mure');
       await pb.click('#dlg-batiment [data-action="bat-geste"]');
       R.check('serre-2 récoltée : +4 Nourriture, l’emplacement est libre, serre-1 inchangée', await L.waitFor(() => {

@@ -1,11 +1,13 @@
 // 19. Lettre du matin : une par jour à la première ouverture, quête n° 1 nommée, prénom facultatif (réglage gardé
-// sur l'appareil), lettre correcte sans prénom, nouvelle lettre le lendemain.
+// sur l'appareil), lettre correcte sans prénom, nouvelle lettre le lendemain. Le P.-S. de Fanal (lot J) : absent sans
+// bâtiment qui produit ; avec l'éolienne, la scierie et le poulailler, il dit ce que la visite du jour a produit, sous la
+// signature, lu par les lecteurs d'écran.
 const L = require('./lib.cjs');
 const DAY = 24 * 3600 * 1000;
 
 const letter = (page) => page.evaluate(() => {
   const d = document.getElementById('dlg-letter');
-  return { open: d.open && !d.classList.contains('is-closing'), text: (d.querySelector('.letter-paper') || {}).textContent?.replace(/\s+/g, ' ').trim() || '', title: (d.querySelector('#letter-t') || {}).textContent?.trim() || '' };
+  return { open: d.open && !d.classList.contains('is-closing'), text: (d.querySelector('.letter-paper') || {}).textContent?.replace(/\s+/g, ' ').trim() || '', title: (d.querySelector('#letter-t') || {}).textContent?.trim() || '', ps: !!d.querySelector('.letter-ps') };
 });
 
 L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => {
@@ -18,6 +20,7 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
   const quest = (await page.textContent('#fil-quest .fil-title')).trim();
   R.check('« Une lettre de Fanal », signée Fanal', l.title === 'Une lettre de Fanal' && /Fanal$/.test(l.text), l.title);
   R.check('la lettre nomme la quête n° 1', l.text.includes(quest), `${quest} / ${l.text.slice(0, 160)}`);
+  R.check('aucun bâtiment qui produit : pas de P.-S.', !l.ps, l.text.slice(-160));
   R.check('sans prénom : aucune accolade, aucune virgule orpheline', !/[{}]/.test(l.text) && !/,\s*[.!]/.test(l.text), l.text.slice(0, 160));
   R.check('« Ranger la lettre » a le focus', await page.evaluate(() => document.activeElement && document.activeElement.closest('#dlg-letter .sheet-foot') !== null));
   await shot(page, '19-lettre');
@@ -64,6 +67,47 @@ L.runScenario('19. lettre du matin', async ({ R, srv, newPage, core, shot }) => 
   await page.clock.fastForward(61 * 1000);
   await page.waitForTimeout(1200);
   R.check('le même jour, plus rien ne s’ouvre', !(await page.evaluate(() => !!document.querySelector('dialog[open]'))));
+
+  // ───── le P.-S. de Fanal (lot J) : ce que la visite du jour a produit
+  const jour = core.gameDay(new Date());
+  const veille = core.addDays(jour, -1);
+  const gP = L.quietState(core, new Date(), { letters: false });
+  gP.startDay = core.addDays(jour, -3);
+  gP.habitants = 6;
+  gP.premiersPas = Object.fromEntries(core.PAS_IDS.map((id) => [id, gP.startDay]));
+  gP.resources = { energy: 20, materials: 20, food: 5 };
+  gP.batiments = ['chalet-1', 'chalet-2', 'atelier-1', 'eolienne-1', 'scierie-1', 'poulailler-1'].map((id) => ({ id, type: id.replace(/-\d+$/, '') }));
+  // les imprévus de la semaine déjà tirés (une panne arrêterait l'éolienne) ; la veille, une ouverture
+  const ledgerP = [
+    ...core.calendrierImprevus(core.weekStart(jour)).creneaux.map((c) => ({ key: `imprevu:${c.jour}`, at: `${veille}T15:00:00.000Z`, day: veille, type: 'imprevu', imprevu: 'orignal', pe: 0, energy: 0, materials: 0 })),
+    { key: `bonus:ouverture:${veille}`, at: `${veille}T15:00:00.000Z`, day: veille, type: 'bonus', bonus: 'ouverture', pe: 0, energy: 1, materials: 0 },
+  ];
+  const srvP = await L.startServer({ game: gP, ledger: ledgerP });
+  const { page: pp, context: cp } = await newPage();
+  try {
+    await pp.goto(srvP.url);
+    await L.ready(pp);
+    R.check('avec l’éolienne, la scierie et le poulailler : la lettre s’ouvre', await L.waitFor(async () => (await letter(pp)).open, 6000));
+    await pp.waitForTimeout(600);
+    const ps = await pp.evaluate(() => {
+      const d = document.getElementById('dlg-letter');
+      const p = d.querySelector('.letter-ps');
+      if (!p) return null;
+      const r = p.getBoundingClientRect(), sign = d.querySelector('.letter-sign').getBoundingClientRect(), box = d.getBoundingClientRect();
+      const btn = d.querySelector('.sheet-foot [data-close]').getBoundingClientRect();
+      return {
+        text: p.textContent.replace(/\s+/g, ' ').trim(), sous: r.top >= sign.bottom && r.left >= box.left && r.right <= box.right,
+        lu: !p.closest('[aria-hidden="true"]'), bouton: btn.bottom <= innerHeight, large: document.documentElement.scrollWidth <= innerWidth,
+      };
+    });
+    const { EOLIENNE_ENERGIE: E, PRODUCTION: P } = core;
+    R.check('P.-S. : ce que la visite a produit, bâtiment par bâtiment', ps && ps.text === `P.-S. Le village a déjà fait sa part aujourd’hui : ${E} Énergie de l’éolienne, ${P.scierie.materials} Matériaux de la scierie et ${P.poulailler.food} Nourriture du poulailler.`, JSON.stringify(ps));
+    R.check('P.-S. : sous la signature, dans la feuille, lu ; « Ranger la lettre » à l’écran ; aucun défilement horizontal', ps && ps.sous && ps.lu && ps.bouton && ps.large, JSON.stringify(ps));
+    await shot(pp, '19-lettre-ps');
+  } finally {
+    await cp.close();
+    srvP.stop();
+  }
 }, {
   game: (core) => {
     const now = new Date();

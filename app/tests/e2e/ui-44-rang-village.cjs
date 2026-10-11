@@ -1,12 +1,13 @@
 // 44. Le rang Village (lot B), à l'écran : les quatre bâtiments posés sur la bande du Hameau.
-//   Partie A (village au rang Village, aujourd'hui ; poulailler déjà debout) : les quatre emplacements sont sur l'île, aucune
-//   plaque n'en couvre plus du quart ; toucher les piquets de la scierie ouvre sa fiche (ce qu'elle fait, son prix,
-//   « Bâtir ») ; bâtir la paie une fois au serveur, la fiche promet la production du jour ; une quête faite inscrit la
-//   production de la scierie et du poulailler au registre, la phrase lue dit les Matériaux et la Nourriture, les fiches
-//   disent ce qui a été donné ; Remballer reprend les deux et la phrase lue le dit.
+//   Partie A (village au rang Village, aujourd'hui ; poulailler déjà debout) : à l'ouverture, sans quête, le poulailler
+//   donne sa Nourriture du jour (la visite du jour, lot J) ; les quatre emplacements sont sur l'île, aucune plaque n'en
+//   couvre plus du quart ; toucher les piquets de la scierie ouvre sa fiche (ce qu'elle fait, son prix, « Bâtir ») ; bâtir
+//   la paie une fois au serveur et elle scie aussitôt sa part du jour, que sa fiche dit ; la fiche du poulailler dit les
+//   œufs ramassés ; une quête faite puis remballée ne fait rien produire et ne reprend rien aux bâtiments.
 //   Partie B (l'hiver, tour bâtie, TOUR_ANNONCE jours avant une tempête) : la rangée d'alerte paraît 6 jours d'avance ; la
 //   fiche de la tour dit la tempête annoncée.
-//   Partie C (16 mars, cabane bâtie) : la cabane fume, sa fiche et la carte en liste disent le temps des sucres.
+//   Partie C (16 mars, cabane bâtie) : la cabane fume, la carte en liste dit le temps des sucres, sa fiche dit qu'elle a
+//   bouilli à l'ouverture.
 // Données fictives seulement.
 const path = require('node:path');
 const L = require('./lib.cjs');
@@ -116,7 +117,7 @@ async function plan(page) {
   // Partie C : le 16 mars qui suit aujourd'hui
   const C = `${Number(auj.slice(0, 4)) + (auj.slice(5) >= '03-16' ? 1 : 0)}-03-16`;
 
-  await L.runScenario('44. le rang Village : bâtir, produire, la tour et la cabane', async ({ R, srv, newPage, shot, tag }) => {
+  await L.runScenario('44. le rang Village : produire à la visite, bâtir, la tour et la cabane', async ({ R, srv, newPage, shot, tag }) => {
     // ───── Partie A : bâtir la scierie, une quête, Remballer
     const { page } = await newPage();
     await page.addInitScript(L.VOICES);
@@ -124,6 +125,9 @@ async function plan(page) {
     await L.ready(page);
     await L.closeWelcome(page, 1500);
     await page.waitForTimeout(600);
+    // la visite du jour : sans quête, le poulailler a déjà donné sa Nourriture
+    const ouvert = await L.waitFor(() => srv.ledger().some((e) => e.key === `prod:poulailler:${auj}`), 5000);
+    R.check('à l’ouverture, sans quête : le poulailler donne sa Nourriture du jour, au registre', !!ouvert && !srv.ledger().some((e) => e.type === 'reward'), JSON.stringify(srv.ledger().map((e) => e.key)));
     const ids = await page.evaluate(() => [...document.querySelectorAll('.ow-ent[data-id]')].map((e) => e.dataset.id));
     R.check('les quatre emplacements du Village sont sur l’île', VILLAGE.every((t) => ids.includes(`${t}-1`)), ids.join(' '));
     await fit(page);
@@ -146,7 +150,7 @@ async function plan(page) {
     const f0 = await ouvrir(page);
     R.check(`${loin ? 'la carte en liste (vue d’ensemble)' : 'le toucher'} ouvre la fiche de la scierie`, f0 && f0.id === 'scierie-1' && f0.nom === 'Emplacement de la scierie', JSON.stringify(f0));
     if (!f0) return;
-    R.check('« Ce que ça fait » : 3 Matériaux par jour travaillé', f0.values[1] === `${PRODUCTION.scierie.materials} Matériaux de plus chaque jour où tu termines au moins une quête.`, f0.values[1]);
+    R.check('« Ce que ça fait » : 3 Matériaux chaque jour où tu passes au village', f0.values[1] === `${PRODUCTION.scierie.materials} Matériaux de plus chaque jour où tu passes au village.`, f0.values[1]);
     R.check('« Maintenant » : le prix ; « Bâtir » actif, 44 px', f0.values[2] === 'Coûte 6 Énergie et 35 Matériaux.' && f0.geste && f0.geste.label === 'Bâtir' && !f0.geste.off && f0.geste.h >= 44, JSON.stringify([f0.values[2], f0.geste]));
     await shot(page, '44-scierie-vide');
     const g0 = srv.game();
@@ -154,7 +158,9 @@ async function plan(page) {
     const bati = await L.waitFor(() => (srv.game().batiments || []).some((b) => b.id === 'scierie-1'), 5000);
     R.check('bâtie : enregistrée sur le serveur', !!bati);
     const g1 = srv.game();
-    R.check('payée une fois : 6 Énergie et 35 Matériaux', g0.resources.energy - g1.resources.energy === 6 && g0.resources.materials - g1.resources.materials === 35, JSON.stringify([g0.resources, g1.resources]));
+    const sciee = srv.ledger().filter((e) => e.key.startsWith('prod:scierie:')).map((e) => e.key);
+    R.check('payée une fois (6 Énergie, 35 Matériaux), elle scie aussitôt sa part du jour, au registre', g0.resources.energy - g1.resources.energy === 6
+      && g0.resources.materials - g1.resources.materials === 35 - PRODUCTION.scierie.materials && sciee.join() === `prod:scierie:${auj}`, JSON.stringify([g0.resources, g1.resources, sciee]));
     await page.waitForTimeout(600);
     if (!(await fiche(page)).open) {
       await fermer(page);
@@ -163,50 +169,38 @@ async function plan(page) {
       await page.click('#dlg-plan [data-bat="scierie-1"]');
     }
     const f1 = await ouvrir(page);
-    R.check('la fiche promet la production du jour', f1 && f1.nom === 'Scierie' && f1.values[2] === 'Elle sciera à ta prochaine quête terminée aujourd’hui.', JSON.stringify(f1));
+    R.check('la fiche de la scierie dit ce qu’elle a donné', f1 && f1.nom === 'Scierie' && f1.values[2] === `Elle a scié aujourd’hui : ${PRODUCTION.scierie.materials} Matériaux de plus.`, JSON.stringify(f1));
     await shot(page, '44-scierie');
     await fermer(page);
 
-    // une quête faite : la production du jour, au registre et dans la phrase lue
+    // une quête faite puis remballée : rien ne produit de plus, rien n'est repris aux bâtiments (lot J)
+    const prods = () => srv.ledger().filter((e) => e.type === 'prod').map((e) => e.key).sort().join(' ');
+    const avant = prods();
     const id = await page.getAttribute('#fil-quest', 'data-task-id');
     await L.said(page, true);
     await page.click('#fil-quest [data-action="complete"]');
-    const prod = await L.waitFor(() => {
-      const led = srv.ledger();
-      return led.some((e) => e.key === `prod:scierie:${auj}`) && led.some((e) => e.key === `prod:poulailler:${auj}`);
-    }, 5000);
-    R.check('une quête faite : la scierie et le poulailler produisent, au registre', !!prod, JSON.stringify(srv.ledger().map((e) => e.key)));
+    const paye = await L.waitFor(() => srv.ledger().some((e) => e.type === 'reward' && e.taskId === id), 5000);
     await page.waitForTimeout(800);
     const live1 = sp(await page.textContent('#live'));
-    R.check('la phrase lue dit les Matériaux et la Nourriture gagnés', /Gains/.test(live1) && /Matériaux/.test(live1) && /Nourriture/.test(live1), live1);
-    await L.openPlan(page);
-    await page.waitForSelector('#dlg-plan[open]');
-    await page.click('#dlg-plan [data-bat="scierie-1"]');
-    const f2 = await ouvrir(page);
-    R.check('la fiche de la scierie dit ce qu’elle a donné', f2 && f2.values[2] === `Elle a scié aujourd’hui : ${PRODUCTION.scierie.materials} Matériaux de plus.`, JSON.stringify(f2 && f2.values));
-    await fermer(page);
-    await L.openPlan(page);
-    await page.waitForSelector('#dlg-plan[open]');
-    await page.click('#dlg-plan [data-bat="poulailler-1"]');
-    const f3 = await ouvrir(page);
-    R.check('la fiche du poulailler aussi', f3 && f3.values[2] === `Les œufs du jour sont ramassés : ${PRODUCTION.poulailler.food} Nourriture de plus.`, JSON.stringify(f3 && f3.values));
-    await fermer(page);
-
-    // Remballer la seule quête du jour : la production est reprise, la phrase lue le dit
+    R.check('une quête faite : payée, sans production de plus ; la phrase lue ne parle pas de Nourriture', !!paye && prods() === avant && /Gains/.test(live1) && !/Nourriture/.test(live1), JSON.stringify([avant, prods(), live1]));
     await L.openPanel(page);
     await page.locator('label.seg-option', { hasText: 'Faites' }).click();
     const row = page.locator(`#quest-list > li[data-task-id="${id}"]`);
     await row.locator('[data-action="remballer"]').click();
     await page.waitForSelector('#dlg-confirm[open]');
     await page.click('#dlg-confirm [data-answer="yes"]');
-    const repris = await L.waitFor(() => {
-      const led = srv.ledger();
-      return led.some((e) => e.key === `reprise:scierie:${auj}:1`) && led.some((e) => e.key === `reprise:poulailler:${auj}:1`);
-    }, 5000);
-    R.check('Remballer : la production du jour est reprise, au registre', !!repris, JSON.stringify(srv.ledger().map((e) => e.key)));
+    const remballe = await L.waitFor(() => srv.ledger().some((e) => e.type === 'reverse' && e.taskId === id), 5000);
     await page.waitForTimeout(800);
     const live2 = sp(await page.textContent('#live'));
-    R.check('la phrase lue dit les Matériaux et la Nourriture repris', /Gains repris/.test(live2) && /Matériaux/.test(live2) && /Nourriture/.test(live2), live2);
+    R.check('Remballer : la quête est reprise, rien des bâtiments (registre, phrase lue)', !!remballe && prods() === avant && !srv.ledger().some((e) => e.key.startsWith('reprise:'))
+      && /Gains repris/.test(live2) && !/Nourriture/.test(live2), JSON.stringify([prods(), live2]));
+    await fermer(page);
+    await L.openPlan(page);
+    await page.waitForSelector('#dlg-plan[open]');
+    await page.click('#dlg-plan [data-bat="poulailler-1"]');
+    const f3 = await ouvrir(page);
+    R.check('la fiche du poulailler dit toujours les œufs ramassés', f3 && f3.values[2] === `Les œufs du jour sont ramassés : ${PRODUCTION.poulailler.food} Nourriture de plus.`, JSON.stringify(f3 && f3.values));
+    await fermer(page);
 
     // ───── Partie B : la tour de guet, A jours avant une tempête
     const srvB = await L.startServer({ tasks: TASKS(B), game: village(B, ['tour']), ledger: calme([B], tempetesDeLHiver(J).filter((j) => j < J)), sandbox: true });
@@ -248,7 +242,7 @@ async function plan(page) {
       R.check('la carte en liste dit le temps des sucres', bats['cabane-1'] === 'Temps des sucres', JSON.stringify(bats));
       await pc.click('#dlg-plan [data-bat="cabane-1"]');
       const fc = await ouvrir(pc);
-      R.check('la fiche de la cabane promet la Nourriture du jour', fc && fc.nom === 'Cabane à sucre' && fc.values[2] === 'C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.', JSON.stringify(fc && fc.values));
+      R.check('la fiche de la cabane dit qu’elle a bouilli à l’ouverture', fc && fc.nom === 'Cabane à sucre' && fc.values[2] === `Elle a bouilli aujourd’hui : ${PRODUCTION.cabane.food} Nourriture de plus.`, JSON.stringify(fc && fc.values));
       await shot(pc, '44-cabane');
     } finally {
       await cc.close();

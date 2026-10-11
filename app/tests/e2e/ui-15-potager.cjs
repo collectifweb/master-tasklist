@@ -1,5 +1,6 @@
 // 15. Potager et familles (v2) : rebâtir un chalet depuis sa fiche, semer la parcelle du vieux potager, la voir pousser
-// au fil des jours travaillés (« Jour suivant » de la version d'essai), récolter, puis accueillir une famille. Chaque
+// au fil des jours où le jeu est ouvert, sans quête (« Jour suivant » de la version d'essai ; la visite du jour, lot J),
+// récolter, puis accueillir une famille. Chaque
 // geste attend l'écriture du serveur avant de la vérifier. Date fixe en juin (potager ouvert). Titres fictifs.
 // Les premiers pas sont déjà faits (leurs coups de pouce changeraient les comptes) : le scénario 17 les suit.
 const L = require('./lib.cjs');
@@ -46,7 +47,7 @@ async function closeBat(page) {
 }
 const geste = (page) => page.click('#dlg-batiment [data-action="bat-geste"]');
 
-L.runScenario('15. potager : chalet, semis, jours travaillés, récolte, famille', async ({ R, srv, newPage, shot }) => {
+L.runScenario('15. potager : chalet, semis, jours de passage, récolte, famille', async ({ R, srv, newPage, shot }) => {
   const { page } = await newPage();
   await page.clock.install({ time: MONDAY });
   await page.goto(srv.url);
@@ -74,31 +75,30 @@ L.runScenario('15. potager : chalet, semis, jours travaillés, récolte, famille
     const g = srv.game();
     return (g?.parcelles || []).some((p) => p.id === 'parcelle-1' && p.semeLe === ymd(0)) && g.resources.energy === g0.resources.energy - 2;
   }, 5000), JSON.stringify(srv.game()?.parcelles));
-  s = await L.waitFor(async () => { const x = await sheet(page); return /Mûr dans 5 jours travaillés/.test(x.now) ? x : null; }, 3000);
-  R.check('en terre : « Mûr dans 5 jours travaillés », « Récolter » en attente', s && s.geste?.label === 'Récolter' && s.geste.off, JSON.stringify(s));
+  s = await L.waitFor(async () => { const x = await sheet(page); return /Mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
+  R.check('en terre : « Mûr dans 5 jours de passage », « Récolter » en attente', s && s.geste?.label === 'Récolter' && s.geste.off, JSON.stringify(s));
   await closeBat(page);
 
-  // ───── cinq jours travaillés : « Jour suivant », puis une quête
+  // ───── cinq jours de passage : « Jour suivant » seulement, aucune quête
   for (let k = 1; k <= 5; k++) {
     await L.openPanel(page);
     await page.click('[data-action="jour-suivant"]');
     await L.waitFor(() => srv.game()?.horloge?.decalage === k, 5000);
+    const ouvert = await L.waitFor(() => srv.ledger().some((e) => e.key === `bonus:ouverture:${ymd(k)}`), 5000);
+    if (!ouvert) { R.check(`jour ${k} : l’ouverture du jour est au registre`, false, JSON.stringify(srv.ledger().map((e) => e.key))); break; }
     await L.closeWelcome(page, 2500);
-    await L.openPanel(page);
-    await page.click('#fil-quest [data-action="complete"]');
-    const paid = await L.waitFor(() => srv.ledger().some((e) => e.type === 'reward' && e.day === ymd(k)), 5000);
-    if (!paid) { R.check(`jour ${k} : une quête payée`, false, JSON.stringify(srv.ledger().map((e) => [e.type, e.day]))); break; }
     await page.waitForTimeout(400);
     if (k === 1) {
       s = await openBat(page, 'parcelle-1');
-      R.check('un jour travaillé plus tard : « Mûr dans 4 jours travaillés »', s && /Mûr dans 4 jours travaillés/.test(s.now), JSON.stringify(s));
+      R.check('un jour de passage plus tard, sans quête : « Mûr dans 4 jours de passage »', s && /Mûr dans 4 jours de passage/.test(s.now), JSON.stringify(s));
       await closeBat(page);
     }
   }
+  R.check('aucune quête faite pendant ces cinq jours', !srv.ledger().some((e) => e.type === 'reward'), JSON.stringify(srv.ledger().filter((e) => e.type === 'reward').map((e) => e.key)));
 
   // ───── récolter, puis accueillir une famille
   s = await openBat(page, 'parcelle-1');
-  R.check('après 5 jours travaillés : mûr, 4 Nourriture à récolter', s && s.now === 'C’est mûr : 4 Nourriture à récolter.' && !s.geste?.off, JSON.stringify(s));
+  R.check('après 5 jours de passage : mûr, 4 Nourriture à récolter', s && s.now === 'C’est mûr : 4 Nourriture à récolter.' && !s.geste?.off, JSON.stringify(s));
   await geste(page);
   R.check('récolté : 4 Nourriture de plus, la parcelle est libre', await L.waitFor(() => {
     const g = srv.game();

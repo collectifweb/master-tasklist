@@ -206,7 +206,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForTimeout(450);
   f = await fiche(page);
   R.check('Entrée sur la ligne du Garage : sa fiche, posée sur le catalogue', f.open && f.quartier === 'garage' && f.pile.join() === 'dlg-construire,dlg-quartier', JSON.stringify({ q: f.quartier, pile: f.pile }));
-  R.check('Garage au plus haut : pas de bouton d’achat, « Niveau 2 : le plus haut pour l’instant. »', !f.monter && f.max === 'Niveau 2 : le plus haut pour l’instant.' && /^Ce qu’il fait 3 jours travaillés pour qu’une culture mûrisse \(\d+ au départ\)\./.test(f.corps), JSON.stringify({ max: f.max, corps: f.corps }));
+  R.check('Garage au plus haut : pas de bouton d’achat, « Niveau 2 : le plus haut pour l’instant. »', !f.monter && f.max === 'Niveau 2 : le plus haut pour l’instant.' && /^Ce qu’il fait 3 jours de passage pour qu’une culture mûrisse \(\d+ au départ\)\./.test(f.corps), JSON.stringify({ max: f.max, corps: f.corps }));
   R.check('le focus est dans la fiche', await page.evaluate(() => document.getElementById('dlg-quartier').contains(document.activeElement)));
   R.check('une autre fiche ouverte : plus de ligne de réussite', f.monte === null, JSON.stringify(f.monte));
   await shot(page, '31-pile');

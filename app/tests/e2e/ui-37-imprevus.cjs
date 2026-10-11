@@ -7,8 +7,9 @@
 //   - parcelle mûre et ours : un double toucher dont le second tombe sur « Récolter » (ouvert) ne fait que chasser l'ours ;
 //     la phrase lue le dit une fois, Fanal le salue, la fiche dit « Ours chassé aujourd'hui. » ; la récolte, ensuite, est
 //     entière ;
-//   - une quête Maison payée répare l'éolienne, gratuitement, et la phrase lue le dit ; « Remballer » cette quête rouvre la
-//     panne (la phrase lue le dit, la marque revient) ;
+//   - une quête Maison payée répare l'éolienne, gratuitement, et la phrase lue le dit ; l'éolienne tourne alors au passage
+//     du temps qui suit ; « Remballer » cette quête rouvre la panne (la phrase lue le dit, la marque revient) et reprend le
+//     gain de la quête, pas l'Énergie de l'éolienne (lot J : Remballer ne reprend rien aux bâtiments) ;
 //   - « Jour suivant » : le gel se règle seul, sans rien écrire ; marque, bloc de la fiche et objets du jour s'en vont.
 //   Partie B (semaine tirée par le calendrier : une aurore, puis une panne ; version d'essai) :
 //   - la veille, rien ; « Jour suivant » : l'aurore paraît, payée une fois au registre, racontée par Fanal une fois par
@@ -31,7 +32,7 @@ const at = (day, h = 14) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
 
 (async () => {
   const core = await import(require('node:url').pathToFileURL(path.join(L.REPO, 'app', 'core', 'index.js')).href);
-  const { addDays, weekStart, calendrierImprevus, isTruce } = core;
+  const { addDays, weekStart, calendrierImprevus, isTruce, EOLIENNE_ENERGIE } = core;
 
   // ───── dates : en septembre prochain (potager ouvert, gel possible), jamais dans le passé
   const now = new Date();
@@ -81,7 +82,7 @@ const at = (day, h = 14) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
     return g;
   }
   const ledgerA = () => [
-    ...[1, 2, 3, 4, 5].map((k) => paye(addDays(DA, -10 + k))), // parcelle-1 mûre : cinq jours travaillés depuis son semis
+    ...[1, 2, 3, 4, 5].map((k) => paye(addDays(DA, -10 + k))), // parcelle-1 mûre : cinq jours de visite (quêtes payées) depuis son semis
     // les deux créneaux de la semaine, déjà tirés (pêche et trouvaille), et un orignal : les trois montrés aujourd'hui
     { key: `imprevu:${creneauxA[0]}`, at: at(DA).toISOString(), day: DA, type: 'imprevu', imprevu: 'peche', pe: 0, energy: 0, materials: 0 },
     { key: `imprevu:${creneauxA[1]}`, at: at(DA).toISOString(), day: DA, type: 'imprevu', imprevu: 'trouvaille', pe: 0, energy: 0, materials: 0 },
@@ -290,7 +291,10 @@ const at = (day, h = 14) => new Date(`${day}T${String(h).padStart(2, '0')}:00:00
       await page.waitForSelector('#dlg-confirm[open]');
       await page.click('#dlg-confirm [data-answer="yes"]');
       const dRe = await L.waitFor(() => { const d = degat(srvA, `panne:${addDays(DA, -1)}`); return d && !d.fin ? d : null; }, 5000);
-      R.check('Remballer la quête : la panne revient, et les ressources d’avant la quête aussi', !!dRe && !dRe.par && !dRe.taskId && res(srvA.game()) === res(gQ), `${JSON.stringify(dRe)} ${res(gQ)} → ${res(srvA.game())}`);
+      const eoA = srvA.ledger().filter((e) => e.type === 'prod' && e.batiment === 'eolienne' && e.day === DA).map((e) => e.key);
+      const gQe = { resources: { ...gQ.resources, energy: Math.round((gQ.resources.energy + EOLIENNE_ENERGIE) * 10) / 10 } };
+      R.check('Remballer la quête : la panne revient, le gain de la quête s’en va, l’Énergie de l’éolienne réparée reste', !!dRe && !dRe.par && !dRe.taskId
+        && eoA.join() === `prod:eolienne:${DA}` && res(srvA.game()) === res(gQe), `${JSON.stringify(dRe)} ${eoA} ${res(gQ)} → ${res(srvA.game())}`);
       const dRem = await L.waitFor(async () => { const d = await dits(page); return d.some((x) => x.includes('L’éolienne retombe en panne.')) ? d : null; }, 3000) || await dits(page);
       R.check('Remballer la quête : la phrase lue dit « L’éolienne retombe en panne. »', dRem.some((x) => x.includes('L’éolienne retombe en panne.')), JSON.stringify(dRem));
       await page.waitForSelector('#dlg-confirm:not([open])', { state: 'attached' });
