@@ -33,7 +33,7 @@ Un gabarit s'écrit `{nom}`. Le code le remplace avant l'affichage.
 | `{au_quartier}` | Forme de lieu, `quartier.<id>.in` (« aux Champs », « sur la Place du village ») |
 | `{cout}` | Coût lisible, tiré des données de jeu (« 20 Matériaux et 6 Énergie ») |
 | `{rang}` | Nom du nouveau rang du village (« Hameau »), pour `permis.rang` et `permis.rang.bande` seulement ; hors d'un changement de rang, il n'est pas rempli et la variante est écartée |
-| `{ville}` | Nom de la ville réglée pour la vraie météo (`game.reglages.ville.nom`, lot Q), tel que la recherche d'Open-Meteo l'a donné. Pour `tempete.meteo`, `bandeau.tempete.meteo`, `monde.plan.tempete.meteo` et `settings.saved.ville` ; sans ville, ces textes ne servent pas |
+| `{ville}` | Nom d'une ville de la vraie météo (lot Q), tel que la recherche d'Open-Meteo l'a donné. Pour `tempete.meteo`, `bandeau.tempete.meteo` et `monde.plan.tempete.meteo` : la ville de la prévision, notée avec la tempête (`alerteTempete(...).ville`), même si la ville réglée a changé ou a été retirée depuis. Pour `settings.saved.ville` : la ville que le joueur vient de choisir |
 | `{n}`, `{p}`, `{l}`, `{d}`, `{points}`, `{cote}`, `{duree}`… | Nombres et valeurs de l'interface, nommés dans chaque clé |
 | `{n}`, `{jours}` (`help.materiaux.source`), `{parPermis}` (`help.permis.source`), `{max}` (`help.permis.source`, `quartier.prochain.plein`) | Valeurs lues dans le code au moment d'afficher, jamais écrites dans le texte : `{n}` = les Matériaux de la semaine tenue (`SEMAINE_TENUE.materials`), `{jours}` = les jours travaillés qu'elle demande (`SEMAINE_TENUE.jours`), `{parPermis}` = les jours travaillés pour un permis (`JOURS_PAR_PERMIS`), `{max}` = les permis en main à partir desquels la Mairie ne tamponne plus (`PERMIS_EN_MAIN`, lot M). Si le réglage change dans le code, le texte suit |
 
@@ -92,7 +92,7 @@ Trois règles :
 | `imprevu.panne` / `.ours` / `.gel` | Un mauvais imprévu frappe (lot I), même moment. Rassure, ne chiffre rien : le prix et les jours sont dans la phrase lue et la fiche |
 | `imprevu.regle` | Un dégât est réglé : en payant (geste « Réparer », « Chasser l'ours », « Couvrir la culture »), ou par la quête payée du bon domaine, après `semaine.tenue` |
 | `tempete.annonce` | Une tempête de neige est annoncée (lot H) : dite une fois par tempête et par appareil, à la première ouverture pendant les trois jours d'annonce, après l'imprévu du jour. Rassure, ne chiffre rien : les jours, la barre et le prix sont dans le bandeau et la phrase lue |
-| `tempete.meteo` | La même annonce, quand la tempête vient de la vraie météo (lot Q : au moins 3 cm de neige prévus dans la ville réglée) : remplace `tempete.annonce`, au même moment. Dit d'où vient la tempête, avec `{ville}` ; rassure, ne chiffre rien. Sans ville (retirée depuis), `tempete.annonce` la remplace |
+| `tempete.meteo` | La même annonce, quand la tempête vient de la vraie météo (lot Q : au moins 3 cm de neige prévus dans la ville réglée) : remplace `tempete.annonce`, au même moment. Dit d'où vient la tempête, avec `{ville}` ; rassure, ne chiffre rien |
 | `tempete.veille` | La veille, quand la barre n'est pas pleine et que l'annonce a été dite un autre jour. Aucun reproche |
 | `tempete.tenue` | Le jour même, la tempête est tenue (barre pleine) |
 | `tempete.neige` | Le jour même, la tempête a enseveli un bâtiment (éolienne ou petite serre). Même ton que `imprevu.panne` : ni prix ni nombre de jours |
