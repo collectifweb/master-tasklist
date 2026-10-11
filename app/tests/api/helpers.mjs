@@ -33,7 +33,8 @@ export async function startServer({ tasksRaw = fmt(SAMPLE), env = {}, phpArgs = 
   const dataDir = join(root, 'app', 'api', 'data');
   const port = await freePort();
   const proc = spawn('php', [...phpArgs, '-S', `127.0.0.1:${port}`, '-t', root], {
-    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', OREE_TASKS_FILE: tasksFile, OREE_DATA_DIR: dataDir, ...(tasksRaw === null ? { OREE_ALLOW_CREATE_TASKS: '1' } : {}), ...env },
+    // OREE_METEO_URL : un port fermé, pour qu'aucun test n'appelle le vrai Open-Meteo (meteo.test.mjs pose un faux)
+    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', OREE_METEO_URL: 'http://127.0.0.1:9/v1/forecast', OREE_TASKS_FILE: tasksFile, OREE_DATA_DIR: dataDir, ...(tasksRaw === null ? { OREE_ALLOW_CREATE_TASKS: '1' } : {}), ...env },
     stdio: 'ignore',
   });
   const url = `http://127.0.0.1:${port}/app/api/api.php`;

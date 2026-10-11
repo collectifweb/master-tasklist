@@ -24,6 +24,10 @@ const LOCKOUT_GLOBAL_MAX = 20;        // jetons faux tolérés dans la fenêtre,
 const LOCKOUT_GLOBAL_KEY = '*';       // entrée du budget commun (une clé d'adresse est un SHA-256, jamais « * »)
 const LOCKOUT_DELAY_US = 250000;      // délai fixe après un jeton faux
 const MIN_CLIENT = 13;                // version d'app exigée pour écrire (la v1 n'envoie pas la sienne ; la v2 ne compte pas les permis ; la v3 achèterait un niveau à l'ancien prix et ne paierait pas la semaine tenue ; la v4 ignore les dégâts des imprévus et efface la reprise ; la v5 ignore la neige des tempêtes et l'efface ; la v6 tire deux imprévus par semaine quelle que soit l'allure ; la v7 ignore la tour de guet et la production du rang Village, et ne la reprend pas au Remballer ; la v8 compte 7 jours d'annonce avec la tour au lieu de 6 ; la v9 ne reprend pas au Remballer l'Énergie du sirop ; la v10 tamponne le permis des jours au-delà de 4 en main ; la v11 fait produire à la quête, reprend la production au Remballer et fait pousser aux seuls jours travaillés ; la v12 ignore les tempêtes notées d'après la neige prévue et règle celles du tirage)
+const METEO_URL_DEFAUT = 'https://api.open-meteo.com/v1/forecast'; // prévision gratuite, sans clé, usage non commercial
+const METEO_DELAI_S = 4;              // la réponse part en 4 s au plus, même si Open-Meteo traîne
+const METEO_REESSAI_S = 3600;         // après un échec, nouvel essai une heure plus tard : au plus 25 appels par jour
+const METEO_JOURS = 16;               // jours de prévision (le maximum d'Open-Meteo)
 const GAME_V1_COPY = 'game-state.v1.json'; // copie de la partie v1, dans backups/ : hors de l'élagage (backup_names)
 
 ini_set('display_errors', '0');
@@ -92,6 +96,8 @@ function load_config(): array
         'allow_open' => false,
         'allow_create' => false,
         'sandbox' => false, // version d'essai : « Jour suivant » permis (décalage de date dans la partie)
+        'meteo' => true, // la vraie météo (lot Q) : false, aucun appel à Open-Meteo
+        'meteo_url' => METEO_URL_DEFAUT,
     ];
     $file = __DIR__ . '/config.php';
     if (is_file($file)) {
@@ -102,12 +108,14 @@ function load_config(): array
         if (defined('ALLOW_OPEN')) $cfg['allow_open'] = (bool)ALLOW_OPEN;
         if (defined('ALLOW_CREATE_TASKS')) $cfg['allow_create'] = (bool)ALLOW_CREATE_TASKS;
         if (defined('SANDBOX')) $cfg['sandbox'] = (bool)SANDBOX;
+        if (defined('METEO')) $cfg['meteo'] = (bool)METEO;
+        if (defined('METEO_URL') && is_string(METEO_URL) && METEO_URL !== '') $cfg['meteo_url'] = METEO_URL;
     }
-    foreach (['tasks' => 'OREE_TASKS_FILE', 'data' => 'OREE_DATA_DIR', 'hash' => 'OREE_TOKEN_HASH'] as $k => $name) {
+    foreach (['tasks' => 'OREE_TASKS_FILE', 'data' => 'OREE_DATA_DIR', 'hash' => 'OREE_TOKEN_HASH', 'meteo_url' => 'OREE_METEO_URL'] as $k => $name) {
         $v = getenv($name);
         if (is_string($v) && $v !== '') $cfg[$k] = $v;
     }
-    foreach (['allow_open' => 'OREE_ALLOW_OPEN', 'allow_create' => 'OREE_ALLOW_CREATE_TASKS', 'sandbox' => 'OREE_SANDBOX'] as $k => $name) {
+    foreach (['allow_open' => 'OREE_ALLOW_OPEN', 'allow_create' => 'OREE_ALLOW_CREATE_TASKS', 'sandbox' => 'OREE_SANDBOX', 'meteo' => 'OREE_METEO'] as $k => $name) {
         $v = getenv($name);
         if (is_string($v) && $v !== '') $cfg[$k] = ($v === '1');
     }
@@ -477,8 +485,11 @@ function read_ops(string $file): array
     return $out;
 }
 
-/** Charge utile des réponses ; `sandbox: true` seulement en version d'essai (l'interface montre alors « Jour suivant »). */
-function state_payload(array $t, array $g, array $l, bool $sandbox): array
+/**
+ * Charge utile des réponses ; `sandbox: true` seulement en version d'essai (l'interface montre alors « Jour suivant ») ;
+ * `meteo` : la prévision de neige gardée pour la ville de la partie, ou null.
+ */
+function state_payload(array $t, array $g, array $l, bool $sandbox, ?array $meteo): array
 {
     return [
         'revision' => sha1($t['raw']),
@@ -487,7 +498,128 @@ function state_payload(array $t, array $g, array $l, bool $sandbox): array
         'gameRevision' => $g['rev'],
         'ledger' => $l['recent'],
         'ledgerKeys' => array_map('strval', array_keys($l['keys'])),
+        'meteo' => $meteo,
     ] + ($sandbox ? ['sandbox' => true] : []);
+}
+
+// ---------- La vraie météo (lot Q) ----------
+// Une lecture (GET) relit la prévision de neige chez Open-Meteo quand une ville est réglée dans la partie et que celle
+// gardée dans data/meteo.json n'est pas du jour de jeu ou pas de cette ville. L'appel ne bloque jamais la réponse plus de
+// METEO_DELAI_S, ne retient pas le verrou des données, et un échec garde l'ancienne prévision. Le cœur la reçoit telle
+// quelle (`meteo` des réponses) et juge lui-même si elle sert (core/meteo.js).
+
+/** Ville réglée dans la partie : [lat, lon] arrondis au centième, ou null. */
+function meteo_ville(mixed $game): ?array
+{
+    $r = $game instanceof stdClass ? ($game->reglages ?? null) : null;
+    $v = $r instanceof stdClass ? ($r->ville ?? null) : null;
+    if (!($v instanceof stdClass)) return null;
+    $lat = $v->lat ?? null;
+    $lon = $v->lon ?? null;
+    if (!is_int($lat) && !is_float($lat) || !is_int($lon) && !is_float($lon)) return null;
+    if (!is_finite((float)$lat) || !is_finite((float)$lon) || abs($lat) > 90 || abs($lon) > 180) return null;
+    return [round((float)$lat, 2), round((float)$lon, 2)];
+}
+
+/** Jour de jeu (core/time.js, gameDay) : à Montréal, de 4 h 00 à 3 h 59 le lendemain. */
+function meteo_jour(int $ts): string
+{
+    $l = (new DateTimeImmutable('@' . $ts))->setTimezone(new DateTimeZone('America/Montreal'));
+    if ((int)$l->format('G') < 4) $l = $l->modify('-1 day');
+    return $l->format('Y-m-d');
+}
+
+function meteo_lire(string $dataDir): ?array
+{
+    $raw = @file_get_contents($dataDir . '/meteo.json');
+    $c = is_string($raw) ? json_decode($raw, true) : null;
+    return is_array($c) ? $c : null;
+}
+
+/** Prévision gardée, telle que les réponses la portent : { lat, lon, lue, jours }, ou null. */
+function meteo_reponse(?array $c): ?array
+{
+    if (!$c || !isset($c['lat'], $c['lon'], $c['lue'], $c['jours']) || !is_array($c['jours'])) return null;
+    return ['lat' => $c['lat'], 'lon' => $c['lon'], 'lue' => $c['lue'], 'jours' => (object)$c['jours']];
+}
+
+/** Prévision gardée pour la ville de la partie (écritures : jamais d'appel), ou null sans ville. */
+function meteo_gardee(string $dataDir, mixed $game): ?array
+{
+    return meteo_ville($game) === null ? null : meteo_reponse(meteo_lire($dataDir));
+}
+
+/** Neige du jour (cm) des 16 jours de la prévision, ou null si l'appel échoue ou que la réponse est illisible. */
+function meteo_appeler(string $url): ?array
+{
+    if (!function_exists('curl_init')) return null;
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => METEO_DELAI_S,
+        CURLOPT_TIMEOUT => METEO_DELAI_S,
+        CURLOPT_FOLLOWLOCATION => false,
+    ]);
+    $raw = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    if (!is_string($raw) || $code !== 200) return null;
+    $d = json_decode($raw, true);
+    $time = $d['daily']['time'] ?? null;
+    $neige = $d['daily']['snowfall_sum'] ?? null;
+    if (!is_array($time) || !is_array($neige) || count($time) !== count($neige)) return null;
+    $jours = [];
+    foreach (array_values($time) as $k => $j) {
+        $cm = array_values($neige)[$k];
+        if (is_string($j) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $j) && (is_int($cm) || is_float($cm)) && is_finite((float)$cm)) $jours[$j] = $cm;
+    }
+    return $jours ?: null;
+}
+
+/**
+ * Prévision à joindre à une lecture : relue si elle n'est pas du jour de jeu ou pas de la ville réglée, sauf METEO éteint,
+ * échec de moins d'une heure pour cette ville, ou une autre lecture qui appelle déjà (verrou pris : rien n'attend). Un
+ * échec garde l'ancienne prévision. Jamais une erreur : au pire, la prévision gardée.
+ */
+function meteo_du_jour(array $cfg, string $dataDir, mixed $game, int $now): ?array
+{
+    $ville = meteo_ville($game);
+    if ($ville === null) return null;
+    $c = meteo_lire($dataDir);
+    try {
+        $deCetteVille = fn(?array $x): bool => is_numeric($x['lat'] ?? null) && is_numeric($x['lon'] ?? null)
+            && [round((float)$x['lat'], 2), round((float)$x['lon'], 2)] === $ville;
+        $aJour = fn(?array $x): bool => $deCetteVille($x) && is_string($x['lue'] ?? null) && ($t = strtotime($x['lue'])) !== false
+            && meteo_jour($t) === meteo_jour($now);
+        $e = $c['echec'] ?? null;
+        $echecRecent = is_array($e) && $deCetteVille($e) && is_int($e['le'] ?? null) && $now - $e['le'] < METEO_REESSAI_S;
+        if (!$cfg['meteo'] || $aJour($c) || $echecRecent) return meteo_reponse($c);
+        $fh = @fopen($dataDir . '/.meteo.lock', 'c');
+        if (!$fh) return meteo_reponse($c);
+        if (!flock($fh, LOCK_EX | LOCK_NB)) { fclose($fh); return meteo_reponse($c); }
+        try {
+            $c = meteo_lire($dataDir); // relue sous le verrou : une autre lecture vient peut-être de l'écrire
+            if ($aJour($c)) return meteo_reponse($c);
+            $jours = meteo_appeler($cfg['meteo_url'] . '?' . http_build_query([
+                'latitude' => $ville[0], 'longitude' => $ville[1], 'daily' => 'snowfall_sum',
+                'timezone' => 'America/Montreal', 'forecast_days' => METEO_JOURS,
+            ]));
+            if ($jours !== null) {
+                $c = ['lat' => $ville[0], 'lon' => $ville[1], 'lue' => gmdate('Y-m-d\TH:i:s\Z', $now), 'jours' => $jours];
+            } else {
+                error_log('oree api: prévision de neige illisible ou injoignable');
+                $c = $c ?? [];
+                $c['echec'] = ['lat' => $ville[0], 'lon' => $ville[1], 'le' => $now];
+            }
+            atomic_write($dataDir . '/meteo.json', jenc($c, JSON_UNESCAPED_SLASHES) . "\n", 0600);
+            return meteo_reponse($c);
+        } finally {
+            flock($fh, LOCK_UN);
+            fclose($fh);
+        }
+    } catch (Throwable $e) {
+        error_log('oree api: météo : ' . $e->getMessage());
+        return meteo_reponse($c);
+    }
 }
 
 // ---------- Opérations ----------
@@ -679,7 +811,8 @@ function handle(): void
         $g = read_game($gameFile);
         $l = read_ledger($ledgerFile);
         flock($lock, LOCK_UN);
-        respond(200, state_payload($t, $g, $l, $cfg['sandbox']));
+        // la prévision se lit après le verrou des données : un Open-Meteo lent ne bloque aucune écriture
+        respond(200, state_payload($t, $g, $l, $cfg['sandbox'], meteo_du_jour($cfg, $dataDir, $g['game'], $now)));
     }
 
     $lock = lock_file($dataDir . '/.lock', LOCK_EX);
@@ -691,7 +824,8 @@ function handle(): void
                 throw new ApiError(409, 'op_id_reused', 'Cet identifiant d’opération a déjà servi pour une autre requête. Rien n’a été enregistré.');
             }
             $t = read_tasks($cfg);
-            respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, read_game($gameFile), read_ledger($ledgerFile), $cfg['sandbox']));
+            $gr = read_game($gameFile);
+            respond(200, ['ok' => true, 'replay' => true, 'applied' => $body->opId] + state_payload($t, $gr, read_ledger($ledgerFile), $cfg['sandbox'], meteo_gardee($dataDir, $gr['game'])));
         }
     }
 
@@ -708,7 +842,7 @@ function handle(): void
     }
     if ($parsed['game'] !== null && $parsed['baseRev'] !== $g['rev']) {
         $t = read_tasks($cfg);
-        respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.'] + state_payload($t, $g, $l, $cfg['sandbox']));
+        respond(409, ['ok' => false, 'code' => 'game_conflict', 'error' => 'L’état du jeu a changé ailleurs. Rien n’a été enregistré.'] + state_payload($t, $g, $l, $cfg['sandbox'], meteo_gardee($dataDir, $g['game'])));
     }
 
     // Écritures, dans l'ordre : tasks.json, game-state.json, registre, ops.json. Annulées en cas d'échec.
@@ -741,7 +875,7 @@ function handle(): void
         $ops[] = ['id' => $body->opId, 'h' => $opsHash];
         $ops = array_slice($ops, -MAX_OPS_KEPT);
         $opsJson = jenc($ops) . "\n";
-        $responseJson = jenc(['ok' => true, 'applied' => $body->opId] + state_payload($t, $g2, $l2, $cfg['sandbox']), JSON_UNESCAPED_SLASHES);
+        $responseJson = jenc(['ok' => true, 'applied' => $body->opId] + state_payload($t, $g2, $l2, $cfg['sandbox'], meteo_gardee($dataDir, $g2['game'])), JSON_UNESCAPED_SLASHES);
 
         if ($newGameJson !== null) {
             $prevRaw = $g['raw'];

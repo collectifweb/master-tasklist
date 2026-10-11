@@ -2,7 +2,7 @@
 /**
  * Modèle de réglages. Copier en `config.php` (ignoré par Git) et adapter.
  * Ordre de priorité : variables d'environnement (OREE_TASKS_FILE, OREE_DATA_DIR,
- * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1, OREE_SANDBOX=1), puis ce fichier,
+ * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1, OREE_SANDBOX=1, OREE_METEO=0, OREE_METEO_URL), puis ce fichier,
  * puis les valeurs par défaut.
  */
 
@@ -32,6 +32,15 @@
 // « Jour suivant », et une partie qui porte un décalage de date (`horloge`) est acceptée. Sans ce réglage, l'API la
 // refuse (409 sandbox_only).
 // define('SANDBOX', true);
+
+// LA VRAIE MÉTÉO (réglages du jeu, « Météo du village ») : avec une ville réglée, une lecture de l'app relit la prévision
+// de neige chez Open-Meteo (https://open-meteo.com), une fois par jour de jeu et par ville (après un échec, une heure
+// plus tard), et la garde dans data/meteo.json. Service gratuit et sans clé pour un usage non commercial (moins de
+// 10 000 appels par jour), données sous licence CC BY 4.0 ; l'hébergement doit pouvoir appeler l'extérieur (cURL). Le
+// service reçoit les coordonnées de la ville, arrondies au centième. METEO false : aucun appel, le jeu garde le tirage
+// d'après la date. METEO_URL : une autre adresse de prévision au même format (essais).
+// define('METEO', false);
+// define('METEO_URL', 'https://api.open-meteo.com/v1/forecast');
 
 // RAPPEL DU MATIN (app/serveur/rappel.php, lancé à 8 h par une tâche planifiée de l'hébergement) : une notification
 // ntfy au texte général, qui ouvre l'app. Le nom du canal fait office de mot de passe sur le serveur public de ntfy :
