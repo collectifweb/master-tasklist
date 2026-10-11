@@ -170,7 +170,8 @@ function react(payload) {
   if (bat) announce.say(remember(action === 'advanceTime' ? after(bat + replyText) : bat + replyText));
 }
 
-const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger', 'livrer', 'servirRepas', 'faireLesSucres'];
+// gestes du village dont le gain se dit avec leur phrase (réparer : l'éolienne réparée en payant tourne aussitôt)
+const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger', 'livrer', 'servirRepas', 'faireLesSucres', 'reparer'];
 
 /** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine tenue. */
 function objectifsSay(events) {

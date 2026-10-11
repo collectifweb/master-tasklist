@@ -26,7 +26,7 @@ import { round1 } from './reward.js';
 import { hasKey } from './ledger.js';
 import { hash } from './letters.js';
 import { quartierOfTask } from './domains.js';
-import { batimentsDuVillage, etatCulture, joursVisites, stockage, potagerOuvert, manque } from './batiments.js';
+import { batimentsDuVillage, etatCulture, joursVisites, stockage, potagerOuvert, manque, produireEolienne } from './batiments.js';
 import { etatPremiersPas, suivreObjectifs } from './objectifs.js';
 import { estJourDeTempete } from './hiver.js';
 import { allureDe } from './allure.js';
@@ -176,13 +176,15 @@ export function reparer(tasks, game, ledger, params, now) {
   g.degats = list(g.degats).map((x) => (x.id === d.id ? { ...x, fin: ctx.day, par: 'paiement' } : x));
   ctx.game = g;
   ctx.events.push({ type: 'reparation', degat: d.id, imprevu: d.type, cible: d.cible, par: 'paiement', cout });
+  // l'éolienne réparée en payant tourne aussitôt, si elle n'a pas encore donné sa part du jour (choix d'Alex, 11 octobre)
+  if (d.cible.startsWith('eolienne-')) produireEolienne(ctx, false);
   return ctx.result();
 }
 
 /**
  * Une quête payée règle les dégâts en cours de son domaine (Maison : la panne ; Terrain : le potager et la neige), sans rien changer
- * à la quête ni à son gain. Appelée par quests.js juste après le gain ; l'éolienne réparée tourne au passage du temps qui suit (lot J). Événement { type: 'reparation',
- * degat, imprevu, cible, par: 'quete', taskId } par dégât réglé.
+ * à la quête ni à son gain. Appelée par quests.js juste après le gain ; l'éolienne réparée tourne au passage du temps qui
+ * suit (lot J). Événement { type: 'reparation', degat, imprevu, cible, par: 'quete', taskId } par dégât réglé.
  */
 export function reparerParQuete(ctx, task) {
   const q = quartierOfTask(task);

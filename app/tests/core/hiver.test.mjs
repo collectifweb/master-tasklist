@@ -215,8 +215,8 @@ test('déneiger : en payant (Énergie), une seule fois ; une quête Terrain dén
   const [d] = degatsActifs(world.game, at(j));
   const prix = DEGATS.neige.reparer.energy;
   const { world: w1, r } = step(world, reparer, { id: d.id }, at(j, 15));
-  assert.equal(w1.game.resources.energy, 50 - prix);
-  assert.deepEqual(r.entries, []);
+  assert.equal(w1.game.resources.energy, 50 - prix + EOLIENNE_ENERGIE, 'déneigée en payant, elle tourne aussitôt (11 octobre)');
+  assert.deepEqual(r.entries.map((x) => x.key), [`prod:eolienne:${j}`]);
   assert.deepEqual(r.events.filter((x) => x.type === 'reparation').map((x) => [x.imprevu, x.par, x.cout]), [['neige', 'paiement', DEGATS.neige.reparer]]);
   assert.equal(degatDe(w1.game, 'eolienne-1', at(j, 15)), null);
   assert.equal(refusReparer(w1.game, { id: d.id }, at(j, 15)), 'Déjà déneigé.');

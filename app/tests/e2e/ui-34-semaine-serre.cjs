@@ -340,8 +340,8 @@ const jourSuivant = async (page, srv, k) => {
         const g = srvB.game();
         return (g?.parcelles || []).some((p) => p.id === 'serre-2' && p.semeLe === ymdJ(0)) && g.resources.energy === e0 - 5;
       }, 5000), JSON.stringify([srvB.game()?.parcelles, srvB.game()?.resources]));
-      f = await L.waitFor(async () => { const x = await fiche(pb); return /Mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
-      R.check('serre-2 en terre : « Mûr dans 5 jours de passage », « Récolter » en attente', f && f.geste?.label === 'Récolter' && f.geste.off, JSON.stringify(f));
+      f = await L.waitFor(async () => { const x = await fiche(pb); return /^Semé le [^,]+, mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
+      R.check('serre-2 en terre : « Semé le …, mûr dans 5 jours de passage » (jamais « .. » après une date abrégée), « Récolter » en attente', f && !/\.\./.test(f.now) && f.geste?.label === 'Récolter' && f.geste.off, JSON.stringify(f));
       await closeBat(pb);
       const un = await openBat(pb, 'serre-1');
       R.check('serre-1 reste vide : la 2e serre se sème seule', un && /^Rien n’est semé\./.test(un.now), JSON.stringify(un));

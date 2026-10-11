@@ -151,7 +151,7 @@ plein), que le joueur serve le repas chaque semaine ou seulement quand la réser
 - l'éolienne, la scierie, le poulailler et la cabane à sucre (au temps des sucres) donnent leur part, une fois par jour, même avec deux appareils. Un producteur bâti dans la journée donne la sienne aussitôt (choix de Claude, réversible). Réserve de Nourriture pleine : rien n'entre, le passage suivant du même jour réessaie (celui qui suit une quête, par exemple) ;
 - les cultures (potager et serres) comptent les jours de visite depuis leur semis : 5 pour mûrir (4, puis 3 avec le Garage). Un jour de visite est un jour où le jeu a été ouvert, ou un jour avec une quête payée et non remballée. Les jours de gel ou de neige sur la culture ne comptent pas, comme avant ;
 - un jour sans ouvrir le jeu, rien ne pousse ni ne produit, et rien n'est perdu : pas de rattrapage des jours manqués, pas de série ;
-- Remballer ne reprend plus rien aux bâtiments : leur part ne dépend plus des quêtes. Une éolienne en panne ou sous la neige ne tourne pas ; réparée dans la journée, elle tourne au passage du temps suivant : aussitôt après la quête qui la répare ; après un paiement, au prochain passage du temps du même jour (une quête terminée ou ajoutée, une étape cochée, un retour sur la page ou son chargement) ; sans aucun d'eux, la part de ce jour est perdue ;
+- Remballer ne reprend plus rien aux bâtiments : leur part ne dépend plus des quêtes. Une éolienne en panne ou sous la neige ne tourne pas ; réparée dans la journée, elle tourne au passage du temps suivant : aussitôt après la quête qui la répare ; réparée ou déneigée en payant, elle tourne aussitôt (décision 49) ;
 - la lettre du matin de Fanal porte un P.-S. qui dit ce que le village a produit : « P.-S. Le village a déjà fait sa part aujourd'hui : 3 Énergie de l'éolienne, 3 Matériaux de la scierie et 1 Nourriture du poulailler. » Les fiches disent « chaque jour où tu passes au village » et « mûr dans N jours de passage » ;
 - restent aux jours travaillés (au moins une quête payée) : les permis, la semaine tenue, les crans de préparation des tempêtes et l'allure. Le bonus d'ouverture (+1 Énergie) ne change pas.
 
@@ -449,7 +449,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 7 et 8 | ~~La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance~~ (abandonnée le 9 octobre, décision 44) | Décembre |
 | 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex du 5 au 10 octobre 2026
+## 15. Décisions d'Alex du 5 au 11 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -532,3 +532,7 @@ Décisions du 10 octobre 2026 :
 
 47. **La Mairie garde 4 permis au plus** (§4). Alex m'a laissé le choix, d'après la simulation : un plafond de 4 permis en main pour le permis des jours travaillés, plutôt qu'un permis tous les 5 ou 6 jours (le joueur rapide perdait des niveaux) ou un plafond qui suit le prix du prochain niveau (des niveaux retardés jusqu'à 6 jours). Rang, saison et scientifique passent au-delà.
 48. **La visite du jour, telle que construite** (lot J, 10 octobre au soir ; §5). Règle A : les cultures et les bâtiments suivent la visite du jour, aux montants d'avant. Trois cibles de la simulation, fixées sous l'ancienne règle, ne tenaient plus ; Alex les a ajustées après avoir vu les chiffres : l'objectif d'hiver peut être atteint dès le 1er décembre (le joueur lent qui ouvre chaque jour l'atteint du 12 au 17 décembre), l'objectif réduit au ralenti reste ; l'allure ne retarde jamais le premier niveau de plus de 4 jours, l'avancer est permis ; livrer les commandes ne le retarde jamais de plus de 7 jours. Les textes disent « passes au village » ; la production du jour est dite dans un P.-S. de Fanal, sous sa signature.
+
+Décisions du 11 octobre 2026 :
+
+49. **L'éolienne réparée en payant tourne aussitôt** (§5, « La visite du jour »). Réparée ou déneigée en payant, elle donne sa part du jour tout de suite, si elle ne l'a pas déjà donnée, comme un producteur bâti dans la journée. Avant, elle attendait le passage du temps suivant, et sans lui la part du jour était perdue. Réparée par une quête, elle tourne au passage du temps qui suit la quête, comme avant.

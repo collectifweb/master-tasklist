@@ -184,23 +184,22 @@ test('une quête Maison payée répare l’éolienne, sans changer la quête ni 
   assert.ok(degatDe(t.world.game, 'eolienne-1', at(jour, 16)));
 });
 
-test('réparer en payant : le prix, une seule fois ; ensuite l’éolienne tourne au prochain passage du temps', () => {
+test('réparer en payant : le prix, une seule fois ; l’éolienne tourne aussitôt, une fois (choix d’Alex, 11 octobre)', () => {
   const jour = mauvaisJour('2026-10-05');
   const { world } = step(village(jour, { batiments: [EOLIENNE] }), advanceTime, {}, at(jour));
   const [d] = degatsActifs(world.game, at(jour));
   const prix = IMPREVUS.mauvais.panne.reparer;
   assert.equal(refusReparer(world.game, { id: d.id }, at(jour)), null);
   const { world: w2, r } = step(world, reparer, { id: d.id }, at(jour, 15));
-  assert.deepEqual(w2.game.resources, { ...world.game.resources, materials: 50 - (prix.materials || 0), energy: 50 - (prix.energy || 0) });
-  assert.deepEqual(r.entries, [], 'rien au registre');
-  assert.deepEqual(r.ops.map((op) => op.type), ['game.set']);
+  assert.deepEqual(w2.game.resources, { ...world.game.resources, materials: 50 - (prix.materials || 0), energy: 50 - (prix.energy || 0) + EOLIENNE_ENERGIE });
+  assert.deepEqual(r.entries.map((x) => [x.key, x.energy]), [[`prod:eolienne:${jour}`, EOLIENNE_ENERGIE]], 'au registre : la part du jour, rien d’autre');
   assert.deepEqual(r.events.filter((x) => x.type === 'reparation').map((x) => [x.imprevu, x.par, x.cout]), [['panne', 'paiement', prix]]);
   assert.equal(degatDe(w2.game, 'eolienne-1', at(jour, 15)), null);
   // un second toucher, ou un second appareil qui a déjà la réparation : refusé, rien ne bouge
   assert.equal(refusReparer(w2.game, { id: d.id }, at(jour, 15)), 'Déjà réparé.');
   assert.throws(() => step(w2, reparer, { id: d.id }, at(jour, 15)), { message: 'Déjà réparé.' });
   const { r: r3 } = step(w2, advanceTime, {}, at(jour, 16));
-  assert.deepEqual(r3.entries.filter((x) => x.type === 'prod').map((x) => x.energy), [EOLIENNE_ENERGIE]);
+  assert.deepEqual(r3.entries.filter((x) => x.type === 'prod'), [], 'pas deux fois le même jour');
 });
 
 test('réparer : raisons écrites (rien à réparer, réglé tout seul, déjà réparé par une quête, ce qui manque) ; jamais de stock négatif', () => {
@@ -224,7 +223,7 @@ test('réparer : raisons écrites (rien à réparer, réglé tout seul, déjà r
   assert.match(refusReparer(pauvre.game, { id: d.id }, at(jour)), /^Il manque 1 /);
   const juste = { ...world, game: { ...world.game, resources: { energy: 0, materials: 0, food: 0, [cle]: n } } };
   const { world: w0 } = step(juste, reparer, { id: d.id }, at(jour));
-  assert.deepEqual(w0.game.resources, { energy: 0, materials: 0, food: 0 });
+  assert.deepEqual(w0.game.resources, { energy: EOLIENNE_ENERGIE, materials: 0, food: 0 }, 'payé jusqu’à zéro, puis la part du jour de l’éolienne réparée');
 });
 
 test('ours au potager : seulement sur une parcelle mûre, de mai à octobre ; la récolte faite pendant sa visite est réduite et le renvoie', () => {

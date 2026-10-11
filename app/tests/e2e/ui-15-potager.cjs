@@ -75,8 +75,8 @@ L.runScenario('15. potager : chalet, semis, jours de passage, récolte, famille'
     const g = srv.game();
     return (g?.parcelles || []).some((p) => p.id === 'parcelle-1' && p.semeLe === ymd(0)) && g.resources.energy === g0.resources.energy - 2;
   }, 5000), JSON.stringify(srv.game()?.parcelles));
-  s = await L.waitFor(async () => { const x = await sheet(page); return /Mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
-  R.check('en terre : « Mûr dans 5 jours de passage », « Récolter » en attente', s && s.geste?.label === 'Récolter' && s.geste.off, JSON.stringify(s));
+  s = await L.waitFor(async () => { const x = await sheet(page); return /^Semé le [^,]+, mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
+  R.check('en terre : « Semé le …, mûr dans 5 jours de passage », « Récolter » en attente', s && s.geste?.label === 'Récolter' && s.geste.off, JSON.stringify(s));
   await closeBat(page);
 
   // ───── cinq jours de passage : « Jour suivant » seulement, aucune quête
@@ -90,7 +90,7 @@ L.runScenario('15. potager : chalet, semis, jours de passage, récolte, famille'
     await page.waitForTimeout(400);
     if (k === 1) {
       s = await openBat(page, 'parcelle-1');
-      R.check('un jour de passage plus tard, sans quête : « Mûr dans 4 jours de passage »', s && /Mûr dans 4 jours de passage/.test(s.now), JSON.stringify(s));
+      R.check('un jour de passage plus tard, sans quête : « mûr dans 4 jours de passage »', s && /, mûr dans 4 jours de passage/.test(s.now), JSON.stringify(s));
       await closeBat(page);
     }
   }
