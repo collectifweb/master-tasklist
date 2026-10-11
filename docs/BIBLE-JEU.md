@@ -114,11 +114,11 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Potager (parcelle) | Campement | Produit de la Nourriture de mai à octobre |
 | Atelier | Campement | Permet de construire et de réparer |
 | Petite serre | Campement ; la 2e, Hameau | Produit de la Nourriture toute l'année ; l'hiver, elle consomme de l'Énergie. On peut en avoir deux (la seconde exige le rang Hameau) : plus de Nourriture l'hiver, et un usage pour l'Énergie |
-| Éolienne | Hameau | Donne de l'Énergie en plus les jours où tu as travaillé |
+| Éolienne | Hameau | Donne de l'Énergie en plus les jours où tu passes au village |
 | Grenier | Hameau | Garde plus de Nourriture en réserve |
 | Quai | Hameau | Les visiteurs arrivent par le lac : débloque les commandes |
 | Tour de guet | Village | Annonce les tempêtes de neige jusqu'à 6 jours d'avance au lieu de 3 |
-| Scierie | Village | Donne des Matériaux en plus les jours où tu as travaillé |
+| Scierie | Village | Donne des Matériaux en plus les jours où tu passes au village |
 | Poulailler | Village | Un peu de Nourriture, même l'hiver |
 | Cabane à sucre | Village | Grosse récolte au temps des sucres (mars-avril) ; réserve pleine, le marchand du quai achète le reste en sirop |
 | Marché | Bourg | Échanger sans attendre un visiteur |
@@ -128,7 +128,7 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 
 **Le rang Village, tel qu'il est construit** (lot B, nuit du 8 au 9 octobre 2026 ; choix de Claude, envoi accepté par Alex le 9 octobre au matin ; en ligne depuis, étiquette `v2.10`) :
 - les quatre bâtiments se posent sur la bande du Hameau (décision 38), un exemplaire chacun ; leurs piquets y paraissent avec la bande, et avant le 6e habitant leur fiche dit combien il en manque (« Village : encore 3 habitants. » au 3e). Prix : tour de guet 4 Énergie et 30 Matériaux ; scierie 6 Énergie et 35 Matériaux (il faut d'abord l'atelier) ; poulailler 25 Matériaux ; cabane à sucre 3 Énergie et 30 Matériaux ;
-- comme l'éolienne, les trois producteurs donnent à la première quête payée du jour, une fois par jour, et Remballer reprend leur part si le jour reste sans quête payée : la scierie 3 Matériaux ; le poulailler 1 Nourriture, toute l'année ; la cabane à sucre 4 Nourriture du 1er mars au 30 avril (le reste de l'année, elle dort ; au temps des sucres, sa vapeur sort du lanterneau). La Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'entre, et la quête payée suivante du même jour réessaie ;
+- comme l'éolienne, les trois producteurs donnent leur part une fois par jour : la scierie 3 Matériaux ; le poulailler 1 Nourriture, toute l'année ; la cabane à sucre 4 Nourriture du 1er mars au 30 avril (le reste de l'année, elle dort ; au temps des sucres, sa vapeur sort du lanterneau). La Nourriture ne dépasse jamais la réserve : réserve pleine, rien n'entre, et le passage suivant du même jour réessaie. Depuis le lot J, ils donnent à la première ouverture du jour (« La visite du jour », plus bas) ; avant, c'était à la première quête payée du jour, et Remballer reprenait leur part si le jour restait sans quête payée ;
 - la fiche de chacun dit, dans « Maintenant », ce qu'il a donné aujourd'hui, ou pourquoi rien encore (hors saison, réserve pleine) ; celle de la tour, la tempête annoncée (§8) ;
 - rien ne tombe en panne ni sous la neige dans ce lot : seules l'éolienne et la serre le peuvent.
 
@@ -142,10 +142,20 @@ trop se perdait. Elle sert maintenant à trois choses de plus :
   tablée est dressée sur la Place, devant la lanterne ;
 - **la partie de sucre**, l'objectif du printemps (§6) ;
 - **le sirop** : au temps des sucres, réserve pleine, ce que la cabane à sucre ne peut pas ranger part au marchand du
-  quai, 1,5 Énergie par Nourriture, sans geste à faire ; sans le quai, rien n'entre. Remballer le reprend comme le reste
-  de la production du jour. La fiche de la cabane le dit dans « Maintenant ».
+  quai, 1,5 Énergie par Nourriture, sans geste à faire ; sans le quai, rien n'entre. Depuis le lot J, Remballer ne le reprend plus, pas plus que le
+  reste de la production du jour. La fiche de la cabane le dit dans « Maintenant ».
 D'après la simulation (o), avec ce garde-fou personne ne recule (Hameau, premier niveau, niveaux au 1er mai, village
 plein), que le joueur serve le repas chaque semaine ou seulement quand la réserve déborde.
+
+**La visite du jour** (lot J, 10 octobre 2026 ; décisions 45 et 48). Dès la première ouverture du jour de jeu, sans quête :
+- l'éolienne, la scierie, le poulailler et la cabane à sucre (au temps des sucres) donnent leur part, une fois par jour, même avec deux appareils. Un producteur bâti dans la journée donne la sienne aussitôt (choix de Claude, réversible). Réserve de Nourriture pleine : rien n'entre, le passage suivant du même jour réessaie (celui qui suit une quête, par exemple) ;
+- les cultures (potager et serres) comptent les jours de visite depuis leur semis : 5 pour mûrir (4, puis 3 avec le Garage). Un jour de visite est un jour où le jeu a été ouvert, ou un jour avec une quête payée et non remballée. Les jours de gel ou de neige sur la culture ne comptent pas, comme avant ;
+- un jour sans ouvrir le jeu, rien ne pousse ni ne produit, et rien n'est perdu : pas de rattrapage des jours manqués, pas de série ;
+- Remballer ne reprend plus rien aux bâtiments : leur part ne dépend plus des quêtes. Une éolienne en panne ou sous la neige ne tourne pas ; réparée dans la journée, elle tourne au passage du temps suivant : aussitôt après la quête qui la répare ; après un paiement, à la prochaine quête du jour, au prochain chargement de la page ou le lendemain ;
+- la lettre du matin de Fanal porte un P.-S. qui dit ce que le village a produit : « P.-S. Le village a déjà fait sa part aujourd'hui : 3 Énergie de l'éolienne, 3 Matériaux de la scierie et 1 Nourriture du poulailler. » Les fiches disent « chaque jour où tu passes au village » et « mûr dans N jours de passage » ;
+- restent aux jours travaillés (au moins une quête payée) : les permis, la semaine tenue, les crans de préparation des tempêtes et l'allure. Le bonus d'ouverture (+1 Énergie) ne change pas.
+
+D'après la simulation (J), chez les trois joueurs mesurés (très lent, lent, (g) ; départs du 1er juillet et du 7 octobre), ouvrir le jeu plus souvent ne retarde jamais le Hameau et ne retire jamais de niveau au 1er mars. Le rang Village, lui, peut reculer : chez (g) parti en octobre, ouvrir chaque jour le repousse au jour 51, contre 46 quand il n'ouvre que les jours de quête, parce que ses cultures mûrissent toutes le même jour et qu'il manque la commande famille de la semaine (`tasks/todo.md`, lot J).
 
 Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village.
 
@@ -515,9 +525,10 @@ Décisions du 9 octobre 2026 (matin), lot N :
 Décisions du 9 octobre 2026 (soir) :
 
 44. **Hermes ne fait qu'ajouter les tâches** d'Alex, comme aujourd'hui (texte ou vocal, évaluées puis écrites dans la liste). Pas de chroniques : le jeu tire déjà seul imprévus, visiteurs et tempêtes. Les mentions d'Hermes comme auteur du village (introduction, §6, §9, §11, §12) sont caduques.
-45. **La visite du jour fait tourner le village**, sans série. Dès la première ouverture du jour, les cultures poussent et les bâtiments produisent ; aucun compteur de jours de suite, une absence ne fait rien perdre. Les permis, la semaine tenue et la préparation des tempêtes restent aux jours travaillés (au moins une quête payée), pour qu'ouvrir l'app ne rapporte pas autant que faire une quête. Alex avait d'abord demandé une série de connexions ; cette version lui convient. À simuler avant de fixer les montants.
+45. **La visite du jour fait tourner le village**, sans série. Dès la première ouverture du jour, les cultures poussent et les bâtiments produisent ; aucun compteur de jours de suite, une absence ne fait rien perdre. Les permis, la semaine tenue et la préparation des tempêtes restent aux jours travaillés (au moins une quête payée), pour qu'ouvrir l'app ne rapporte pas autant que faire une quête. Alex avait d'abord demandé une série de connexions ; cette version lui convient. À simuler avant de fixer les montants. Mesuré le 10 octobre (lot J) : Alex garde la règle telle quelle, cultures et bâtiments (règle A), montants inchangés (§5, « La visite du jour » ; décision 48).
 46. **La vraie météo.** La ville du joueur dans les réglages ; le serveur lit la prévision d'Open-Meteo une fois par jour, et une neige prévue chez le joueur fait annoncer une tempête dans le jeu. Pas besoin d'être précis. Une annonce faite reste tenue même si la prévision change ; sans ville ou sans réseau, le tirage d'après la date (§8). Les conditions d'utilisation d'Open-Meteo restent à vérifier avant le lot.
 
-Décision du 10 octobre 2026 :
+Décisions du 10 octobre 2026 :
 
 47. **La Mairie garde 4 permis au plus** (§4). Alex m'a laissé le choix, d'après la simulation : un plafond de 4 permis en main pour le permis des jours travaillés, plutôt qu'un permis tous les 5 ou 6 jours (le joueur rapide perdait des niveaux) ou un plafond qui suit le prix du prochain niveau (des niveaux retardés jusqu'à 6 jours). Rang, saison et scientifique passent au-delà.
+48. **La visite du jour, telle que construite** (lot J, 10 octobre au soir ; §5). Règle A : les cultures et les bâtiments suivent la visite du jour, aux montants d'avant. Trois cibles de la simulation, fixées sous l'ancienne règle, ne tenaient plus ; Alex les a ajustées après avoir vu les chiffres : l'objectif d'hiver peut être atteint dès le 1er décembre (le joueur lent qui ouvre chaque jour l'atteint du 12 au 17 décembre), l'objectif réduit au ralenti reste ; l'allure ne retarde jamais le premier niveau de plus de 4 jours, l'avancer est permis ; livrer les commandes ne le retarde jamais de plus de 7 jours. Les textes disent « passes au village » ; la production du jour est dite dans un P.-S. de Fanal, sous sa signature.

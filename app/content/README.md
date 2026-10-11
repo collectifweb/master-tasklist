@@ -7,7 +7,7 @@ Tout le texte visible de « La lisière rallumée » vit ici, en JSON UTF-8, ave
 | `fr-CA/repliques.json` | La voix de Fanal et ses répliques, classées par situation |
 | `fr-CA/lettres.json` | Les lettres de Fanal : matin, matin sans quête, retour, passage à la v2, conversion des niveaux en permis |
 | `fr-CA/interface.json` | Les petits textes d'interface (boutons, tris, états, confirmations…) |
-| `fr-CA/batiments.json` | Les bâtiments du village : noms, fiches à trois lignes (ce que c'est, ce que ça fait, maintenant), états, annonces et textes du catalogue « Construire », la commande du visiteur dans la fiche du quai (`bat.commande.*`, lot C), le comptoir du marchand (`bat.comptoir.*`, dont l'échange du jour sous les offres de la semaine, `bat.comptoir.jour.*`, lot T). Lus sous `bat.<groupe>.<clé>` ; les raisons de refus viennent de `core/batiments.js` |
+| `fr-CA/batiments.json` | Les bâtiments du village : noms, fiches à trois lignes (ce que c'est, ce que ça fait, maintenant), états, annonces et textes du catalogue « Construire », la commande du visiteur dans la fiche du quai (`bat.commande.*`, lot C), le comptoir du marchand (`bat.comptoir.*`, dont l'échange du jour sous les offres de la semaine, `bat.comptoir.jour.*`, lot T), le morceau de chaque producteur dans le P.-S. de la lettre (`bat.<type>.ps`, lot J). Lus sous `bat.<groupe>.<clé>` ; les raisons de refus viennent de `core/batiments.js` |
 | `fr-CA/ancres.json` | Les objets-ancres et mots-clés qui servent à deviner le domaine. Tenu à part, voir le fichier lui-même |
 
 Vérifier un fichier après modification : `python3 -m json.tool app/content/fr-CA/repliques.json > /dev/null`.
@@ -145,7 +145,8 @@ Chaque situation compte au moins 4 variantes sans filtre, de 4 à 6 (comptées l
 ```
 
 - `texte` : un paragraphe par élément. Le premier est la salutation. La lettre est signée par la voix de `signature`.
-- `matin` : à la première ouverture du jour de jeu. Contient toujours `{quete}`, la quête n° 1 du Fil du jour. Sans quête ouverte, on tire dans `matinSansQuete`. Jamais le jour où la partie commence.
+- `matin` : à la première ouverture du jour de jeu. Contient toujours `{quete}`, la quête n° 1 du Fil du jour. Sans quête ouverte, on tire dans `matinSansQuete`. Jamais le jour où la partie commence.
+- Le P.-S. (lot J) : sous la signature de la lettre du matin (`matin` ou `matinSansQuete`), quand le village a produit à l'ouverture du jour ; rien sinon. Gabarit `letter.ps` d'`interface.json` (« P.-S. Le village a déjà fait sa part aujourd'hui : {liste}. ») ; `{liste}` réunit, avec « et » avant le dernier, un morceau par production : `bat.<type>.ps` de `batiments.json` (« {n} Énergie de l'éolienne »), plus `bat.cabane.ps.sirop` pour l'Énergie du sirop vendu au marchand. Espace insécable entre `{n}` et la ressource, pour qu'un nombre ne finisse jamais seul en bout de ligne.
 - `retour` : à la première ouverture après 3 jours ou plus sans visite, à la place de la lettre du matin, le jour où le bonus de retour est versé (+10 Énergie, au plus une fois par 14 jours). Une absence de 3 jours ou plus qui tombe moins de 14 jours après le dernier bonus n'a ni lettre de retour ni réplique `return.after_absence` : la lettre du matin continue.
 - `periode` (facultatif) : `automne` de septembre au 14 novembre, `neige` du 15 novembre au 30 avril. Sans `periode`, la lettre convient toute l'année ; de mai à août, seules ces lettres jouent.
 - `passage` : la lettre de passage à la v2 (`passage.v2`), montrée une seule fois à une partie convertie depuis la v1 (`game.migratedAt`), jamais à une partie neuve. Elle prend la place de la lettre du matin ce jour-là. Si les écrans d'accueil viennent d'être montrés, elle attend la visite suivante.
@@ -185,6 +186,7 @@ Durée correspond au champ `length` d'une tâche, Effort au champ `difficulty`.
 - Mots du jeu : Quête, Cote, Étape, Énergie, Matériaux, Nourriture, Habitants, permis, quartier, rang, bâtiment. Confiance, Lueur, Fil libre, Secteur, Lot, Avis, Préparation, Voile, Lisière et Relais sont des mots de la v1 : ils ne servent plus que dans la lettre de passage et dans les noms des anciens gestes écartés (`migration.geste.*`). Jamais « Réputation ».
 - Dans un prix, un manque ou une raison de refus, les ressources se disent toujours dans le même ordre : permis, Énergie, Matériaux, puis Nourriture (comme la barre du haut). Le code l'applique (`manque`, `core/batiments.js` ; `prixText`, `js/ui/quartier.js`) ; les textes écrits à la main le suivent.
 - La semaine tenue ne se dit jamais comme une série : pas de nombre de jours de suite, pas de « tu l'as manquée ». Une semaine non tenue n'a aucune ligne ni aucun mot.
+- La production des bâtiments et la pousse des cultures suivent la visite du jour (lot J) : « chaque jour où tu passes au village », « mûr dans N jours de passage », « à ton prochain passage au village ». « Jour travaillé » reste le mot des permis, de la semaine tenue et de la barre de tempête.
 - Fanal parle en 20 mots au plus par réplique (par phrase dans ses lettres) et n'est jamais triste. Une réplique tient en 110 caractères.
 - La célébration suit la taille de la quête : une réplique brève, une fois sur trois, pour une petite ou une moyenne ; une réplique chaque fois pour un grand chantier.
 - Aucune donnée réelle : ni vraie tâche, ni prénom de proche, ni lieu identifiable.
