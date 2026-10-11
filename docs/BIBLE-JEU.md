@@ -18,7 +18,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 **Fanal.** Un vieux robot de déneigement, remis en marche, qui porte une lanterne. C'est ton contremaître : il explique ce que fait chaque chose, annonce les visiteurs et la météo, et signe la lettre du matin. Il parle court, avec un humour pince-sans-rire, et ne fait jamais la morale.
 
-**Pourquoi tes tâches comptent.** Ce que tu accomplis dans ta vraie vie fait tourner le village. Une tâche terminée, c'est de l'Énergie et des Matériaux pour l'Orée. Le village travaille les jours où tu travailles.
+**Pourquoi tes tâches comptent.** Ce que tu accomplis dans ta vraie vie fait tourner le village. Une tâche terminée, c'est de l'Énergie et des Matériaux pour l'Orée. Le village, lui, travaille chaque jour où tu passes le voir (décision 45).
 
 **Le but.** Faire revivre l'Orée, puis la faire grandir : du campement au hameau, au village, au bourg, puis à la ville. Il n'y a pas de dernière étape. La forêt recule, l'île s'agrandit, de nouvelles familles arrivent.
 
@@ -32,7 +32,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Ressource | D'où elle vient | À quoi elle sert |
 |---|---|---|
-| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu as travaillé ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7), et le sirop de la cabane à sucre quand la réserve est pleine (§5) ; une fois par semaine, le repas du village (§5) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
+| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu passes au village (décision 45) ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7), et le sirop de la cabane à sucre quand la réserve est pleine (§5) ; une fois par semaine, le repas du village (§5) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
 | **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie ; et une fois par semaine, la semaine tenue (§4) | Construire et réparer |
 | **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, servir le repas de la semaine (§5), faire la partie de sucre au printemps (§6), faire des réserves pour l'hiver |
 | **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
@@ -151,7 +151,7 @@ plein), que le joueur serve le repas chaque semaine ou seulement quand la réser
 - l'éolienne, la scierie, le poulailler et la cabane à sucre (au temps des sucres) donnent leur part, une fois par jour, même avec deux appareils. Un producteur bâti dans la journée donne la sienne aussitôt (choix de Claude, réversible). Réserve de Nourriture pleine : rien n'entre, le passage suivant du même jour réessaie (celui qui suit une quête, par exemple) ;
 - les cultures (potager et serres) comptent les jours de visite depuis leur semis : 5 pour mûrir (4, puis 3 avec le Garage). Un jour de visite est un jour où le jeu a été ouvert, ou un jour avec une quête payée et non remballée. Les jours de gel ou de neige sur la culture ne comptent pas, comme avant ;
 - un jour sans ouvrir le jeu, rien ne pousse ni ne produit, et rien n'est perdu : pas de rattrapage des jours manqués, pas de série ;
-- Remballer ne reprend plus rien aux bâtiments : leur part ne dépend plus des quêtes. Une éolienne en panne ou sous la neige ne tourne pas ; réparée dans la journée, elle tourne au passage du temps suivant : aussitôt après la quête qui la répare ; après un paiement, à la prochaine quête du jour, au prochain chargement de la page ou le lendemain ;
+- Remballer ne reprend plus rien aux bâtiments : leur part ne dépend plus des quêtes. Une éolienne en panne ou sous la neige ne tourne pas ; réparée dans la journée, elle tourne au passage du temps suivant : aussitôt après la quête qui la répare ; après un paiement, au prochain passage du temps du même jour (une quête terminée ou ajoutée, une étape cochée, un retour sur la page ou son chargement) ; sans aucun d'eux, la part de ce jour est perdue ;
 - la lettre du matin de Fanal porte un P.-S. qui dit ce que le village a produit : « P.-S. Le village a déjà fait sa part aujourd'hui : 3 Énergie de l'éolienne, 3 Matériaux de la scierie et 1 Nourriture du poulailler. » Les fiches disent « chaque jour où tu passes au village » et « mûr dans N jours de passage » ;
 - restent aux jours travaillés (au moins une quête payée) : les permis, la semaine tenue, les crans de préparation des tempêtes et l'allure. Le bonus d'ouverture (+1 Énergie) ne change pas.
 
@@ -267,7 +267,7 @@ La tempête de neige n'est plus un imprévu : depuis le lot H, c'est une alerte
 
 | Dégât | Ce que ça change | Régler en payant | Régler par une quête | Seul en |
 |---|---|---|---|---|
-| Panne d'éolienne | elle ne donne plus son Énergie les jours de quête | 4 Matériaux | Maison | 3 jours |
+| Panne d'éolienne | elle ne donne plus son Énergie à la visite du jour | 4 Matériaux | Maison | 3 jours |
 | Ours au potager (parcelle mûre, de mai à octobre) | la récolte faite pendant sa visite donne 2 Nourriture de moins | 2 Énergie | Terrain | 3 jours |
 | Gel précoce (culture pas mûre, septembre et octobre) | la journée du gel ne compte pas pour la pousse | 1 Énergie | Terrain | 1 jour |
 

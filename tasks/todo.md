@@ -1543,11 +1543,11 @@ Cadre : simulation (o) du lot N, marchand avisé, commandes livrées, échange d
 - [ ] Avant l'envoi, lire par l'API, sans rien écrire, le nombre de permis de la partie d'Alex, pour lui dire ce qu'il verra.
 - [ ] Envoi sur accord d'Alex.
 
-## Lot J — La visite du jour fait tourner le village (proposé le 10 octobre 2026, à valider)
+## Lot J — La visite du jour fait tourner le village (proposé et validé le 10 octobre 2026)
 
 Référence : décision 45 de la bible (§15) ; « Idées d'Alex du 9 octobre au soir », plus haut ; PRODUCT.md, ligne 23 : « Les tâches accomplies restent la source principale de progression », le retour quotidien peut donner « de petits bonus plafonnés, sans permettre de fabriquer artificiellement de la progression ». Travail dans une copie séparée (`git worktree`, branche `feat/visite-du-jour`, partie de `7313a42`) : une autre session finit le lot M dans le dossier principal.
 
-**Statut : proposé, à valider par Alex.**
+**Statut : plan validé par Alex le 10 octobre ; J1 à J3 faits, J4 en cours.**
 
 ### Aujourd'hui (lu dans le code, rien de mesuré)
 - Une culture mûrit après 5 jours travaillés depuis le semis (`CULTURE.jours`, `etatCulture`, `core/batiments.js:49` et `:147`). Un jour travaillé : au moins une quête payée et non remballée (`joursTravailles`, `:132`). Un jour de gel ou de neige sur la culture ne compte pas (`joursGeles`, `core/imprevus.js:128`).
@@ -1611,7 +1611,7 @@ Cadre : celui du lot M (simulation (o), marchand avisé, commandes livrées, éc
 
 ### J3 — Écran et textes [impeccable]
 Choix d'Alex (10 octobre, au soir) : le mot « passes au village » (« chaque jour où tu passes au village », « mûr dans N jours de passage ») ; la production dite dans un P.-S. de Fanal, après sa signature.
-- [x] Textes des cultures (fiches « Ce que ça fait » et « Maintenant », étiquette « mûr dans N jours de passage », refus « Pas encore mûr : encore N jours de passage »), de l'effet du Garage, de l'aide de l'Énergie, des fiches de l'éolienne, de la scierie, du poulailler et de la cabane, et des dégâts de l'éolienne (panne, neige). Les promesses de l'éolienne et de la scierie disent « à ton prochain passage au village » : elles ne se voient plus qu'avant le premier passage du jour. Celles du poulailler et de la cabane gardent « à ta prochaine quête terminée aujourd'hui » : leur seul cas réel est une réserve pleine à l'ouverture puis vidée, et le passage suivant du même jour vient avec la prochaine quête. Permis, semaine tenue et barre de tempête : inchangés, toujours aux jours travaillés.
+- [x] Textes des cultures (fiches « Ce que ça fait » et « Maintenant », étiquette « mûr dans N jours de passage », refus « Pas encore mûr : encore N jours de passage »), de l'effet du Garage, de l'aide de l'Énergie, des fiches de l'éolienne, de la scierie, du poulailler et de la cabane, et des dégâts de l'éolienne (panne, neige). Les promesses de l'éolienne et de la scierie disent « à ton prochain passage au village » : elles se voient avant le premier passage du jour, et pour l'éolienne réparée en payant, jusqu'au passage suivant. Celles du poulailler et de la cabane gardent « à ta prochaine quête terminée aujourd'hui » : leur seul cas réel est une réserve pleine à l'ouverture puis vidée, et le passage suivant du même jour vient avec la prochaine quête. Permis, semaine tenue et barre de tempête : inchangés, toujours aux jours travaillés.
 - [x] P.-S. de la lettre du matin : « P.-S. Le village a déjà fait sa part aujourd'hui : 3 Énergie de l'éolienne, 3 Matériaux de la scierie et 1 Nourriture du poulailler. » (`productionsDuJour`, cœur ; `psProduction`, `js/ui/batiment.js` ; `.letter-ps`, 16 px, encre douce, sous la signature). Dans la feuille de la lettre, donc lu au lecteur d'écran avec elle ; aucun son ; la carte reste comme avant. Espace insécable entre le nombre et la ressource.
 - [x] Mesuré dans un navigateur aux trois largeurs (script hors dépôt, 39 vérifications) : le P.-S. sous la signature, dans la feuille, « Ranger la lettre » à l'écran, aucun débordement ; la carte en liste (« Mûr dans 3 jours de passage ») et la fiche de la parcelle sans débordement. Captures regardées à 390 et 1280 px.
 - Défaut repéré au passage, d'avant le lot : la fiche d'une parcelle semée affiche « Semé le 8 oct.. Mûr… » (la date abrégée finit déjà par un point). Signalé à Alex, pas corrigé.
@@ -1621,7 +1621,7 @@ Choix d'Alex (10 octobre, au soir) : le mot « passes au village » (« chaque j
 - Scénario 19, deux échecs d'origine aujourd'hui (un samedi) : le lendemain est un dimanche et le bilan de la semaine s'ouvre après la lettre (sondé : `dlg-review` ouvert, focus sur « Fermer »). Même échec sur la version d'avant le lot (`7313a42`) : il ne vient pas du lot J. L'autre session l'avait déjà corrigé sur `feat/village-v2` (6601631, leçon retouchée en 2b14d6d) : les deux commits repris tels quels ici, pour une fusion sans conflit sur ces lignes. Scénario 19 ensuite : 81 vérifications réussies.
 - [ ] Suite de logique ; scénarios touchés (production à la quête : 44 et 45 ; gel : 37 ; parcelle mûre : 39 ; et tout scénario qui vérifie un montant exact après l'ouverture avec un bâtiment producteur, cherchés avant la série, leçon du lot I) ; puis la série complète, quand aucune autre session ne fait tourner la sienne.
 - [ ] Relecture indépendante.
-- [ ] Bible (§5, décision 45), `app/ARCHITECTURE.md` (registre : `prod` à la première visite, plus de `reprise` neuve), README (/humanize), PRODUCT.md si la règle du retour quotidien y change.
+- [x] Bible (§5 « La visite du jour », décisions 45 et 48), `app/ARCHITECTURE.md`, `app/content/README.md`, `app/DESIGN.md` (le P.-S.), PRODUCT.md, README (une phrase, passée par /humanize) ; leçons.
 
 ### J5 — Envoi
 - [ ] Après l'envoi du lot M, sur accord d'Alex.
