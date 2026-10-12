@@ -1815,7 +1815,7 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 
 - Format : 4:5, 1080 × 1350, MP4 (H.264, AAC), environ 40 s, en français, textes à l'écran pour suivre sans le son. Les deux réseaux l'acceptent d'après des guides tiers et la page publicitaire de LinkedIn ; la documentation officielle de X n'a pas été lue.
 - Fin : « Quêtes du foyer », github.com/collectifweb/master-tasklist, signé Alexandre Alves.
-- Musique : « Middle » (Keyframe Audio). Le montage se fait sur l'extrait d'écoute ; la version publiée prendra le fichier téléchargé du compte d'Alex. La licence de Keyframe lue le 11 octobre vise un abonnement payé et interdit l'usage commercial aux comptes d'essai, sans rien dire des crédits gratuits : à vérifier par Alex avant publication.
+- Musique : « Middle » (Keyframe Audio). Le fichier téléchargé du compte d'Alex est identique à l'extrait d'écoute. La licence de Keyframe lue le 11 octobre vise un abonnement payé et interdit l'usage commercial aux comptes d'essai, sans rien dire des crédits gratuits : à vérifier par Alex avant publication.
 - Les posts sont écrits par Alex.
 
 | Temps | À l'écran | Texte |
@@ -1831,11 +1831,14 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 - [x] Essai de tournage de 10 s (une quête cochée, les ressources qui montent) : comparer deux façons de filmer et juger la netteté sur des images extraites.
   - L'enregistrement vidéo de Playwright et les images du navigateur sans affichage ne rendent que 390 × 844 pixels, même à l'échelle 3 émulée. Ce qui marche : navigateur affiché sous `xvfb-run`, lancé avec `--force-device-scale-factor=3`, taille de page fixée par `Emulation.setDeviceMetricsOverride` (390 × 844, `deviceScaleFactor: 0`), puis les images du navigateur (`Page.startScreencast`). Mesuré : 1170 × 2532 pixels, environ 32 images par seconde, aucun écart de plus de 52 ms entre deux images.
   - Middle, mesuré seconde par seconde : intro calme jusqu'à 18 s, montée jusqu'à 36 s, plein régime de 49 à 72 s, retombée à 73 s. Les 40 premières secondes collent au découpage.
-- [ ] Mettre en scène le village fictif (rang Village, chalets, familles, potager) et des tâches fictives.
-- [ ] Filmer les six plans.
-- [ ] Cartons de titre et de fin avec /impeccable, d'après `app/DESIGN.md`.
-- [ ] Montage avec ffmpeg (musique, fondus) ; images extraites pour qu'Alex valide.
-- [ ] Version finale avec le fichier de musique du compte d'Alex.
+- [x] Mettre en scène le village fictif (rang Village, chalets, familles, potager) et des tâches fictives.
+  - Huit tâches fictives, un village de 15 bâtiments, un Hameau de 5 habitants pour le chalet rebâti, un jour d'hiver trois jours avant une tempête (horloge du navigateur avancée). Chaque plan tourne sur une copie neuve de l'app (`startServer` des essais navigateur), avec un registre « calme » : imprévus déjà tirés, productions du jour faites, bulles de la semaine déjà vues.
+- [x] Filmer les six plans (`tournage/plans.cjs`), avec le bouton « Passer l'animation » masqué (accord d'Alex).
+- [x] Cartons avec /impeccable, d'après `app/DESIGN.md` : pas de carton d'ouverture (le premier plan porte la première phrase), un carton de fin. Bandeau de ciel, police Nunito (licence OFL), texte encre sur fond clair.
+- [x] Montage (`montage/montage.cjs`) : chaque image composée dans Chromium d'après la ligne de temps, puis ffmpeg. Plans serrés surtout, téléphone entier au début ; une phrase sort avant que la suivante entre.
+- [x] Version finale avec le fichier de musique du compte d'Alex : même empreinte SHA-256 que l'extrait d'écoute, mesuré le 11 octobre.
+
+**Bilan (11 octobre 2026).** `.claude/promo/video-2026-10/sortie/promo.mp4` : 40,0 s, 1080 × 1350, H.264 à 30 images par seconde, AAC, 8,7 Mo, volume moyen −19,5 LUFS (mesurés). Reste à Alex : regarder la vidéo, juger le rythme, et vérifier la licence de Keyframe pour les crédits gratuits avant de publier.
 
 ## Défauts relevés en passant (11 octobre 2026), à corriger au prochain lot
 
