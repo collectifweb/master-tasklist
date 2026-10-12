@@ -1497,8 +1497,11 @@ button.quest-check:active .quest-check-ring {
   font-size: var(--text-20);
   font-weight: var(--w-display);
 }
+/* flex-basis auto, pas 0 % : une feuille sans hauteur fixée prend la hauteur de son contenu. Avec « flex: 1 », Safari
+   sur iPhone (filmé le 12 octobre 2026) et le WebKit de Playwright 1.56 réduisaient le corps à ses marges intérieures,
+   une ligne de texte ; Chromium et le WebKit de Playwright 1.60 ne le faisaient pas. */
 .sheet-body {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;

@@ -1844,3 +1844,17 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 
 - Fiche « Pourquoi la Cote » : la ligne du total devrait dire « Cote N sur 100 » et dirait « Cote  sur 100 ». `js/ui/sheets.js:396` appelle `t('why.total')` sans la variable `cote`, et `js/content.js:61` remplace alors `{cote}` par rien. Lu dans le code, pas encore vu à l'écran. Correction reportée par Alex à la prochaine session.
 - Textes jamais lus : les clés `why.priority`, `why.length`, `why.difficulty` et `filter.quick` de `content/fr-CA/interface.json` (aucune occurrence dans `js/`, `core/` ni `index.html`). Signalé, pas supprimé.
+
+## Correctif Safari — les fiches écrasées sur iPhone (12 octobre 2026)
+
+Signalement d'Alex : une amie a installé le jeu sur son iPhone, depuis Safari, et l'a ajouté à l'écran d'accueil (rapporté). Deux vidéos : en portrait, la fiche de la Place du village ; en paysage, celle de la Nourriture. Dans les deux, la fiche s'ouvre mais son contenu tient dans une bande d'une ligne, où le doigt fait défiler le texte.
+
+- Cause, vérifiée : `.sheet-body` était en `flex: 1` (taille de départ 0 %) dans une feuille qui n'a qu'une hauteur maximale. Le WebKit de Playwright 1.56.1 (révision 2215, paru le 17 octobre 2025) réduit alors le corps à ses marges intérieures : 28 px de haut pour 329 à 1 132 px de contenu. Il reproduit les deux vidéos à l'identique ; Chromium et le WebKit de Playwright 1.60.0 (révision 2287, paru le 11 mai 2026) ne le font pas. La version d'iOS de l'amie n'est pas connue.
+- Ampleur, mesurée sur la v2.14 dans ce WebKit : 11 cas sur 12 écrasés (six fiches en portrait 390×844 et en paysage 844×390 : ressource, Place, ajout d'une quête, fiche d'une quête, « Pourquoi », Réglages ; seule la Place en paysage, qui a une hauteur fixée, s'en sortait), plus l'écran de bienvenue du premier lancement (157 px au lieu de 319).
+- Correctif : `flex: 1 1 auto` sur `.sheet-body` (`css/components.css`), une ligne.
+- Vérifié : 36 mesures sur 36 réussies (WebKit 2215, WebKit 2287, Chromium ; six fiches ; deux formats), plus l'écran de bienvenue dans WebKit 2215. Côté Chromium, les 12 mesures sont identiques au pixel avant et après. Captures regardées. Aucune erreur de console dans WebKit 2215 sur ce parcours.
+- Balayage « de ce genre » : accueil, panneau ouvert et carte en liste, aux trois formats, comparés élément par élément entre WebKit 2215 et Chromium : aucune autre zone écrasée. Seul écart : dans WebKit 2215, la barre de défilement fine de l'app (`::-webkit-scrollbar`, `css/base.css`) prend 10 px de large (mesuré dans la carte en liste), 0 dans WebKit 2287 et dans Chromium ; le texte passe un peu plus tôt à la ligne. Ce qu'en fait un iPhone n'est pas vérifié. Fonctions récentes du navigateur trouvées dans le code (`structuredClone`, `findLast`, `checkVisibility`, `inert`, `:has`, `@container`, `text-wrap`, `dvh`, `field-sizing`) : toutes présentes dans WebKit 2215, qui se présente comme Safari 26.0 (essayées une à une).
+- Pas vérifié : un vrai iPhone.
+- [x] Série complète des scénarios navigateur (Chromium) : 44 sur 44 réussis, aucune reprise, de 11 h 24 à 12 h 09 le 12 octobre, sur une copie figée (le dernier commit plus le correctif, sans le passage de `sw.js` en v27).
+- [ ] Envoi en production en v2.14.1, accordé par Alex le 12 octobre dès que la série est verte (fait avancer `main` sur GitHub).
+- [ ] L'installation de l'amie : une mise à jour à la main, la dernière si le lot U se fait.
