@@ -84,7 +84,7 @@
   "why.deadline.days": "Échéance dans {n} jours : +{points}",
   "why.deadline.passed": "Échéance passée : +{points}",
   "why.age": "Ouverte depuis {n} jours : +{points}",
-  "why.total": "Cote {cote} sur 100",
+  "why.total": "Cote sur 100",
   "why.capped": "Plafonnée à 100.",
   "why.priority_guard": "Priorité 8 ou plus : elle reste parmi les trois premières.",
   "duration.minutes": "≈ {n} min",
