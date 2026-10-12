@@ -189,7 +189,7 @@ Hors plafond :
 - three.js est plus beau, mais ne laisse que 23 px par case sur mobile et coûte cher en développement (4/10).
 - **On passe à Pixi** si, sur un vrai Pixel 6a et un vrai iPhone, les animations tombent sous 45 i/s ou si recolorer un secteur dépasse 50 ms.
 
-**Captures à montrer** (une sélection est dans `img/` ; les démos sont dans `sketches/007-spikes-rendu/`) :
+**Captures à montrer** (une sélection est dans `img/` ; les démos sont dans `sketches/007-spikes-rendu/`, retirées du dépôt le 9 octobre 2026, étiquette `v2.10.1`) :
 - `dom-svg/shots/` : `v3-m-jour.png`, `v3-m-soir.png`, `v3-m-nuit.png`, `v3-m-quete-a.png`, `v3-m-quete-b.png`, `v3-m-build-b.png`, `v3-m-harvest-a.png`, `v3-m-reduit.png`, `v3-d-jour.png` ;
 - pour comparer : `canvas-pixi/shots/m03-nuit.png`, `canvas-pixi/shots/m07-quete-vol.png`, `three-voxel/shots/final/m-jour.png`.
 

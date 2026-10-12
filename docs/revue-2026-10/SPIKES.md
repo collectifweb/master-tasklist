@@ -1,6 +1,6 @@
 # Prototypes de rendu (spikes)
 
-Même scène construite avec trois techniques, mesurée sur mobile simulé (CPU ×4). Démos dans `sketches/007-spikes-rendu/`.
+Même scène construite avec trois techniques, mesurée sur mobile simulé (CPU ×4). Démos dans `sketches/007-spikes-rendu/`, retirées du dépôt le 9 octobre 2026 (étiquette `v2.10.1`).
 
 ## dom-svg
 

@@ -81,7 +81,7 @@ Avec Node 24 et PHP 8.3 :
 node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
 ```
 
-Les scénarios navigateur (`app/tests/e2e/`, lancés par `run-ui.sh`) utilisent la bibliothèque Playwright et prennent environ 45 minutes.
+Les scénarios navigateur (`app/tests/e2e/`, lancés par `run-ui.sh`) utilisent la bibliothèque Playwright et prennent environ 46 minutes.
 
 ## Les dossiers
 

@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Alex est l’unique utilisateur pour l’instant. Il utilise l’application surtout sur téléphone ou tablette pour consulter, choisir, ajouter, modifier et terminer des tâches familiales et personnelles.
+Alex est l’utilisateur principal. Depuis la publication du dépôt (9 octobre 2026), d’autres peuvent installer leur propre copie chez un hébergeur PHP (`docs/INSTALLATION.md`). Il utilise l’application surtout sur téléphone ou tablette pour consulter, choisir, ajouter, modifier et terminer des tâches familiales et personnelles.
 
 ## Product Purpose
 
@@ -46,6 +46,7 @@ Le produit doit être un véritable jeu de gestion avec narration, enjeux, obsta
 - Rester sans courriel.
 - Les notifications sont facultatives, discrètes et configurables. Le rappel quotidien passe par l’app gratuite ntfy (téléphone sans services Google), avec un texte général sans titre de tâche.
 - La vraie météo est facultative (lot Q, 11 octobre 2026). Si le joueur règle sa ville, le nom qu’il cherche part de l’appareil vers le service de recherche de villes d’Open-Meteo, puis le serveur envoie à Open-Meteo, une fois par jour, la position de la ville arrondie à environ 1 km, pour lire la prévision de neige. Aucune tâche ni rien de la partie ne part vers Open-Meteo. Sans ville, aucun appel. Le crédit d’Open-Meteo (données sous licence CC BY 4.0) est affiché à côté de ce qui en vient.
+- La mise à jour depuis GitHub est facultative (lot U, 12 octobre 2026). Pour une installation chez quelqu’un d’autre, un bouton des Réglages installe la version publiée sur la branche `main` du dépôt public. Le serveur ne fait que lire chez GitHub (la liste des versions, puis l’archive du jeu) : rien des quêtes ni de la partie n’y part. Elle est coupée sur la production d’Alex (`MISE_A_JOUR` dans son `config.php`), mise à jour par ses propres envois.
 - L’interface doit être ergonomique, lisible et attrayante sur mobile et tablette.
 - L’hébergement actuel est un environnement web LiteSpeed/PHP avec fichiers statiques et endpoint d’écriture PHP. Une évolution technique doit préserver un déploiement fiable sur cet environnement ou fournir une migration explicitement vérifiée.
 - Le produit n’est pas multiutilisateur à ce stade.
@@ -64,7 +65,7 @@ Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `
 
 ## Brand Commitments
 
-- Nom de travail existant: « Quêtes du foyer ».
+- Nom du jeu : « L’Orée » (nom de code dans le dépôt : « La lisière rallumée »). « Quêtes du foyer » était l’ancien nom de travail.
 - Le langage produit peut assumer pleinement les métaphores de jeu vidéo, tant que les actions principales restent évidentes.
 - L’expérience doit rester adulte, crédible et agréable à utiliser souvent, sans ressembler à une interface infantile ou à une couche de points décorative.
 - La direction visuelle Vecteur est la préférence actuelle d’Alex parmi les prototypes: interface animée, précise, énergique et lisible.
@@ -93,7 +94,7 @@ Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `
 - Données réelles: `tasks.json`.
 - Workflow et architecture de synchronisation: `TASKS_WORKFLOW.md` et `sync-tasks-remote.sh`.
 - Endpoint d’écriture de l’application historique : `tasks-api.php` dans l’artefact de déploiement local. L’app actuelle écrit `tasks.json` par `app/api/api.php`.
-- Aucun actif graphique, univers visuel définitif, économie de récompenses validée ou donnée de progression historique n’est encore fourni. Ces éléments ne doivent pas être présentés comme existants.
+- Univers, récit et économie : `docs/BIBLE-JEU.md`, validée par Alex le 5 octobre 2026. Contrat visuel et pictogrammes : `app/DESIGN.md`, `app/design/icons.svg`.
 
 ## Product Principles
 
