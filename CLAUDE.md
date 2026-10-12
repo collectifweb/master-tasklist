@@ -31,7 +31,7 @@ php -S 127.0.0.1:8090 -t .
 
 # Nouvelle app : tests de la logique et de l'API (Node 24 : motifs entre guillemets, pas un dossier)
 node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
-# Nouvelle app : 43 scénarios navigateur aux 3 largeurs (environ 45 minutes, mesuré le 11 octobre 2026 ; Playwright est une bibliothèque).
+# Nouvelle app : 44 scénarios navigateur aux 3 largeurs (environ 45 minutes, mesuré le 11 octobre 2026 ; Playwright est une bibliothèque).
 # Ne pas la lancer pendant qu’un autre agent fait tourner ses essais : sous charge, des mesures de position échouent.
 # Un seul essai par scénario ; ESSAIS=3 seulement pour diagnostiquer une instabilité.
 PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
