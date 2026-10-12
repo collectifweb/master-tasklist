@@ -45,7 +45,7 @@ Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/cap
 
 ## À venir
 
-Décidé dans la bible, pas encore construit. Aucun lot n’est fixé pour l’instant.
+Décidé dans la bible, pas encore construit. Aucun lot n’est fixé : depuis le 12 octobre, les nouveautés sont en pause, le temps de jouer et de noter ce qui gêne.
 
 - Le contenu des rangs Bourg et Ville. Le jeu compte déjà ces rangs (Bourg à 11 habitants, Ville à 21, puis un palier tous les 15), mais rien ne s’y ouvre encore. Au Bourg : une nouvelle bande de terrain, un marché, une école qui fait produire un peu plus les habitants, une centrale solaire, un garage à chasse-neige qui protège des tempêtes. À la Ville : une île voisine reliée par un pont, une gare, un musée. À chaque palier suivant : du terrain, un bâtiment, un permis, un nouveau visiteur.
 - Une bande de terrain au rang Village : seule celle du Hameau existe.

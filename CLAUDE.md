@@ -37,6 +37,9 @@ node --test "app/tests/core/*.test.mjs" "app/tests/api/*.test.mjs"
 # Ne pas la lancer pendant qu’un autre agent fait tourner ses essais : sous charge, des mesures de position échouent.
 # Un seul essai par scénario ; ESSAIS=3 seulement pour diagnostiquer une instabilité.
 PW_CORE=~/.npm/_npx/<hash>/node_modules/playwright-core PW_CHROME=~/.cache/ms-playwright/chromium-<version>/chrome-linux64/chrome SHOTS=<dossier> bash app/tests/e2e/run-ui.sh
+# Un changement qui ne touche pas le jeu lui-même (texte non affiché, version du cache) : seulement les scénarios concernés,
+# trouvés par grep dans app/tests/e2e/, lancés un par un depuis ce dossier avec les mêmes variables (le n° 21 : 11 s).
+cd app/tests/e2e && PW_CORE=… PW_CHROME=… SHOTS=<dossier> node ui-21-pwa.cjs
 
 # Vérifier l'exemple de tâches
 python3 -m json.tool tasks.example.json > /dev/null
