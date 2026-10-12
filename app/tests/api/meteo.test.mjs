@@ -188,9 +188,14 @@ test('service lent : la réponse part en 4 s au plus, sans prévision', () => av
 
 test('deux lectures en même temps : un seul appel ; l’autre part avec ce qui est gardé', () => avecMeteo({}, async (s, om) => {
   om.repondre(() => ({ status: 200, body: corps(), delai: 1000 }));
-  const [a, b] = await Promise.all([lecture(s), lecture(s)]);
+  // La seconde part quand la première attend Open-Meteo, donc tient le verrou de la prévision. Envoyées ensemble, php -S
+  // les donnait parfois au même processus, qui les servait l'une après l'autre (4 échecs sur 16, mesuré le 12 octobre 2026).
+  const a = lecture(s);
+  for (let i = 0; i < 100 && om.appels.length === 0; i++) await new Promise((r) => setTimeout(r, 20));
   assert.equal(om.appels.length, 1);
-  assert.equal([a, b].filter((m) => m !== null).length, 1);
+  assert.equal(await lecture(s), null);
+  assert.notEqual(await a, null);
+  assert.equal(om.appels.length, 1);
 }));
 
 test('METEO éteint (OREE_METEO=0) : aucun appel', () => avecMeteo({ env: { OREE_METEO: '0' } }, async (s, om) => {
