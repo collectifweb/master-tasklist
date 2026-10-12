@@ -1828,7 +1828,9 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 | 31–35 s | Le village en plan large | « Aucune série à tenir. Une absence ne coûte rien. » |
 | 35–40 s | Carton de fin | « Quêtes du foyer » · lien GitHub · Alexandre Alves |
 
-- [ ] Essai de tournage de 10 s (une quête cochée, les ressources qui montent) : comparer deux façons de filmer et juger la netteté sur des images extraites.
+- [x] Essai de tournage de 10 s (une quête cochée, les ressources qui montent) : comparer deux façons de filmer et juger la netteté sur des images extraites.
+  - L'enregistrement vidéo de Playwright et les images du navigateur sans affichage ne rendent que 390 × 844 pixels, même à l'échelle 3 émulée. Ce qui marche : navigateur affiché sous `xvfb-run`, lancé avec `--force-device-scale-factor=3`, taille de page fixée par `Emulation.setDeviceMetricsOverride` (390 × 844, `deviceScaleFactor: 0`), puis les images du navigateur (`Page.startScreencast`). Mesuré : 1170 × 2532 pixels, environ 32 images par seconde, aucun écart de plus de 52 ms entre deux images.
+  - Middle, mesuré seconde par seconde : intro calme jusqu'à 18 s, montée jusqu'à 36 s, plein régime de 49 à 72 s, retombée à 73 s. Les 40 premières secondes collent au découpage.
 - [ ] Mettre en scène le village fictif (rang Village, chalets, familles, potager) et des tâches fictives.
 - [ ] Filmer les six plans.
 - [ ] Cartons de titre et de fin avec /impeccable, d'après `app/DESIGN.md`.
