@@ -1859,3 +1859,47 @@ Signalement d'Alex : une amie a installé le jeu sur son iPhone, depuis Safari, 
 - [x] Envoi en production en v2.14.1, accordé par Alex le 12 octobre dès que la série est verte (fait avancer `main` sur GitHub).
   *Envoyé le 12 octobre vers 12 h 11 : étiquette `v2.14.1` = ca712ee, poussée avec la branche. Contrôle de confidentialité avant l'étiquette : 39 motifs, rien trouvé, ni dans le commit ni dans son message. Photo de la production `api/data/backups/avant-v2.14.1-20261012-121047/` (partie, registre, opérations et `tasks.json`, 4 empreintes identiques ; `meteo.json` copié aussi). `deploy-prod.sh v2.14.1` : app 200, API sans code 401, avec code 200, données 403, config vide vue de l'extérieur, cache `oree-coquille-v27`, pas de bac à sable, `main` sur GitHub avancée à v2.14.1. En ligne : les 87 fichiers de l'étiquette, identiques, plus 3 fichiers propres au serveur ; données inchangées depuis la photo ; la feuille de style servie porte `flex: 1 1 auto`. Page chargée sans code dans des navigateurs neufs à 390×844, toute écriture bloquée (aucune tentée) : WebKit 2215 (« Version/26.0 ») et Chromium, statut 200, la fiche « Accès à tes quêtes » montre tout son contenu (168 px sur 168 dans WebKit), pas de défilement horizontal, seule erreur le refus 401 attendu. Non vérifié : un vrai iPhone ; l'app ouverte avec le code en production. Retour : `deploy-prod.sh v2.14`.*
 - [ ] L'installation de l'amie : une mise à jour à la main, la dernière si le lot U se fait.
+
+## Lot U — La mise à jour depuis GitHub (plan validé le 12 octobre 2026)
+
+Demande d'Alex : qu'une installation chez quelqu'un d'autre puisse se mettre à jour avec les dernières versions du dépôt GitHub. Aujourd'hui, `docs/INSTALLATION.md` (section « Mettre à jour ») demande de tout refaire à la main : télécharger le ZIP, remplacer les fichiers, garder `api/config.php` et `api/.htaccess`.
+
+### Vérifié avant le plan (12 octobre)
+- `main` sur GitHub pointe sur la v2.14 (`6db088b`), la version en ligne : `deploy-prod.sh` l'y avance à chaque envoi, en avance rapide seulement.
+- Une seule requête publique (`https://github.com/collectifweb/master-tasklist.git/info/refs?service=git-upload-pack`) donne le commit de `main` et les étiquettes qui le désignent (ici `v2.14`), sans limite annoncée. L'API de GitHub donne aussi le commit, mais limitée à 60 appels sans clé (en-tête `x-ratelimit-limit`).
+- L'archive d'un commit (`codeload.github.com/…/tar.gz/<commit>`) pèse 2 661 925 octets ; le PHP 8.3 de ce poste l'ouvre avec `PharData` (308 fichiers). Extensions chargées sur ce poste : Phar, zlib, zip, curl.
+- `deploy-prod.sh` retire du paquet `tests/`, `.impeccable/`, `design/reference.*`, les `*.md`, `api/data/` et `api/config.php`, écrit `api/.htaccess` et n'efface rien en ligne.
+- Pas vérifié : qu'un hébergeur mutualisé laisse PHP écrire dans le dossier du jeu (celui de l'amie n'est pas connu).
+
+### Proposition (options recommandées, à valider)
+1. **Serveur**, nouveau fichier `api/maj.php`, qui reprend d'`api.php` la configuration, le code d'accès et le blocage des essais :
+   - lecture : version installée (notée à chaque mise à jour dans le dossier des données ; « inconnue » pour une installation faite à la main), dernière version publiée (`main` et son étiquette, relue au plus une fois par heure), et si la mise à jour peut se faire ici (droit d'écrire, Phar, cURL), avec la raison sinon ;
+   - mise à jour : télécharge l'archive du commit exact, n'en garde que `app/` moins ce que retire `deploy-prod.sh`, sauvegarde les fichiers qu'elle remplace (dossier `backups/` des données), copie, et remet la sauvegarde si une copie échoue. Ne touche jamais `api/config.php`, `api/.htaccess`, `api/data/` ni les données hors du dossier public. N'efface aucun fichier ;
+   - adresse du dépôt fixée dans le code, HTTPS vérifié ; rien ne vient de l'appareil sauf l'ordre de lancer ;
+   - `define('MISE_A_JOUR', false)` dans `config.php` coupe tout : à poser sur la production d'Alex, envoyée par `deploy-prod.sh`.
+2. **App**, Réglages, une section « Version du jeu » : la version installée ; s'il y a plus récent, « Version 2.15 disponible » et un bouton « Mettre à jour » ; après la mise à jour, l'app se recharge. Les autres appareils restés ouverts voient déjà « L'app a été mise à jour : recharge la page » quand la version l'exige. Passe /impeccable.
+3. **Essais** : API contre un faux GitHub local (adresse réglable, comme `OREE_METEO_URL`) : version inconnue, à jour, en retard, archive refusée, copie qui échoue au milieu (la sauvegarde revient), fichiers gardés intacts ; un scénario navigateur aux trois largeurs ; contre-épreuves.
+4. **Documents** : `docs/INSTALLATION.md` (passe /humanize), `api/config.example.php`, `app/ARCHITECTURE.md`, le README s'il en parle.
+5. **Première fois** : l'installation de l'amie n'a pas encore le bouton ; une dernière mise à jour à la main l'y amène.
+
+### Décisions d'Alex (12 octobre)
+- Qui déclenche : un bouton dans les Réglages (pas de tâche planifiée).
+- Ce qu'on télécharge : l'archive de `main` ; `deploy-prod.sh` ne change pas.
+- Le correctif Safari part avant, en v2.14.1, dès que la série des scénarios est verte.
+
+### Fait (12 octobre)
+- [x] Serveur : `api/maj.php` (lecture et mise à jour, décrites dans `app/ARCHITECTURE.md`, section « Mise à jour depuis GitHub »). Le code d'accès et le blocage viennent d'`api.php`, par une fonction `check_access` sortie de `handle()` ; `api.php` se comporte comme avant (suite de l'API réussie, hors l'essai instable décrit plus bas, qui l'était déjà). `config.example.php` décrit `MISE_A_JOUR`.
+- [x] App : section « Version du jeu » des Réglages, sous la météo, passée par /impeccable (aucune classe nouvelle). Détecteur d'/impeccable sur `js/ui/story.js` et `css/components.css` : 4 avis, tous déjà là avant le lot.
+- [x] Essais de l'API : `tests/api/maj.test.mjs`, 12 essais réussis. Contre-épreuves : chacune des 6 protections retirée à son tour (chemins refusés, fichiers obligatoires, remise en cas de copie interrompue, droit d'écrire, réglage coupé, code d'accès) fait échouer au moins un essai.
+- [x] Scénario 48, aux trois largeurs : 42 vérifications réussies, dont le fichier témoin réellement installé par le bouton. Premier essai en échec : l'archive du scénario, faite par le `tar` de Linux (format GNU), codait le chemin `app/.impeccable/surfaces/design-reference-html.md` (plus de 100 caractères avec le dossier du commit) d'une façon que `PharData` lit mal. Passée au format pax, celui de `git archive`, elle se lit. Captures regardées à 390 et 1 280 px.
+- [x] Vérifié sur de vraies archives : celle de GitHub pour la v2.14.1 (11,3 Mo, téléchargée de `codeload.github.com`) se lit avec `PharData`, chemin long compris (309 entrées), et elle est refusée, rien n'étant changé, car elle n'a pas `api/maj.php` ; une archive faite par `git archive` d'un arbre qui contient le lot U garde 88 fichiers (les 87 envoyés en v2.14.1, plus `api/maj.php`), `.impeccable/` écarté.
+- [x] Les autres scénarios n'appellent jamais le vrai GitHub : `tests/e2e/lib.cjs` vise un port fermé, sauf adresse posée par le scénario.
+- [x] Documents : `app/ARCHITECTURE.md`, `app/DESIGN.md`, `docs/INSTALLATION.md` (section « Mettre à jour », passée par /humanize). Le README renvoie déjà au guide, rien à y changer.
+- [x] Suite de logique et de l'API : 675 essais, 672 réussis, 2 en attente, 1 échec, sans lien avec le lot (voir plus bas).
+- [x] `sw.js` passé en `oree-coquille-v28` (fichiers de l'interface changés).
+- Écarts au plan : la version publiée est relue au plus toutes les 10 minutes, pas toutes les heures (la section se lit à l'ouverture des Réglages ; un appel à GitHub de 8 s au plus) ; les fichiers remplacés sont gardés dans `<données>/maj/precedente/`, pas dans `backups/`, pour ne pas se mêler aux sauvegardes tournantes. Les adresses de GitHub peuvent aussi être changées par l'environnement du serveur, pour les essais seulement (`OREE_MAJ_REFS`, `OREE_MAJ_ARCHIVE`), et cURL y accepte le HTTP pour le faux GitHub local ; l'appareil n'en choisit aucune.
+- Pas vérifié : un hébergeur mutualisé réel (droit d'écrire de PHP, appel sortant vers GitHub, durée d'une mise à jour).
+- Défaut relevé en passant, pas corrigé : l'essai « deux lectures en même temps » de `tests/api/meteo.test.mjs` échoue 2 fois sur 8, avec ou sans le lot U (mesuré sur le dernier commit et sur la copie de travail) : la seconde lecture reçoit parfois la prévision au lieu de rien. Cause non cherchée.
+- [ ] Série complète des scénarios (45) avant l'envoi.
+- [ ] Envoi en v2.15, à décider par Alex. Avant, poser `define('MISE_A_JOUR', false);` dans le `config.php` de sa production, sinon le bouton y paraît aussi.
+- [ ] L'installation de l'amie : une dernière mise à jour à la main l'amène au bouton.

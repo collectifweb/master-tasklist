@@ -1,6 +1,8 @@
 // Client de api/api.php : GET (état complet) et POST (lot d'opérations). Jeton facultatif gardé dans localStorage.
+// Et de api/maj.php (lot U) : la version installée et la mise à jour depuis GitHub, avec le même jeton.
 const TOKEN_KEY = 'oree.token';
 const URL_API = new URL('api/api.php', document.baseURI).href;
+const URL_MAJ = new URL('api/maj.php', document.baseURI).href;
 
 export class ApiError extends Error {
   /** status 0 = réseau injoignable ; code = code de l'API (game_conflict, busy…) ; body = réponse JSON si lisible. */
@@ -25,7 +27,7 @@ export const token = {
 export const newOpId = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'op-' + Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join(''));
 
-async function call(method, payload) {
+async function call(method, payload, url = URL_API) {
   const headers = { Accept: 'application/json' };
   const tk = readToken();
   if (tk) headers.Authorization = 'Bearer ' + tk;
@@ -36,7 +38,7 @@ async function call(method, payload) {
   }
   let res;
   try {
-    res = await fetch(URL_API, init);
+    res = await fetch(url, init);
   } catch (e) {
     throw new ApiError(0, 'network', 'Le serveur est injoignable.');
   }
@@ -73,4 +75,10 @@ export const CLIENT_VERSION = 13;
 export const api = {
   get: () => call('GET'),
   post: (opId, ops) => call('POST', { client: CLIENT_VERSION, opId, ops }),
+};
+
+/** Mise à jour depuis GitHub : lire l'état (versions installée et publiée), puis la lancer. */
+export const maj = {
+  lire: () => call('GET', undefined, URL_MAJ),
+  lancer: () => call('POST', { lancer: true }, URL_MAJ),
 };

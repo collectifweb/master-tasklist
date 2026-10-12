@@ -2,7 +2,7 @@
 /**
  * Modèle de réglages. Copier en `config.php` (ignoré par Git) et adapter.
  * Ordre de priorité : variables d'environnement (OREE_TASKS_FILE, OREE_DATA_DIR,
- * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1, OREE_SANDBOX=1, OREE_METEO=0, OREE_METEO_URL), puis ce fichier,
+ * OREE_TOKEN_HASH, OREE_ALLOW_OPEN=1, OREE_ALLOW_CREATE_TASKS=1, OREE_SANDBOX=1, OREE_METEO=0, OREE_METEO_URL, OREE_MAJ=0), puis ce fichier,
  * puis les valeurs par défaut.
  */
 
@@ -41,6 +41,13 @@
 // d'après la date. METEO_URL : une autre adresse de prévision au même format (essais).
 // define('METEO', false);
 // define('METEO_URL', 'https://api.open-meteo.com/v1/forecast');
+
+// MISE À JOUR DEPUIS GITHUB (Réglages du jeu, « Version du jeu ») : api/maj.php compare la version installée à la branche
+// `main` du dépôt public (github.com/collectifweb/master-tasklist), et la remplace sur demande, depuis l'app, avec le
+// code d'accès. Il ne touche ni ce fichier, ni api/.htaccess, ni les données, et n'efface aucun fichier ; les fichiers
+// remplacés restent dans <DATA_DIR>/maj/precedente/. PHP doit pouvoir écrire dans le dossier du jeu et appeler GitHub
+// (cURL, Phar). MISE_A_JOUR false : la section disparaît des Réglages et rien n'est appelé. Environnement : OREE_MAJ=0.
+// define('MISE_A_JOUR', false);
 
 // RAPPEL DU MATIN (app/serveur/rappel.php, lancé à 8 h par une tâche planifiée de l'hébergement) : une notification
 // ntfy au texte général, qui ouvre l'app. Le nom du canal fait office de mot de passe sur le serveur public de ntfy :

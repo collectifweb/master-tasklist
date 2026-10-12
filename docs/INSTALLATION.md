@@ -118,6 +118,19 @@ Ouvre l’adresse du jeu, entre ton code, puis ajoute le jeu à l’écran d’a
 
 ## Mettre à jour
 
+### Depuis les Réglages du jeu
+
+Les Réglages du jeu ont une section « Version du jeu ». Quand une version plus récente est publiée sur GitHub (la branche `main` du dépôt), elle l’annonce et propose « Mettre à jour » : le serveur du jeu télécharge la nouvelle version et remplace lui-même ses fichiers. Le jeu se recharge ensuite. Sur tes autres appareils, recharge-le.
+
+- Tes quêtes, ta partie, `api/config.php` et `api/.htaccess` ne bougent pas. La mise à jour n’efface aucun fichier.
+- Les fichiers qu’elle remplace sont gardés dans `oree-donnees/jeu/maj/precedente/` jusqu’à la mise à jour suivante. Si la copie s’interrompt, le serveur remet l’ancienne version.
+- Le serveur regarde s’il y a du neuf quand tu ouvres les Réglages, au plus une fois toutes les 10 minutes. Il lui faut les extensions cURL et Phar de PHP. Il doit aussi pouvoir appeler GitHub et modifier les fichiers du jeu.
+- Une copie mise en ligne à la main affiche « Version installée inconnue » jusqu’à sa première mise à jour par ce bouton. Si ta copie date d’avant ce bouton, mets-la à jour une dernière fois à la main.
+- Si les Réglages disent que le serveur ne laisse pas le jeu remplacer ses propres fichiers, PHP n’a pas le droit de les modifier chez ton hébergeur (par exemple parce qu’il tourne sous un autre compte que le tien). Continue à la main, ou pose la question à ton hébergeur. Ne rends pas les fichiers modifiables par tout le monde : n’importe quel autre compte du serveur pourrait alors les changer.
+- Pour couper la mise à jour depuis les Réglages : `define('MISE_A_JOUR', false);` dans `api/config.php`. La section disparaît.
+
+### À la main
+
 1. Copie le dossier `oree-donnees/` sur ton ordinateur : c’est ta sauvegarde.
 2. Récupère la nouvelle version (nouveau ZIP, ou `git pull`).
 3. Remplace les fichiers en ligne par le contenu du nouveau dossier `app/`, toujours sans `tests/`. Garde tes fichiers `api/config.php` et `api/.htaccess`.

@@ -761,19 +761,24 @@ function read_body(): string
     return (string)file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
 }
 
-function handle(): void
+/** Code d'accès et blocage après jetons faux : lève l'erreur à renvoyer. Commun à api.php et maj.php. */
+function check_access(array $cfg, string $dataDir, int $now): void
 {
-    $cfg = load_config();
     $token = bearer_token();
-    $dataDir = rtrim($cfg['data'], '/\\');
-    $guarded = $cfg['hash'] !== '';
-    $now = time();
     $denied = auth_decision($cfg['hash'], $cfg['allow_open'], PHP_SAPI, $token);
-    if ($guarded) {
+    if ($cfg['hash'] !== '') {
         if ($token === null) lockout_guard($dataDir, $now);
         else lockout_attempt($dataDir, $now, $denied !== null); // avec le hash réglé, un jeton refusé est un jeton faux
     }
     if ($denied) throw $denied;
+}
+
+function handle(): void
+{
+    $cfg = load_config();
+    $dataDir = rtrim($cfg['data'], '/\\');
+    $now = time();
+    check_access($cfg, $dataDir, $now);
 
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     if ($method !== 'GET' && $method !== 'POST') {

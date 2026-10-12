@@ -9,6 +9,7 @@ import { glyph } from './glyphs.js';
 import { num, numGain, shortDate, durationText } from './format.js';
 import { openSheet, closeSheet, stepperRow, syncStepper, stepValue } from './sheets.js';
 import { psProduction } from './batiment.js';
+import { maj } from '../api-client.js';
 
 const REVIEW_KEY = 'oree.recycle.v1';
 const KEEP_DAYS = 28; // « Garder » : la quête ne revient pas dans le bilan avant 4 semaines
@@ -94,6 +95,7 @@ export function createStory(app) {
           ${stepperRow('set', 'priority', quete.priority)}${stepperRow('set', 'length', quete.length)}${stepperRow('set', 'difficulty', quete.difficulty)}
         </fieldset>
         ${meteoHtml(charge)}
+        ${majHtml()}
         <p class="field-error" id="set-err" role="alert" hidden>${icon('why')}<span></span></p>
       </form>
       <footer class="sheet-foot"><button class="btn btn--primary btn--block" type="submit" form="settings-form">${esc(t('settings.save'))}</button></footer>`;
@@ -101,6 +103,65 @@ export function createStory(app) {
     openSheet(dlg);
     // clavier virtuel : il ne s'ouvre que si l'on vient écrire le prénom, sinon il cacherait les trois rangées
     (depuisLettre ? $('#set-prenom', dlg) : $('[data-close]', dlg)).focus();
+    lireMaj();
+  }
+  // ───────── Version du jeu (lot U) : la version installée, et la mise à jour depuis GitHub quand le serveur la permet ─────────
+  // La section reste cachée tant que le serveur n'a pas répondu, et pour de bon s'il a coupé la mise à jour (MISE_A_JOUR),
+  // s'il n'a pas api/maj.php ou si l'appareil est hors ligne : il n'y aurait rien à y faire.
+  let majEnCours = false;
+  const numero = (x) => (x && typeof x.version === 'string' ? x.version.replace(/^v/, '') : null);
+  function majHtml() {
+    return `
+        <fieldset class="field set-quete set-maj" id="set-maj" aria-describedby="set-maj-hint" hidden>
+          <legend class="field-label">${esc(t('settings.maj'))}</legend>
+          <p class="field-hint" id="set-maj-hint">${esc(t('settings.maj.hint'))}</p>
+          <div class="meteo-ville" id="set-maj-version"></div>
+          <p class="field-hint meteo-etat" id="set-maj-etat" role="status" aria-live="polite"></p>
+        </fieldset>`;
+  }
+  async function lireMaj() {
+    if (!navigator.onLine || majEnCours) return;
+    let r;
+    try { r = await maj.lire(); } catch { return; }
+    if (r && r.actif) rendreMaj(r);
+  }
+  function rendreMaj(r) {
+    const f = $('#dlg-settings[open] #set-maj');
+    if (!f) return;
+    const inst = r.installee;
+    const titre = !inst ? t('settings.maj.inconnue') : numero(inst) ? t('settings.maj.version', { version: numero(inst) }) : t('settings.maj.sans_numero');
+    const sous = !inst ? t('settings.maj.inconnue.hint') : t('settings.maj.le', { date: shortDate(gameDay(new Date(inst.le))) });
+    const dispo = !r.aJour && r.publiee && r.possible;
+    $('#set-maj-version', f).innerHTML = `<span class="meteo-ville-text"><b>${esc(titre)}</b><small>${esc(sous)}</small></span>${dispo
+      ? `<button class="btn btn--secondary btn--small" type="button" data-action="maj-lancer">${icon('refresh')}<span>${esc(t('settings.maj.lancer'))}</span></button>` : ''}`;
+    let etat = '';
+    if (r.aJour) etat = t('settings.maj.a_jour');
+    else if (!r.publiee) etat = r.injoignable ? t('settings.maj.injoignable') : '';
+    else if (!r.possible) etat = r.raison === 'ecriture' ? t('settings.maj.ecriture') : t('settings.maj.extension', { ext: r.raison === 'curl' ? 'cURL' : 'Phar' });
+    else etat = numero(r.publiee) ? t('settings.maj.disponible', { version: numero(r.publiee) }) : t('settings.maj.disponible.sans_numero');
+    $('#set-maj-etat', f).textContent = etat;
+    f.hidden = false;
+  }
+  async function lancerMaj() {
+    const f = $('#set-maj');
+    const btn = f && $('[data-action="maj-lancer"]', f);
+    if (!btn || majEnCours) return;
+    const etat = $('#set-maj-etat', f);
+    majEnCours = true;
+    btn.setAttribute('aria-busy', 'true');
+    btn.setAttribute('aria-disabled', 'true');
+    etat.textContent = t('settings.maj.en_cours');
+    try {
+      await maj.lancer();
+      etat.textContent = t('settings.maj.fait');
+      setTimeout(() => location.reload(), 1500); // le temps de lire la phrase ; le service hors ligne prend le réseau d'abord
+    } catch (e) {
+      majEnCours = false;
+      btn.removeAttribute('aria-busy');
+      btn.removeAttribute('aria-disabled');
+      // les refus du serveur sont des phrases complètes (« Rien n'a été changé ») ; sans réponse, on ne sait pas où il en est
+      etat.textContent = e.status ? e.message : t('settings.maj.sans_reponse');
+    }
   }
   // ───────── Météo du village : chercher, choisir ou retirer la ville (gardée dans la partie dès le choix) ─────────
   let villes = []; // villes trouvées par la dernière recherche
@@ -456,6 +517,7 @@ export function createStory(app) {
     chercherVille,
     choisirVille,
     retirerVille,
+    lancerMaj,
     openReview: () => openReview(app.ctx()),
     refreshReview: () => refreshReview(app.ctx()),
     reviewAction: (action, id) => reviewAction(action, id, app.ctx()),

@@ -568,6 +568,7 @@ document.addEventListener('click', (e) => {
     case 'meteo-chercher': return story.chercherVille();
     case 'meteo-choisir': return story.choisirVille(target.dataset.i);
     case 'meteo-retirer': return story.retirerVille();
+    case 'maj-lancer': return story.lancerMaj();
     case 'open-review': return story.openReview();
     case 'review-keep': case 'review-archive': return story.reviewAction(action, target.dataset.id);
     case 'split':

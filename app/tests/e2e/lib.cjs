@@ -45,6 +45,8 @@ function quietState(core, now = new Date(), { letters = true, accueil = true } =
  * sandbox: true = version d'essai (réglage OREE_SANDBOX de l'API : bouton « Jour suivant ») ; jamais par défaut.
  * meteoUrl : adresse de la prévision (OREE_METEO_URL) ; par défaut un port fermé, pour qu'aucun scénario n'appelle le vrai
  * Open-Meteo (une prévision se pose dans data/meteo.json avant le premier appel).
+ * Mise à jour depuis GitHub (lot U) : OREE_MAJ_REFS et OREE_MAJ_ARCHIVE visent aussi un port fermé, sauf si le scénario
+ * les a posés dans process.env (un faux GitHub local, scénario 48).
  */
 async function startServer({ tasks, game, ledger, meteo, sandbox = false, meteoUrl = 'http://127.0.0.1:9/v1/forecast' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'oree-ui-'));
@@ -63,7 +65,9 @@ async function startServer({ tasks, game, ledger, meteo, sandbox = false, meteoU
   if (ledger) fs.writeFileSync(path.join(dataDir, 'ledger.jsonl'), ledger.map((e) => JSON.stringify(e)).join('\n') + (ledger.length ? '\n' : ''));
   const port = await freePort();
   const proc = spawn('php', ['-S', `127.0.0.1:${port}`, '-t', root], {
-    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', OREE_SANDBOX: sandbox ? '1' : '', OREE_METEO_URL: meteoUrl }, stdio: 'ignore',
+    env: { ...process.env, PHP_CLI_SERVER_WORKERS: '8', OREE_SANDBOX: sandbox ? '1' : '', OREE_METEO_URL: meteoUrl,
+      OREE_MAJ_REFS: process.env.OREE_MAJ_REFS || 'http://127.0.0.1:9/refs', OREE_MAJ_ARCHIVE: process.env.OREE_MAJ_ARCHIVE || 'http://127.0.0.1:9/archive/' },
+    stdio: 'ignore',
   });
   const base = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 100; i++) {
