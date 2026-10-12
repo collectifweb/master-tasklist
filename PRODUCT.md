@@ -65,7 +65,7 @@ Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `
 
 ## Brand Commitments
 
-- Nom : « L’Orée », gardé pour l’instant (Alex, 12 octobre 2026), sans être définitif : un nom qui dise mieux le village du Nord en développement reste possible. L’app s’affiche « L’Orée » (titre de la page ; « Orée » sous l’icône du téléphone). « Quêtes du foyer » reste le nom du produit dans la revue d’octobre 2026, dans le texte `app.name` (que le code n’affiche nulle part) et sur le carton de fin de la vidéo de présentation. Nom de code dans le dépôt : « La lisière rallumée ».
+- Nom : « L’Orée », gardé pour l’instant (Alex, 12 octobre 2026), sans être définitif : un nom qui dise mieux le village du Nord en développement reste possible. L’app s’affiche « L’Orée » (titre de la page ; « Orée » sous l’icône du téléphone). « Quêtes du foyer » reste le nom du produit dans la revue d’octobre 2026 et sur le carton de fin de la vidéo de présentation, à refaire quand le nom sera définitif. Le texte `app.name`, que le code n’affiche nulle part, dit « L’Orée » depuis le 12 octobre. Nom de code dans le dépôt : « La lisière rallumée ».
 - Le langage produit peut assumer pleinement les métaphores de jeu vidéo, tant que les actions principales restent évidentes.
 - L’expérience doit rester adulte, crédible et agréable à utiliser souvent, sans ressembler à une interface infantile ou à une couche de points décorative.
 - Direction visuelle (12 octobre 2026) : celle du jeu en ligne, que décrit `app/DESIGN.md`. Une palette de terre chaude (papier crème, sauge pour agir, verre pour informer, terre pour les Matériaux) ; la braise est réservée aux menaces. Elle remplace la préférence d’avant pour le prototype Vecteur.

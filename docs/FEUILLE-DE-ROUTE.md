@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.15.1 est en ligne depuis le 12 octobre 2026. Rien n’est prêt pour un prochain envoi.
+La version 2.15.1 est en ligne depuis le 12 octobre 2026. Prêt pour le prochain envoi : « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », un texte qu’aucun écran n’affiche.
 
 ## Fait
 
@@ -40,7 +40,7 @@ Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/cap
 ## En cours ou en attente
 
 - L’installation d’une amie : elle doit faire une dernière mise à jour à la main. Reste à savoir si le défaut de l’iPhone a disparu chez elle, et si le bouton « Mettre à jour » marche chez son hébergeur. Rien de cela n’a encore été essayé sur un vrai iPhone ni chez un vrai hébergeur.
-- Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`).
+- Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
 - Quatre textes jamais affichés dans `app/content/fr-CA/interface.json` (`why.priority`, `why.length`, `why.difficulty`, `filter.quick`) : signalés, pas retirés.
 
