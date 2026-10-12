@@ -1838,7 +1838,7 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 - [x] Montage (`montage/montage.cjs`) : chaque image composée dans Chromium d'après la ligne de temps, puis ffmpeg. Plans serrés surtout, téléphone entier au début ; une phrase sort avant que la suivante entre.
 - [x] Version finale avec le fichier de musique du compte d'Alex : même empreinte SHA-256 que l'extrait d'écoute, mesuré le 11 octobre.
 
-**Bilan (11 octobre 2026).** `.claude/promo/video-2026-10/sortie/promo.mp4` : 40,0 s, 1080 × 1350, H.264 à 30 images par seconde, AAC, 8,7 Mo, volume moyen −19,5 LUFS (mesurés). Reste à Alex : regarder la vidéo, juger le rythme, et vérifier la licence de Keyframe pour les crédits gratuits avant de publier.
+**Bilan (11 octobre 2026).** `.claude/promo/video-2026-10/sortie/promo.mp4` : 40,0 s, 1080 × 1350, H.264 à 30 images par seconde, AAC, 8,7 Mo, volume moyen −19,5 LUFS (mesurés). Vidéo validée telle quelle par Alex le 11 octobre. Reste à Alex : vérifier la licence de Keyframe pour les crédits gratuits avant de publier.
 
 ## Défauts relevés en passant (11 octobre 2026), à corriger au prochain lot
 
