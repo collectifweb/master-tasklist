@@ -1,6 +1,6 @@
 # L'Orée — bible du jeu
 
-*Version 2, validée par Alex le 5 octobre 2026, complétée le 6 octobre après son essai (ses décisions sont au §15). Elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et sert de guide à Hermes pour écrire la suite.*
+*Version 2, validée par Alex le 5 octobre 2026, complétée le 6 octobre après son essai (ses décisions sont au §15). Elle remplace le récit et l'économie de la v1 (Lueur, Fil libre, cendre, voile, chapitres scénarisés) et devait servir de guide à Hermes pour écrire la suite ; ce rôle est abandonné depuis le 9 octobre 2026 (décision 44).*
 
 Les nombres de ce document sont des exemples de départ, à équilibrer à l'usage.
 
@@ -32,10 +32,10 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 
 | Ressource | D'où elle vient | À quoi elle sert |
 |---|---|---|
-| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes et les panneaux, les jours où tu passes au village (décision 45) ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7), et le sirop de la cabane à sucre quand la réserve est pleine (§5) ; une fois par semaine, le repas du village (§5) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
+| **Énergie** | Chaque tâche terminée ; en plus, les éoliennes (et les panneaux solaires, à venir), les jours où tu passes au village (décision 45) ; et, quai rebâti, l'échange du jour du marchand, qui rachète tes Matériaux en trop (§7), et le sirop de la cabane à sucre quand la réserve est pleine (§5) ; une fois par semaine, le repas du village (§5) | Construire, semer, chauffer les serres l'hiver, réparer après un imprévu |
 | **Matériaux** | Chaque tâche terminée, d'autant plus qu'elle est longue ; en plus, la scierie ; et une fois par semaine, la semaine tenue (§4) | Construire et réparer |
 | **Nourriture** | Les récoltes : potager de mai à octobre, serres toute l'année, poulailler, cabane à sucre | Accueillir un habitant, remplir la commande d'un visiteur, servir le repas de la semaine (§5), faire la partie de sucre au printemps (§6), faire des réserves pour l'hiver |
-| **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux et fait mieux produire son bâtiment |
+| **Habitants** | Une famille arrive quand il y a un logement libre et assez de Nourriture pour l'accueillir | Le niveau du village : chaque habitant a un métier, travaille sous tes yeux (lot E) et fait mieux produire son bâtiment (à venir) |
 
 **Les permis ne sont pas une ressource.** Un compteur « Permis » à part, à droite des quatre ressources dans la barre du haut, dit combien il en reste à placer. Il ne sert qu'à monter un quartier (§4).
 
@@ -51,10 +51,10 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 |---|---|---|
 | Campement | 0 à 2 | Le départ : chalets, potager, atelier, petite serre |
 | Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; éolienne, grenier, quai |
-| Village | 6 à 10 | Nouvelle bande de terrain ; tour de guet, scierie, poulailler, cabane à sucre |
-| Bourg | 11 à 20 | Nouvelle bande ; marché, école, centrale solaire, garage à chasse-neige |
-| Ville | 21 à 35 | Une île voisine reliée par un pont ; gare, musée |
-| Ville +1, +2… | +15 chaque fois | Chaque palier : du terrain, un bâtiment, un permis, un nouveau type de visiteur |
+| Village | 6 à 10 | Nouvelle bande de terrain (à venir) ; tour de guet, scierie, poulailler, cabane à sucre |
+| Bourg | 11 à 20 | (à venir) Nouvelle bande ; marché, école, centrale solaire, garage à chasse-neige |
+| Ville | 21 à 35 | (à venir) Une île voisine reliée par un pont ; gare, musée |
+| Ville +1, +2… | +15 chaque fois | (à venir) Chaque palier : du terrain, un bâtiment, un permis, un nouveau type de visiteur |
 
 Le prochain rang est toujours affiché avec ce qui manque, par exemple : « Hameau : encore 2 habitants. »
 
@@ -121,10 +121,10 @@ Comme dans Dune 2, certains bâtiments en demandent d'autres. La fiche d'un bât
 | Scierie | Village | Donne des Matériaux en plus les jours où tu passes au village |
 | Poulailler | Village | Un peu de Nourriture, même l'hiver |
 | Cabane à sucre | Village | Grosse récolte au temps des sucres (mars-avril) ; réserve pleine, le marchand du quai achète le reste en sirop |
-| Marché | Bourg | Échanger sans attendre un visiteur |
-| École | Bourg | Les habitants produisent un peu plus |
-| Centrale solaire | Bourg | De l'Énergie en plus, surtout l'été |
-| Garage à chasse-neige | Bourg | Protège des tempêtes de neige |
+| Marché (à venir) | Bourg | Échanger sans attendre un visiteur |
+| École (à venir) | Bourg | Les habitants produisent un peu plus |
+| Centrale solaire (à venir) | Bourg | De l'Énergie en plus, surtout l'été |
+| Garage à chasse-neige (à venir) | Bourg | Protège des tempêtes de neige |
 
 **Le rang Village, tel qu'il est construit** (lot B, nuit du 8 au 9 octobre 2026 ; choix de Claude, envoi accepté par Alex le 9 octobre au matin ; en ligne depuis, étiquette `v2.10`) :
 - les quatre bâtiments se posent sur la bande du Hameau (décision 38), un exemplaire chacun ; leurs piquets y paraissent avec la bande, et avant le 6e habitant leur fiche dit combien il en manque (« Village : encore 3 habitants. » au 3e). Prix : tour de guet 4 Énergie et 30 Matériaux ; scierie 6 Énergie et 35 Matériaux (il faut d'abord l'atelier) ; poulailler 25 Matériaux ; cabane à sucre 3 Énergie et 30 Matériaux ;
@@ -157,7 +157,7 @@ plein), que le joueur serve le repas chaque semaine ou seulement quand la réser
 
 D'après la simulation (J), chez les trois joueurs mesurés (très lent, lent, (g) ; départs du 1er juillet et du 7 octobre), ouvrir le jeu plus souvent ne retarde jamais le Hameau et ne retire jamais de niveau au 1er mars. Le rang Village, lui, peut reculer : chez (g) parti en octobre, ouvrir chaque jour le repousse au jour 51, contre 46 quand il n'ouvre que les jours de quête, parce que ses cultures mûrissent toutes le même jour et qu'il manque la commande famille de la semaine (`tasks/todo.md`, lot J).
 
-Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village.
+Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village (à venir : aujourd'hui, les décors de l'île sont fixes).
 
 ## 6. Les saisons : le vrai calendrier du Nord
 
@@ -167,10 +167,10 @@ Le jeu suit la date réelle. Quand il neige dehors, il neige à l'Orée.
 |---|---|---|---|
 | Automne | septembre à novembre | Récoltes, couleurs ; alerte du premier gel | Remplir le grenier pour l'hiver |
 | Hiver | décembre à février (neige au sol du 15 novembre au 30 avril) | Le potager dort. Serre et poulailler seuls produisent de la Nourriture, jusqu'au temps des sucres en mars ; la serre consomme de l'Énergie. Tempêtes de neige. Trêve des Fêtes du 21 décembre au 4 janvier : aucune alerte | Garder la serre allumée : 10 récoltes de serre |
-| Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue ; semis en mai | Faire les sucres : la partie de sucre, en mars ou en avril |
-| Été | juin à août | Pleine production ; mouches noires en juin ; fête de la Saint-Jean le 24 juin ; plus de visiteurs | Accueillir une nouvelle famille |
+| Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue (à venir) ; semis en mai | Faire les sucres : la partie de sucre, en mars ou en avril |
+| Été | juin à août | Pleine production ; mouches noires en juin, fête de la Saint-Jean le 24 juin, plus de visiteurs (à venir) | Accueillir une nouvelle famille (à venir : l'été s'affiche « à venir » dans le bandeau) |
 
-Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : un décor unique, un permis, une famille qui s'installe.
+Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : aujourd'hui 3 Énergie, 10 Matériaux et un permis ; un décor unique ou une famille qui s'installe sont à venir.
 
 **L'hiver, tel qu'il est construit** (lot H, 7 octobre 2026, décisions d'Alex) :
 - du 15 novembre au 30 avril, l'île est sous la neige : sol, toits, arbres, bords du lac pris par la glace. Rien ne bouge ; les chemins restent dégagés ;
@@ -187,11 +187,11 @@ Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense 
   table de tire attend sur la neige, devant la cabane à sucre si elle est bâtie, sinon près de l'érable, jusqu'au
   30 avril. En mai, si elle n'a pas été faite, le bandeau dit qu'elle revient le 1er mars : rien n'est perdu.
 
-Chaque année, les saisons reviennent avec de nouvelles variantes écrites par Hermes, et le village, plus grand, vise plus haut.
+Chaque année, les saisons reviennent avec de nouvelles variantes, et le village, plus grand, vise plus haut (à venir ; Hermes ne les écrira pas, décision 44).
 
 ## 7. Les visiteurs et leurs commandes
 
-Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : par exemple « 6 Nourriture et 10 Matériaux ». En échange, il laisse quelque chose d'**unique** : un permis, un décor qu'on ne trouve nulle part ailleurs, une famille prête à s'installer, ou un gros lot de Matériaux. Un visiteur donne au plus un permis.
+Chaque lundi, un visiteur accoste au quai avec une commande valable 7 jours : par exemple « 6 Nourriture et 10 Matériaux ». En échange, il laisse quelque chose d'**unique** : un permis, un décor qu'on ne trouve nulle part ailleurs (à venir), une famille prête à s'installer, ou un gros lot de Matériaux. Un visiteur donne au plus un permis.
 
 Une commande n'est jamais obligatoire. La laisser passer ne fait rien perdre.
 
@@ -242,7 +242,7 @@ Valeurs réglées par la simulation (m) (`tests/core/simulation.test.mjs`, cinq 
 
 Valeurs réglées par la simulation (l) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre, quai bâti, qui livrent tout ce qu'ils peuvent payer ou jamais ; mesurées le 8 octobre 2026) : livrer tout ne change pas le nombre de niveaux au 1er mars, sauf un de moins pour le joueur à une quête tous les quatre jours parti l'été (5 au lieu de 6). Le village est plein de 2 à 12 jours plus tôt dans cinq cas sur dix, à la même date dans trois, 2 jours plus tard dans un ; le dernier ne le remplit jamais. 75 commandes sur 228 ne sont pas livrées : 57 fois la famille du Sud faute de place libre dans un chalet, les 18 autres faute de Nourriture ou de Matériaux le dimanche soir.
 
-**Catalogue de départ** : le marchand (échange de ressources), le colporteur (décors), la scientifique (permis et améliorations), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée), le violoneux (seulement pendant les Fêtes).
+**Catalogue de départ** : le marchand (échange de ressources), le colporteur (décors ; à venir), la scientifique (permis ; les améliorations sont à venir), la famille du Sud (un habitant), le convoi (Matériaux), la conteuse (une histoire du vieux village, débloque un souvenir au musée ; à venir), le violoneux (seulement pendant les Fêtes ; à venir). Construits : le marchand, le convoi, la famille du Sud et la scientifique.
 
 ## 8. Les imprévus, bons et mauvais
 
@@ -253,8 +253,8 @@ Ils sont tirés d'un catalogue, au plus deux par semaine à l'allure régulière
 | Aurore boréale : Énergie en plus | Gel précoce : une parcelle perdue jusqu'au lendemain |
 | Bonne pêche : Nourriture en plus | Panne d'éolienne : à réparer (Matériaux) |
 | Trouvaille en forêt : Matériaux en plus | Un ours au potager : la prochaine récolte est réduite |
-| Un orignal traverse le village : rien, c'est juste beau | Mouches noires : les chantiers prennent un jour de plus |
-| Visiteur surprise : une commande en plus | |
+| Un orignal traverse le village : rien, c'est juste beau | Mouches noires : les chantiers prennent un jour de plus (à venir) |
+| Visiteur surprise : une commande en plus (à venir) | |
 
 La tempête de neige n'est plus un imprévu : depuis le lot H, c'est une alerte annoncée d'avance (plus bas).
 
@@ -276,7 +276,7 @@ La tempête de neige n'est plus un imprévu : depuis le lot H, c'est une alerte
 
 Montants validés par Alex le 6 octobre au soir, après une simulation (`tests/core/simulation.test.mjs`, joueur (i)) : le premier niveau de quartier bouge de 0 à 2 jours aux six départs, qu'on paie ou qu'on attende. La tempête de neige est venue au lot de l'hiver, comme alerte (plus bas) ; le visiteur surprise et les mouches noires ne sont pas dans cette première série.
 
-**Les alertes météo** reprennent les « Avis » de la v1, comme les menaces qu'on voit venir dans Dune 2. Une tempête est annoncée quelques jours d'avance, avec une barre de préparation. Certains bâtiments aident à s'y préparer : la tour de guet prévient plus tôt, le garage à chasse-neige protège. Si l'alerte est tenue, on gagne une récompense ; sinon, un bâtiment est à réparer.
+**Les alertes météo** reprennent les « Avis » de la v1, comme les menaces qu'on voit venir dans Dune 2. Une tempête est annoncée quelques jours d'avance, avec une barre de préparation. Certains bâtiments aident à s'y préparer : la tour de guet prévient plus tôt, le garage à chasse-neige protège (à venir). Si l'alerte est tenue, on gagne une récompense ; sinon, un bâtiment est à réparer.
 
 **La tempête de neige, telle qu'elle est construite** (lot H, 7 octobre 2026, décisions d'Alex) :
 - de la première neige (15 novembre) à la fin de mars, une tempête tous les 7 à 14 jours, tirés au hasard d'après la date : tous les appareils voient la même, même hors ligne. Aucune pendant la trêve des Fêtes, ni annoncée pendant elle. Rien avant la fin des premiers pas : une tempête tombée avant passe sans rien donner ni abîmer. Hiver 2026-2027 : 11 tempêtes, du 25 novembre au 22 mars ; sur 20 hivers simulés, de 9 à 13 ;
@@ -304,7 +304,7 @@ Le village s'adapte à ta façon de jouer. Il ne t'accable pas quand tu ralentis
 **L'allure du village.** Chaque matin, l'app regarde deux choses :
 
 - le nombre de tâches terminées sur les 14 derniers jours ;
-- tes réserves, comparées au prix de ce que ton rang permet de construire.
+- tes réserves, comparées au prix de ce que ton rang permet de construire (à venir : seules les quêtes comptent, voir plus bas).
 
 Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein régime**. Par exemple, moins d'une tâche par jour en moyenne, c'est « au ralenti » ; plus de cinq par jour, ou des réserves qui dépassent trois fois le prix du plus gros bâtiment accessible, c'est « plein régime ». L'allure ne change que d'un cran par semaine, pour éviter les à-coups. Le bilan de la semaine l'affiche avec sa raison : « Allure : plein régime (68 tâches en 14 jours, greniers pleins). »
 
@@ -322,7 +322,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 
 - jusqu'à quatre imprévus par semaine, plus exigeants, mais toujours réparables ;
 - des commandes plus grosses, contre des récompenses plus rares ;
-- des **grands chantiers** sur plusieurs semaines (un phare, une digue, un pont, un monument) qui avalent beaucoup d'Énergie et de Matériaux et laissent une trace permanente sur l'île ;
+- des **grands chantiers** sur plusieurs semaines (un phare, une digue, un pont, un monument) qui avalent beaucoup d'Énergie et de Matériaux et laissent une trace permanente sur l'île (à venir) ;
 - les niveaux de quartier, qui coûtent cher (voir §4).
 
 **Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, le prix d'un niveau de quartier, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
@@ -340,7 +340,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 
 Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre) : au rythme de l'essai, l'allure reste régulière et rien ne change ; à six quêtes par jour, elle passe au plein régime (132 imprévus au lieu de 68 du 1er juillet au 1er mars) ; le joueur à une quête tous les quatre jours atteint l'objectif d'hiver réduit le 29 janvier au lieu du 18 février (départ du 1er juillet), le 20 février au lieu de jamais (départ du 7 octobre).
 
-**Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes en tient compte quand il révise la semaine qui vient (§12). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
+**Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes devait en tenir compte en révisant la semaine qui vient (§12, abandonné : décision 44). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
 
 ## 10. Ce qu'on voit à l'écran
 
@@ -375,7 +375,7 @@ On ne commence pas avec une liste vide. Le village démarre avec un petit stock 
 4. Semer ta première parcelle (l'hiver, dans la petite serre).
 5. Accueillir ta première famille.
 
-Chacune enseigne un geste et donne un petit coup de pouce. Le bandeau les propose dans cet ordre, mais chacune se coche dès qu'elle est faite, même avant son tour (demande d'Alex, 7 octobre 2026 : sans les Matériaux du chalet, les autres pas déjà faits restaient vides). Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app : Hermes enrichit, il n'est jamais indispensable.
+Chacune enseigne un geste et donne un petit coup de pouce. Le bandeau les propose dans cet ordre, mais chacune se coche dès qu'elle est faite, même avant son tour (demande d'Alex, 7 octobre 2026 : sans les Matériaux du chalet, les autres pas déjà faits restaient vides). Quelqu'un qui installe l'app sans agent ni liste existante comprend le jeu en cinq minutes. Le contenu de base est livré avec l'app ; Hermes ne l'enrichit pas (décision 44).
 
 La version publique (un site sans compte, les données gardées dans l'appareil, puis un code de synchronisation, puis des applications natives) est notée dans `PRODUCT.md`, section « Horizons ». Rien n'est prévu dans les lots.
 
@@ -430,7 +430,7 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 - la Tour de veille devient la tour de guet, avec un effet clair ;
 - l'île de 12 sur 12 devient une île qui s'agrandit.
 
-**On retire** : « Je m'y mets » (bouton, épingle en tête du Fil, relevé du temps, temps au bilan, proposition de découper liée au temps ; le bouton « Découper » des grands chantiers reste), Lueur, Fil libre, Souffler, cendre, voile, Confiance, ÉCHO-7 et le mystère des chapitres 3 à 8. L'histoire du vieux village survit en douceur : la conteuse et le musée en livrent des souvenirs.
+**On retire** : « Je m'y mets » (bouton, épingle en tête du Fil, relevé du temps, temps au bilan, proposition de découper liée au temps ; le bouton « Découper » des grands chantiers reste), Lueur, Fil libre, Souffler, cendre, voile, Confiance, ÉCHO-7 et le mystère des chapitres 3 à 8. L'histoire du vieux village survit en douceur : la conteuse et le musée en livreront des souvenirs (à venir).
 
 **Ta partie** : au passage à la v2, l'état du jeu repart, mais tes tâches déjà terminées sont recomptées depuis le registre. Rien n'est perdu.
 
