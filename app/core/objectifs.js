@@ -37,7 +37,7 @@ export const PAS_IDS = PREMIERS_PAS.map((p) => p.id);
  * « Garder la serre allumée », `recoltes` récoltes de petite serre de décembre à février (10 : simulations (j) et (k),
  * mesuré le 7 octobre 2026 au soir, réserve pleine sans effet sur la récolte : du 12 au 31 janvier au rythme de l'essai, le
  * 19 janvier à une quête un jour sur deux, du 13 décembre au 2 janvier à deux ou trois par jour, avec deux serres et des
- * jours de pousse raccourcis par les niveaux). Le printemps et l'été s'affichent « à venir ».
+ * jours de pousse raccourcis par les niveaux). L'été s'affiche « à venir » ; le printemps est plus bas (lot N).
  * Au ralenti (allure.js, lot A), la cible est réduite, la récompense la même : `partRalenti` du grenier à l'automne,
  * `recoltesRalenti` récoltes l'hiver. Réglées par la simulation (k), mesuré le 7 octobre 2026 au soir : à 6 récoltes, le
  * joueur à une quête tous les quatre jours atteint l'objectif d'hiver le 29 janvier (départ du 1er juillet) ou le 20 février

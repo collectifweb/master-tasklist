@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.15.1 est en ligne depuis le 12 octobre 2026. Prêt pour le prochain envoi : « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », un texte qu’aucun écran n’affiche.
+La version 2.15.1 est en ligne depuis le 12 octobre 2026. Prêt pour le prochain envoi, sans rien de visible : « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés.
 
 ## Fait
 
@@ -31,7 +31,7 @@ La version 2.15.1 est en ligne depuis le 12 octobre 2026. Prêt pour le prochain
 | 2.12 | 10 octobre | La Mairie garde 4 permis au plus. |
 | 2.13 | 11 octobre | La visite du jour : les cultures poussent et les bâtiments produisent dès la première ouverture du jour, sans quête à faire. |
 | 2.14 | 11 octobre | La vraie météo : avec une ville choisie dans les Réglages, les tempêtes suivent la neige prévue. |
-| 2.14.1 | 12 octobre | Un correctif pour Safari : sur iPhone, les fiches se réduisaient à une bande d’une ligne. Essayé dans le moteur de Safari, pas encore sur un vrai iPhone. |
+| 2.14.1 | 12 octobre | Un correctif pour Safari : sur iPhone, les fiches se réduisaient à une bande d’une ligne. Confirmé depuis sur l’iPhone d’une amie. |
 | 2.15 | 12 octobre | La mise à jour depuis GitHub, par un bouton des Réglages, pour qui installe le jeu chez soi. Coupée sur l’installation d’Alex. |
 | 2.15.1 | 12 octobre | Le texte du total, dans la fiche « Pourquoi ? » de la Cote, avait un double espace que le navigateur cachait : corrigé. Avec la vidéo dans le README et cette feuille de route. |
 
@@ -39,10 +39,9 @@ Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/cap
 
 ## En cours ou en attente
 
-- L’installation d’une amie : elle doit faire une dernière mise à jour à la main. Reste à savoir si le défaut de l’iPhone a disparu chez elle, et si le bouton « Mettre à jour » marche chez son hébergeur. Rien de cela n’a encore été essayé sur un vrai iPhone ni chez un vrai hébergeur.
+- L’installation d’une amie : le défaut de l’iPhone a disparu chez elle (elle l’a confirmé le 12 octobre). Reste à savoir si le bouton « Mettre à jour » marche chez son hébergeur : il n’a encore servi chez aucun vrai hébergeur.
 - Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
-- Quatre textes jamais affichés dans `app/content/fr-CA/interface.json` (`why.priority`, `why.length`, `why.difficulty`, `filter.quick`) : signalés, pas retirés.
 
 ## À venir
 
