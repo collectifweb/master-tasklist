@@ -168,7 +168,7 @@ Le jeu suit la date réelle. Quand il neige dehors, il neige à l'Orée.
 | Automne | septembre à novembre | Récoltes, couleurs ; alerte du premier gel | Remplir le grenier pour l'hiver |
 | Hiver | décembre à février (neige au sol du 15 novembre au 30 avril) | Le potager dort. Serre et poulailler seuls produisent de la Nourriture, jusqu'au temps des sucres en mars ; la serre consomme de l'Énergie. Tempêtes de neige. Trêve des Fêtes du 21 décembre au 4 janvier : aucune alerte | Garder la serre allumée : 10 récoltes de serre |
 | Printemps | mars à mai | Temps des sucres en mars-avril ; dégel et crue (à venir) ; semis en mai | Faire les sucres : la partie de sucre, en mars ou en avril |
-| Été | juin à août | Pleine production ; mouches noires en juin, fête de la Saint-Jean le 24 juin, plus de visiteurs (à venir) | Accueillir une nouvelle famille (à venir : l'été s'affiche « à venir » dans le bandeau) |
+| Été | juin à août | Pleine production ; mouches noires en juin, fête de la Saint-Jean le 24 juin, plus de visiteurs (les trois à venir) | Accueillir une nouvelle famille (à venir : l'été s'affiche « à venir » dans le bandeau) |
 
 Un objectif de saison manqué ne coûte rien. Réussi, il donne une récompense marquante : aujourd'hui 3 Énergie, 10 Matériaux et un permis ; un décor unique ou une famille qui s'installe sont à venir.
 

@@ -13,6 +13,10 @@ Le jeu s’utilise surtout sur téléphone ou tablette, et s’installe sur l’
 
 *Captures faites avec les quêtes d’exemple de `tasks.example.json`.*
 
+<a href="docs/captures/video-promo.mp4?raw=true"><img src="docs/captures/video-promo-apercu.jpg" alt="Image de la vidéo de présentation : « J’ai transformé ma liste de tâches en jeu. », au-dessus du jeu sur téléphone" width="260"></a>
+
+*La vidéo de présentation dure 40 secondes. GitHub ne la lit pas dans la page : un clic sur l’image télécharge le fichier, un peu plus de 8 Mo. Les quêtes qu’on y voit ont été écrites pour le tournage.*
+
 ## Une liste de tâches qui sait par où commencer
 
 Une tâche, ici, s’appelle une quête. Contrairement à une liste ordinaire, chacune porte trois réglages de 1 à 10, en plus de son titre : sa priorité, sa durée (de 5 minutes à 4 heures) et l’effort qu’elle demande.
@@ -94,6 +98,7 @@ Les scénarios navigateur (`app/tests/e2e/`, lancés par `run-ui.sh`) utilisent 
 | `app/api/` | Le serveur PHP et son modèle de réglages, `config.example.php`. |
 | `app/ARCHITECTURE.md`, `app/DESIGN.md` | Le fonctionnement technique et le design. |
 | `PRODUCT.md`, `docs/BIBLE-JEU.md` | Le cahier des charges, le récit et l’économie du jeu. |
+| `docs/FEUILLE-DE-ROUTE.md` | Ce qui est fait, ce qui est en cours et ce qui vient, version par version. |
 | `docs/revue-2026-10/` | La revue d’octobre 2026 d’où vient le jeu actuel. |
 | `tasks/` | Le journal de développement : le plan, lot par lot, et les leçons. |
 | `tasks.example.json` | Des tâches fictives pour essayer. |

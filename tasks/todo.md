@@ -1843,6 +1843,7 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 ## Défauts relevés en passant (11 octobre 2026), à corriger au prochain lot
 
 - Fiche « Pourquoi la Cote » : la ligne du total devrait dire « Cote N sur 100 » et dirait « Cote  sur 100 ». `js/ui/sheets.js:396` appelle `t('why.total')` sans la variable `cote`, et `js/content.js:61` remplace alors `{cote}` par rien. Lu dans le code, pas encore vu à l'écran. Correction reportée par Alex à la prochaine session.
+  *Corrigé le 12 octobre (accord d'Alex) : vu dans Chromium à 390 px, la ligne s'affichait déjà « Cote sur 100 » (le navigateur fusionne les deux espaces) ; seul le texte source portait le trou. Le texte devient « Cote sur 100 », capture identique au pixel avant et après. Nouvel essai `tests/core/gabarits.test.mjs` : rouge avant, vert après ; aucun autre appel du même genre. Cache `oree-coquille-v29`. Pas encore en ligne.*
 - Textes jamais lus : les clés `why.priority`, `why.length`, `why.difficulty` et `filter.quick` de `content/fr-CA/interface.json` (aucune occurrence dans `js/`, `core/` ni `index.html`). Signalé, pas supprimé.
 
 ## Correctif Safari — les fiches écrasées sur iPhone (12 octobre 2026)
@@ -1908,3 +1909,18 @@ Demande d'Alex : qu'une installation chez quelqu'un d'autre puisse se mettre à 
   *Posé le 12 octobre à 12 h 34, en dernière ligne, après une copie du fichier dans `api/data/backups/config.php.avant-maj-off-20261012-123439` (identique, droits 0600). `php -l` sans erreur ; le jeu répond 200 avec le code, 401 sans ; `config.php` vide vu de l'extérieur. Sans effet tant que `api/maj.php` n'est pas en ligne.*
 - [ ] L'installation de l'amie : une dernière mise à jour à la main l'amène au bouton.
   *12 octobre : message pour elle rédigé (dernière mise à jour à la main, puis « Mettre à jour » une fois pour noter la version) ; Alex dit l'avoir envoyé. Sa mise à jour, et la disparition du défaut sur son iPhone, restent à confirmer.*
+
+## Retours de la passe de documents (12 octobre 2026, après-midi)
+
+Décisions d'Alex sur le bilan de la passe de documents : fermer les cases d'onglets (il recharge à chaque envoi) et ne plus en créer ; marquer « à venir » dans la bible ce qui n'est pas construit ; la vidéo dans le README ; corriger aujourd'hui les défauts restés en suspens ; un document qui dit ce qui est fait, en cours et à venir.
+
+- [x] Sept cases « Alex recharge ses onglets » cochées ; leçon dans `tasks/lessons.md`.
+- [x] Bible : 26 marques « à venir » ou « abandonné » (Hermes, décision 44), chaque élément cherché d'abord dans le code.
+- [x] Essai météo « deux lectures en même temps » : cause prouvée (16 essais, 4 échecs, tous servis par un seul processus de `php -S`, la seconde lecture une seconde après la première). L'essai envoie la seconde lecture pendant l'appel de la première : 20 réussites sur 20 ; sans le verrou de la prévision, il échoue (contre-épreuve). Le jeu n'avait rien.
+- [x] Total du « Pourquoi ? » (voir « Défauts relevés en passant » plus haut).
+- [x] `PRODUCT.md` : la ligne du nom, que la passe de documents avait faussée (« Quêtes du foyer » donné comme ancien nom) ; les deux noms en usage, sans trancher.
+- [x] README : la vidéo. GitHub n'affiche pas de lecteur dans un README (essai par son outil de rendu : la balise `video` est retirée) et la page du fichier dit qu'il est trop gros ; une image tirée de la vidéo (`docs/captures/video-promo-apercu.jpg`, à 2 s) mène au fichier par `?raw=true`, qui le télécharge (essai sur GitHub : 302 puis `application/octet-stream`, 8 690 257 octets). Visible sur GitHub quand `main` avancera, au prochain envoi : `main` suit la production, et les installations chez quelqu'un d'autre se mettent à sa version.
+- [x] `docs/FEUILLE-DE-ROUTE.md` : fait, en cours, à venir ; pointée par `CLAUDE.md` et le README, mise à jour à chaque envoi. Chaque ligne contrôlée par quatre vérificateurs (étiquettes Git, plan, bible, `PRODUCT.md`) : lignes des versions 1, 2.4, 2.7 et 2.14.1 et section « À venir » corrigées avant de la montrer, et la Saint-Jean marquée « à venir » dans la bible.
+- [x] /humanize sur les textes publics (README, feuille de route) : aucun caractère invisible, plus de gras en série.
+- [ ] Série complète des scénarios navigateur, avant tout envoi du correctif.
+
