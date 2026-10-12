@@ -1777,6 +1777,12 @@ Historique de neige des archives d'Open-Meteo (une réanalyse, pas des prévisio
 - [x] Après l'envoi : Alex recharge ses onglets, puis règle sa ville ; je lis ensuite, sans rien écrire, que `api/data/meteo.json` existe, daté du jour, pour sa ville. C'est là que l'appel sortant depuis le web est vérifié.
   *11 octobre, 20 h 20 : Alex dit avoir rechargé ses onglets et réglé sa ville. Lu en production, sans rien écrire : `api/data/meteo.json` écrit à 20 h 19 (droits 0600), lu le jour même, 16 jours (du 11 au 26 octobre), aucun échec noté, même position au centième que la ville réglée dans la partie. L'appel sortant depuis le serveur web fonctionne donc. Aucun jour à 3 cm ou plus dans ces 16 jours : aucune tempête notée, comme prévu.*
 
+### Bilan du lot Q (11 octobre 2026)
+- Fait : avec une ville choisie dans les Réglages, les tempêtes de neige suivent la prévision d'Open-Meteo (3 cm ou plus, toute l'année) ; une tempête annoncée le reste même si la prévision change ; sans ville ou sans prévision récente, le tirage d'après la date (décision 50). Le serveur lit la prévision une fois par jour de jeu. Fanal, la rangée d'alerte et la carte en liste nomment la ville de la prévision, avec le crédit d'Open-Meteo.
+- Mesuré : suite de logique et de l'API, 663 tests, 661 réussis, 0 échec, 2 « à faire » ; série navigateur, 44 scénarios sur 44 réussis ; en production, prévision du jour lue par le serveur web pour la ville réglée.
+- Changé en route : seuil de 3 cm au lieu du 1 cm proposé, et neige hors saison comptée, sur les réponses d'Alex ; six défauts trouvés par la relecture indépendante, tous corrigés avec un test vu en échec ; mesures qui permettaient de retrouver la ville d'Alex retirées des fichiers et des commits du lot, avant tout envoi.
+- Reste : aucune tempête de la vraie météo vue en production (pas de jour à 3 cm ou plus dans la prévision du 11 au 26 octobre) ; deux comportements signalés et laissés tels quels en Q5 (onglet en version 12 resté ouvert, prévision de l'ancienne ville juste après un changement).
+
 ### Questions pour Alex
 Où on en est : aujourd'hui, les tempêtes tombent à des jours tirés d'après la date, une tous les 7 à 14 jours, du 15 novembre à la fin de mars (11 cet hiver). Avec ta ville, ce serait la prévision de neige chez toi qui fixerait ces jours. Le reste ne change pas : bandeau, barre, « Rentrer du bois », récompense, bâtiment enseveli.
 
