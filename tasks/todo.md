@@ -1808,3 +1808,34 @@ Mêmes archives et même règle que plus haut, mais toute l'année (du 1er septe
 
 - Tirage d'aujourd'hui, mêmes hivers : 10 à 12 (10,9). À 3 cm, la ville d'Alex garde à peu près ce rythme (chiffres gardés hors du dépôt).
 - Chez Alex, à 3 cm, des tempêtes tombent aussi hors de la saison d'aujourd'hui, certains hivers dès octobre (détail gardé hors du dépôt).
+
+## Vidéo promo pour X et LinkedIn (découpage validé le 11 octobre 2026)
+
+**Statut : découpage, format et musique validés par Alex le 11 octobre 2026.** Les outils de tournage et les vidéos vivent dans `.claude/promo/`, ignoré par Git : aucune capture dans le dépôt. Données fictives seulement : ni vraie tâche, ni prénom, ni adresse de production.
+
+- Format : 4:5, 1080 × 1350, MP4 (H.264, AAC), environ 40 s, en français, textes à l'écran pour suivre sans le son. Les deux réseaux l'acceptent d'après des guides tiers et la page publicitaire de LinkedIn ; la documentation officielle de X n'a pas été lue.
+- Fin : « Quêtes du foyer », github.com/collectifweb/master-tasklist, signé Alexandre Alves.
+- Musique : « Middle » (Keyframe Audio). Le montage se fait sur l'extrait d'écoute ; la version publiée prendra le fichier téléchargé du compte d'Alex. La licence de Keyframe lue le 11 octobre vise un abonnement payé et interdit l'usage commercial aux comptes d'essai, sans rien dire des crédits gratuits : à vérifier par Alex avant publication.
+- Les posts sont écrits par Alex.
+
+| Temps | À l'écran | Texte |
+|---|---|---|
+| 0–3 s | Une liste de tâches fictives, à plat | « J'ai transformé ma liste de tâches en jeu. » |
+| 3–9 s | Ajout d'une quête : Priorité, Durée, Effort, la Cote, les filtres | « Priorité, durée, effort → une cote sur 100 » |
+| 9–15 s | Une quête cochée, les ressources qui montent | « Chaque tâche faite rapporte de l'énergie et des matériaux » |
+| 15–24 s | L'île : un chalet rebâti, une famille qui arrive, le rang qui monte | « …pour relancer L'Orée, un village du Nord » |
+| 24–31 s | Une tempête annoncée, la neige sur l'île | « Les saisons suivent le vrai calendrier » |
+| 31–35 s | Le village en plan large | « Aucune série à tenir. Une absence ne coûte rien. » |
+| 35–40 s | Carton de fin | « Quêtes du foyer » · lien GitHub · Alexandre Alves |
+
+- [ ] Essai de tournage de 10 s (une quête cochée, les ressources qui montent) : comparer deux façons de filmer et juger la netteté sur des images extraites.
+- [ ] Mettre en scène le village fictif (rang Village, chalets, familles, potager) et des tâches fictives.
+- [ ] Filmer les six plans.
+- [ ] Cartons de titre et de fin avec /impeccable, d'après `app/DESIGN.md`.
+- [ ] Montage avec ffmpeg (musique, fondus) ; images extraites pour qu'Alex valide.
+- [ ] Version finale avec le fichier de musique du compte d'Alex.
+
+## Défauts relevés en passant (11 octobre 2026), à corriger au prochain lot
+
+- Fiche « Pourquoi la Cote » : la ligne du total devrait dire « Cote N sur 100 » et dirait « Cote  sur 100 ». `js/ui/sheets.js:396` appelle `t('why.total')` sans la variable `cote`, et `js/content.js:61` remplace alors `{cote}` par rien. Lu dans le code, pas encore vu à l'écran. Correction reportée par Alex à la prochaine session.
+- Textes jamais lus : les clés `why.priority`, `why.length`, `why.difficulty` et `filter.quick` de `content/fr-CA/interface.json` (aucune occurrence dans `js/`, `core/` ni `index.html`). Signalé, pas supprimé.
