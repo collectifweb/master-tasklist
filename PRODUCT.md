@@ -65,11 +65,10 @@ Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `
 
 ## Brand Commitments
 
-- Nom : pas encore tranché. L’app s’affiche « L’Orée » (titre de la page ; « Orée » sous l’icône du téléphone). « Quêtes du foyer » est le nom du produit dans la revue d’octobre 2026, dans le texte `app.name` (que le code n’affiche nulle part) et sur le carton de fin de la vidéo de présentation. Nom de code dans le dépôt : « La lisière rallumée ».
+- Nom : « L’Orée », gardé pour l’instant (Alex, 12 octobre 2026), sans être définitif : un nom qui dise mieux le village du Nord en développement reste possible. L’app s’affiche « L’Orée » (titre de la page ; « Orée » sous l’icône du téléphone). « Quêtes du foyer » reste le nom du produit dans la revue d’octobre 2026, dans le texte `app.name` (que le code n’affiche nulle part) et sur le carton de fin de la vidéo de présentation. Nom de code dans le dépôt : « La lisière rallumée ».
 - Le langage produit peut assumer pleinement les métaphores de jeu vidéo, tant que les actions principales restent évidentes.
 - L’expérience doit rester adulte, crédible et agréable à utiliser souvent, sans ressembler à une interface infantile ou à une couche de points décorative.
-- La direction visuelle Vecteur est la préférence actuelle d’Alex parmi les prototypes: interface animée, précise, énergique et lisible.
-- Le Potager est la boucle de gestion la plus prometteuse: ferme réellement développable, objectifs, animations, événements et aléas à contrer.
+- Direction visuelle (12 octobre 2026) : celle du jeu en ligne, que décrit `app/DESIGN.md`. Une palette de terre chaude (papier crème, sauge pour agir, verre pour informer, terre pour les Matériaux) ; la braise est réservée aux menaces. Elle remplace la préférence d’avant pour le prototype Vecteur.
 - Monde principal confirmé le 5 octobre 2026 : un village du Nord québécois au bord d’un lac, relancé avec des outils d’aujourd’hui, qui grandit sans fin (bible : `docs/BIBLE-JEU.md`). Le Bastion et son mystère sont abandonnés.
 - Les aléas ont des conséquences virtuelles réelles mais récupérables: récoltes perdues, bâtiments endommagés ou délais supplémentaires. Ils ne suppriment jamais une tâche, une donnée réelle ou une progression permanente.
 - Économie confirmée à quatre ressources : Énergie et Matériaux gagnés par les tâches, Nourriture tirée des récoltes, Habitants qui font monter le rang du village. Les permis (voir plus bas) ne sont pas une ressource : un compteur « Permis » à part, dans la barre des ressources, remplace la pastille qui était sur « Construire ».

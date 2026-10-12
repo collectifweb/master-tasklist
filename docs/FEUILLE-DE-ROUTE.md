@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.15 est en ligne depuis le 12 octobre 2026. Le prochain envoi portera un texte corrigé dans la fiche « Pourquoi ? » de la Cote : celui du total avait un double espace, que le navigateur cachait.
+La version 2.15.1 est en ligne depuis le 12 octobre 2026. Rien n’est prêt pour un prochain envoi.
 
 ## Fait
 
@@ -33,13 +33,14 @@ La version 2.15 est en ligne depuis le 12 octobre 2026. Le prochain envoi porter
 | 2.14 | 11 octobre | La vraie météo : avec une ville choisie dans les Réglages, les tempêtes suivent la neige prévue. |
 | 2.14.1 | 12 octobre | Un correctif pour Safari : sur iPhone, les fiches se réduisaient à une bande d’une ligne. Essayé dans le moteur de Safari, pas encore sur un vrai iPhone. |
 | 2.15 | 12 octobre | La mise à jour depuis GitHub, par un bouton des Réglages, pour qui installe le jeu chez soi. Coupée sur l’installation d’Alex. |
+| 2.15.1 | 12 octobre | Le texte du total, dans la fiche « Pourquoi ? » de la Cote, avait un double espace que le navigateur cachait : corrigé. Avec la vidéo dans le README et cette feuille de route. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
 ## En cours ou en attente
 
 - L’installation d’une amie : elle doit faire une dernière mise à jour à la main. Reste à savoir si le défaut de l’iPhone a disparu chez elle, et si le bouton « Mettre à jour » marche chez son hébergeur. Rien de cela n’a encore été essayé sur un vrai iPhone ni chez un vrai hébergeur.
-- Le nom du jeu, à trancher : l’app s’affiche « L’Orée », la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`).
+- Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`).
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
 - Quatre textes jamais affichés dans `app/content/fr-CA/interface.json` (`why.priority`, `why.length`, `why.difficulty`, `filter.quick`) : signalés, pas retirés.
 
