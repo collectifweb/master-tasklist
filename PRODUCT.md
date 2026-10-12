@@ -65,7 +65,7 @@ Ce qui rend la première étape envisageable (lu dans `app/ARCHITECTURE.md` et `
 
 ## Brand Commitments
 
-- Nom du jeu : « L’Orée » (nom de code dans le dépôt : « La lisière rallumée »). « Quêtes du foyer » était l’ancien nom de travail.
+- Nom : pas encore tranché. L’app s’affiche « L’Orée » (titre de la page ; « Orée » sous l’icône du téléphone). « Quêtes du foyer » est le nom du produit dans la revue d’octobre 2026, dans le texte `app.name` (que le code n’affiche nulle part) et sur le carton de fin de la vidéo de présentation. Nom de code dans le dépôt : « La lisière rallumée ».
 - Le langage produit peut assumer pleinement les métaphores de jeu vidéo, tant que les actions principales restent évidentes.
 - L’expérience doit rester adulte, crédible et agréable à utiliser souvent, sans ressembler à une interface infantile ou à une couche de points décorative.
 - La direction visuelle Vecteur est la préférence actuelle d’Alex parmi les prototypes: interface animée, précise, énergique et lisible.
