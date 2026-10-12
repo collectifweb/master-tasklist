@@ -1901,5 +1901,7 @@ Demande d'Alex : qu'une installation chez quelqu'un d'autre puisse se mettre à 
 - Pas vérifié : un hébergeur mutualisé réel (droit d'écrire de PHP, appel sortant vers GitHub, durée d'une mise à jour).
 - Défaut relevé en passant, pas corrigé : l'essai « deux lectures en même temps » de `tests/api/meteo.test.mjs` échoue 2 fois sur 8, avec ou sans le lot U (mesuré sur le dernier commit et sur la copie de travail) : la seconde lecture reçoit parfois la prévision au lieu de rien. Cause non cherchée.
 - [ ] Série complète des scénarios (45) avant l'envoi.
-- [ ] Envoi en v2.15, à décider par Alex. Avant, poser `define('MISE_A_JOUR', false);` dans le `config.php` de sa production, sinon le bouton y paraît aussi.
+- [ ] Envoi en v2.15 : accordé par Alex le 12 octobre, dès que la série est verte.
+- [x] `define('MISE_A_JOUR', false);` dans le `config.php` de sa production, avant l'envoi : accordé par Alex le 12 octobre (sinon le bouton y paraît aussi).
+  *Posé le 12 octobre à 12 h 34, en dernière ligne, après une copie du fichier dans `api/data/backups/config.php.avant-maj-off-20261012-123439` (identique, droits 0600). `php -l` sans erreur ; le jeu répond 200 avec le code, 401 sans ; `config.php` vide vu de l'extérieur. Sans effet tant que `api/maj.php` n'est pas en ligne.*
 - [ ] L'installation de l'amie : une dernière mise à jour à la main l'amène au bouton.
