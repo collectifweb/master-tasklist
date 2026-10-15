@@ -1931,3 +1931,67 @@ Décisions d'Alex sur le bilan de la passe de documents : fermer les cases d'ong
 - [x] Pause dans les nouveautés (Alex, 12 octobre) : il joue et note ce qui le gêne avant le prochain lot. Hermes et ses 30 secondes : Alex le notera lui-même.
 - [x] Ménage : `why.priority`, `why.length`, `why.difficulty`, `filter.quick` retirés de `interface.json` (cherchés dans `app/` et `docs/`, en clé simple, double, gabarit et construite : aucun usage) ; commentaire de `core/objectifs.js` sur le printemps « à venir » corrigé. Avec la v30, pas encore en ligne.
 
+
+## Lot L — Des fiches qu'on lit d'un coup d'œil (proposé le 15 octobre 2026, à valider)
+
+Référence : retour d'Alex du 15 octobre 2026, après sa pause de jeu (« beaucoup de texte partout quand on clique sur des éléments, pas assez d'indications plus simples, plus imagées, comme Farmville » ; « savoir très clairement ce que ça apporte d'augmenter le niveau »). Point de départ : le malentendu du potager. La fiche d'une parcelle écrit la règle (« une récolte de 5 Nourriture après 5 jours où tu passes au village ») avant le compte réel ; Alex a cru son compteur remis à zéro par la montée des Champs. Sa partie, lue en production le 15 octobre (lecture seule, sur son accord) : semis du 11 octobre inchangé avant et après la montée, 1 jour de passage restant ; rien n'était remis à zéro.
+
+Critique /impeccable du 15 octobre : 23/40, deux relectures indépendantes sur une partie fictive aux trois largeurs. Archivée hors suivi Git (`.impeccable/critique/`, elle contient un chemin du poste).
+
+**Statut : plan proposé, à valider par Alex.**
+
+### Choix d'Alex (15 octobre)
+- Les cinq problèmes de la critique, en commençant par les niveaux.
+- Chiffres et pictos d'abord : par défaut, le dessin, l'état (barre ou chiffre), le gain, le prix en pastilles, un bouton chiffré. Les explications passent dans un repli « Comment ça marche ».
+- « Ce que c'est » (le texte d'ambiance) devient une ligne discrète sous le titre.
+- La carte elle-même ne change pas : pas de pastille au-dessus des parcelles dans ce lot.
+
+Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une lecture pure si une valeur manque à l'interface), Fanal, les lettres, le Fil du jour, la barre du haut.
+
+### L0 — Maquette d'abord, vue par Alex avant le code
+- [ ] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
+- [ ] Alex tranche ; corrections en une seule passe, puis le code.
+
+### L1 — Monter de niveau : l'avant et l'après (problème 1)
+- [ ] Fiche de quartier : en tête, une ligne comparative. Picto de la ressource, nom court du réglage (« Récolte du potager »), « 4 → 5 » (l'avant en encre douce, l'après en sauge et en gras), pastille « +1 ». Mairie et Garage, où un chiffre plus bas est meilleur : le mot dit le sens (« moins cher », « plus vite »), pas la couleur seule. Au niveau le plus haut : la valeur actuelle seule.
+- [ ] Prix en trois pastilles (Permis, Énergie, Matériaux) : picto et nombre. Une pastille qui manque passe en pointillés, avec « il en manque N » dessous. La phrase en gras « Il manque … » disparaît de la fiche ; le bouton verrouillé garde sa raison pour le lecteur d'écran.
+- [ ] La ligne « Tu as N permis. Le prochain : … » quitte la fiche (voir L3).
+- [ ] Repli « Comment ça marche » : ce que fait le quartier, en une phrase.
+- [ ] Valeurs lues au cœur (`valeur`, `EFFETS_QUARTIERS`), jamais en dur dans l'interface.
+
+### L2 — Fiches de bâtiment : l'état d'abord (problème 2)
+- [ ] Gabarit commun : titre, ligne d'ambiance discrète ; l'état ; le gain ; le geste chiffré ; le repli « Comment ça marche » (l'actuel « Ce que ça fait »).
+- [ ] Parcelle et petite serre : une barre de crans (jours de pousse, lus au cœur), pleins jusqu'aux jours passés, « 3 sur 5 », « Mûr dans 2 jours », pastille « +5 Nourriture ». Bouton « Récolter dans 2 jours » (verrouillé, avec sa raison), puis « Récolter · +5 » ; rien de semé : « Semer · 2 Énergie ». Un dégât (gel, neige, ours) reste en tête.
+- [ ] Chalet : les places en silhouettes (« 2 sur 2 »), bouton « Accueillir · 18 Nourriture ». Bâtir : le prix sur le bouton, en pastilles.
+- [ ] Producteurs (éolienne, scierie, poulailler, cabane à sucre) : le gain par jour de passage en pastille, coché quand il est donné aujourd'hui.
+- [ ] Quai : la commande et le comptoir gardent leurs pastilles ; les règles passent dans le repli ; « encore N jours » une seule fois.
+- [ ] Atelier : plus de « Une fois réparé, il permet… » quand il est réparé.
+
+### L3 — Le permis à une seule place (problème 3)
+- [ ] Fiche Permis (tuile du haut) : 4 cases en airelle, pleines jusqu'au nombre en main, « 1 sur 4 au plus » ; « Prochain : dans N jours travaillés », en crans ; à 4 en main, « La Mairie attend que tu en places un ». La règle, raccourcie, dans le repli. Lu au cœur (`progressionPermis`).
+- [ ] La ligne des permis quitte les fiches de quartier et la tête du catalogue. Ailleurs, le permis n'est plus qu'une pastille de prix.
+
+### L4 — Le moment d'une montée de niveau (problème 4)
+- [ ] À l'achat, la fiche se range et le moment se joue sur la plaque, visible ; puis une carte de récompense : « Champs · niveau 2 », la ligne « 5 → 6 », la réplique de Fanal. Mouvement réduit : un fondu, sans déplacement.
+- [ ] Le niveau suivant, verrouillé, ne s'affiche qu'à la prochaine ouverture de la fiche.
+
+### L5 — Le catalogue Construire (problème 5)
+- [ ] Deux onglets, « Bâtiments » et « Quartiers » (cibles de 44 px).
+- [ ] Les bâtiments uniques déjà bâtis n'y figurent plus.
+- [ ] Par rangée : la vignette, l'effet en une ligne à picto (« +4 Nourriture en 5 jours », « +3 Énergie par jour »), le prix en pastilles, le rang requis en pastille. Quartiers : la ligne comparative de L1.
+
+### L6 — Contrat, textes, vérification, envoi
+- [ ] `app/DESIGN.md` et `app/.impeccable/design.json` : ligne comparative, pastilles de prix, crans de pousse, cases de permis, carte de récompense, onglets ; écrits dans le même commit que l'écran.
+- [ ] Textes dans `app/content/fr-CA/`, typographie de `app/content/README.md` ; les textes devenus inutiles retirés.
+- [ ] Tests à revoir (recherche du 15 octobre) : scénarios 9, 15, 26, 30, 31, 32, 33, 34, 44, `world-s3`, `world-perf` ; tests du cœur `fiches-village`, `cultures`, `quartiers`, `quests`. Un nouveau scénario : l'avant → après aux trois largeurs, la fiche Permis, plus de ligne des permis dans les quartiers ni le catalogue.
+- [ ] Détecteur /impeccable sur les écrans changés ; essai à la main aux trois largeurs ; cibles de 44 px ; la raison d'un bouton verrouillé toujours lue ; mouvement réduit.
+- [ ] Série complète des scénarios (environ 46 minutes) avant l'envoi : le lot change l'interface du jeu.
+- [ ] Feuille de route, `CLAUDE.md` (ligne de version) ; envoi sur l'accord d'Alex, étiquette `v2.16` (elle emporte aussi `app.name` et le cache v30, pas encore en ligne).
+
+Ordre : L0, validation, puis L1, L3, L2, L5, L4, L6. Un commit par étape vérifiée.
+
+### Relevé par la critique, hors de ce lot
+- Deux sortes de jours (« de passage » pour les cultures, « travaillés » pour les permis) : une règle du jeu, à discuter à part.
+- Pastilles sur la carte (« 2 j » au-dessus d'une parcelle, « 2/2 » sur un chalet).
+- Le plafond de Nourriture absent de la barre du haut ; à 390 px, 5 plaques de quartier sur 6 sans nom ; Construire, Quêtes et Vue sans mot visible.
+- La bulle de Fanal : interligne serré, recouverte au tiers par une plaque à 390 px (détecteur).
