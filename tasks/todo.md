@@ -1938,7 +1938,7 @@ Référence : retour d'Alex du 15 octobre 2026, après sa pause de jeu (« beauc
 
 Critique /impeccable du 15 octobre : 23/40, deux relectures indépendantes sur une partie fictive aux trois largeurs. Archivée hors suivi Git (`.impeccable/critique/`, elle contient un chemin du poste).
 
-**Statut : lancé par Alex le 15 octobre (« Go, tu peux lancer la maquette ») ; maquette L0 livrée le même jour, en attente de son verdict.**
+**Statut : maquette L0 validée par Alex le 15 octobre (« Splendissime. J'ai vu les maquettes, ça me convient »), avec les deux choix sur les bulles ; code en cours, dans l'ordre L1, L3, L2, L6, L5, L4, L7.**
 
 ### Choix d'Alex (15 octobre)
 - Les cinq problèmes de la critique, en commençant par les niveaux.
@@ -1951,7 +1951,8 @@ Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une l
 ### L0 — Maquette d'abord, vue par Alex avant le code
 - [x] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets ; l'île avec les bulles de L6 et une flèche au bord, à 390 px. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
   Fait le 15 octobre : onze écrans de téléphone (390 × 844) sur un canevas privé de claude.ai, sur la partie fictive de la critique (l'île en fond est sa capture). Champs 0 → 1 et 1 → 2 (il manque des ressources), Mairie 0 → 1 (« −3 »), carte de récompense, fiche Permis ; parcelle qui pousse, mûre, vide ; chalet (il manque 4 Nourriture) ; l'île avec quatre bulles et une flèche au bord ; catalogue. Écart avec ce plan : la tablette et l'ordinateur ne sont pas dessinés, ils se vérifient au code. Un rendu local des onze écrans (sans le moteur du canevas) a fait corriger deux débordements ; le rendu sur claude.ai lui-même n'a pas été regardé.
-- [ ] Alex tranche ; corrections en une seule passe, puis le code.
+- [x] Alex tranche ; corrections en une seule passe, puis le code.
+  Validée telle quelle le 15 octobre, aucune correction. Ses deux réponses : seule la bulle d'une récolte agit d'un toucher, les bulles famille, commande et quartier ouvrent la fiche (« ça me va ») ; réserve pleine ou dégât sur la culture, la bulle ouvre la fiche au lieu de récolter (« dac »).
 
 ### L1 — Monter de niveau : l'avant et l'après (problème 1)
 - [ ] Fiche de quartier : en tête, une ligne comparative. Picto de la ressource, nom court du réglage (« Récolte du potager »), « 4 → 5 » (l'avant en encre douce, l'après en sauge et en gras), pastille « +1 ». Mairie et Garage, où un chiffre plus bas est meilleur : le mot dit le sens (« moins cher », « plus vite »), pas la couleur seule. Au niveau le plus haut : la valeur actuelle seule.
@@ -1985,7 +1986,7 @@ Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une l
 Constat du 15 octobre (partie fictive, 390 px, deux parcelles et la serre mûres) : le seul signe d'une récolte prête est un petit panier dessiné à côté de la culture ; deux des trois parcelles sortent par le bord gauche de l'écran ; « mûr, à récolter » n'existe que dans le nom lu par le lecteur d'écran ; ni le bandeau ni la barre du haut n'en parlent (`js/ui/bandeau.js`, `js/ui/hud.js`). Les dégâts, eux, ont déjà leur marque au-dessus du bâtiment (`world/models.js`, `marque`) : les bonnes nouvelles n'ont rien d'équivalent.
 - [ ] Une bulle au-dessus de ce qui est prêt, lue au cœur (aucune règle dans l'interface) : culture mûre (`etatCulture`) ; chalet qui peut accueillir (`refusAccueillir` vide) ; commande qu'on peut livrer au quai (`refusLivrer` vide) ; quartier qu'on peut monter, sur sa plaque (`refusMonter` vide). Picto de la ressource ou du geste ; pas de braise (réservée aux menaces) : chercher la famille de couleur dans `app/DESIGN.md` et `.impeccable/design.json` avant de la poser. Zone de toucher de 44 px, même si la bulle est dessinée plus petite. Un petit mouvement de flottement en `transform` seulement, coupé en mouvement réduit.
 - [ ] Toucher la bulle d'une culture : la récolte se fait d'un coup, la Nourriture s'envole vers la barre du haut (mouvement réduit : le chiffre change, sans vol). Si la récolte serait perdue en tout ou en partie (réserve pleine), ou si un dégât touche la culture, la fiche s'ouvre à la place, avec son avertissement. Un double toucher ne récolte qu'une fois (garde existante, vérifiée aux trois largeurs).
-- [ ] Toucher les autres bulles (famille, commande, quartier) ouvre la fiche : le geste dépense des ressources, la décision reste dans la fiche. À confirmer sur la maquette.
+- [ ] Toucher les autres bulles (famille, commande, quartier) ouvre la fiche : le geste dépense des ressources, la décision reste dans la fiche. Confirmé par Alex le 15 octobre.
 - [ ] Hors de l'écran : une flèche collée au bord, du côté de ce qui est prêt ; la toucher amène la caméra dessus.
 - [ ] Clavier et lecteur d'écran : la « Carte en liste » dit déjà l'état (« mûr, à récolter ») et mène à la fiche par « Ouvrir la fiche » (`world/plan.js`), où le geste existe ; y ajouter l'état des trois autres bulles s'il manque. La récolte directe est annoncée comme dans la fiche.
 
