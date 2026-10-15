@@ -1995,6 +1995,24 @@ button.quest-check:active .quest-check-ring {
   white-space: nowrap;
 }
 
+/* Crans (lot L) : une barre de jours, pleins jusqu'au compte. Sauge pour ce qui pousse, airelle pour le prochain permis ;
+   vide, un filet de papier creusé. Toujours accompagnés d'une phrase : le dessin est muet. */
+.crans {
+  --cran: var(--c-sage-deep);
+  display: flex;
+  gap: 6px;
+}
+.crans[data-res="permis"] { --cran: var(--res-permis); }
+.crans > span {
+  flex: 1;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: 7px;
+  background: var(--c-sunken);
+}
+.crans > span[data-plein] { border-color: var(--cran); background: var(--cran); }
+
 /* Bandeau de la fiche : Cote, statut, secteur */
 .fiche-summary {
   display: flex;

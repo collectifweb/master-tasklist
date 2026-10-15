@@ -2,6 +2,7 @@
 // Le contenu est construit à l'ouverture. Rien n'est recalculé ici : chaque geste passe par `app.run(action, params)`.
 import {
   QUARTIERS, QUETE_DEFAUT, SEMAINE_TENUE, JOURS_PAR_PERMIS, PERMIS_EN_MAIN, quartierOfTask, why, inferDomain, canReverse, hoursBetween, dayOnly, estimatedMinutes,
+  progressionPermis, coutNiveau, niveauMax, QUARTIER_IDS,
 } from '../../core/index.js';
 import { t, tn, content } from '../content.js';
 import { $, $$, esc, icon, setHtml, setText, setAttr, reconcile, reducedMotion } from './dom.js';
@@ -468,18 +469,47 @@ export function openToken(onSaved, { bad = false, locked = 0 } = {}) {
 
 // ───────── Aide d'une ressource : ce que c'est, d'où ça vient, à quoi ça sert ─────────
 const HELP = { energie: 'resource.energy', materiaux: 'resource.materials.other', nourriture: 'resource.food', habitants: 'resource.habitants', permis: 'resource.permis' };
-export function openHelp(name) {
+
+// La fiche Permis (lot L) : les permis en main en cases (4 au plus pour les jours travaillés ; rang, saison et commande
+// passent au-delà), le prochain en crans, ce que coûte chaque niveau de quartier, les autres sources dans un repli.
+// Tout est lu au cœur (progressionPermis, coutNiveau) ; les dessins sont muets, les phrases visibles disent tout.
+function permisBody(c) {
+  const p = progressionPermis(c.game, c.ledger, c.now);
+  const cases = Array.from({ length: Math.max(PERMIS_EN_MAIN, p.dispo) }, (_, i) => (i < p.dispo
+    ? `<span class="permis-case" data-plein>${icon('permis')}</span>` : '<span class="permis-case"></span>')).join('');
+  const sur = p.dispo <= PERMIS_EN_MAIN ? ` <small>${esc(t('permis.fiche.sur', { max: PERMIS_EN_MAIN }))}</small>` : '';
+  const fait = Math.min(JOURS_PAR_PERMIS, p.jours);
+  const crans = Array.from({ length: JOURS_PAR_PERMIS }, (_, i) => `<span${i < fait ? ' data-plein' : ''}></span>`).join('');
+  const dans = t(`permis.fiche.dans.${p.restants <= 0 ? 'zero' : p.restants === 1 ? 'one' : 'other'}`, { n: p.restants });
+  const prochain = p.plein ? `<p class="permis-note">${esc(t('permis.fiche.plein'))}</p>`
+    : `<div class="crans" data-res="permis" aria-hidden="true">${crans}</div><p class="permis-note">${esc(t('permis.fiche.cran'))}</p>`;
+  const haut = Math.max(...QUARTIER_IDS.map(niveauMax));
+  const niveaux = Array.from({ length: haut }, (_, i) => coutNiveau(i + 1).permis).map((n, i) => `<li class="permis-niv">
+    <span class="permis-niv-t">${esc(t('quartier.compare.niveau', { n: i + 1 }))}</span>
+    <span class="pastille" data-res="permis">${icon('permis')}<b>${n}</b><span class="sr-only"> ${esc(t('resource.permis'))}</span></span></li>`).join('');
+  return `<p class="permis-sous">${esc(t('permis.fiche.sous'))}</p>
+    <section class="permis-bloc" aria-labelledby="permis-main-t"><div class="permis-tete"><h3 class="permis-t" id="permis-main-t">${esc(t('permis.fiche.enMain'))}</h3>
+      <p class="permis-val"><b>${p.dispo}</b>${sur}</p></div><div class="permis-cases" aria-hidden="true">${cases}</div></section>
+    <section class="permis-bloc" aria-labelledby="permis-prochain-t"><div class="permis-tete"><h3 class="permis-t" id="permis-prochain-t">${esc(t('permis.fiche.prochain'))}</h3>
+      ${p.plein ? '' : `<p class="permis-val">${esc(dans)}</p>`}</div>${prochain}</section>
+    <section class="permis-bloc" aria-labelledby="permis-cout-t"><h3 class="permis-t" id="permis-cout-t">${esc(t('permis.fiche.cout'))}</h3>
+      <ul class="permis-nivs" role="list">${niveaux}</ul></section>
+    <details class="repli"><summary>${esc(t('permis.fiche.repli'))}${icon('chevron-down')}</summary><p>${esc(t('permis.fiche.autres'))}</p></details>`;
+}
+
+/** Ouvre l'aide d'une ressource. c : { game, ledger, now }, pour la fiche Permis (lue au cœur). */
+export function openHelp(name, c) {
   const nom = HELP[name];
   if (!nom) return;
   const dlg = $('#dlg-help');
-  // la phrase des Matériaux dit le bonus de la semaine tenue, celle des permis le nombre de jours travaillés pour un permis
-  // et le plafond des permis en main
-  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours, parPermis: JOURS_PAR_PERMIS, max: PERMIS_EN_MAIN };
+  // la phrase des Matériaux dit le bonus de la semaine tenue
+  const vars = { n: SEMAINE_TENUE.materials, jours: SEMAINE_TENUE.jours };
   const line = (k) => `<div class="help-line"><dt>${esc(t(`help.${k}`))}</dt><dd>${esc(t(`help.${name}.${k}`, vars))}</dd></div>`;
+  const body = name === 'permis' ? permisBody(c) : `<dl class="help-lines">${line('quoi')}${line('source')}${line('usage')}</dl>`;
   dlg.innerHTML = `
     <header class="sheet-head"><h2 class="sheet-title help-title" id="help-t" data-res="${esc(name)}">${icon(name)}<span>${esc(t(nom))}</span></h2>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('add.close'))}">${icon('x')}</button></header>
-    <div class="sheet-body"><dl class="help-lines">${line('quoi')}${line('source')}${line('usage')}</dl></div>`;
+    <div class="sheet-body${name === 'permis' ? ' permis-body' : ''}">${body}</div>`;
   openSheet(dlg);
 }
 

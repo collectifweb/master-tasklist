@@ -921,6 +921,14 @@
       "description": "Prix d'un niveau (lot L) : picto et nombre sur le lavis de la ressource. Quand il en manque : bordure en pointillés de l'encre de la ressource et « il manque N » dessous. Le mot est lu, pas écrit.",
       "html": "<span class=\"ds-pastilles\"><span class=\"ds-pastille ds-pastille--permis\">1</span><span class=\"ds-pastille ds-pastille--energie ds-pastille--manque\">160</span></span>",
       "css": ".ds-pastilles{display:flex;gap:10px}.ds-pastille{display:inline-flex;align-items:center;height:40px;box-sizing:border-box;padding:0 10px;border:2px solid transparent;border-radius:var(--r-md);font-family:var(--font-num);font-size:1.125rem;font-weight:800}.ds-pastille--permis{background:var(--c-airelle-wash);color:var(--c-airelle-ink)}.ds-pastille--energie{background:var(--c-glass-wash);color:var(--c-glass-deep)}.ds-pastille--manque{border-style:dashed;border-color:currentColor}"
+    },
+    {
+      "name": "Crans",
+      "kind": "custom",
+      "refersTo": "crans",
+      "description": "Jours qui comptent (lot L) : barres égales, creuses sur papier creusé, pleines dans l'encre de la ressource (sauge profonde par défaut, airelle pour le prochain permis). Cachées au lecteur d'écran : le délai écrit à côté les dit.",
+      "html": "<span class=\"ds-crans\"><span data-plein></span><span></span><span></span><span></span></span>",
+      "css": ".ds-crans{display:flex;gap:6px;width:240px}.ds-crans>span{flex:1;height:14px;box-sizing:border-box;border:1.5px solid var(--c-line-strong);border-radius:7px;background:var(--c-sunken)}.ds-crans>span[data-plein]{border-color:var(--c-airelle-ink);background:var(--c-airelle-ink)}"
     }
   ],
   "narrative": {

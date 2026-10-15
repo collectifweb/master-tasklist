@@ -13,7 +13,7 @@
 // dessin d'une offre du comptoir (le troc, « Servir le repas »). Chacun : le cadenas et la raison du cœur, ou sa ligne
 // cochée à la même place. Les gestes passent par data-action="bat-geste", comme ceux d'un bâtiment.
 import {
-  QUARTIERS, EFFETS_QUARTIERS, niveauDe, niveauMax, valeur, coutNiveau, refusMonter, progressionPermis, PERMIS_EN_MAIN,
+  QUARTIERS, EFFETS_QUARTIERS, niveauDe, niveauMax, valeur, coutNiveau, refusMonter,
   quartierOfTask, potagerOuvert, compte, gameDay, PLACE_ID, repasDeLaSemaine, refusServirRepas, objectifSaison,
   OBJECTIFS_SAISON, refusFaireLesSucres, manqueDetail,
 } from '../../core/index.js';
@@ -36,18 +36,6 @@ export function prixText(cout) {
   if (cout.energy) parts.push(`${num(cout.energy)} ${t('resource.energy')}`);
   if (cout.materials) parts.push(`${num(cout.materials)} ${t(cout.materials < 2 ? 'resource.materials.one' : 'resource.materials.other')}`);
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join('');
-}
-
-const form = (n) => (n <= 0 ? 'zero' : n === 1 ? 'one' : 'other');
-
-/**
- * « Tu as 1 permis. Le prochain : encore 2 jours travaillés. » (progressionPermis du cœur) ; à PERMIS_EN_MAIN en main ou
- * plus : « Tu as 4 permis. Le prochain attend : la Mairie s’arrête à 4 permis en main. »
- */
-export function permisText(c) {
-  const p = progressionPermis(c.game, c.ledger, c.now);
-  const prochain = p.plein ? t('quartier.prochain.plein', { max: PERMIS_EN_MAIN }) : t(`quartier.prochain.${form(p.restants)}`, { n: p.restants });
-  return `${t(`quartier.permis.${form(p.dispo)}`, { n: p.dispo })} ${prochain}`;
 }
 
 /** Quêtes à faire du quartier : celles que « Voir les quêtes » montre dans la liste. */

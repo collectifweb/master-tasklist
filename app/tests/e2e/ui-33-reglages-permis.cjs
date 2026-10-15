@@ -3,8 +3,9 @@
 //     part dans la partie du serveur (game.reglages.queteDefaut), jamais dans le registre ni dans les tâches ;
 //   - le formulaire d'ajout du même appareil, puis celui d'un SECOND appareil (autre contexte : autre stockage local), montrent
 //     8, 3, 2 ; la quête créée sur le second appareil les porte ; le prénom, lui, reste sur l'appareil ;
-//   - le compteur « Permis » de la barre des ressources vaut game.permis.dispo, sa feuille d'aide dit à quoi sert un permis et
-//     comment on en gagne ; « Construire » ne porte plus ni chiffre ni pastille ;
+//   - le compteur « Permis » de la barre des ressources vaut game.permis.dispo ; sa fiche montre les permis en main (cases sur
+//     4), les crans du prochain, le coût des niveaux 1 à 3 et, repliées, les autres sources ; « Construire » ne porte plus ni
+//     chiffre ni pastille ;
 //   - la barre de cinq puces tient à 360, 390, 834 et 1280 px : aucun chiffre ni mot coupé, aucune puce hors de la barre, cibles
 //     de 44 px, aucun défilement horizontal ;
 //   - fiche de quartier : le bouton d'achat reste au même endroit avant et après un achat, et le second toucher tombe sur ce
@@ -113,14 +114,29 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   await L.waitFor(() => isOpen(page, 'dlg-help'), 2000);
   await page.waitForTimeout(450);
   const aide = await page.evaluate(() => {
+    const sp = (x) => String(x || '').replace(/\s+/g, ' ').trim();
     const d = document.getElementById('dlg-help');
-    return { titre: (d.querySelector('.help-title')?.textContent || '').trim(), picto: !!d.querySelector('.help-title use[href$="#i-permis"]'), lignes: [...d.querySelectorAll('.help-line')].map((l) => [l.querySelector('dt').textContent.trim(), l.querySelector('dd').textContent.trim()]) };
+    const rep = d.querySelector('details.repli');
+    return { titre: sp(d.querySelector('.help-title')?.textContent), picto: !!d.querySelector('.help-title use[href$="#i-permis"]'),
+      sous: sp(d.querySelector('.permis-sous')?.textContent), lignesAnciennes: d.querySelectorAll('.help-line').length,
+      enMain: sp(d.querySelector('#permis-main-t')?.textContent), val: sp(d.querySelector('#permis-main-t')?.closest('.permis-bloc').querySelector('.permis-val')?.textContent),
+      cases: d.querySelectorAll('.permis-case').length, pleines: d.querySelectorAll('.permis-case[data-plein]').length,
+      prochain: sp(d.querySelector('#permis-prochain-t')?.closest('.permis-bloc').querySelector('.permis-val')?.textContent),
+      crans: d.querySelectorAll('.crans[data-res="permis"] > span').length, cransPleins: d.querySelectorAll('.crans[data-res="permis"] > span[data-plein]').length,
+      cransMuets: d.querySelector('.crans')?.getAttribute('aria-hidden') === 'true',
+      note: sp(d.querySelector('.permis-note')?.textContent),
+      niveaux: [...d.querySelectorAll('.permis-niv')].map((li) => [sp(li.querySelector('.permis-niv-t').textContent), sp(li.querySelector('.pastille b').textContent), sp(li.querySelector('.pastille .sr-only').textContent)]),
+      repli: rep ? { ouvert: rep.open, resume: sp(rep.querySelector('summary').textContent), texte: sp(rep.querySelector('p').textContent) } : null,
+      wide: [...d.querySelectorAll('*')].some((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.right > innerWidth + 1); }) };
   });
-  const [quoi, source, usage] = aide.lignes;
+  const attendu = aide.cransPleins >= 4 ? 'avec ta prochaine quête payée' : aide.cransPleins === 3 ? 'dans 1 jour' : `dans ${4 - aide.cransPleins} jours`;
   R.check('aide « Permis » : titre et pictogramme du permis', aide.titre === 'Permis' && aide.picto, JSON.stringify({ t: aide.titre, p: aide.picto }));
-  R.check('aide « Permis » : ce que c’est (monter un quartier d’un niveau)', quoi && quoi[0] === 'Ce que c’est' && /quartier/.test(quoi[1]) && /niveau/.test(quoi[1]), JSON.stringify(quoi));
-  R.check('aide « Permis » : d’où ça vient (4 jours travaillés, nouveau rang, objectif de saison)', source && source[0] === 'D’où ça vient' && /4 jours travaillés/.test(source[1]) && /rang/.test(source[1]) && /saison/.test(source[1]), JSON.stringify(source));
-  R.check('aide « Permis » : à quoi ça sert (le niveau n coûte n permis, plus Énergie et Matériaux)', usage && usage[0] === 'À quoi ça sert' && /coûte 1 permis/.test(usage[1]) && /en coûte 2/.test(usage[1]) && /Énergie/.test(usage[1]) && /Matériaux/.test(usage[1]), JSON.stringify(usage));
+  R.check('aide « Permis » : une fiche imagée, plus les trois lignes de texte', aide.sous === 'Pour monter les quartiers' && aide.lignesAnciennes === 0, JSON.stringify({ sous: aide.sous, l: aide.lignesAnciennes }));
+  R.check('aide « Permis » : en main, « 3 sur 4 au plus » et 3 cases pleines sur 4', aide.enMain === 'En main' && aide.val === '3 sur 4 au plus' && aide.cases === 4 && aide.pleines === 3, JSON.stringify({ v: aide.val, c: aide.cases, p: aide.pleines }));
+  R.check('aide « Permis » : le prochain, 4 crans muets et le délai qui leur correspond', aide.crans === 4 && aide.cransMuets && aide.prochain === attendu && aide.note === 'Un cran par jour où tu termines au moins une quête.', JSON.stringify({ crans: aide.crans, pleins: aide.cransPleins, vu: aide.prochain, attendu, note: aide.note }));
+  R.check('aide « Permis » : ce que coûte un quartier, 1, 2 puis 3 permis aux niveaux 1 à 3', JSON.stringify(aide.niveaux) === JSON.stringify([['niveau 1', '1', 'Permis'], ['niveau 2', '2', 'Permis'], ['niveau 3', '3', 'Permis']]), JSON.stringify(aide.niveaux));
+  R.check('aide « Permis » : les autres sources repliées (rang, saison, scientifique)', aide.repli && !aide.repli.ouvert && aide.repli.resume === 'D’autres façons d’en gagner' && /rang/.test(aide.repli.texte) && /saison/.test(aide.repli.texte) && /scientifique/.test(aide.repli.texte), JSON.stringify(aide.repli));
+  R.check('aide « Permis » : aucun débordement horizontal', !aide.wide);
   await shot(page, '33-aide');
   await page.keyboard.press('Escape');
   await L.waitFor(async () => !(await isOpen(page, 'dlg-help')), 2000);

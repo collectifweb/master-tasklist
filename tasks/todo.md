@@ -1971,8 +1971,9 @@ Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une l
 - [ ] Atelier : plus de « Une fois réparé, il permet… » quand il est réparé.
 
 ### L3 — Le permis à une seule place (problème 3)
-- [ ] Fiche Permis (tuile du haut) : 4 cases en airelle, pleines jusqu'au nombre en main, « 1 sur 4 au plus » ; « Prochain : dans N jours travaillés », en crans ; à 4 en main, « La Mairie attend que tu en places un ». La règle, raccourcie, dans le repli. Lu au cœur (`progressionPermis`).
-- [ ] La ligne des permis quitte les fiches de quartier et la tête du catalogue. Ailleurs, le permis n'est plus qu'une pastille de prix.
+- [x] Fiche Permis (tuile du haut) : 4 cases en airelle, pleines jusqu'au nombre en main, « 1 sur 4 au plus » ; « Prochain : dans N jours travaillés », en crans ; à 4 en main, « La Mairie attend que tu en places un ». La règle, raccourcie, dans le repli. Lu au cœur (`progressionPermis`).
+- [x] La ligne des permis quitte les fiches de quartier et la tête du catalogue. Ailleurs, le permis n'est plus qu'une pastille de prix.
+  Fait le 15 octobre, comme la maquette : « En main » (cases, « 1 sur 4 au plus »), « Le prochain » (« dans 3 jours » et 4 crans en airelle, la règle des crans dessous), « Ce que coûte un quartier » (niveaux 1 à 3 en pastilles), les autres sources dans le repli « D'autres façons d'en gagner ». Écart : « un cran par jour où tu termines au moins une quête » (la maquette disait « tâche » ; le jeu dit « quête »). La barre de crans est un composant commun (`.crans`), repris par L2 pour les jours de pousse. Retirés : `#cat-permis`, `permisText`, les clés `help.permis.*`, `quartier.permis.*` et `quartier.prochain.*`. Vérifié : 9 captures (3 largeurs × 1, 4 et 0 permis), aucun débordement ; tests des gabarits et de la typographie, 0 échec ; scénarios 31 (183 contrôles ; catalogue sans ligne des permis), 33 (149 ; la nouvelle fiche, contrôle par contrôle), 09 (72) et 34 (157) lancés seuls aux trois largeurs, 0 échec.
 
 ### L4 — Le moment d'une montée de niveau (problème 4)
 - [ ] À l'achat, la fiche se range et le moment se joue sur la plaque, visible ; puis une carte de récompense : « Champs · niveau 2 », la ligne « 5 → 6 », la réplique de Fanal. Mouvement réduit : un fondu, sans déplacement.

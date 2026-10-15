@@ -556,7 +556,7 @@ document.addEventListener('click', (e) => {
     }
     case 'accueil-suivant': return story.accueilSuivant();
     case 'add': return openAdd(queteDefaut(store.view?.game));
-    case 'res-help': return openHelp(target.dataset.res);
+    case 'res-help': return openHelp(target.dataset.res, ctx());
     case 'why': return openWhy(ctx(), id);
     case 'open': return openFiche(ctx(), id);
     case 'complete': {

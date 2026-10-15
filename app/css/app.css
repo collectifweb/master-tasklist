@@ -701,11 +701,6 @@
   .cat-row .ow-plan-bat-text { flex-basis: calc(100% - 52px - var(--sp-3)); }
   .cat-go { margin-left: calc(52px + var(--sp-3)); }
 }
-/* permis en main, en tête du catalogue (le même texte que sur la fiche d'un quartier) */
-.cat-permis {
-  margin: 0 0 var(--sp-2);
-  font-weight: var(--w-semibold);
-}
 /* section « Quartiers » : toute la ligne est un bouton qui ouvre la fiche, picto du quartier à gauche, chevron à droite */
 .cat-qrt { padding: 0; }
 .cat-qrt-go {
@@ -829,6 +824,75 @@
   gap: var(--sp-2) 10px;
   min-width: 0;
 }
+
+/* Fiche Permis (lot L, tuile « Permis » de la barre) : les permis en main en cases d'airelle, le prochain en crans, le
+   prix de chaque niveau de quartier en pastilles, les autres sources dans un repli */
+.permis-body { gap: var(--sp-5); }
+.permis-sous { margin: calc(-1 * var(--sp-2)) 0 0; font-size: var(--text-15); color: var(--text-soft); }
+.permis-bloc { display: grid; gap: 10px; }
+.permis-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.permis-t {
+  margin: 0;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+}
+.permis-val {
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  color: var(--text);
+  text-align: right;
+}
+.permis-val b { color: var(--res-permis); font-weight: var(--w-heavy); }
+.permis-val small { font-family: var(--font-ui); font-size: var(--text-15); font-weight: var(--w-semibold); color: var(--text-soft); }
+.permis-cases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.permis-case {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 72px;
+  box-sizing: border-box;
+  border: 2px dashed var(--c-line-strong);
+  border-radius: var(--r-md);
+}
+.permis-case[data-plein] {
+  border: 2px solid var(--res-permis);
+  background: var(--res-permis-wash);
+  color: var(--res-permis);
+}
+.permis-case .icon { width: 34px; height: 34px; }
+.permis-note { margin: 0; font-size: var(--text-14); color: var(--text-soft); }
+.permis-nivs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.permis-niv {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: var(--sp-2) var(--sp-1);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+}
+.permis-niv-t { font-size: 0.8125rem; font-weight: var(--w-bold); color: var(--text-soft); }
+.permis-niv .pastille { height: 32px; padding: 0 8px; font-size: var(--text-15); }
+.permis-niv .pastille .icon { width: 16px; height: 16px; }
 /* Tablette et plus : la feuille est centrée, donc une feuille qui grandit (ligne de réussite après un achat, raison d'un
    refus) descend son bouton d'achat sous le doigt. Hauteur fixe : le corps défile s'il le faut, le pied ne bouge plus.
    Sur téléphone, la feuille est posée en bas : en grandissant, elle monte et le pied reste en place. */
