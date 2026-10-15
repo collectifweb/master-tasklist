@@ -1944,12 +1944,12 @@ Critique /impeccable du 15 octobre : 23/40, deux relectures indépendantes sur u
 - Les cinq problèmes de la critique, en commençant par les niveaux.
 - Chiffres et pictos d'abord : par défaut, le dessin, l'état (barre ou chiffre), le gain, le prix en pastilles, un bouton chiffré. Les explications passent dans un repli « Comment ça marche ».
 - « Ce que c'est » (le texte d'ambiance) devient une ligne discrète sous le titre.
-- La carte elle-même ne change pas : pas de pastille au-dessus des parcelles dans ce lot.
+- Sur la carte, une bulle au-dessus de ce qui t'attend (ajout d'Alex le même jour, L6) : récoltes mûres, famille à accueillir, commande prête au quai, quartier à monter. Toucher la bulle d'une culture récolte d'un coup. Ce qui est hors de l'écran est signalé par une flèche au bord. Les comptes à rebours (« 2 j » au-dessus d'une parcelle) restent hors lot.
 
 Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une lecture pure si une valeur manque à l'interface), Fanal, les lettres, le Fil du jour, la barre du haut.
 
 ### L0 — Maquette d'abord, vue par Alex avant le code
-- [ ] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
+- [ ] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets ; l'île avec les bulles de L6 et une flèche au bord, à 390 px. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
 - [ ] Alex tranche ; corrections en une seule passe, puis le code.
 
 ### L1 — Monter de niveau : l'avant et l'après (problème 1)
@@ -1980,18 +1980,26 @@ Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une l
 - [ ] Les bâtiments uniques déjà bâtis n'y figurent plus.
 - [ ] Par rangée : la vignette, l'effet en une ligne à picto (« +4 Nourriture en 5 jours », « +3 Énergie par jour »), le prix en pastilles, le rang requis en pastille. Quartiers : la ligne comparative de L1.
 
-### L6 — Contrat, textes, vérification, envoi
-- [ ] `app/DESIGN.md` et `app/.impeccable/design.json` : ligne comparative, pastilles de prix, crans de pousse, cases de permis, carte de récompense, onglets ; écrits dans le même commit que l'écran.
+### L6 — Ce qui t'attend se voit sur la carte (ajout d'Alex, 15 octobre)
+Constat du 15 octobre (partie fictive, 390 px, deux parcelles et la serre mûres) : le seul signe d'une récolte prête est un petit panier dessiné à côté de la culture ; deux des trois parcelles sortent par le bord gauche de l'écran ; « mûr, à récolter » n'existe que dans le nom lu par le lecteur d'écran ; ni le bandeau ni la barre du haut n'en parlent (`js/ui/bandeau.js`, `js/ui/hud.js`). Les dégâts, eux, ont déjà leur marque au-dessus du bâtiment (`world/models.js`, `marque`) : les bonnes nouvelles n'ont rien d'équivalent.
+- [ ] Une bulle au-dessus de ce qui est prêt, lue au cœur (aucune règle dans l'interface) : culture mûre (`etatCulture`) ; chalet qui peut accueillir (`refusAccueillir` vide) ; commande qu'on peut livrer au quai (`refusLivrer` vide) ; quartier qu'on peut monter, sur sa plaque (`refusMonter` vide). Picto de la ressource ou du geste ; pas de braise (réservée aux menaces) : chercher la famille de couleur dans `app/DESIGN.md` et `.impeccable/design.json` avant de la poser. Zone de toucher de 44 px, même si la bulle est dessinée plus petite. Un petit mouvement de flottement en `transform` seulement, coupé en mouvement réduit.
+- [ ] Toucher la bulle d'une culture : la récolte se fait d'un coup, la Nourriture s'envole vers la barre du haut (mouvement réduit : le chiffre change, sans vol). Si la récolte serait perdue en tout ou en partie (réserve pleine), ou si un dégât touche la culture, la fiche s'ouvre à la place, avec son avertissement. Un double toucher ne récolte qu'une fois (garde existante, vérifiée aux trois largeurs).
+- [ ] Toucher les autres bulles (famille, commande, quartier) ouvre la fiche : le geste dépense des ressources, la décision reste dans la fiche. À confirmer sur la maquette.
+- [ ] Hors de l'écran : une flèche collée au bord, du côté de ce qui est prêt ; la toucher amène la caméra dessus.
+- [ ] Clavier et lecteur d'écran : la « Carte en liste » dit déjà l'état (« mûr, à récolter ») et mène à la fiche par « Ouvrir la fiche » (`world/plan.js`), où le geste existe ; y ajouter l'état des trois autres bulles s'il manque. La récolte directe est annoncée comme dans la fiche.
+
+### L7 — Contrat, textes, vérification, envoi
+- [ ] `app/DESIGN.md` et `app/.impeccable/design.json` : ligne comparative, pastilles de prix, crans de pousse, cases de permis, carte de récompense, onglets, bulles de la carte et flèche au bord ; écrits dans le même commit que l'écran.
 - [ ] Textes dans `app/content/fr-CA/`, typographie de `app/content/README.md` ; les textes devenus inutiles retirés.
-- [ ] Tests à revoir (recherche du 15 octobre) : scénarios 9, 15, 26, 30, 31, 32, 33, 34, 44, `world-s3`, `world-perf` ; tests du cœur `fiches-village`, `cultures`, `quartiers`, `quests`. Un nouveau scénario : l'avant → après aux trois largeurs, la fiche Permis, plus de ligne des permis dans les quartiers ni le catalogue.
+- [ ] Tests à revoir (recherche du 15 octobre) : scénarios 9, 15, 26, 30, 31, 32, 33, 34, 44, `world-s3`, `world-perf` ; tests du cœur `fiches-village`, `cultures`, `quartiers`, `quests`. Deux nouveaux scénarios : l'avant → après aux trois largeurs, la fiche Permis, plus de ligne des permis dans les quartiers ni le catalogue ; les bulles de la carte (récolte d'un toucher, réserve pleine qui ouvre la fiche, double toucher, flèche au bord).
 - [ ] Détecteur /impeccable sur les écrans changés ; essai à la main aux trois largeurs ; cibles de 44 px ; la raison d'un bouton verrouillé toujours lue ; mouvement réduit.
 - [ ] Série complète des scénarios (environ 46 minutes) avant l'envoi : le lot change l'interface du jeu.
 - [ ] Feuille de route, `CLAUDE.md` (ligne de version) ; envoi sur l'accord d'Alex, étiquette `v2.16` (elle emporte aussi `app.name` et le cache v30, pas encore en ligne).
 
-Ordre : L0, validation, puis L1, L3, L2, L5, L4, L6. Un commit par étape vérifiée.
+Ordre : L0, validation, puis L1, L3, L2, L6, L5, L4, L7. Un commit par étape vérifiée.
 
 ### Relevé par la critique, hors de ce lot
 - Deux sortes de jours (« de passage » pour les cultures, « travaillés » pour les permis) : une règle du jeu, à discuter à part.
-- Pastilles sur la carte (« 2 j » au-dessus d'une parcelle, « 2/2 » sur un chalet).
+- Comptes à rebours sur la carte (« 2 j » au-dessus d'une parcelle, « 2/2 » sur un chalet).
 - Le plafond de Nourriture absent de la barre du haut ; à 390 px, 5 plaques de quartier sur 6 sans nom ; Construire, Quêtes et Vue sans mot visible.
 - La bulle de Fanal : interligne serré, recouverte au tiers par une plaque à 390 px (détecteur).
