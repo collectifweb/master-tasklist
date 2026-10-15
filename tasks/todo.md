@@ -1938,7 +1938,7 @@ Référence : retour d'Alex du 15 octobre 2026, après sa pause de jeu (« beauc
 
 Critique /impeccable du 15 octobre : 23/40, deux relectures indépendantes sur une partie fictive aux trois largeurs. Archivée hors suivi Git (`.impeccable/critique/`, elle contient un chemin du poste).
 
-**Statut : plan proposé, à valider par Alex.**
+**Statut : lancé par Alex le 15 octobre (« Go, tu peux lancer la maquette ») ; maquette L0 livrée le même jour, en attente de son verdict.**
 
 ### Choix d'Alex (15 octobre)
 - Les cinq problèmes de la critique, en commençant par les niveaux.
@@ -1949,7 +1949,8 @@ Critique /impeccable du 15 octobre : 23/40, deux relectures indépendantes sur u
 Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une lecture pure si une valeur manque à l'interface), Fanal, les lettres, le Fil du jour, la barre du haut.
 
 ### L0 — Maquette d'abord, vue par Alex avant le code
-- [ ] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets ; l'île avec les bulles de L6 et une flèche au bord, à 390 px. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
+- [x] Une page de maquette hors de l'app, avec les vrais jetons de `app/css/tokens.css` et des valeurs fictives, aux trois largeurs : fiche de quartier au niveau 0 et au niveau 1 ; parcelle qui pousse, parcelle mûre, parcelle vide ; chalet ; fiche Permis ; carte de récompense après une montée ; catalogue à deux onglets ; l'île avec les bulles de L6 et une flèche au bord, à 390 px. Publiée en page privée pour qu'Alex la regarde sur son téléphone.
+  Fait le 15 octobre : onze écrans de téléphone (390 × 844) sur un canevas privé de claude.ai, sur la partie fictive de la critique (l'île en fond est sa capture). Champs 0 → 1 et 1 → 2 (il manque des ressources), Mairie 0 → 1 (« −3 »), carte de récompense, fiche Permis ; parcelle qui pousse, mûre, vide ; chalet (il manque 4 Nourriture) ; l'île avec quatre bulles et une flèche au bord ; catalogue. Écart avec ce plan : la tablette et l'ordinateur ne sont pas dessinés, ils se vérifient au code. Un rendu local des onze écrans (sans le moteur du canevas) a fait corriger deux débordements ; le rendu sur claude.ai lui-même n'a pas été regardé.
 - [ ] Alex tranche ; corrections en une seule passe, puis le code.
 
 ### L1 — Monter de niveau : l'avant et l'après (problème 1)
