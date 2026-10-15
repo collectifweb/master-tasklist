@@ -913,6 +913,14 @@
       "description": "Erreur de synchronisation : lavis de braise, filet braise, texte en encre mousse (5,9:1). La braise reste sur le picto et le filet.",
       "html": "<div class=\"ds-sync\" role=\"alert\"><span class=\"ds-sync-text\"><strong>Pas enregistré</strong>La connexion a coupé. Réessaie.</span></div>",
       "css": ".ds-sync{display:flex;align-items:center;min-height:48px;padding:8px 8px 8px 12px;border:1px solid rgb(191 90 56 / .4);border-radius:var(--r-md);background:var(--c-ember-wash);color:var(--c-ink-soft);font-size:.875rem;line-height:1.35}.ds-sync strong{display:block;font-size:.9375rem;color:var(--c-ink)}"
+    },
+    {
+      "name": "Pastille de prix",
+      "kind": "custom",
+      "refersTo": "pastille",
+      "description": "Prix d'un niveau (lot L) : picto et nombre sur le lavis de la ressource. Quand il en manque : bordure en pointillés de l'encre de la ressource et « il manque N » dessous. Le mot est lu, pas écrit.",
+      "html": "<span class=\"ds-pastilles\"><span class=\"ds-pastille ds-pastille--permis\">1</span><span class=\"ds-pastille ds-pastille--energie ds-pastille--manque\">160</span></span>",
+      "css": ".ds-pastilles{display:flex;gap:10px}.ds-pastille{display:inline-flex;align-items:center;height:40px;box-sizing:border-box;padding:0 10px;border:2px solid transparent;border-radius:var(--r-md);font-family:var(--font-num);font-size:1.125rem;font-weight:800}.ds-pastille--permis{background:var(--c-airelle-wash);color:var(--c-airelle-ink)}.ds-pastille--energie{background:var(--c-glass-wash);color:var(--c-glass-deep)}.ds-pastille--manque{border-style:dashed;border-color:currentColor}"
     }
   ],
   "narrative": {

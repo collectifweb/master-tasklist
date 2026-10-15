@@ -753,7 +753,82 @@
   font-size: var(--text-14);
   color: var(--text-soft);
 }
-.qrt-body .help-line dd p.qrt-permis { margin-top: var(--sp-1); color: var(--text-soft); }
+/* L'avant et l'après d'un niveau (lot L) : « 4 → 5 » en gros, l'écart en pastille sauge, les légendes dessous */
+.qrt-compare {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+}
+.qrt-compare-t {
+  margin: 0;
+  font-size: var(--text-15);
+  font-weight: var(--w-semibold);
+  color: var(--text-soft);
+}
+.qrt-compare-row {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  align-items: center;
+  gap: 2px var(--sp-3);
+}
+.qrt-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+.qrt-val b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 2.125rem;
+  font-weight: var(--w-bold);
+  line-height: 1;
+}
+.qrt-val .icon { flex: none; width: 24px; height: 24px; }
+.qrt-val--apres { color: var(--c-sage-deep); }
+.qrt-val--apres b { font-size: 2.875rem; font-weight: var(--w-heavy); }
+.qrt-val--apres .icon { width: 28px; height: 28px; }
+.qrt-fleche { width: 28px; height: 28px; color: var(--c-sage); }
+.qrt-ecart {
+  justify-self: end;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+  font-family: var(--font-num);
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  white-space: nowrap;
+}
+.qrt-legende { font-size: 0.8125rem; color: var(--text-muted); }
+.qrt-legende--apres { font-weight: var(--w-bold); color: var(--c-sage-deep); }
+.qrt-legende--sens { justify-self: end; font-weight: var(--w-bold); color: var(--c-sage-deep); }
+.qrt-note { margin: 0; font-size: var(--text-14); color: var(--text-soft); }
+/* le prix : « Prix » puis les pastilles, qui passent à la ligne s'il le faut */
+.qrt-prix {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+.qrt-prix-t {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 0;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+}
+.qrt-pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) 10px;
+  min-width: 0;
+}
 /* Tablette et plus : la feuille est centrée, donc une feuille qui grandit (ligne de réussite après un achat, raison d'un
    refus) descend son bouton d'achat sous le doigt. Hauteur fixe : le corps défile s'il le faut, le pied ne bouge plus.
    Sur téléphone, la feuille est posée en bas : en grandissant, elle monte et le pied reste en place. */

@@ -1,6 +1,7 @@
 // 31. Niveaux de quartier achetés par permis.
 //   - compteur « Permis » de la barre des ressources (et plus de pastille sur « Construire ») ; plaques « Champs · niv. 0 », sans barre ;
-//   - toucher une plaque ouvre la fiche du quartier : ce qu'il fait, le niveau suivant, son prix, les permis ;
+//   - toucher une plaque ouvre la fiche du quartier (lot L) : l'avant et l'après (« 4 → 5 », « +1 »), le prix en pastilles
+//     (en pointillés avec « il manque N » quand il en manque), la règle dans un repli fermé ; plus les permis en main ;
 //   - achat : un double toucher n'achète qu'un niveau ; la phrase « Champs : niveau 1. … » est lue dans la feuille ;
 //     plaque, compteur et fiche à jour, le bouton d'achat reste à sa place et garde le focus ; le niveau suivant, trop cher, reste visible avec
 //     le cadenas et la raison du cœur, redite au toucher, sans rien acheter ;
@@ -31,10 +32,23 @@ const fiche = (page) => page.evaluate(() => {
   return {
     open: d.open && !d.classList.contains('is-closing'), quartier: d.dataset.quartier, niveau: d.dataset.niveau,
     titre: sp(d.querySelector('#qrt-t')?.textContent), ligne: sp(d.querySelector('#qrt-d')?.textContent),
-    corps: [...d.querySelectorAll('.qrt-body .help-line')].map((l) => [l.querySelector('dt'), ...l.querySelector('dd').children].map((x) => sp(x.textContent)).join(' ')).join(' '),
-    permis: sp(d.querySelector('#qrt-permis')?.textContent),
+    compare: (() => {
+      const c = d.querySelector('.qrt-compare');
+      if (!c) return null;
+      const vals = [...c.querySelectorAll('.qrt-val b')].map((x) => sp(x.textContent));
+      return { label: sp(c.querySelector('.qrt-compare-t').textContent), avant: vals[0], apres: vals[1] ?? null, ecart: sp(c.querySelector('.qrt-ecart')?.textContent) || null,
+        legendes: [...c.querySelectorAll('.qrt-legende')].map((x) => sp(x.textContent)).join(' | '), sr: sp(c.querySelector('.sr-only').textContent), muet: c.querySelector('.qrt-compare-row').getAttribute('aria-hidden') === 'true' };
+    })(),
+    // « permis 1 plein, energie 80 plein… » ; une pastille qui manque : « permis 3 pointillés il manque 3 »
+    pastilles: [...d.querySelectorAll('.qrt-pastilles .pastille-prix')].map((p) => {
+      const b = p.querySelector('.pastille');
+      return [b.dataset.res, sp(b.textContent), b.hasAttribute('data-manque') && getComputedStyle(b).borderTopStyle === 'dashed' ? 'pointillés' : 'plein', sp(p.querySelector('.pastille-manque')?.textContent)].filter(Boolean).join(' ');
+    }).join(', '),
+    prix: sp(d.querySelector('#qrt-prix')?.textContent),
+    permis: !!d.querySelector('#qrt-permis') || /Tu as|Tu n’as aucun permis|Le prochain/.test(d.querySelector('.qrt-body').textContent),
+    regle: (() => { const r = d.querySelector('.repli'); return r ? { open: r.open, resume: sp(r.querySelector('summary').textContent), texte: sp(r.querySelector('p').textContent), h: r.querySelector('summary').getBoundingClientRect().height } : null; })(),
     monter: b ? { text: sp(b.textContent), niveau: b.dataset.niveau, off: b.getAttribute('aria-disabled') === 'true', primaire: b.classList.contains('btn--primary'), desc: b.getAttribute('aria-describedby'), lock: !!b.querySelector('use[href$="#i-lock"]') } : null,
-    raison: raison ? { text: sp(raison.textContent), lock: !!raison.querySelector('use[href$="#i-lock"]') } : null,
+    raison: raison ? { text: sp(raison.textContent), cache: raison.classList.contains('sr-only') } : null,
     max: sp(d.querySelector('.qrt-max')?.textContent),
     monte: (() => { const p = d.querySelector('.qrt-monte'); if (!p) return null; const r = p.getBoundingClientRect(); return { text: sp(p.textContent), check: !!p.querySelector('use[href$="#i-check"]'), premier: p === d.querySelector('.qrt-body').firstElementChild, vu: r.height > 0 && r.top >= 0 && r.bottom <= innerHeight }; })(),
     quetes: sp(d.querySelector('[data-action="qrt-quetes"]')?.textContent),
@@ -91,11 +105,13 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForTimeout(450);
   let f = await fiche(page);
   R.check('toucher la plaque ouvre la fiche des Champs', f.open && f.quartier === 'champs' && f.titre === 'Champs', JSON.stringify(f));
-  R.check('en-tête : « Quartier · quêtes Terrain · niveau 0 »', f.ligne === 'Quartier · quêtes Terrain · niveau 0', f.ligne);
-  R.check('ce qu’il fait : « Rien encore. » ; niveau 1 : 5 Nourriture par récolte', /^Ce qu’il fait Rien encore\./.test(f.corps) && /Niveau 1 5 Nourriture par récolte du potager\./.test(f.corps), f.corps);
-  R.check('prix : 1 permis, 80 Énergie et 60 Matériaux', /Prix 1 permis, 80 Énergie et 60 Matériaux\./.test(f.corps), f.corps);
-  R.check('permis : « Tu as 3 permis. » et le prochain', /^Tu as 3 permis\. Le prochain : (encore \d+ jours? travaillés?|avec ta prochaine quête payée)\.$/.test(f.permis), f.permis);
-  R.check('« Monter au niveau 1 » : bouton principal actif, décrit par le prix', f.monter && f.monter.text === 'Monter au niveau 1' && !f.monter.off && f.monter.primaire && f.monter.desc === 'qrt-prix qrt-permis', JSON.stringify(f.monter));
+  R.check('en-tête : « Quartier · niveau 0 »', f.ligne === 'Quartier · niveau 0', f.ligne);
+  R.check('l’avant et l’après : « Nourriture par récolte du potager », 4 → 5, « +1 », légendes « maintenant » et « niveau 1 »', f.compare && f.compare.label === 'Nourriture par récolte du potager' && f.compare.avant === '4' && f.compare.apres === '5' && f.compare.ecart === '+1' && f.compare.legendes === 'maintenant | niveau 1', JSON.stringify(f.compare));
+  R.check('… dessin muet, phrase lue « Maintenant : 4 Nourriture par récolte du potager. Niveau 1 : 5 … »', f.compare.muet && f.compare.sr === 'Maintenant : 4 Nourriture par récolte du potager. Niveau 1 : 5 Nourriture par récolte du potager.', f.compare.sr);
+  R.check('prix en pastilles : permis 1, Énergie 80, Matériaux 60, aucune en pointillés ; phrase lue « Prix : 1 permis, 80 Énergie et 60 Matériaux. »', f.pastilles === 'permis 1 plein, energie 80 plein, materiaux 60 plein' && f.prix === 'Prix : 1 permis, 80 Énergie et 60 Matériaux.', JSON.stringify({ p: f.pastilles, prix: f.prix }));
+  R.check('plus de permis en main dans la fiche (la tuile « Permis » les dit)', !f.permis);
+  R.check('repli « Comment ça marche » fermé, 44 px, avec la règle des niveaux', f.regle && !f.regle.open && f.regle.resume === 'Comment ça marche' && f.regle.h >= 43.99 && f.regle.texte === 'Au départ : 4 Nourriture par récolte du potager. Aux niveaux 1, 2 et 3 : 5, 6 et 7. Chaque niveau coûte des permis : touche « Permis » en haut pour savoir comment en gagner.', JSON.stringify(f.regle));
+  R.check('« Monter au niveau 1 » : bouton principal actif, décrit par le prix', f.monter && f.monter.text === 'Monter au niveau 1' && !f.monter.off && f.monter.primaire && f.monter.desc === 'qrt-prix', JSON.stringify(f.monter));
   R.check('« Voir les quêtes Terrain (1) »', f.quetes === 'Voir les quêtes Terrain (1)', f.quetes);
   R.check('fiche : cibles de 44 px, aucun défilement horizontal', !f.small.length && !f.wide && !f.scroll, JSON.stringify({ small: f.small, wide: f.wide, scroll: f.scroll }));
   R.check('fiche : une région lue dans la feuille', await page.evaluate(() => !!document.querySelector('#dlg-quartier > [data-live][role="status"]')));
@@ -124,7 +140,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   const apres = await page.evaluate(() => { const r = document.querySelector('#dlg-quartier [data-action="qrt-monter"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
   R.check('le bouton d’achat n’a pas bougé après l’achat (second toucher sur le même bouton)', Math.abs(apres[0] - go[0]) <= 1 && Math.abs(apres[1] - go[1]) <= 1, JSON.stringify({ avant: go, apres }));
   f = await fiche(page);
-  R.check('fiche à jour sur place : niveau 1, ce qu’il fait, niveau 2 à 2 permis', f.open && f.ligne.endsWith('niveau 1') && /Ce qu’il fait 5 Nourriture par récolte du potager \(\d+ au départ\)\./.test(f.corps) && /Prix 2 permis, 160 Énergie et 120 Matériaux\./.test(f.corps) && /^Tu as 2 permis\./.test(f.permis), JSON.stringify(f));
+  R.check('fiche à jour sur place : niveau 1, 5 → 6, niveau 2 à 2 permis, 160 Énergie et 120 Matériaux', f.open && f.ligne.endsWith('niveau 1') && f.compare.avant === '5' && f.compare.apres === '6' && f.compare.legendes === 'maintenant | niveau 2' && f.pastilles === 'permis 2 plein, energie 160 plein, materiaux 120 plein' && !f.permis, JSON.stringify(f));
   // la fiche a une hauteur fixe dès 700 px : la ligne de réussite ne la fait plus grandir ni descendre son bouton
   R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
   R.check('niveau 2 achetable : bouton actif', f.monter && !f.monter.off && f.monter.niveau === '2', JSON.stringify(f.monter));
@@ -142,8 +158,10 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('réussite du niveau 2 visible en tête de la fiche', f.monte && f.monte.check && f.monte.premier && f.monte.vu && /^Champs : niveau 2\. \d+ Nourriture par récolte du potager\.$/.test(f.monte.text), JSON.stringify(f.monte));
   g = srv.game();
   const raison = `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`;
-  R.check('raison écrite par le cœur, avec le cadenas', f.raison && f.raison.lock && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
-  R.check('« Tu n’as aucun permis. »', /^Tu n’as aucun permis\./.test(f.permis), f.permis);
+  R.check('raison écrite par le cœur, lue mais pas affichée (les pastilles la montrent)', f.raison && f.raison.cache && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
+  const mq = (n) => Math.ceil(Math.round(n * 10) / 10);
+  const pastilles = `permis 3 pointillés il manque 3, energie 240 pointillés il manque ${mq(240 - g.resources.energy)}, materiaux 180 pointillés il manque ${mq(180 - g.resources.materials)}`;
+  R.check('pastilles en pointillés, « il manque N » sous chacune', f.pastilles === pastilles, JSON.stringify({ vu: f.pastilles, attendu: pastilles }));
   await L.waitFor(async () => (await badge(page)).text === '0', 4000);
   bd = await badge(page);
   R.check('plus de permis : le compteur dit « Permis : 0 », « Construire » reste « Construire »', bd.text === '0' && bd.label === 'Permis\u00a0: 0' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
@@ -206,7 +224,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForTimeout(450);
   f = await fiche(page);
   R.check('Entrée sur la ligne du Garage : sa fiche, posée sur le catalogue', f.open && f.quartier === 'garage' && f.pile.join() === 'dlg-construire,dlg-quartier', JSON.stringify({ q: f.quartier, pile: f.pile }));
-  R.check('Garage au plus haut : pas de bouton d’achat, « Niveau 2 : le plus haut pour l’instant. »', !f.monter && f.max === 'Niveau 2 : le plus haut pour l’instant.' && /^Ce qu’il fait 3 jours de passage pour qu’une culture mûrisse \(\d+ au départ\)\./.test(f.corps), JSON.stringify({ max: f.max, corps: f.corps }));
+  R.check('Garage au plus haut : pas de bouton d’achat ni de prix, « Niveau 2 : le plus haut pour l’instant. », la valeur seule (3)', !f.monter && !f.pastilles && f.max === 'Niveau 2 : le plus haut pour l’instant.' && f.compare.avant === '3' && f.compare.apres === null && f.compare.sr === 'Maintenant : 3 jours de passage pour qu’une culture mûrisse.', JSON.stringify({ max: f.max, compare: f.compare, p: f.pastilles }));
   R.check('le focus est dans la fiche', await page.evaluate(() => document.getElementById('dlg-quartier').contains(document.activeElement)));
   R.check('une autre fiche ouverte : plus de ligne de réussite', f.monte === null, JSON.stringify(f.monte));
   await shot(page, '31-pile');
@@ -250,7 +268,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-quartier').open), 2000);
   await page.waitForTimeout(450);
   f = await fiche(page);
-  R.check('Entrée : fiche de la Mairie posée sur la carte en liste', f.open && f.quartier === 'mairie' && f.pile.join() === 'dlg-plan,dlg-quartier' && /Niveau 1 15 Nourriture pour accueillir une famille\./.test(f.corps), JSON.stringify({ q: f.quartier, pile: f.pile, corps: f.corps }));
+  R.check('Entrée : fiche de la Mairie posée sur la carte en liste, 18 → 15, « −3 », « moins cher »', f.open && f.quartier === 'mairie' && f.pile.join() === 'dlg-plan,dlg-quartier' && f.compare.avant === '18' && f.compare.apres === '15' && f.compare.ecart === '\u22123' && f.compare.legendes === 'maintenant | niveau 1 | moins cher', JSON.stringify({ q: f.quartier, pile: f.pile, compare: f.compare }));
   await shot(page, '31-plan-fiche');
   await page.keyboard.press('Escape');
   await closed(page, 'dlg-quartier');
@@ -260,7 +278,8 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await closed(page, 'dlg-plan');
   R.check('aucun défilement horizontal', await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
 
-  // ───── plafond des permis (lot M) : à 4 en main, la fiche dit que la Mairie attend, sans « encore 0 jour »
+  // ───── plafond des permis (lot M) : à 4 en main, la fiche du quartier n'en parle plus (lot L : la fiche Permis le dit) ;
+  //       la pastille du permis passe pleine
   const gf = require('path').join(srv.root, 'app', 'api', 'data', 'game-state.json');
   const g4 = JSON.parse(require('fs').readFileSync(gf, 'utf8'));
   g4.permis = { ...g4.permis, dispo: 4 };
@@ -275,7 +294,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-quartier').open), 2000);
   await page.waitForTimeout(450);
   f = await fiche(page);
-  R.check('plafond : « Tu as 4 permis. Le prochain attend : la Mairie s’arrête à 4 permis en main. »', f.permis === 'Tu as 4 permis. Le prochain attend : la Mairie s’arrête à 4 permis en main.', f.permis);
+  R.check('plafond : 4 permis en main, la fiche n’en parle pas ; la pastille « permis 3 » est pleine', !f.permis && /^permis 3 plein,/.test(f.pastilles), JSON.stringify({ permis: f.permis, p: f.pastilles }));
   R.check('plafond : la fiche ne déborde pas', !f.wide && !f.scroll, JSON.stringify({ wide: f.wide, scroll: f.scroll }));
   await shot(page, '31-plafond');
 }, {

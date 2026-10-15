@@ -1,7 +1,10 @@
-// Fiche d'un quartier (docs/conception-niveaux-quartiers.md, §7) : ce qu'il fait, le niveau suivant, son prix en
-// permis, Énergie et Matériaux, puis « Monter au niveau n ». Un achat impossible reste visible, à plat, avec la raison
-// écrite par le cœur (refusMonter) et un cadenas. Même gabarit que la fiche d'un bâtiment (batiment.js), avec ses
-// propres identifiants : elle s'ouvre aussi par-dessus le catalogue « Construire » ou la Carte en liste.
+// Fiche d'un quartier (docs/conception-niveaux-quartiers.md, §7 ; lot L) : l'avant et l'après du niveau suivant
+// (« 4 → 5 », « +1 »), son prix en pastilles (permis, Énergie, Matériaux ; en pointillés avec « il manque N » quand il en
+// manque), la règle dans un repli « Comment ça marche », puis « Monter au niveau n ». Un achat impossible reste visible,
+// à plat, avec un cadenas ; la raison écrite par le cœur (refusMonter) n'est plus qu'une phrase lue, les pastilles la
+// montrent. Les permis en main et le prochain ne s'y lisent plus : la tuile « Permis » de la barre les dit. Même gabarit
+// que la fiche d'un bâtiment (batiment.js), avec ses propres identifiants : elle s'ouvre aussi par-dessus le catalogue
+// « Construire » ou la Carte en liste.
 // Rien n'est calculé ici qui ne vienne de core/quartiers.js ; l'achat passe par data-action="qrt-monter", l'ancien
 // filtre de la liste par data-action="qrt-quetes" (main.js).
 // La fiche de la Place porte aussi ce que la Nourriture achète (lot N, core/nourriture.js et objectifs.js) : du 1er mars
@@ -12,7 +15,7 @@
 import {
   QUARTIERS, EFFETS_QUARTIERS, niveauDe, niveauMax, valeur, coutNiveau, refusMonter, progressionPermis, PERMIS_EN_MAIN,
   quartierOfTask, potagerOuvert, compte, gameDay, PLACE_ID, repasDeLaSemaine, refusServirRepas, objectifSaison,
-  OBJECTIFS_SAISON, refusFaireLesSucres,
+  OBJECTIFS_SAISON, refusFaireLesSucres, manqueDetail,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml, setText } from './dom.js';
@@ -79,9 +82,42 @@ function sucresModel({ game, ledger, now }) {
   };
 }
 
+// Picto de la ligne comparative, par réglage ; les réglages où un chiffre plus bas est meilleur disent leur sens en
+// toutes lettres (« moins cher », « plus vite ») : le signe seul ressemblerait à une perte.
+const PICTO = { recoltePotager: 'nourriture', recolteSerre: 'nourriture', prixFamille: 'nourriture', placesParChalet: 'habitants', joursPousse: 'calendar', stockagePlace: 'nourriture' };
+const SENS = { prixFamille: 'quartier.compare.moinsCher', joursPousse: 'quartier.compare.plusVite' };
+const liste = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} et ${xs.at(-1)}` : xs.join(''));
+
 /**
- * Modèle de la fiche : { id, nom, ligne, niveau, max, fait, maintenant, suivant: { n, effet } | null, prix, permis,
- * raison, quetes, repas, sucres } (repas et sucres : la Place seulement, voir repasModel et sucresModel).
+ * L'avant et l'après : { picto, label, avant, apres (null au plus haut), niveau (« niveau 2 »), ecart (« +1 », « −3 »),
+ * sens (« moins cher » ou ''), sr (la phrase lue) }. Valeurs du cœur (valeur, EFFETS_QUARTIERS).
+ */
+function compareModel(game, quartier, niveau, max) {
+  const { reglage, niveaux } = EFFETS_QUARTIERS[quartier];
+  const avant = valeur(game, reglage);
+  const apres = niveau < max ? niveaux[niveau] : null;
+  const ecart = apres === null ? 0 : apres - avant;
+  const maintenant = effetText(quartier, niveau);
+  return {
+    picto: PICTO[reglage], label: t(`quartier.compare.${reglage}`),
+    avant: num(avant), apres: apres === null ? null : num(apres), niveau: t('quartier.compare.niveau', { n: niveau + 1 }),
+    ecart: ecart > 0 ? `+${num(ecart)}` : `−${num(-ecart)}`,
+    sens: SENS[reglage] ? t(SENS[reglage]) : '',
+    sr: apres === null ? t('quartier.compare.sr.max', { maintenant })
+      : t('quartier.compare.sr', { maintenant, n: niveau + 1, suivant: effetText(quartier, niveau + 1) }),
+  };
+}
+
+/** Pastilles du prix : [{ res, n, manque }], dans l'ordre de la barre (permis, Énergie, Matériaux) ; manque à 0 s'il y en a assez. */
+function pastillesModel(game, cout) {
+  const d = manqueDetail(game, cout);
+  return [['permis', 'permis'], ['energie', 'energy'], ['materiaux', 'materials']]
+    .filter(([, k]) => cout[k]).map(([res, k]) => ({ res, n: cout[k], manque: d[k] }));
+}
+
+/**
+ * Modèle de la fiche : { id, nom, ligne, niveau, max, compare, maintenant, suivant: { n } | null, pastilles, prixSr,
+ * regle, raison, quetes, repas, sucres } (repas et sucres : la Place seulement, voir repasModel et sucresModel).
  */
 export function quartierModel(c, quartier) {
   if (!Object.hasOwn(EFFETS_QUARTIERS, quartier)) return null;
@@ -89,24 +125,24 @@ export function quartierModel(c, quartier) {
   const niveau = niveauDe(game, quartier);
   const max = niveauMax(quartier);
   const domaine = QUARTIERS[quartier].domain;
-  const depart = valeur({}, EFFETS_QUARTIERS[quartier].reglage);
+  const { niveaux } = EFFETS_QUARTIERS[quartier];
   let maintenant = '';
   if (quartier === 'champs' && !potagerOuvert(gameDay(now))) maintenant = t('quartier.fiche.dort');
   else if (quartier === 'atelier' && !compte(game, 'serre')) maintenant = t('quartier.fiche.sansSerre');
   const n = quetesDe(tasks, quartier);
+  const cout = niveau < max ? coutNiveau(niveau + 1) : null;
   return {
     id: quartier,
     nom: t(`quartier.${quartier}.name`),
-    ligne: domaine ? t('quartier.fiche.ligne', { domaine, n: niveau }) : t('quartier.fiche.ligne.place', { n: niveau }),
+    ligne: t('quartier.fiche.ligne', { n: niveau }),
     niveau, max,
-    fait: !niveau ? t('quartier.fiche.rien')
-      : depart ? t('quartier.fiche.valeur', { effet: effetText(quartier, niveau), depart: num(depart) })
-        : t('quartier.fiche.valeur.seule', { effet: effetText(quartier, niveau) }),
+    compare: compareModel(game, quartier, niveau, max),
     maintenant,
-    suivant: niveau < max ? { n: niveau + 1, effet: effetText(quartier, niveau + 1) } : null,
-    prix: niveau < max ? prixText(coutNiveau(niveau + 1)) : '',
-    permis: permisText(c),
-    raison: niveau < max ? refusMonter(game, ledger, { quartier }) : null,
+    suivant: cout ? { n: niveau + 1 } : null,
+    pastilles: cout ? pastillesModel(game, cout) : [],
+    prixSr: cout ? t('quartier.fiche.prix.sr', { cout: prixText(cout) }) : '',
+    regle: t('quartier.fiche.regle', { depart: effetText(quartier, 0), niveaux: liste(niveaux.map((_, i) => String(i + 1))), valeurs: liste(niveaux.map(num)) }),
+    raison: cout ? refusMonter(game, ledger, { quartier }) : null,
     quetes: domaine ? t('quartier.fiche.quetes', { domaine, n }) : t('quartier.fiche.quetes.place', { n }),
     repas: quartier === PLACE_ID ? repasModel(c) : null,
     sucres: quartier === PLACE_ID ? sucresModel(c) : null,
@@ -155,21 +191,35 @@ function repasHtml(r) {
 // nouvelle ouverture l’efface. Hors région lue : le lecteur d’écran l’a déjà entendue par l’annonce de la feuille.
 let monte = null;
 
+// « 4 → 5 +1 » : la valeur d'aujourd'hui en encre douce, celle du niveau suivant en sauge et en gros, l'écart en pastille
+// (et son sens en toutes lettres quand plus bas est meilleur) ; au plus haut, la valeur seule. Dessin muet, phrase lue à côté.
+function compareHtml(c) {
+  const val = (v, apres) => `<span class="qrt-val${apres ? ' qrt-val--apres' : ''}">${icon(c.picto)}<b>${esc(v)}</b></span>`;
+  const legende = (s, sorte) => `<span class="qrt-legende${sorte ? ` qrt-legende--${sorte}` : ''}">${esc(s)}</span>`;
+  const haut = [val(c.avant)], bas = [legende(t('quartier.compare.maintenant'))];
+  if (c.apres !== null) {
+    haut.push(icon('fleche', 'qrt-fleche'), val(c.apres, true), `<span class="qrt-ecart">${esc(c.ecart)}</span>`);
+    bas.push('<span></span>', legende(c.niveau, 'apres'), c.sens ? legende(c.sens, 'sens') : '<span></span>');
+  }
+  return `<div class="qrt-compare"><p class="qrt-compare-t">${esc(c.label)}</p>
+    <div class="qrt-compare-row" aria-hidden="true">${haut.join('')}${bas.join('')}</div><p class="sr-only">${esc(c.sr)}</p></div>`;
+}
+
+// Le prix en pastilles, muettes ; la phrase lue (#qrt-prix) décrit le bouton d'achat. Une pastille qui manque passe en
+// pointillés, avec « il manque N » dessous.
+function prixHtml(m) {
+  const pastille = (p) => `<span class="pastille-prix"><span class="pastille" data-res="${p.res}"${p.manque ? ' data-manque' : ''}>${icon(p.res)}<b>${esc(num(p.n))}</b></span>${
+    p.manque ? `<span class="pastille-manque">${esc(t('quartier.prix.manque', { n: num(p.manque) }))}</span>` : ''}</span>`;
+  return `<div class="qrt-prix" aria-hidden="true"><p class="qrt-prix-t">${esc(t('quartier.fiche.prix'))}</p><div class="qrt-pastilles">${m.pastilles.map(pastille).join('')}</div></div>
+    <p class="sr-only" id="qrt-prix">${esc(m.prixSr)}</p>${m.raison ? `<p class="sr-only" id="qrt-raison">${esc(m.raison)}</p>` : ''}`;
+}
+
 function bodyHtml(m) {
-  const line = (dt, html) => `<div class="help-line"><dt>${esc(dt)}</dt><dd>${html}</dd></div>`;
   const ok = monte && monte.quartier === m.id && monte.niveau === m.niveau
     ? `<p class="qrt-monte">${icon('check')}<span>${esc(monte.text)}</span></p>` : '';
-  const permis = `<p class="qrt-permis" id="qrt-permis">${esc(m.permis)}</p>`;
-  const rows = [line(t('quartier.fiche.fait'), `<p>${esc(m.fait)}</p>`)];
-  if (m.maintenant) rows.push(line(t('quartier.fiche.maintenant'), `<p>${esc(m.maintenant)}</p>`));
-  if (m.suivant) {
-    rows.push(line(t('quartier.fiche.niveau', { n: m.suivant.n }), `<p>${esc(t('quartier.fiche.effet', { effet: m.suivant.effet }))}</p>`));
-    const raison = m.raison ? `<p class="bat-raison" id="qrt-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : '';
-    rows.push(line(t('quartier.fiche.prix'), `<p id="qrt-prix">${esc(t('quartier.fiche.cout', { cout: m.prix }))}</p>${permis}${raison}`));
-  } else {
-    rows.push(line(t('quartier.fiche.permis'), permis));
-  }
-  return `${ok}<dl class="help-lines">${rows.join('')}</dl>${m.sucres ? sucresHtml(m.sucres) : ''}${m.repas ? repasHtml(m.repas) : ''}`;
+  const note = m.maintenant ? `<p class="qrt-note">${esc(m.maintenant)}</p>` : '';
+  const repli = `<details class="repli"><summary>${esc(t('quartier.fiche.repli'))}${icon('chevron-down')}</summary><p>${esc(m.regle)}</p></details>`;
+  return `${ok}${compareHtml(m.compare)}${note}${m.suivant ? prixHtml(m) : ''}${repli}${m.sucres ? sucresHtml(m.sucres) : ''}${m.repas ? repasHtml(m.repas) : ''}`;
 }
 
 function footHtml(m) {
@@ -177,7 +227,7 @@ function footHtml(m) {
   if (!m.suivant) return `<p class="qrt-max">${esc(t('quartier.fiche.max', { n: m.niveau }))}</p>${quetes}`;
   const off = !!m.raison;
   return `<button class="btn ${off ? '' : 'btn--primary '}btn--block" type="button" data-action="qrt-monter" data-quartier="${esc(m.id)}"
-    data-niveau="${m.suivant.n}"${off ? ' aria-disabled="true" aria-describedby="qrt-raison"' : ' aria-describedby="qrt-prix qrt-permis"'}>${icon(off ? 'lock' : 'chevron-up')}<span>${esc(t('quartier.fiche.monter', { n: m.suivant.n }))}</span></button>${quetes}`;
+    data-niveau="${m.suivant.n}"${off ? ' aria-disabled="true" aria-describedby="qrt-raison"' : ' aria-describedby="qrt-prix"'}>${icon(off ? 'lock' : 'chevron-up')}<span>${esc(t('quartier.fiche.monter', { n: m.suivant.n }))}</span></button>${quetes}`;
 }
 
 /** Ouvre la fiche du quartier (champs, atelier…). open(dlg) : ouverture de la feuille (sheets.js). */
@@ -207,7 +257,15 @@ function fill(dlg, m) {
   const body = $('.qrt-body', dlg);
   const fete = body.contains(document.activeElement) ? document.activeElement.closest('.fete') : null;
   const sorte = fete ? (fete.classList.contains('fete--sucres') ? 'sucres' : 'repas') : null;
+  // le repli « Comment ça marche » reste ouvert, et le focus sur lui, d'une mise à jour à l'autre
+  const repli = $('.repli', body);
+  const ouvert = !!repli?.open, surRepli = !!repli?.contains(document.activeElement);
   setHtml(body, bodyHtml(m));
+  if (ouvert || surRepli) {
+    const r = $('.repli', body);
+    r.open = ouvert;
+    if (surRepli) $('summary', r).focus();
+  }
   if (sorte && !body.contains(document.activeElement)) {
     const bloc = $(`.fete--${sorte}`, body);
     if (bloc) ($('[data-action="bat-geste"]', bloc) || $(`#${sorte}-etat`, bloc))?.focus();

@@ -1955,11 +1955,12 @@ Ce qui ne change pas : les règles et les prix (`core/` ne bouge pas, sauf une l
   Validée telle quelle le 15 octobre, aucune correction. Ses deux réponses : seule la bulle d'une récolte agit d'un toucher, les bulles famille, commande et quartier ouvrent la fiche (« ça me va ») ; réserve pleine ou dégât sur la culture, la bulle ouvre la fiche au lieu de récolter (« dac »).
 
 ### L1 — Monter de niveau : l'avant et l'après (problème 1)
-- [ ] Fiche de quartier : en tête, une ligne comparative. Picto de la ressource, nom court du réglage (« Récolte du potager »), « 4 → 5 » (l'avant en encre douce, l'après en sauge et en gras), pastille « +1 ». Mairie et Garage, où un chiffre plus bas est meilleur : le mot dit le sens (« moins cher », « plus vite »), pas la couleur seule. Au niveau le plus haut : la valeur actuelle seule.
-- [ ] Prix en trois pastilles (Permis, Énergie, Matériaux) : picto et nombre. Une pastille qui manque passe en pointillés, avec « il en manque N » dessous. La phrase en gras « Il manque … » disparaît de la fiche ; le bouton verrouillé garde sa raison pour le lecteur d'écran.
-- [ ] La ligne « Tu as N permis. Le prochain : … » quitte la fiche (voir L3).
-- [ ] Repli « Comment ça marche » : ce que fait le quartier, en une phrase.
-- [ ] Valeurs lues au cœur (`valeur`, `EFFETS_QUARTIERS`), jamais en dur dans l'interface.
+- [x] Fiche de quartier : en tête, une ligne comparative. Picto de la ressource, nom court du réglage (« Récolte du potager »), « 4 → 5 » (l'avant en encre douce, l'après en sauge et en gras), pastille « +1 ». Mairie et Garage, où un chiffre plus bas est meilleur : le mot dit le sens (« moins cher », « plus vite »), pas la couleur seule. Au niveau le plus haut : la valeur actuelle seule.
+- [x] Prix en trois pastilles (Permis, Énergie, Matériaux) : picto et nombre. Une pastille qui manque passe en pointillés, avec « il en manque N » dessous. La phrase en gras « Il manque … » disparaît de la fiche ; le bouton verrouillé garde sa raison pour le lecteur d'écran.
+- [x] La ligne « Tu as N permis. Le prochain : … » quitte la fiche (voir L3).
+- [x] Repli « Comment ça marche » : ce que fait le quartier, en une phrase.
+- [x] Valeurs lues au cœur (`valeur`, `EFFETS_QUARTIERS`), jamais en dur dans l'interface.
+  Fait le 15 octobre. Écarts : « il manque N » (le mot de la maquette) au lieu de « il en manque N » ; la ligne d'en-tête devient « Quartier · niveau N » (la maquette ; le domaine reste sur « Voir les quêtes Terrain (1) »). Le cœur gagne `manqueDetail` (ce qui manque, ressource par ressource), dont `manque` se sert. Vérifié : tests du cœur (588, 0 échec) et de l'API (88, 0 échec) ; scénarios 31 (183 contrôles, adapté : l'avant et l'après, les pastilles, le repli, plus de ligne des permis), 12, 32, 33 et 45 lancés seuls aux trois largeurs, 0 échec. La série complète reste pour L7, avant l'envoi.
 
 ### L2 — Fiches de bâtiment : l'état d'abord (problème 2)
 - [ ] Gabarit commun : titre, ligne d'ambiance discrète ; l'état ; le gain ; le geste chiffré ; le repli « Comment ça marche » (l'actuel « Ce que ça fait »).

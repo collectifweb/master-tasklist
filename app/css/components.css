@@ -483,12 +483,12 @@
   text-align: left;
   transition: transform var(--t-press) var(--ease-out), background-color var(--t-micro);
 }
-/* la feuille d'aide reprend la matière de sa tuile */
-.res[data-res="energie"], .help-title[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
-.res[data-res="materiaux"], .help-title[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
-.res[data-res="nourriture"], .help-title[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
-.res[data-res="habitants"], .help-title[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
-.res[data-res="permis"], .help-title[data-res="permis"] { --res: var(--res-permis); --res-wash: var(--res-permis-wash); }
+/* la feuille d'aide et les pastilles de prix (lot L) reprennent la matière de la tuile */
+.res[data-res="energie"], .help-title[data-res="energie"], .pastille[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
+.res[data-res="materiaux"], .help-title[data-res="materiaux"], .pastille[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
+.res[data-res="nourriture"], .help-title[data-res="nourriture"], .pastille[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
+.res[data-res="habitants"], .help-title[data-res="habitants"], .pastille[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
+.res[data-res="permis"], .help-title[data-res="permis"], .pastille[data-res="permis"] { --res: var(--res-permis); --res-wash: var(--res-permis-wash); }
 
 .res-tile {
   display: grid;
@@ -1925,6 +1925,74 @@ button.quest-check:active .quest-check-ring {
   background: var(--c-paper-raised);
   border-top: 1px solid var(--c-line);
   border-radius: 0 0 var(--r-md) var(--r-md);
+}
+
+/* Repli « Comment ça marche » (lot L) : la règle d'une fiche derrière un lien discret, fermé par défaut */
+.repli > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target);
+  margin-left: calc(-1 * var(--sp-2));
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-md);
+  list-style: none;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  color: var(--c-sage-deep);
+  cursor: pointer;
+}
+.repli > summary::-webkit-details-marker { display: none; }
+.repli > summary .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  transition: transform var(--t-short) var(--ease-out);
+}
+.repli[open] > summary .icon { transform: rotate(180deg); }
+.repli > summary:focus { outline: none; }
+.repli > summary:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+@media (hover: hover) {
+  .repli > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+.repli > p {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--text-15);
+  color: var(--text-soft);
+}
+
+/* Pastille de prix (lot L) : picto et nombre sur le lavis de la ressource ; en pointillés quand il en manque, avec
+   « il manque N » dessous (le motif double la couleur) */
+.pastille-prix {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 2px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--res-wash);
+  color: var(--res);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  white-space: nowrap;
+}
+.pastille .icon { flex: none; width: 20px; height: 20px; }
+.pastille[data-manque] { border-style: dashed; border-color: currentColor; }
+.pastille-manque {
+  font-size: 0.8125rem;
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+  white-space: nowrap;
 }
 
 /* Bandeau de la fiche : Cote, statut, secteur */

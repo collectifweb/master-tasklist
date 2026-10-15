@@ -175,17 +175,28 @@ export function etatCulture(game, ledger, id, now) {
 
 // ───────── Raisons écrites ─────────
 
-/** Ce qui manque pour payer `cout` ({ permis?, energy?, materials?, food? }), en une phrase, ou null. Même ordre que le HUD et les prix : permis, Énergie, Matériaux, Nourriture. */
+/**
+ * Ce qui manque pour payer `cout` ({ permis?, energy?, materials?, food? }), ressource par ressource, en entiers arrondis
+ * vers le haut : { permis, energy, materials, food }, 0 quand il y en a assez (les pastilles de prix, lot L).
+ */
+export function manqueDetail(game, cout) {
+  const reste = (n) => (n > 0 ? entierHaut(n) : 0);
+  return {
+    permis: Math.max(0, (cout.permis || 0) - Math.max(0, Math.floor(Number(game.permis?.dispo) || 0))),
+    energy: reste(round1((cout.energy || 0) - game.resources.energy)),
+    materials: reste(round1((cout.materials || 0) - game.resources.materials)),
+    food: reste(round1((cout.food || 0) - (Number(game.resources.food) || 0))), // une commande de visiteur (visiteurs.js)
+  };
+}
+
+/** Ce qui manque pour payer `cout`, en une phrase, ou null. Même ordre que le HUD et les prix : permis, Énergie, Matériaux, Nourriture. */
 export function manque(game, cout) {
-  const p = (cout.permis || 0) - Math.max(0, Math.floor(Number(game.permis?.dispo) || 0));
-  const m = round1((cout.materials || 0) - game.resources.materials);
-  const e = round1((cout.energy || 0) - game.resources.energy);
+  const d = manqueDetail(game, cout);
   const parts = [];
-  if (p > 0) parts.push(`${p} permis`);
-  if (e > 0) parts.push(`${entierHaut(e)} Énergie`);
-  if (m > 0) parts.push(`${entierHaut(m)} ${entierHaut(m) < 2 ? 'Matériau' : 'Matériaux'}`);
-  const n = round1((cout.food || 0) - (Number(game.resources.food) || 0)); // une commande de visiteur (visiteurs.js)
-  if (n > 0) parts.push(`${entierHaut(n)} Nourriture`);
+  if (d.permis) parts.push(`${d.permis} permis`);
+  if (d.energy) parts.push(`${d.energy} Énergie`);
+  if (d.materials) parts.push(`${d.materials} ${d.materials < 2 ? 'Matériau' : 'Matériaux'}`);
+  if (d.food) parts.push(`${d.food} Nourriture`);
   if (!parts.length) return null;
   return `Il manque ${parts.length > 2 ? `${parts.slice(0, -1).join(', ')} et ${parts.at(-1)}` : parts.join(' et ')}.`;
 }
