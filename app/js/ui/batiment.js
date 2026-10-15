@@ -1,6 +1,10 @@
-// Fiche d'un bâtiment (bible §5) : trois lignes, « Ce que c'est », « Ce que ça fait », « Maintenant », puis le seul
-// geste possible ici (bâtir, semer, récolter, accueillir une famille). Un geste impossible reste visible, à plat, avec
-// sa raison écrite par le cœur (« Hameau : encore 2 habitants. ») et un cadenas : le joueur sait toujours pourquoi.
+// Fiche d'un bâtiment (bible §5 ; lot L, « l'état d'abord ») : sous le nom, une ligne d'ambiance ; puis l'état dessiné
+// (les crans d'une culture, les places du village, le gain du jour d'un producteur), le prix en pastilles, et le seul geste
+// possible ici (bâtir, semer, récolter, accueillir une famille), chiffré sur son bouton (« Semer · 2 », « Récolter · +5 »).
+// La règle passe dans le repli « Comment ça marche » (« Comment ça pousse » pour une culture). Le dessin est caché au
+// lecteur d'écran : la phrase d'état (#bat-now) le dit. Un geste impossible reste visible, à plat, avec un cadenas ; sa
+// raison écrite par le cœur (« Hameau : encore 2 habitants. ») reste à l'écran, sauf quand elle ne dit que ce qui manque :
+// les pastilles en pointillés le montrent déjà, elle n'est plus que lue.
 // Rien n'est calculé ici qui ne vienne de core/batiments.js ; les valeurs que les niveaux de quartier changent (récolte
 // selon le lieu, jours de pousse, places par chalet, prix d'une famille, stockage) sont lues au cœur, jamais des
 // constantes de départ. Le geste passe par data-action="bat-geste".
@@ -19,13 +23,14 @@
 // à sucre hors saison, la réserve pleine) ; celui de la tour de guet, la tempête annoncée.
 // Le visiteur à commande (lot C) a son bloc au-dessus du comptoir : qui il est, ce qu'il demande, ce qu'il laisse, la
 // taille de la commande quand elle n'est pas « régulière », puis « Livrer » (la seule action principale de la fiche,
-// data-geste="livrer"), le cadenas et la raison du cœur, ou « Commande livrée ».
+// data-geste="livrer"), le cadenas et la raison du cœur, ou « Commande livrée ». Les jours qui restent ne s'y redisent pas
+// quand le marchand est là (l'état du quai les dit) ; les règles du comptoir et de la commande sont dans le repli.
 import {
   BATIMENTS, CHAUFFAGE, GRENIER_STOCKAGE, EOLIENNE_ENERGIE, aBati, etatCulture, coutSemis,
   refusConstruire, refusSemer, refusRecolter, refusAccueillir, logements, stockage, gameDay, eolienneDuJour,
   recolteDe, prixFamille, placesParChalet, valeur, visiteurDeLaSemaine, refusEchanger, IMPREVUS, DEGATS, degatDe, refusReparer,
   saisonDe, degatsALaRecolte, commandeDeLaSemaine, refusLivrer, PRODUCTION, netDuJour, produitCeJour, TOUR_ANNONCE,
-  TEMPETE, alerteTempete, SIROP, compte, productionsDuJour,
+  TEMPETE, alerteTempete, SIROP, compte, productionsDuJour, manque, manqueDetail,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml } from './dom.js';
@@ -47,20 +52,6 @@ export function coutText(cout) {
   return parts.join(' et ');
 }
 
-// habitants logés dans chaque chalet debout, dans l'ordre des chalets (comme la carte)
-function occupantsDe(game, id) {
-  let reste = logements(game).habitants;
-  const places = placesParChalet(game);
-  for (let k = 1; k <= BATIMENTS.chalet.max; k++) {
-    const cid = `chalet-${k}`;
-    if (!aBati(game, cid)) continue;
-    const n = Math.min(places, reste);
-    if (cid === id) return n;
-    reste -= n;
-  }
-  return 0;
-}
-
 // « 30 Énergie », « 15 Matériaux », « 10 Nourriture » : une ressource d'un côté d'une offre du marchand
 const RES = { energy: 'energie', materials: 'materiaux', food: 'nourriture' };
 export function ressource(obj) {
@@ -74,6 +65,25 @@ export function ressourcesText(obj) {
   const parts = ['energy', 'materials', 'food'].filter((k) => obj[k] > 0).map((k) => ressource({ [k]: obj[k] }).texte);
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}` : parts.join('');
 }
+
+// ───────── Pastilles (lot L), partagées avec la fiche de quartier ─────────
+const RES_PRIX = { permis: 'permis', energy: 'energie', materials: 'materiaux', food: 'nourriture' };
+
+/** Pastilles d'un prix : [{ res, n, manque }], dans l'ordre de la barre (permis, Énergie, Matériaux, Nourriture) ; manque à 0 s'il y en a assez. */
+export function pastillesDe(game, cout) {
+  const d = manqueDetail(game, cout);
+  return Object.keys(RES_PRIX).filter((k) => cout[k]).map((k) => ({ res: RES_PRIX[k], n: cout[k], manque: d[k] }));
+}
+
+/** Une pastille de prix : picto et nombre ; en pointillés, avec « il manque N » dessous, quand il en manque. */
+export const pastilleHtml = (p) => `<span class="pastille-prix"><span class="pastille" data-res="${p.res}"${p.manque ? ' data-manque' : ''}>${icon(p.res)}<b>${esc(numManque(p.n))}</b></span>${
+  p.manque ? `<span class="pastille-manque">${esc(t('quartier.prix.manque', { n: num(p.manque) }))}</span>` : ''}</span>`;
+
+/** « Prix » et ses pastilles, muets (la phrase lue du bouton dit le prix). */
+export const prixRangHtml = (pastilles) => `<div class="qrt-prix" aria-hidden="true"><p class="qrt-prix-t">${esc(t('quartier.fiche.prix'))}</p><div class="qrt-pastilles">${pastilles.map(pastilleHtml).join('')}</div></div>`;
+
+// Un gain : « +5 » et le picto, en pastille ronde ; cochée quand il est déjà donné aujourd'hui
+const gainHtml = (res, n, fait = false) => `<span class="pastille pastille--gain" data-res="${res}"${fait ? ' data-fait' : ''}>${fait ? icon('check', 'pastille-coche') : ''}<b>+${esc(n)}</b>${icon(res)}</span>`;
 
 const DEGAT_ICON = { panne: 'cle', ours: 'patte', gel: 'flocon', neige: 'pelle' };
 const domaine = (type) => t(`quartier.${DEGATS[type].quartier}.domain`);
@@ -109,9 +119,12 @@ function degatModel(game, id, now) {
 }
 
 /**
- * Modèle de la fiche : { id, type, bati, nom, quoi, fait, maintenant, raison, geste: { action, params, label } | null,
+ * Modèle de la fiche : { id, type, bati, nom, quoi, fait, regle: [phrase] | null, repli, maintenant, muet, etat: { kind… },
+ * prix: [pastille] | null, raison, manque, geste: { action, params, label, aria?, attente? } | null,
  * comptoir: [{ id, donne, recoit, prise, raison }] | null, duJour: { même forme } | null, commande, degat } (comptoir et
  * duJour : le quai debout, quand le marchand y est ; commande : voir commandeModel ; degat : voir degatModel).
+ * maintenant : la phrase d'état, lue seulement quand muet (l'état dessiné la montre), affichée sinon. manque : la raison ne
+ * dit que ce qui manque pour payer (les pastilles en pointillés la montrent ; elle n'est plus que lue).
  */
 export function batimentModel(c, id) {
   const type = typeOf(id);
@@ -119,32 +132,49 @@ export function batimentModel(c, id) {
   const def = BATIMENTS[type];
   const { game, ledger, now } = c;
   const bati = aBati(game, id);
+  const pousse = valeur(game, 'joursPousse');
   const m = {
     id, type, bati,
     nom: t(`bat.${type}.${bati ? 'nom' : 'vide'}`),
     quoi: t(`bat.${type}.${bati ? 'quoi' : 'quoiVide'}`),
     fait: t(`bat.${type}.fait`, {
-      loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: valeur(game, 'joursPousse'), chauffage: CHAUFFAGE,
+      loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: pousse, chauffage: CHAUFFAGE,
       n: N_FAIT[type], base: TEMPETE.annonce, sirop: num(SIROP.energie),
     }),
-    maintenant: '', raison: null, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
+    regle: null, repli: 'bat.fiche.repli', maintenant: '', muet: false, etat: { kind: 'phrase' }, prix: null,
+    raison: null, manque: false, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };
+  if (bati && type !== 'atelier') m.regle = [m.fait]; // l'atelier réparé n'a plus de règle : « Une fois réparé… » est passé
+  let cout = null; // ce que le geste coûte : une raison qui ne dit que ce qui en manque se lit dans les pastilles
   if (!bati) {
-    m.maintenant = t('bat.fiche.cout', { cout: coutText(def.cout) });
+    // à bâtir : ce que ça fera, puis le prix
+    cout = def.cout;
+    m.maintenant = t('bat.fiche.cout', { cout: coutText(cout) });
+    m.muet = true;
+    m.etat = { kind: 'apercu', texte: m.fait };
+    m.prix = pastillesDe(game, cout);
     m.raison = refusConstruire(game, type, id);
     m.geste = { action: 'construire', params: { type, id }, label: t(`bat.${type}.geste`) };
   } else if (def.culture) {
     const st = etatCulture(game, ledger, id, now);
+    const gain = numGain(recolteDe(game, def.culture));
+    m.regle = [t(`bat.${type}.regle`, { jours: pousse, chauffage: CHAUFFAGE })];
+    m.repli = 'bat.fiche.repli.culture';
+    m.muet = true;
     if (!st.semee) {
       const cs = coutSemis(id, gameDay(now));
+      cout = { energy: cs.energy };
       m.maintenant = cs.chauffage
         ? t('bat.fiche.semer.chauffage', { semis: numManque(cs.energy - cs.chauffage), chauffage: numManque(cs.chauffage) })
-        : t('bat.fiche.semer.cout', { cout: coutText({ energy: cs.energy }) });
+        : t('bat.fiche.semer.cout', { cout: coutText(cout) });
+      m.etat = { kind: 'semis', semis: pastillesDe(game, cout)[0], jours: pousse, gain, chauffage: cs.chauffage ? numManque(cs.chauffage) : null };
       m.raison = refusSemer(game, ledger, id, now);
-      m.geste = { action: 'semer', params: { id }, label: t('bat.fiche.semer') };
+      m.geste = { action: 'semer', params: { id }, label: t('bat.fiche.semer.geste', { n: numManque(cs.energy) }), aria: t('bat.fiche.semer.label', { cout: coutText(cout) }) };
     } else if (!st.mure) {
-      m.maintenant = t(`bat.fiche.pousse.${st.reste === 1 ? 'one' : 'other'}`, { n: st.reste, date: shortDate(st.semeLe) });
-      m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter'), attente: true };
+      const n = st.reste === 1 ? 'one' : 'other';
+      m.maintenant = t(`bat.fiche.pousse.${n}`, { n: st.reste, date: shortDate(st.semeLe) });
+      m.etat = { kind: 'pousse', titre: t(`bat.fiche.dans.${n}`, { n: st.reste }), fait: Math.max(0, Math.min(pousse, st.jours)), total: pousse, gain };
+      m.geste = { action: 'recolter', params: { id }, label: t(`bat.fiche.recolter.dans.${n}`, { n: st.reste }), attente: true };
     } else {
       // la réserve pleine ne bloque plus la récolte : la fiche dit d'avance ce qui serait perdu (l'hiver, la serre compte
       // quand même pour son objectif)
@@ -152,21 +182,36 @@ export function batimentModel(c, id) {
       const tient = n - degatsALaRecolte(game, id, n, now).mange; // un ours en visite prend sa part avant le stockage
       const place = stockage(game) - game.resources.food;
       const serreHiver = def.culture === 'serre' && saisonDe(gameDay(now)).id === 'hiver';
+      const plein = { stock: numPossede(game.resources.food), max: numPossede(stockage(game)), objectif: t('bandeau.saison.serre.titre') };
       m.maintenant = entierGain(place) <= 0
-        ? t(`bat.fiche.mure.plein${serreHiver ? '.hiver' : ''}`, { n: numGain(n), stock: numPossede(game.resources.food), max: numPossede(stockage(game)), objectif: t('bandeau.saison.serre.titre') })
+        ? t(`bat.fiche.mure.plein${serreHiver ? '.hiver' : ''}`, { n: numGain(n), ...plein })
         : place < tient ? t('bat.fiche.mure.place', { n: numGain(n), place: numGain(place) }) : t('bat.fiche.mure', { n: numGain(n) });
+      m.etat = {
+        kind: 'mure', total: pousse,
+        note: entierGain(place) <= 0 ? t(`bat.fiche.mur.plein${serreHiver ? '.hiver' : ''}`, plein)
+          : place < tient ? t('bat.fiche.mur.place', { place: numGain(place) }) : null,
+      };
       m.raison = refusRecolter(game, ledger, id, now);
-      m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter') };
+      m.geste = { action: 'recolter', params: { id }, label: t('bat.fiche.recolter.geste', { n: numGain(n) }), aria: t('bat.fiche.recolter.label', { n: numGain(n) }) };
     }
   } else if (type === 'chalet') {
-    const occupants = occupantsDe(game, id);
-    m.maintenant = t(`bat.fiche.chalet.${occupants === 0 ? 'zero' : occupants === 1 ? 'one' : 'other'}`, { occupants, loge: placesParChalet(game), n: prixFamille(game) });
+    // les places du village entier : une famille s'installe où il y a de la place, pas dans ce chalet-ci
+    const l = logements(game);
+    const prix = prixFamille(game);
+    cout = { food: prix };
+    m.maintenant = t(`bat.fiche.places.sr.${l.habitants <= 1 ? 'one' : 'other'}`, { n: l.habitants, places: l.places, prix: num(prix) });
+    m.muet = true;
+    m.etat = { kind: 'places', ...l, phrase: t(`bat.fiche.places.libres.${l.libres === 0 ? 'zero' : l.libres === 1 ? 'one' : 'other'}`, { n: l.libres }) };
+    m.prix = pastillesDe(game, cout);
     m.raison = refusAccueillir(game);
     m.geste = { action: 'accueillir', params: {}, label: t('bat.fiche.accueillir') };
   } else if (type === 'eolienne') {
     const d = degatDe(game, id, now);
+    const donne = eolienneDuJour(ledger, gameDay(now)) > 0;
     m.maintenant = d ? t(`bat.eolienne.maintenant.${d.type}`)
-      : eolienneDuJour(ledger, gameDay(now)) > 0 ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
+      : donne ? t('bat.eolienne.maintenant.fait', { n: EOLIENNE_ENERGIE }) : t('bat.eolienne.maintenant');
+    m.muet = true;
+    m.etat = { kind: 'production', res: 'energie', n: num(EOLIENNE_ENERGIE), fait: !d && donne, note: null }; // le dégât se dit au-dessus
   } else if (type === 'quai') {
     const v = visiteurDeLaSemaine(game, now);
     if (v) {
@@ -177,10 +222,17 @@ export function batimentModel(c, id) {
       });
       m.comptoir = v.offres.map(offre);
       m.duJour = offre(v.duJour);
+      m.regle.push(t('bat.comptoir.intro'));
     }
     m.commande = commandeModel(game, ledger, now);
+    if (m.commande) {
+      m.commande.sansJours = !!v; // « encore N jours » une seule fois : l'état du quai le dit déjà
+      m.regle.push(t('bat.commande.regle'));
+    }
   } else if (type === 'grenier') {
     m.maintenant = t('bat.grenier.maintenant', { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) });
+    m.muet = true;
+    m.etat = { kind: 'stock', stock: numPossede(game.resources.food), max: numPossede(stockage(game)) };
   } else if (type === 'tour') {
     const a = alerteTempete(c.tasks || [], game, ledger, now);
     m.maintenant = !a ? t('bat.tour.maintenant')
@@ -193,15 +245,25 @@ export function batimentModel(c, id) {
     const donne = PRODUCTION[type].materials ? net.materials : net.food;
     const sirop = type === 'cabane' ? net.energy : 0;
     const plein = { stock: numPossede(game.resources.food), max: numPossede(stockage(game)) };
+    const dort = !produitCeJour(type, day);
+    const reservePleine = !!PRODUCTION[type].food && game.resources.food >= stockage(game);
     m.maintenant = sirop > 0 ? t(`bat.cabane.maintenant.fait.sirop${donne > 0 ? '' : '.seul'}`, { n: numGain(donne), e: numGain(sirop) })
       : donne > 0 ? t(`bat.${type}.maintenant.fait`, { n: numGain(donne) })
-        : !produitCeJour(type, day) ? t(`bat.${type}.maintenant.dort`)
-          : PRODUCTION[type].food && game.resources.food >= stockage(game)
+        : dort ? t(`bat.${type}.maintenant.dort`)
+          : reservePleine
             ? (type === 'cabane' ? t(`bat.cabane.maintenant.plein.${compte(game, 'quai') ? 'sirop' : 'sansQuai'}`, plein) : t('bat.fiche.production.plein', plein))
             : t(`bat.${type}.maintenant`);
+    // le gain du jour en pastille ; la phrase ne reste à l'écran que pour ce que la pastille ne dit pas (le sirop vendu, la
+    // cabane qui dort, la réserve pleine)
+    m.muet = true;
+    m.etat = {
+      kind: 'production', res: PRODUCTION[type].materials ? 'materiaux' : 'nourriture', n: num(PRODUCTION[type].materials || PRODUCTION[type].food),
+      fait: donne > 0, note: sirop > 0 || (donne <= 0 && (dort || reservePleine)) ? m.maintenant : null,
+    };
   } else {
     m.maintenant = t(`bat.${type}.maintenant`);
   }
+  m.manque = !!m.raison && !!cout && m.raison === manque(game, cout);
   return m;
 }
 
@@ -246,13 +308,12 @@ function offreHtml(o, quand = t('bat.comptoir.fait.quand')) {
 function comptoirHtml(offres, duJour) {
   return `<section class="comptoir" aria-labelledby="comptoir-t">
     <h3 class="comptoir-titre" id="comptoir-t">${icon('barque')}<span>${esc(t('bat.comptoir.titre'))}</span></h3>
-    <p class="comptoir-intro">${esc(t('bat.comptoir.intro'))}</p>
     <ul class="comptoir-offres" role="list">${offres.map((o) => offreHtml(o)).join('')}</ul>
     <p class="comptoir-intro comptoir-jour">${esc(t('bat.comptoir.jour.intro'))}</p>
     <ul class="comptoir-offres" role="list">${offreHtml(duJour, t('bat.comptoir.jour.fait.quand'))}</ul></section>`;
 }
 
-// Le visiteur à commande, au-dessus du comptoir : son nom et ses jours, qui il est, « Demande » et « Laisse » (picto teinté
+// Le visiteur à commande, au-dessus du comptoir : son nom (et ses jours, sans le marchand), qui il est, « Demande » et « Laisse » (picto teinté
 // de la ressource, nombre, mot), la taille quand elle n'est pas régulière, puis « Livrer » (principal) ou, verrouillé, le
 // cadenas et la raison du cœur ; livrée, une ligne cochée à la même place.
 function commandeHtml(c) {
@@ -263,15 +324,14 @@ function commandeHtml(c) {
       aria-label="${esc(c.label)}"${c.raison ? ' aria-disabled="true" aria-describedby="commande-raison"' : ''}>${icon(c.raison ? 'lock' : 'fleche')}<span>${esc(t('bat.commande.geste'))}</span></button>
       ${c.raison ? `<p class="commande-raison" id="commande-raison">${icon('lock')}<span>${esc(c.raison)}</span></p>` : ''}`;
   return `<section class="commande" data-visiteur="${c.id}" data-etat="${etat}" aria-labelledby="commande-t">
-    <h3 class="commande-titre" id="commande-t">${icon('note')}<span>${esc(c.nom)}</span><small class="commande-jours">${esc(c.jours)}</small></h3>
+    <h3 class="commande-titre" id="commande-t">${icon('note')}<span>${esc(c.nom)}</span>${c.sansJours ? '' : `<small class="commande-jours">${esc(c.jours)}</small>`}</h3>
     <p class="commande-qui">${esc(c.qui)}</p>
     <dl class="commande-troc">
       <div><dt>${esc(t('bat.commande.demande'))}</dt><dd>${c.demande.map((r, i) => (i ? `<span class="commande-plus"><span class="commande-et" aria-hidden="true">+</span><span class="sr-only"> ${esc(t('bat.commande.et'))} </span>${resHtml(r)}</span>` : resHtml(r))).join('')}</dd></div>
       <div><dt>${esc(t('bat.commande.laisse'))}</dt><dd>${resHtml(c.recoit)}${c.recoit.note ? `<small class="commande-note">${esc(c.recoit.note)}</small>` : ''}</dd></div>
     </dl>
     ${c.taille ? `<p class="commande-taille">${esc(c.taille)}</p>` : ''}
-    ${action}
-    <p class="commande-regle">${esc(t('bat.commande.regle'))}</p></section>`;
+    ${action}</section>`;
 }
 
 // Le dégât dans « Maintenant » : titre et picto braise, ce que ça change, le geste et son prix (ou le cadenas et la raison),
@@ -287,10 +347,52 @@ function degatHtml(d) {
     <ul class="degat-voies" role="list"><li>${icon(d.voie)}<span>${esc(d.quete)}</span></li><li>${icon('clock')}<span>${esc(d.seul)}</span></li></ul></div>`;
 }
 
+// L'état, dessiné et caché au lecteur d'écran (la phrase #bat-now, lue, dit la même chose) ; sans dessin, la phrase
+// elle-même, à l'écran.
+function etatHtml(m) {
+  const e = m.etat;
+  const crans = (plein, total, cls = '') => `<span class="crans${cls}">${Array.from({ length: total }, (_, i) => `<span${i < plein ? ' data-plein' : ''}></span>`).join('')}</span>`;
+  const sur = (n, max) => `<p class="bat-etat-v"><b>${esc(n)}</b> ${esc(t('bat.fiche.surMax', { max }))}</p>`;
+  const tete = (titre, droite = '') => `<div class="bat-etat-tete">${titre}${droite}</div>`;
+  const note = (p) => (p ? `<p class="bat-etat-note">${esc(p)}</p>` : '');
+  const muet = (html) => `<div class="bat-etat" data-etat="${e.kind}" aria-hidden="true">${html}</div>`;
+  switch (e.kind) {
+    case 'apercu':
+      return `<div class="bat-etat" data-etat="apercu"><p class="bat-etat-texte">${esc(e.texte)}</p></div>`;
+    case 'semis': {
+      const pas = (haut, legende) => `<div class="bat-cycle-pas">${haut}<span class="bat-cycle-l">${esc(legende)}</span></div>`;
+      return muet(`<p class="bat-etat-t" data-ton="doux">${esc(t('bat.fiche.rien'))}</p>
+        <div class="bat-cycle">${pas(pastilleHtml(e.semis), t('bat.fiche.cycle.seme'))}${icon('fleche', 'bat-cycle-fleche')}${
+          pas(crans(e.jours, e.jours, ' crans--mini'), t(`bat.fiche.cycle.jours.${e.jours === 1 ? 'one' : 'other'}`, { n: e.jours }))}${icon('fleche', 'bat-cycle-fleche')}${
+          pas(gainHtml('nourriture', e.gain), t('bat.fiche.cycle.recolte'))}</div>
+        ${note(e.chauffage ? t('bat.fiche.cycle.chauffage', { n: e.chauffage }) : null)}`);
+    }
+    case 'pousse':
+      return muet(`${tete(`<p class="bat-etat-t">${esc(e.titre)}</p>`, sur(e.fait, e.total))}${crans(e.fait, e.total)}
+        <div class="bat-etat-gain"><span>${esc(t('bat.fiche.aLaRecolte'))}</span>${gainHtml('nourriture', e.gain)}</div>`);
+    case 'mure':
+      return muet(`${tete(`<p class="bat-etat-t">${icon('check')}<span>${esc(t('bat.fiche.mur'))}</span></p>`, sur(e.total, e.total))}${crans(e.total, e.total)}${note(e.note)}`);
+    case 'places': {
+      const n = Math.max(e.places, e.habitants);
+      const places = Array.from({ length: n }, (_, i) => `<span class="bat-place"${i < e.habitants ? ' data-plein' : ''}>${icon('habitants')}</span>`).join('');
+      return muet(`${tete(`<p class="bat-etat-label">${esc(t('bat.fiche.places'))}</p>`, sur(e.habitants, e.places))}<div class="bat-places">${places}</div>${note(e.phrase)}`);
+    }
+    case 'stock':
+      return muet(tete(`<p class="bat-etat-label">${esc(t('bat.fiche.reserve'))}</p>`, sur(e.stock, e.max)));
+    case 'production':
+      return muet(`<div class="bat-etat-gain"><span>${esc(t(e.fait ? 'bat.fiche.donne' : 'bat.fiche.parJour'))}</span>${gainHtml(e.res, e.n, e.fait)}</div>${note(e.note)}`);
+    default:
+      return `<div class="bat-etat" data-etat="phrase"><p class="bat-etat-texte" id="bat-now">${esc(m.maintenant)}</p></div>`;
+  }
+}
+
 function bodyHtml(m) {
-  const line = (k, html) => `<div class="help-line"><dt>${esc(t(`bat.fiche.${k}`))}</dt><dd>${html}</dd></div>`;
-  const now = `<p id="bat-now">${esc(m.maintenant)}</p>${m.raison ? `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>` : ''}${m.degat ? degatHtml(m.degat) : ''}`;
-  return `<dl class="help-lines">${line('quoi', esc(m.quoi))}${line('fait', esc(m.fait))}${line('maintenant', now)}</dl>${m.commande ? commandeHtml(m.commande) : ''}${m.comptoir ? comptoirHtml(m.comptoir, m.duJour) : ''}`;
+  const now = m.muet ? `<p class="sr-only" id="bat-now">${esc(m.maintenant)}</p>` : '';
+  const raison = !m.raison ? '' : m.manque ? `<p class="sr-only" id="bat-raison">${esc(m.raison)}</p>`
+    : `<p class="bat-raison" id="bat-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>`;
+  const repli = m.regle ? `<details class="repli"><summary>${esc(t(m.repli))}${icon('chevron-down')}</summary>${m.regle.map((p) => `<p>${esc(p)}</p>`).join('')}</details>` : '';
+  return `${m.degat ? degatHtml(m.degat) : ''}${now}${etatHtml(m)}${m.prix ? prixRangHtml(m.prix) : ''}${raison}${
+    m.commande ? commandeHtml(m.commande) : ''}${m.comptoir ? comptoirHtml(m.comptoir, m.duJour) : ''}${repli}`;
 }
 
 function footHtml(m) {
@@ -299,7 +401,7 @@ function footHtml(m) {
   const off = !!m.raison || !!g.attente;
   const desc = m.raison ? 'bat-raison' : g.attente ? 'bat-now' : '';
   return `<button class="btn ${off ? '' : 'btn--primary '}btn--block" type="button" data-action="bat-geste" data-geste="${esc(g.action)}"
-    data-params="${esc(JSON.stringify(g.params))}"${off ? ' aria-disabled="true"' : ''}${desc ? ` aria-describedby="${desc}"` : ''}>${icon(off ? 'lock' : GESTE_ICON[g.action])}<span>${esc(g.label)}</span></button>`;
+    data-params="${esc(JSON.stringify(g.params))}"${g.aria ? ` aria-label="${esc(g.aria)}"` : ''}${off ? ' aria-disabled="true"' : ''}${desc ? ` aria-describedby="${desc}"` : ''}>${icon(off ? 'lock' : GESTE_ICON[g.action])}<span>${esc(g.label)}</span></button>`;
 }
 
 /**
@@ -313,7 +415,8 @@ export function openBatiment(c, id, { thumb, open } = {}) {
   dlg.dataset.batId = id;
   dlg._thumb = thumb || null;
   dlg.innerHTML = `
-    <header class="sheet-head"><h2 class="sheet-title bat-title" id="bat-t"><span class="bat-thumb" aria-hidden="true"></span><span class="bat-nom"></span></h2>
+    <header class="sheet-head"><div class="qrt-head"><span class="bat-thumb" aria-hidden="true"></span>
+      <div class="qrt-head-text"><h2 class="sheet-title bat-title" id="bat-t"><span class="bat-nom"></span></h2><p class="qrt-ligne bat-ambiance"></p></div></div>
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('bat.fiche.fermer'))}">${icon('x')}</button></header>
     <div class="sheet-body bat-body"></div>
     <footer class="sheet-foot bat-foot"></footer>`;
@@ -324,6 +427,7 @@ export function openBatiment(c, id, { thumb, open } = {}) {
 
 function fill(dlg, m) {
   $('.bat-nom', dlg).textContent = m.nom;
+  $('.bat-ambiance', dlg).textContent = m.quoi;
   dlg.dataset.bati = String(m.bati);
   const art = dlg._thumb ? dlg._thumb(m.id) : '';
   const th = $('.bat-thumb', dlg);
@@ -335,7 +439,15 @@ function fill(dlg, m) {
   const offre = body.contains(document.activeElement) ? document.activeElement.closest('.offre')?.dataset.offre : null;
   const degat = body.contains(document.activeElement) && !!document.activeElement.closest('.degat');
   const commande = body.contains(document.activeElement) && !!document.activeElement.closest('.commande');
+  // le repli reste ouvert, et le focus sur lui, d'une mise à jour à l'autre
+  const repli = $('.repli', body);
+  const ouvert = !!repli?.open, surRepli = !!repli?.contains(document.activeElement);
   setHtml(body, bodyHtml(m));
+  const r = $('.repli', body);
+  if (r && (ouvert || surRepli)) {
+    r.open = ouvert;
+    if (surRepli) $('summary', r).focus();
+  }
   const li = offre && !body.contains(document.activeElement) ? $(`.offre[data-offre="${offre}"]`, body) : null;
   if (li) ($('.offre-go', li) || $('.offre-fait', li))?.focus();
   if (degat && !body.contains(document.activeElement)) ($('.degat-go', body) || $('.degat-fait', body))?.focus();

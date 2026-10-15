@@ -26,7 +26,9 @@ const fiche = (page) => page.evaluate(() => {
   const b = d.querySelector('[data-action="bat-geste"]');
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', nom: s(d.querySelector('.bat-nom')?.textContent),
-    values: [...d.querySelectorAll('.help-lines dd')].map((e) => s(e.textContent)), raison: s(d.querySelector('#bat-raison')?.textContent),
+    // l'ambiance sous le nom ; la règle (en tête à bâtir, sinon dans le repli) ; la phrase d'état (lot L)
+    values: [s(d.querySelector('.bat-ambiance')?.textContent), s((d.querySelector('.bat-etat[data-etat="apercu"] .bat-etat-texte') || d.querySelector('.repli > p'))?.textContent), s(d.querySelector('#bat-now')?.textContent)],
+    raison: s(d.querySelector('#bat-raison')?.textContent),
     geste: b ? { label: s(b.textContent), off: b.getAttribute('aria-disabled') === 'true', h: Math.round(b.getBoundingClientRect().height) } : null,
   };
 });
@@ -150,8 +152,8 @@ async function plan(page) {
     const f0 = await ouvrir(page);
     R.check(`${loin ? 'la carte en liste (vue d’ensemble)' : 'le toucher'} ouvre la fiche de la scierie`, f0 && f0.id === 'scierie-1' && f0.nom === 'Emplacement de la scierie', JSON.stringify(f0));
     if (!f0) return;
-    R.check('« Ce que ça fait » : 3 Matériaux chaque jour où tu passes au village', f0.values[1] === `${PRODUCTION.scierie.materials} Matériaux de plus chaque jour où tu passes au village.`, f0.values[1]);
-    R.check('« Maintenant » : le prix ; « Bâtir » actif, 44 px', f0.values[2] === 'Coûte 6 Énergie et 35 Matériaux.' && f0.geste && f0.geste.label === 'Bâtir' && !f0.geste.off && f0.geste.h >= 44, JSON.stringify([f0.values[2], f0.geste]));
+    R.check('en tête, ce que ça fera : 3 Matériaux chaque jour où tu passes au village', f0.values[1] === `${PRODUCTION.scierie.materials} Matériaux de plus chaque jour où tu passes au village.`, f0.values[1]);
+    R.check('la phrase lue : le prix ; « Bâtir » actif, 44 px', f0.values[2] === 'Coûte 6 Énergie et 35 Matériaux.' && f0.geste && f0.geste.label === 'Bâtir' && !f0.geste.off && f0.geste.h >= 44, JSON.stringify([f0.values[2], f0.geste]));
     await shot(page, '44-scierie-vide');
     const g0 = srv.game();
     await page.click('#dlg-batiment [data-action="bat-geste"]');

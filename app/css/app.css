@@ -256,7 +256,8 @@
   margin: 0;
 }
 
-/* Fiche d'un bâtiment : son dessin de la carte, son nom, puis les trois lignes de l'aide */
+/* Fiche d'un bâtiment (lot L) : son dessin de la carte, son nom et sa ligne d'ambiance (l'en-tête de la fiche de quartier),
+   puis l'état dessiné, le prix en pastilles, le geste, et le repli « Comment ça marche » */
 .bat-title {
   display: flex;
   align-items: center;
@@ -274,12 +275,90 @@
 .bat-thumb[hidden] { display: none; }
 .bat-thumb svg { width: 56px; height: 56px; overflow: visible; }
 [data-bati="false"] .bat-thumb { background: var(--c-sunken); }
-.bat-body .help-line dd p { margin: 0; }
+/* L'état : un encart papier neuf, comme l'avant et l'après d'un quartier. En tête, l'état en gros (« Mûr dans 2 jours »)
+   ou son nom (« Places au village »), le compte à droite (« 3 sur 5 ») ; puis les crans, les places, le gain. */
+.bat-etat {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+}
+.bat-etat p { margin: 0; }
+.bat-etat-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-3);
+}
+.bat-etat-t {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-num);
+  font-size: 1.375rem;
+  font-weight: var(--w-heavy);
+  line-height: 1.15;
+  color: var(--c-sage-deep);
+}
+.bat-etat-t[data-ton="doux"] { color: var(--text-soft); }
+.bat-etat-t .icon { flex: none; width: 24px; height: 24px; }
+.bat-etat-label { font-size: var(--text-15); font-weight: var(--w-bold); color: var(--text-soft); }
+.bat-etat-v {
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.bat-etat-v b { font-family: var(--font-num); font-size: var(--text-18); font-weight: var(--w-heavy); color: var(--text); }
+.bat-etat[data-etat="places"] .bat-etat-v b { color: var(--res-habitants); }
+.bat-etat-texte { font-size: var(--text-15); color: var(--text); }
+.bat-etat-note { font-size: var(--text-14); color: var(--text-soft); }
+.bat-etat-gain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  font-size: var(--text-15);
+  color: var(--text-soft);
+}
+/* parcelle vide : « tu sèmes » → les jours → « tu récoltes » */
+.bat-cycle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.bat-cycle-pas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bat-cycle-l { font-size: 0.8125rem; color: var(--text-soft); text-align: center; }
+.bat-cycle-fleche { flex: none; width: 20px; height: 20px; margin-top: 8px; color: var(--c-sage); }
+/* les places du village : une silhouette par place, pleine en lanterne quand quelqu'un y vit, en pointillés sinon */
+.bat-places { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.bat-place {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 56px;
+  box-sizing: border-box;
+  border: 2px dashed var(--c-line-strong);
+  border-radius: var(--r-md);
+  color: var(--text-muted);
+}
+.bat-place[data-plein] { border: 0; background: var(--res-habitants-wash); color: var(--res-habitants); }
+.bat-place .icon { width: 28px; height: 28px; }
 .bat-body .bat-raison {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin-top: var(--sp-2);
   font-weight: var(--w-semibold);
   color: var(--text-soft);
 }

@@ -64,19 +64,19 @@ L.runScenario('15. potager : chalet, semis, jours de passage, récolte, famille'
     return (g?.batiments || []).some((b) => b.id === 'chalet-1') && g.resources.materials === g0.resources.materials - 15;
   }, 5000), JSON.stringify(srv.game()?.resources));
   s = await L.waitFor(async () => { const x = await sheet(page); return x.nom === 'Chalet' ? x : null; }, 3000);
-  R.check('la fiche se met à jour : « Accueillir une famille », refusé, raison écrite', s && s.geste?.label === 'Accueillir une famille' && s.geste.off && s.raison === 'Il manque 4 Nourriture.', JSON.stringify(s));
+  R.check('la fiche se met à jour : « Accueillir une famille », refusé, raison dite (la pastille du prix est en pointillés)', s && s.geste?.label === 'Accueillir une famille' && s.geste.off && s.raison === 'Il manque 4 Nourriture.', JSON.stringify(s));
   await closeBat(page);
 
   // ───── semer la parcelle du vieux potager
   s = await openBat(page, 'parcelle-1');
-  R.check('parcelle : rien de semé, semer coûte 2 Énergie', s && /Rien n’est semé\. Semer coûte 2 Énergie\./.test(s.now) && s.geste?.label === 'Semer' && !s.geste.off, JSON.stringify(s));
+  R.check('parcelle : rien de semé, semer coûte 2 Énergie', s && /Rien n’est semé\. Semer coûte 2 Énergie\./.test(s.now) && s.geste?.label === 'Semer · 2' && !s.geste.off, JSON.stringify(s));
   await geste(page);
   R.check('semé : enregistré à la date du jour, 2 Énergie dépensées', await L.waitFor(() => {
     const g = srv.game();
     return (g?.parcelles || []).some((p) => p.id === 'parcelle-1' && p.semeLe === ymd(0)) && g.resources.energy === g0.resources.energy - 2;
   }, 5000), JSON.stringify(srv.game()?.parcelles));
   s = await L.waitFor(async () => { const x = await sheet(page); return /^Semé le [^,]+, mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
-  R.check('en terre : « Semé le …, mûr dans 5 jours de passage », « Récolter » en attente', s && s.geste?.label === 'Récolter' && s.geste.off, JSON.stringify(s));
+  R.check('en terre : « Semé le …, mûr dans 5 jours de passage », « Récolter dans 5 jours » en attente', s && s.geste?.label === 'Récolter dans 5 jours' && s.geste.off, JSON.stringify(s));
   await closeBat(page);
 
   // ───── cinq jours de passage : « Jour suivant » seulement, aucune quête
@@ -106,14 +106,14 @@ L.runScenario('15. potager : chalet, semis, jours de passage, récolte, famille'
   }, 5000), JSON.stringify(srv.game()?.resources));
   await closeBat(page);
   s = await openBat(page, 'chalet-1');
-  R.check('chalet : « Accueillir une famille » possible maintenant', s && !s.geste?.off && /Personne n’y vit encore/.test(s.now), JSON.stringify(s));
+  R.check('chalet : « Accueillir une famille » possible maintenant', s && !s.geste?.off && /^0 habitant pour 2 places au village\./.test(s.now), JSON.stringify(s));
   await geste(page);
   R.check('famille accueillie : 1 habitant, 18 Nourriture dépensées', await L.waitFor(() => {
     const g = srv.game();
     return g?.habitants === 1 && g.resources.food === g0.resources.food + 4 - 18;
   }, 5000), JSON.stringify({ h: srv.game()?.habitants, r: srv.game()?.resources }));
-  s = await L.waitFor(async () => { const x = await sheet(page); return /^1 habitant sur 2/.test(x.now) ? x : null; }, 3000);
-  R.check('la fiche le dit : « 1 habitant sur 2 »', !!s, JSON.stringify(await sheet(page)));
+  s = await L.waitFor(async () => { const x = await sheet(page); return /^1 habitant pour 2 places au village\./.test(x.now) ? x : null; }, 3000);
+  R.check('la fiche le dit : « 1 habitant pour 2 places au village »', !!s, JSON.stringify(await sheet(page)));
   R.check('le compteur Habitants affiche 1', await L.waitFor(async () => (await L.resValue(page, 'habitants')) === 1, 3000), String(await L.resValue(page, 'habitants')));
   R.check('aucun défilement horizontal', await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   await shot(page, '15-famille');

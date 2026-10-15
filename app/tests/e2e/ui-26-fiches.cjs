@@ -1,5 +1,5 @@
-// 26. Fiches des bâtiments : un vrai toucher sur la carte ouvre la fiche ; trois lignes (« Ce que c’est », « Ce que ça
-// fait », « Maintenant ») ; un geste verrouillé reste visible, à plat, avec sa raison écrite et un cadenas, et l'activer
+// 26. Fiches des bâtiments : un vrai toucher sur la carte ouvre la fiche ; sous le nom, la ligne d'ambiance ; à bâtir, ce
+// que ça fera, puis le prix en pastilles (lot L) ; un geste verrouillé reste visible, à plat, avec sa raison écrite et un cadenas, et l'activer
 // ne fait que redire la raison ; cibles de 44 px ; au clavier, « Carte en liste » mène à la même fiche et le geste se
 // fait avec Entrée ; la liste montre l'état de chaque emplacement. Titres fictifs.
 const L = require('./lib.cjs');
@@ -18,7 +18,9 @@ const sheetInfo = (page) => page.evaluate(() => {
   const th = d.querySelector('.bat-thumb');
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', nom: txt(d.querySelector('.bat-nom')),
-    labels: [...d.querySelectorAll('.help-lines dt')].map(txt), values: [...d.querySelectorAll('.help-lines dd')].map(txt),
+    ambiance: txt(d.querySelector('.bat-ambiance')), apercu: txt(d.querySelector('.bat-etat[data-etat="apercu"] .bat-etat-texte')),
+    now: txt(d.querySelector('#bat-now')), nowLu: !!d.querySelector('#bat-now.sr-only'), anciennes: d.querySelectorAll('.help-line').length,
+    pastilles: [...d.querySelectorAll('.qrt-pastilles .pastille')].map((p) => `${p.dataset.res} ${txt(p)}${p.hasAttribute('data-manque') ? ' manque' : ''}`).join(', '),
     raison: txt(d.querySelector('#bat-raison')), cadenas: !!d.querySelector('#bat-raison use[href$="#i-lock"]'),
     geste: b ? { label: txt(b), off: b.getAttribute('aria-disabled') === 'true', desc: b.getAttribute('aria-describedby'), cadenas: !!b.querySelector('use[href$="#i-lock"]'), box: box(b) } : null,
     fermer: box(d.querySelector('[data-close]')),
@@ -43,7 +45,7 @@ const hitPoint = (page, id) => page.evaluate((id) => {
   return null;
 }, id);
 
-L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier', async ({ R, srv, newPage, shot }) => {
+L.runScenario('26. fiches des bâtiments : ambiance, prix en pastilles, verrou, 44 px, clavier', async ({ R, srv, newPage, shot }) => {
   const { page } = await newPage();
   await page.addInitScript(L.VOICES);
   await page.goto(srv.url);
@@ -59,9 +61,10 @@ L.runScenario('26. fiches des bâtiments : trois lignes, verrou, 44 px, clavier'
   const s = await L.waitFor(async () => { const x = await sheetInfo(page); return x.open ? x : null; }, 3000);
   R.check('le toucher ouvre sa fiche', s && s.id === 'grenier-1' && s.nom === 'Emplacement du grenier', JSON.stringify(s));
   if (!s) return;
-  R.check('trois lignes : Ce que c’est, Ce que ça fait, Maintenant', s.labels.join('|') === 'Ce que c’est|Ce que ça fait|Maintenant' && s.values.every(Boolean), JSON.stringify(s.labels));
-  R.check('« Ce que ça fait » : le stockage en plus', s.values[1] === 'Garde 40 Nourriture de plus en réserve.', s.values[1]);
-  R.check('« Maintenant » : le coût, puis la raison du verrou avec un cadenas', s.values[2].startsWith('Coûte 30 Matériaux.') && s.raison === 'Hameau : encore 3 habitants.' && s.cadenas, JSON.stringify([s.values[2], s.raison, s.cadenas]));
+  R.check('sous le nom, la ligne d’ambiance ; plus les trois lignes d’aide', s.ambiance === 'Un grand terrain plat, piqueté pour un grenier.' && s.anciennes === 0, JSON.stringify([s.ambiance, s.anciennes]));
+  R.check('en tête, ce que ça fera : le stockage en plus', s.apercu === 'Garde 40 Nourriture de plus en réserve.', s.apercu);
+  R.check('le prix en pastilles (30 Matériaux, en pointillés s’il en manque), dit par la phrase lue', s.pastilles === `materiaux 30${g0.resources.materials < 30 ? ' manque' : ''}` && s.now === 'Coûte 30 Matériaux.' && s.nowLu, JSON.stringify([s.pastilles, s.now, s.nowLu]));
+  R.check('la raison du verrou reste écrite, avec un cadenas (elle ne dit pas un manque)', s.raison === 'Hameau : encore 3 habitants.' && s.cadenas, JSON.stringify([s.raison, s.cadenas]));
   R.check('geste verrouillé : visible, aria-disabled, décrit par la raison, cadenas', s.geste && s.geste.label === 'Bâtir' && s.geste.off && s.geste.desc === 'bat-raison' && s.geste.cadenas, JSON.stringify(s.geste));
   R.check('cibles de 44 px : geste et fermeture', s.geste.box[0] >= 44 && s.geste.box[1] >= 44 && s.fermer[0] >= 44 && s.fermer[1] >= 44, JSON.stringify([s.geste.box, s.fermer]));
   R.check('la fiche montre le dessin de la carte', s.vignette);

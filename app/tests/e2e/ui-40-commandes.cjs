@@ -81,7 +81,7 @@ const fiche = (page) => page.evaluate(() => {
   const dd = [...(c?.querySelectorAll('.commande-troc dd') || [])];
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', commande: !!c, visiteur: c?.dataset.visiteur || '', etat: c?.dataset.etat || '',
-    nom: s(c?.querySelector('.commande-titre > span')?.textContent), jours: s(c?.querySelector('.commande-jours')?.textContent),
+    nom: s(c?.querySelector('.commande-titre > span')?.textContent), jours: s(c?.querySelector('.commande-jours')?.textContent), quai: s(d.querySelector('#bat-now')?.textContent),
     demande: s(dd[0]?.textContent), laisse: s(dd[1]?.textContent), taille: s(c?.querySelector('.commande-taille')?.textContent),
     raison: s(c?.querySelector('.commande-raison')?.textContent), fait: s(c?.querySelector('.commande-fait')?.textContent),
     go: go ? { label: go.getAttribute('aria-label'), off: go.getAttribute('aria-disabled') === 'true', primaire: go.classList.contains('btn--primary'), h: gr.height, w: gr.width } : null,
@@ -173,7 +173,7 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
     let f = await ouvrirParBandeau(page, compact);
     const demande0 = demandeText(cmd0.demande);
     R.check('fiche : la commande du visiteur, au-dessus du comptoir', f.id === 'quai-1' && f.visiteur === v0 && f.nom === BAT.commande[`${v0}.nom`] && f.avantComptoir, JSON.stringify([f.id, f.visiteur, f.nom, f.avantComptoir]));
-    R.check('fiche : ses jours (« encore 2 jours ») et sa demande, à la taille régulière', f.jours === 'encore 2 jours' && sp(f.demande.replace(/\+/g, ' ')) === demande0 && !f.taille, JSON.stringify([f.jours, f.demande, demande0, f.taille]));
+    R.check('fiche : les jours dits une seule fois (« encore 2 jours », dans l’état du quai) et sa demande, à la taille régulière', !f.jours && /encore 2 jours\.$/.test(f.quai) && sp(f.demande.replace(/\+/g, ' ')) === demande0 && !f.taille, JSON.stringify([f.jours, f.quai, f.demande, demande0, f.taille]));
     R.check('fiche : « Livrer » est l’action principale, la seule de la fiche, 44 px au moins, et dit tout', f.go && !f.go.off && f.go.primaire && f.primaires === 1 && f.go.h >= 43.99 && f.go.label === `Livrer ${demande0} ${au(v0)}`, JSON.stringify([f.go, f.primaires]));
     R.check('fiche : rien ne déborde', f.debord.length === 0, JSON.stringify(f.debord));
     await shot(page, '40-commande');
@@ -230,7 +230,7 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
     const b4 = await bandeau(page);
     R.check('lundi : « Commande au quai, encore 7 jours »', b4.text === 'Commande au quai, encore 7 jours' && !b4.livree, JSON.stringify(b4));
     f = await ouvrirParBandeau(page, compact);
-    R.check('lundi : la commande du nouveau visiteur, pas livrée', f.visiteur === v1 && f.etat !== 'fait' && f.jours === 'encore 7 jours', JSON.stringify([f.visiteur, f.etat, f.jours]));
+    R.check('lundi : la commande du nouveau visiteur, pas livrée ; l’état du quai dit « encore 7 jours »', f.visiteur === v1 && f.etat !== 'fait' && !f.jours && /encore 7 jours\.$/.test(f.quai), JSON.stringify([f.visiteur, f.etat, f.jours, f.quai]));
     await fermer(page);
     const label3 = await page.evaluate(() => document.querySelector('.ow-ent[data-id="quai-1"]').getAttribute('aria-label'));
     R.check('lundi : le bateau du nouveau visiteur est au quai', sp(label3).includes(BAT.etat[`quai.commande.${v1}`]), label3);

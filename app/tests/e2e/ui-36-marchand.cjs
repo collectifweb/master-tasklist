@@ -198,12 +198,14 @@ const res = (g) => JSON.stringify(g.resources);
     await L.said(page, true);
     const l0 = srv.ledger().length;
     // un double toucher dont le second tombe sur une autre offre (une ligne qui se décale sous le doigt) : la garde vaut pour
-    // toute la fiche pendant 800 ms. On note où tombent les touchers, pour que le contrôle prouve quelque chose.
+    // toute la fiche pendant 800 ms. On note où tombent les touchers, pour que le contrôle prouve quelque chose. Le second
+    // bouton est visé après le premier toucher : l'échange peut faire remonter le comptoir (la raison « Il manque… » de la
+    // commande, au-dessus, disparaît), et le toucher doit tomber sur un bouton ouvert.
     const pt = await centre(page, btn('energie-materiaux'));
-    const pt2 = await centre(page, btn('nourriture-energie'));
     await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(`${e.target.closest('.offre')?.dataset.offre}:${!!e.target.closest('.offre-go:not([aria-disabled])')}`), true); });
     await page.touchscreen.tap(pt[0], pt[1]);
     await page.waitForTimeout(150);
+    const pt2 = await centre(page, btn('nourriture-energie'));
     await page.touchscreen.tap(pt2[0], pt2[1]);
     const taps = await page.evaluate(() => window.__taps);
     R.check('double toucher : les deux touchers tombent sur deux boutons « Échanger » ouverts', JSON.stringify(taps) === JSON.stringify(['energie-materiaux:true', 'nourriture-energie:true']), JSON.stringify(taps));

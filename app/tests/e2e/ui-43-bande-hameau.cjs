@@ -166,7 +166,7 @@ L.runScenario('43. La bande de terrain du Hameau', async ({ R, srv, newPage, siz
     await pb.addInitScript(L.VOICES);
     await pb.goto(sB.url);
     await L.ready(pb);
-    const ouverture = await bande(pb);
+    const ouverture = await L.waitFor(() => bande(pb), 3000, 50); // le monde la dessine juste après « prêt » (moins de 300 ms)
     R.check('déjà au Hameau : la bande est là dès l’ouverture, sans moment', !!ouverture && !ouverture.bouge, JSON.stringify(ouverture));
     await L.closeWelcome(pb);
     await L.openPanel(pb);

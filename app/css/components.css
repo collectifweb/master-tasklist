@@ -1994,6 +1994,13 @@ button.quest-check:active .quest-check-ring {
   color: var(--text-soft);
   white-space: nowrap;
 }
+/* Pastille de gain (lot L) : « +5 » puis le picto, en galet ; cochée quand le gain du jour est déjà donné */
+.pastille--gain {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+}
+.pastille--gain .pastille-coche { width: 18px; height: 18px; }
 
 /* Crans (lot L) : une barre de jours, pleins jusqu'au compte. Sauge pour ce qui pousse, airelle pour le prochain permis ;
    vide, un filet de papier creusé. Toujours accompagnés d'une phrase : le dessin est muet. */
@@ -2012,6 +2019,9 @@ button.quest-check:active .quest-check-ring {
   background: var(--c-sunken);
 }
 .crans > span[data-plein] { border-color: var(--cran); background: var(--cran); }
+/* en petit, dans le cycle d'une parcelle vide : un cran par jour à attendre, tous pleins */
+.crans--mini { --cran: var(--c-sage); gap: 3px; align-items: center; height: 36px; }
+.crans--mini > span { flex: none; width: 10px; height: 14px; border-radius: 5px; }
 
 /* Bandeau de la fiche : Cote, statut, secteur */
 .fiche-summary {

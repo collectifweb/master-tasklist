@@ -15,12 +15,12 @@
 import {
   QUARTIERS, EFFETS_QUARTIERS, niveauDe, niveauMax, valeur, coutNiveau, refusMonter,
   quartierOfTask, potagerOuvert, compte, gameDay, PLACE_ID, repasDeLaSemaine, refusServirRepas, objectifSaison,
-  OBJECTIFS_SAISON, refusFaireLesSucres, manqueDetail,
+  OBJECTIFS_SAISON, refusFaireLesSucres,
 } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, esc, icon, setHtml, setText } from './dom.js';
 import { num } from './format.js';
-import { ressource, ressourcesText, resHtml } from './batiment.js';
+import { ressource, ressourcesText, resHtml, pastillesDe, prixRangHtml } from './batiment.js';
 
 /** « 6 Nourriture par récolte du potager » : l'effet d'un niveau, sans point final (valeur au niveau n, 0 = départ). */
 export function effetText(quartier, n) {
@@ -96,13 +96,6 @@ function compareModel(game, quartier, niveau, max) {
   };
 }
 
-/** Pastilles du prix : [{ res, n, manque }], dans l'ordre de la barre (permis, Énergie, Matériaux) ; manque à 0 s'il y en a assez. */
-function pastillesModel(game, cout) {
-  const d = manqueDetail(game, cout);
-  return [['permis', 'permis'], ['energie', 'energy'], ['materiaux', 'materials']]
-    .filter(([, k]) => cout[k]).map(([res, k]) => ({ res, n: cout[k], manque: d[k] }));
-}
-
 /**
  * Modèle de la fiche : { id, nom, ligne, niveau, max, compare, maintenant, suivant: { n } | null, pastilles, prixSr,
  * regle, raison, quetes, repas, sucres } (repas et sucres : la Place seulement, voir repasModel et sucresModel).
@@ -127,7 +120,7 @@ export function quartierModel(c, quartier) {
     compare: compareModel(game, quartier, niveau, max),
     maintenant,
     suivant: cout ? { n: niveau + 1 } : null,
-    pastilles: cout ? pastillesModel(game, cout) : [],
+    pastilles: cout ? pastillesDe(game, cout) : [],
     prixSr: cout ? t('quartier.fiche.prix.sr', { cout: prixText(cout) }) : '',
     regle: t('quartier.fiche.regle', { depart: effetText(quartier, 0), niveaux: liste(niveaux.map((_, i) => String(i + 1))), valeurs: liste(niveaux.map(num)) }),
     raison: cout ? refusMonter(game, ledger, { quartier }) : null,
@@ -196,9 +189,7 @@ function compareHtml(c) {
 // Le prix en pastilles, muettes ; la phrase lue (#qrt-prix) décrit le bouton d'achat. Une pastille qui manque passe en
 // pointillés, avec « il manque N » dessous.
 function prixHtml(m) {
-  const pastille = (p) => `<span class="pastille-prix"><span class="pastille" data-res="${p.res}"${p.manque ? ' data-manque' : ''}>${icon(p.res)}<b>${esc(num(p.n))}</b></span>${
-    p.manque ? `<span class="pastille-manque">${esc(t('quartier.prix.manque', { n: num(p.manque) }))}</span>` : ''}</span>`;
-  return `<div class="qrt-prix" aria-hidden="true"><p class="qrt-prix-t">${esc(t('quartier.fiche.prix'))}</p><div class="qrt-pastilles">${m.pastilles.map(pastille).join('')}</div></div>
+  return `${prixRangHtml(m.pastilles)}
     <p class="sr-only" id="qrt-prix">${esc(m.prixSr)}</p>${m.raison ? `<p class="sr-only" id="qrt-raison">${esc(m.raison)}</p>` : ''}`;
 }
 

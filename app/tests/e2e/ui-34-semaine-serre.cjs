@@ -333,7 +333,7 @@ const jourSuivant = async (page, srv, k) => {
 
       // semer serre-2 en hiver : 2 Énergie de semis + 3 de chauffage, dits sur la fiche
       let f = await openBat(pb, 'serre-2');
-      R.check('fiche serre-2 : « Petite serre », coût de semis avec chauffage l’hiver', f && f.nom === 'Petite serre' && /Rien n’est semé\. Semer coûte 2 Énergie, plus 3 Énergie de chauffage jusqu’à la fin d’avril\./.test(f.now) && f.geste?.label === 'Semer' && !f.geste.off, JSON.stringify(f));
+      R.check('fiche serre-2 : « Petite serre », coût de semis avec chauffage l’hiver', f && f.nom === 'Petite serre' && /Rien n’est semé\. Semer coûte 2 Énergie, plus 3 Énergie de chauffage jusqu’à la fin d’avril\./.test(f.now) && f.geste?.label === 'Semer · 5' && !f.geste.off, JSON.stringify(f));
       const e0 = srvB.game().resources.energy;
       await pb.click('#dlg-batiment [data-action="bat-geste"]');
       R.check('serre-2 semée : enregistrée à la date du jour, 5 Énergie dépensées (semis et chauffage)', await L.waitFor(() => {
@@ -341,7 +341,7 @@ const jourSuivant = async (page, srv, k) => {
         return (g?.parcelles || []).some((p) => p.id === 'serre-2' && p.semeLe === ymdJ(0)) && g.resources.energy === e0 - 5;
       }, 5000), JSON.stringify([srvB.game()?.parcelles, srvB.game()?.resources]));
       f = await L.waitFor(async () => { const x = await fiche(pb); return /^Semé le [^,]+, mûr dans 5 jours de passage/.test(x.now) ? x : null; }, 3000);
-      R.check('serre-2 en terre : « Semé le …, mûr dans 5 jours de passage » (jamais « .. » après une date abrégée), « Récolter » en attente', f && !/\.\./.test(f.now) && f.geste?.label === 'Récolter' && f.geste.off, JSON.stringify(f));
+      R.check('serre-2 en terre : « Semé le …, mûr dans 5 jours de passage » (jamais « .. » après une date abrégée), « Récolter dans 5 jours » en attente', f && !/\.\./.test(f.now) && f.geste?.label === 'Récolter dans 5 jours' && f.geste.off, JSON.stringify(f));
       await closeBat(pb);
       const un = await openBat(pb, 'serre-1');
       R.check('serre-1 reste vide : la 2e serre se sème seule', un && /^Rien n’est semé\./.test(un.now), JSON.stringify(un));

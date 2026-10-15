@@ -929,6 +929,14 @@
       "description": "Jours qui comptent (lot L) : barres égales, creuses sur papier creusé, pleines dans l'encre de la ressource (sauge profonde par défaut, airelle pour le prochain permis). Cachées au lecteur d'écran : le délai écrit à côté les dit.",
       "html": "<span class=\"ds-crans\"><span data-plein></span><span></span><span></span><span></span></span>",
       "css": ".ds-crans{display:flex;gap:6px;width:240px}.ds-crans>span{flex:1;height:14px;box-sizing:border-box;border:1.5px solid var(--c-line-strong);border-radius:7px;background:var(--c-sunken)}.ds-crans>span[data-plein]{border-color:var(--c-airelle-ink);background:var(--c-airelle-ink)}"
+    },
+    {
+      "name": "Pastille de gain",
+      "kind": "custom",
+      "refersTo": "pastille--gain",
+      "description": "Gain d'un bâtiment (lot L) : « +5 » puis le picto, en galet sur le lavis de la ressource. Cochée quand le gain du jour est déjà donné. Le mot est lu, pas écrit.",
+      "html": "<span class=\"ds-pastilles\"><span class=\"ds-gain\">+5</span><span class=\"ds-gain ds-gain--energie\">✓ +3</span></span>",
+      "css": ".ds-pastilles{display:flex;gap:10px}.ds-gain{display:inline-flex;align-items:center;height:36px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:var(--c-sage-wash);color:var(--c-sage-deep);font-family:var(--font-num);font-size:1.125rem;font-weight:800}.ds-gain--energie{background:var(--c-glass-wash);color:var(--c-glass-deep)}"
     }
   ],
   "narrative": {
