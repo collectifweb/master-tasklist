@@ -2015,13 +2015,13 @@ button.quest-check:active .quest-check-ring {
   height: 14px;
   box-sizing: border-box;
   border: 1.5px solid var(--c-line-strong);
-  border-radius: 7px;
+  border-radius: var(--r-pill);
   background: var(--c-sunken);
 }
 .crans > span[data-plein] { border-color: var(--cran); background: var(--cran); }
 /* en petit, dans le cycle d'une parcelle vide : un cran par jour à attendre, tous pleins */
 .crans--mini { --cran: var(--c-sage); gap: 3px; align-items: center; height: 36px; }
-.crans--mini > span { flex: none; width: 10px; height: 14px; border-radius: 5px; }
+.crans--mini > span { flex: none; width: 10px; height: 14px; border-radius: var(--r-pill); }
 
 /* Bandeau de la fiche : Cote, statut, secteur */
 .fiche-summary {

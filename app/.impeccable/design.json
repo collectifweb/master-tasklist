@@ -936,7 +936,7 @@
       "refersTo": "crans",
       "description": "Jours qui comptent (lot L) : barres égales, creuses sur papier creusé, pleines dans l'encre de la ressource (sauge profonde par défaut, airelle pour le prochain permis). Cachées au lecteur d'écran : le délai écrit à côté les dit.",
       "html": "<span class=\"ds-crans\"><span data-plein></span><span></span><span></span><span></span></span>",
-      "css": ".ds-crans{display:flex;gap:6px;width:240px}.ds-crans>span{flex:1;height:14px;box-sizing:border-box;border:1.5px solid var(--c-line-strong);border-radius:7px;background:var(--c-sunken)}.ds-crans>span[data-plein]{border-color:var(--c-airelle-ink);background:var(--c-airelle-ink)}"
+      "css": ".ds-crans{display:flex;gap:6px;width:240px}.ds-crans>span{flex:1;height:14px;box-sizing:border-box;border:1.5px solid var(--c-line-strong);border-radius:var(--r-pill);background:var(--c-sunken)}.ds-crans>span[data-plein]{border-color:var(--c-airelle-ink);background:var(--c-airelle-ink)}"
     },
     {
       "name": "Cases de permis",
