@@ -2023,7 +2023,7 @@ Réponse d'Alex : les répliques de Fanal aux niveaux 2 et 3, plus tard ; « tu 
 - [x] Poulailler et cabane : « à ta prochaine quête terminée aujourd'hui » devient « à ton prochain passage au village », comme la scierie et l'éolienne (le temps du jeu passe à l'ouverture, au retour dans l'onglet et après une quête, `js/main.js`).
 - [x] Ligne de la cabane raccourcie, de 129 à 80 caractères : « Une cabane de bois rond et son lanterneau. Au printemps, l'eau d'érable y bout. »
 - [x] Cache `oree-coquille-v31` (les textes sont dans la coquille).
-Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (84), 19 (81), 44 (74) et 45 (78) réussis aux trois largeurs. Envoi : étiquette `v2.16.1`, sur l'accord d'Alex.
+Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (84), 19 (81), 44 (74) et 45 (78) réussis aux trois largeurs. Envoyé sur l'accord d'Alex (« Oui, envoie la v2.16.1 »), étiquette `v2.16.1`, à 23 h 26 : contrôles de l'envoi comme attendu (cache v31, pas de bac à sable, `main` sur GitHub = v2.16.1) ; 5 fichiers servis comparés à l'étiquette, identiques.
 
 ### Relevé par la critique, hors de ce lot
 - Deux sortes de jours (« de passage » pour les cultures, « travaillés » pour les permis) : une règle du jeu, à discuter à part.
