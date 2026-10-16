@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.15.1 est en ligne depuis le 12 octobre 2026. La version 2.16 est prête pour le prochain envoi : des fiches qu’on lit d’un coup d’œil, avec moins de texte. Monter un quartier montre l’avant et l’après du niveau (« 4 → 5 ») et se termine sur une carte de récompense. Un bâtiment dit d’abord son état, avec des crans pour les jours qui restent. Les permis ont leur propre fiche, en cases. Le catalogue « Construire » a deux onglets et montre d’un coup d’œil l’effet et le prix de chaque bâtiment. Sur la carte, une bulle signale ce qui attend un geste, et une récolte se fait d’un toucher. Elle emporte aussi « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés.
+La version 2.16 est en ligne depuis le 15 octobre 2026 : des fiches qu’on lit d’un coup d’œil, avec moins de texte.
 
 ## Fait
 
@@ -34,6 +34,7 @@ La version 2.15.1 est en ligne depuis le 12 octobre 2026. La version 2.16 est pr
 | 2.14.1 | 12 octobre | Un correctif pour Safari : sur iPhone, les fiches se réduisaient à une bande d’une ligne. Confirmé depuis sur l’iPhone d’une amie. |
 | 2.15 | 12 octobre | La mise à jour depuis GitHub, par un bouton des Réglages, pour qui installe le jeu chez soi. Coupée sur l’installation d’Alex. |
 | 2.15.1 | 12 octobre | Le texte du total, dans la fiche « Pourquoi ? » de la Cote, avait un double espace que le navigateur cachait : corrigé. Avec la vidéo dans le README et cette feuille de route. |
+| 2.16 | 15 octobre | Des fiches qu’on lit d’un coup d’œil, avec moins de texte. Monter un quartier montre l’avant et l’après du niveau (« 4 → 5 ») et se termine sur une carte de récompense. Un bâtiment dit d’abord son état, avec des crans pour les jours qui restent. Les permis ont leur propre fiche, en cases. Le catalogue « Construire » a deux onglets et montre l’effet et le prix de chaque bâtiment. Sur la carte, une bulle signale ce qui attend un geste, et une récolte se fait d’un toucher. Avec « L’Orée » dans le dernier texte qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
