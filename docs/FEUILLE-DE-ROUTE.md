@@ -2,11 +2,11 @@
 
 Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour à chaque envoi en production. Le détail de chaque lot (mesures, essais, décisions) est dans `tasks/todo.md`. Les règles du jeu sont dans `docs/BIBLE-JEU.md`.
 
-*Dernière mise à jour : 12 octobre 2026.*
+*Dernière mise à jour : 15 octobre 2026.*
 
 ## Où en est le jeu
 
-La version 2.15.1 est en ligne depuis le 12 octobre 2026. Prêt pour le prochain envoi, sans rien de visible : « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés.
+La version 2.15.1 est en ligne depuis le 12 octobre 2026. La version 2.16 est prête pour le prochain envoi : des fiches qu’on lit d’un coup d’œil, avec moins de texte. Monter un quartier montre l’avant et l’après du niveau (« 4 → 5 ») et se termine sur une carte de récompense. Un bâtiment dit d’abord son état, avec des crans pour les jours qui restent. Les permis ont leur propre fiche, en cases. Le catalogue « Construire » a deux onglets et montre d’un coup d’œil l’effet et le prix de chaque bâtiment. Sur la carte, une bulle signale ce qui attend un geste, et une récolte se fait d’un toucher. Elle emporte aussi « L’Orée » dans le dernier texte du jeu qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés.
 
 ## Fait
 
