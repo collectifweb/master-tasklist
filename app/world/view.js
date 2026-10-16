@@ -1,12 +1,15 @@
 // Ce que le monde doit montrer, dérivé de l'état du jeu et des quêtes. Fonction pure (aucun DOM) :
 // le monde et la carte en liste lisent la même vue, donc ils disent toujours la même chose.
 import { QUARTIER_IDS, quartierOfTask } from '../core/domains.js';
-import { niveauDe, niveauMax } from '../core/quartiers.js';
+import { niveauDe, niveauMax, refusMonter } from '../core/quartiers.js';
 import { gameDay, daysUntil, daysBetween, dayOf, isSnowSeason, weekStart } from '../core/time.js';
 import { findAnchors } from '../core/infer.js';
-import { BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements, produitCeJour, PRODUCTION } from '../core/batiments.js';
+import {
+  BATIMENTS, BATIMENT_IDS, batimentsDuVillage, etatCulture, refusConstruire, logements, produitCeJour, PRODUCTION, recolteDe, stockage,
+  refusAccueillir,
+} from '../core/batiments.js';
 import { placesParChalet } from '../core/quartiers.js';
-import { visiteurDeLaSemaine, commandeDeLaSemaine } from '../core/visiteurs.js';
+import { visiteurDeLaSemaine, commandeDeLaSemaine, refusLivrer } from '../core/visiteurs.js';
 import { IMPREVUS, degatDe } from '../core/imprevus.js';
 import { alerteTempete } from '../core/hiver.js';
 import { bandesGagnees } from '../core/village.js';
@@ -19,11 +22,13 @@ export const CRATE_DAYS = 7;
 
 /**
  * Un quartier : son niveau acheté (game.niveaux, core/quartiers.js), le plus haut possible, et ses quêtes à faire
- * (quetes : celles que « Voir les quêtes » montre). Tous les quartiers sont ouverts.
+ * (quetes : celles que « Voir les quêtes » montre). Tous les quartiers sont ouverts. monte : le niveau qu'on peut acheter
+ * maintenant (refusMonter vide, la pastille de sa plaque, lot L), sinon 0.
  */
-export function sectorView(id, game, tasks = []) {
+export function sectorView(id, game, tasks = [], ledger = []) {
   const quetes = tasks.filter((t) => t && t.status === 'todo' && quartierOfTask(t) === id).length;
-  return { id, niveau: niveauDe(game, id), max: niveauMax(id), quetes };
+  const niveau = niveauDe(game, id);
+  return { id, niveau, max: niveauMax(id), quetes, monte: game.resources && !refusMonter(game, ledger, { quartier: id }) ? niveau + 1 : 0 };
 }
 
 /**
@@ -34,6 +39,10 @@ export function sectorView(id, game, tasks = []) {
  * places : places par chalet (École) ; visiteur : sur le quai debout, { id, joursRestants } du visiteur de la semaine ;
  * commande : sur le quai debout, { id, livree } du visiteur à commande de la semaine (lot C) ;
  * degat : sur un bâtiment debout touché par un mauvais imprévu (core/imprevus.js), { type, joursRestants }.
+ * bulle (lot L) : ce qui attend un geste, lu au cœur. { kind: 'recolte', n, direct } sur une culture mûre (n : la récolte ;
+ * direct : elle tient entière dans la réserve, sans dégât, et un toucher sur la bulle la fait) ; { kind: 'famille' } sur le
+ * premier chalet qui a une place, quand une famille peut venir (refusAccueillir vide) ; { kind: 'commande' } sur le quai,
+ * quand la commande de la semaine peut partir (refusLivrer vide).
  * Un emplacement posé sur une bande de terrain n'y est qu'une fois la bande gagnée (lot B).
  */
 export function batimentsView(game, ledger = [], now = new Date()) {
@@ -42,6 +51,7 @@ export function batimentsView(game, ledger = [], now = new Date()) {
   let loges = logements(g).habitants;
   const places = placesParChalet(g);
   const bandes = bandesGagnees(g.habitants);
+  let famille = !refusAccueillir(g);
   const out = [];
   for (const type of BATIMENT_IDS) {
     EMPLACEMENTS[type].forEach((slot, i) => {
@@ -53,20 +63,28 @@ export function batimentsView(game, ledger = [], now = new Date()) {
         const c = etatCulture(g, ledger, id, now);
         b.etat = !c.semee ? 'bati' : c.mure ? 'mure' : c.jours > 0 ? 'pousse' : 'seme';
         b.reste = c.reste;
+        if (c.mure) b.bulle = { kind: 'recolte', n: recolteDe(g, BATIMENTS[type].culture), direct: false };
       } else {
         b.etat = 'bati';
-        if (type === 'chalet') { b.occupants = Math.min(places, loges); loges -= b.occupants; }
+        if (type === 'chalet') {
+          b.occupants = Math.min(places, loges); loges -= b.occupants;
+          if (famille && b.occupants < places) { b.bulle = { kind: 'famille' }; famille = false; }
+        }
         if (type === 'cabane' && produitCeJour('cabane', gameDay(now))) b.etat = 'sucres'; // le temps des sucres : elle fume
         if (type === 'quai') {
           const v = visiteurDeLaSemaine(g, now);
           if (v) b.visiteur = { id: v.id, joursRestants: v.joursRestants };
           const c = commandeDeLaSemaine(g, ledger, now);
           if (c) b.commande = { id: c.id, livree: c.livree };
+          if (c && !c.livree && !refusLivrer(g, ledger, {}, now)) b.bulle = { kind: 'commande' };
         }
       }
       if (b.bati) {
         const d = degatDe(g, id, now);
         if (d) b.degat = { type: d.type, joursRestants: d.joursRestants };
+        // la récolte d'un toucher : pas de dégât (l'ours prend sa part) et assez de place dans la réserve, sinon la fiche
+        // s'ouvre avec son avertissement (js/ui/batiment.js, la même comparaison)
+        if (b.bulle?.kind === 'recolte') b.bulle.direct = !d && stockage(g) - g.resources.food >= b.bulle.n;
       }
       out.push(b);
     });
@@ -89,7 +107,8 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const today = gameDay(now ?? new Date());
   const sectors = {};
   const list = Array.isArray(tasks) ? tasks : [];
-  for (const id of QUARTIER_IDS) sectors[id] = sectorView(id, g, list);
+  const reg = Array.isArray(ledger) ? ledger : [];
+  for (const id of QUARTIER_IDS) sectors[id] = sectorView(id, g, list, reg);
 
   const crates = [];
   for (const t of list) {
@@ -118,7 +137,6 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
     }
   }
 
-  const reg = Array.isArray(ledger) ? ledger : [];
   const batiments = batimentsView(g, reg, now ?? new Date());
   const imprevus = new Set();
   for (const e of reg) if (e && e.type === 'imprevu' && e.day === today && Object.hasOwn(IMPREVUS.bons, e.imprevu)) imprevus.add(e.imprevu);

@@ -432,6 +432,131 @@
 .ow-plaque[data-court] .ow-plaque-text,
 .ow[data-lod="loin"] .ow-plaque-text { display: none; }
 .ow[data-lod="loin"] .ow-ent.is-btn .ow-hit { pointer-events: none; }
+/* on peut monter ce quartier (lot L) : une pastille sauge au coin de sa plaque, chevron en papier ; la fiche dit le prix */
+.ow-plaque-monte {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 2px solid var(--c-paper);
+  border-radius: 50%;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  box-shadow: 0 1px 3px rgb(66 43 25 / 0.3);
+}
+.ow-plaque-monte[hidden] { display: none; }
+
+/* ---------------------------------------------------------------- bulles de la carte (lot L) */
+/* Au-dessus de ce qui attend un geste : un rond de 48 px en sauge profonde, cerclé de papier, son picto en papier, et une
+   queue qui pointe le bâtiment (48 × 56 : la cible dépasse 44 px). Pas de braise, réservée aux menaces. Elles flottent avec
+   l'ambiance de l'île, jamais en mouvement réduit. */
+.ow-bulles { position: absolute; left: 0; top: 0; z-index: 4; }
+.ow-bulle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-paper);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ow-bulle-flot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: ow-bulle-flot 2.8s var(--ease-inout) infinite;
+  animation-play-state: paused;
+}
+.ow-bulle-rond {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border: 3px solid var(--c-paper);
+  border-radius: 50%;
+  background: var(--c-sage-deep);
+  box-shadow: var(--shadow-hud);
+}
+.ow-bulle-queue {
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid var(--c-paper);
+}
+.ow-bulle:active .ow-bulle-rond { transform: scale(0.94); }
+.ow-bulle:focus { outline: none; }
+.ow-bulle:focus-visible .ow-bulle-rond { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+@keyframes ow-bulle-flot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.ow[data-mouvement="reduit"] .ow-bulle-flot { animation: none; }
+
+/* Flèche au bord : ce qui attend hors de la zone libre, de ce côté (chevron, picto, nombre au-delà de un) ; la toucher y
+   amène la caméra. Collée au bord de l'écran, de la barre du haut ou du panneau. */
+.ow-bords { position: absolute; inset: 0; z-index: 4; overflow: hidden; pointer-events: none; }
+.ow-bord {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 12px 0 6px;
+  border: 3px solid var(--c-paper);
+  border-left: 0;
+  border-radius: 0 24px 24px 0;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  box-shadow: var(--shadow-hud);
+  font-family: var(--font-num);
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ow-bord[hidden] { display: none; }
+.ow-bord[data-cote="droite"] { flex-direction: row-reverse; padding: 0 6px 0 12px; border-left: 3px solid var(--c-paper); border-right: 0; border-radius: 24px 0 0 24px; }
+.ow-bord[data-cote="haut"] { padding: 0 12px 0 8px; border-left: 3px solid var(--c-paper); border-top: 0; border-radius: 0 0 24px 24px; }
+.ow-bord[data-cote="bas"] { padding: 0 12px 0 8px; border-left: 3px solid var(--c-paper); border-bottom: 0; border-radius: 24px 24px 0 0; }
+.ow-bord-icone { display: grid; }
+.ow-bord-n:empty { display: none; }
+.ow-bord:focus { outline: none; }
+.ow-bord:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+
+/* la récolte d'une bulle en vol vers son compteur (fx.envol) */
+.ow-envol {
+  position: absolute;
+  left: -18px;
+  top: -18px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  border: 2px solid var(--c-paper);
+  border-radius: 50%;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  box-shadow: var(--shadow-hud);
+}
 
 .ow-tag {
   position: absolute;
@@ -567,7 +692,7 @@
 /* ---------------------------------------------------------------- ambiance : allumée tant que l'île est à l'écran, ou
    seulement après une activité en économie de batterie (lot E) ; jamais en mouvement réduit, onglet caché ou monde hors
    de l'écran (aucune image calculée alors) */
-.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r, .ow-hab-pas, .ow-hab-bob, .ow-hab-bras) {
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r, .ow-hab-pas, .ow-hab-bob, .ow-hab-bras, .ow-bulle-flot) {
   animation-play-state: running;
 }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }

@@ -32,6 +32,13 @@ const DEFAULTS = {
   'monde.quetes.place.one': '{n} autre quête à faire',
   'monde.quetes.place.other': '{n} autres quêtes à faire',
   'monde.plaque.label': '{quartier} : niveau {n}.',
+  'monde.plaque.monte': '{quartier} : niveau {n}. Tu peux monter au niveau {m}.',
+  'monde.bulle.recolte': '{nom} : récolter +{n} Nourriture', 'monde.bulle.recolte.fiche': '{nom} : récolte mûre, ouvrir la fiche',
+  'monde.bulle.famille': '{nom} : une famille peut venir', 'monde.bulle.commande': '{nom} : une commande est prête',
+  'monde.bord.recolte.one': '{n} récolte mûre hors de vue, {cote}', 'monde.bord.recolte.other': '{n} récoltes mûres hors de vue, {cote}',
+  'monde.bord.famille': 'Une famille peut venir, hors de vue, {cote}', 'monde.bord.commande': 'Une commande est prête, hors de vue, {cote}',
+  'monde.bord.mixte': '{n} choses prêtes hors de vue, {cote}',
+  'monde.bord.gauche': 'à gauche', 'monde.bord.droite': 'à droite', 'monde.bord.haut': 'en haut', 'monde.bord.bas': 'en bas',
   'monde.veille': 'Tout est enregistré. Les lanternes s’allument une à une.',
   'monde.reflet': '{objet} reluit {au_secteur}.',
   'monde.select.object': '{objet}, {au_secteur}.',
@@ -51,6 +58,7 @@ const DEFAULTS = {
   'monde.plan.show.label': 'Voir {secteur} sur la carte',
   'monde.plan.open': 'Ouvrir la fiche',
   'monde.plan.open.label': 'Ouvrir la fiche {du_secteur}',
+  'monde.plan.monte': 'Tu peux monter au niveau {m}.',
 };
 
 function flatten(obj, prefix = '', out = {}) {
@@ -86,7 +94,8 @@ export function batimentNom(t, b) {
  * attend sa commande »… Le
  * même texte sur la carte et dans la liste. Un dégât (lot I) passe devant : « en panne, repart seule dans 2 jours », « un
  * ours rôde, il repart demain · mûr, à récolter ».
- * Un chalet compte ses places dans b.places (École), 2 au départ.
+ * Un chalet compte ses places dans b.places (École), 2 au départ. Les bulles de la carte (lot L) s'y disent : « une famille
+ * peut venir » sur le chalet qui la porte, « tu peux la livrer » après la commande du quai.
  */
 export function batimentEtat(t, b) {
   if (!b.bati) return b.refus ? t('bat.etat.verrou', { raison: b.refus }) : t('bat.etat.libre', { geste: t(`bat.${b.type}.geste`).toLowerCase() });
@@ -100,11 +109,17 @@ function etatDebout(t, b) {
   if (b.etat === 'mure') return t('bat.etat.mure');
   if (b.etat === 'seme' || b.etat === 'pousse') return t(`bat.etat.pousse.${b.reste === 1 ? 'one' : 'other'}`, { n: b.reste });
   if (b.type === 'parcelle' || b.type === 'serre') return t('bat.etat.rien');
-  if (b.type === 'chalet') return t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
+  if (b.type === 'chalet') {
+    if (b.bulle?.kind === 'famille' && b.occupants === 0) return t('bat.etat.famille');
+    const n = t(`bat.etat.chalet.${b.occupants === 0 ? 'zero' : b.occupants === 1 ? 'one' : 'other'}`, { n: b.occupants, max: b.places ?? 2 });
+    return b.bulle?.kind === 'famille' ? `${n} · ${t('bat.etat.famille')}` : n;
+  }
   if (b.type === 'cabane') return t(`bat.etat.cabane.${b.etat === 'sucres' ? 'sucres' : 'dort'}`);
   if (b.type === 'quai' && b.visiteur) {
     const marchand = t(`bat.etat.quai.${b.visiteur.id}.${b.visiteur.joursRestants === 1 ? 'one' : 'other'}`, { n: b.visiteur.joursRestants });
-    return b.commande ? `${marchand} · ${t(`bat.etat.quai.${b.commande.livree ? 'livree' : 'commande'}.${b.commande.id}`)}` : marchand;
+    if (!b.commande) return marchand;
+    const c = t(`bat.etat.quai.${b.commande.livree ? 'livree' : 'commande'}.${b.commande.id}`);
+    return `${marchand} · ${c}${b.bulle?.kind === 'commande' ? `, ${t('bat.etat.quai.livrable')}` : ''}`;
   }
   return t('bat.etat.debout');
 }

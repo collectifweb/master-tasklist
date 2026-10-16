@@ -937,6 +937,22 @@
       "description": "Gain d'un bâtiment (lot L) : « +5 » puis le picto, en galet sur le lavis de la ressource. Cochée quand le gain du jour est déjà donné. Le mot est lu, pas écrit.",
       "html": "<span class=\"ds-pastilles\"><span class=\"ds-gain\">+5</span><span class=\"ds-gain ds-gain--energie\">✓ +3</span></span>",
       "css": ".ds-pastilles{display:flex;gap:10px}.ds-gain{display:inline-flex;align-items:center;height:36px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:var(--c-sage-wash);color:var(--c-sage-deep);font-family:var(--font-num);font-size:1.125rem;font-weight:800}.ds-gain--energie{background:var(--c-glass-wash);color:var(--c-glass-deep)}"
+    },
+    {
+      "name": "Bulle de la carte",
+      "kind": "custom",
+      "refersTo": "ow-bulle",
+      "description": "Ce qui attend un geste sur l'île (lot L) : rond de 48 px en sauge profonde cerclé de papier, picto en papier (panier de la récolte, famille, barque de la commande), queue qui pointe le bâtiment ; 48 × 56, ombre douce et chaude. Flotte de 4 px avec l'ambiance, immobile en mouvement réduit. Pas de braise. Un quartier qu'on peut monter porte une pastille de 24 px, chevron en papier, au coin de sa plaque.",
+      "html": "<span class=\"ds-bulle\"><span class=\"ds-bulle-rond\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3.5 11.5h17l-2.1 8.3H5.6zM9.4 14.3v2.9M14.6 14.3v2.9M7.8 11.5a4.2 4.2 0 0 1 8.4 0M12 7.3c0-1.3.6-2.5 1.7-3.2\"/></svg></span><span class=\"ds-bulle-queue\"></span></span>",
+      "css": ".ds-bulle{display:inline-flex;flex-direction:column;align-items:center;width:48px;height:56px;color:var(--c-paper)}.ds-bulle-rond{display:grid;place-items:center;width:48px;height:48px;box-sizing:border-box;border:3px solid var(--c-paper);border-radius:50%;background:var(--c-sage-deep);box-shadow:var(--shadow-hud)}.ds-bulle-queue{width:0;height:0;margin-top:-2px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--c-paper)}"
+    },
+    {
+      "name": "Flèche au bord",
+      "kind": "custom",
+      "refersTo": "ow-bord",
+      "description": "Ce qui attend un geste hors de la zone libre (lot L) : languette de 48 px collée au bord de ce côté, sauge profonde cerclée de papier, chevron, picto et nombre au-delà de un. La toucher amène la caméra dessus. Son nom lu dit quoi, combien et de quel côté.",
+      "html": "<span class=\"ds-bord\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m14.5 6-6 6 6 6\"/></svg><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3.5 11.5h17l-2.1 8.3H5.6zM9.4 14.3v2.9M14.6 14.3v2.9M7.8 11.5a4.2 4.2 0 0 1 8.4 0M12 7.3c0-1.3.6-2.5 1.7-3.2\"/></svg>2</span>",
+      "css": ".ds-bord{display:inline-flex;align-items:center;gap:4px;height:48px;box-sizing:border-box;padding:0 12px 0 6px;border:3px solid var(--c-paper);border-left:0;border-radius:0 24px 24px 0;background:var(--c-sage-deep);color:var(--c-paper);box-shadow:var(--shadow-hud);font-family:var(--font-num);font-size:1.125rem;font-weight:800}"
     }
   ],
   "narrative": {

@@ -6,6 +6,7 @@
 //   fil de lumière vers le quartier de la tâche (reward)   un quartier monte de niveau (quartier-monte, acheté)
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
 //   la forêt recule : un rang gagne une bande de terrain (rang, lot F)
+//   la récolte d'une bulle s'envole vers son compteur (cueillette, lot L)
 import { P, f } from './iso.js';
 import { SECTOR_CENTER, BANDES_ILE, EMPLACEMENTS, decorFor } from './layout.js';
 import { quartierOfTask } from '../core/domains.js';
@@ -90,6 +91,32 @@ function rewardStep(ctx, ev) {
     fx.ring(tx, ty, 30, { dur: 520 });
     ctx.apply({ enter: false });
     await fx.wait(300);
+  };
+  return { apply, run, text: () => '' };
+}
+
+// ----------------------------------------------------------------------------- la récolte d'une bulle (lot L)
+/**
+ * Une récolte faite d'un toucher sur sa bulle : la bulle part, la culture se vide, la Nourriture s'envole de la bulle vers
+ * son compteur de la barre du haut ; à l'arrivée, le compteur monte (onImpact). En mouvement réduit, ou sans compteur à
+ * viser, le chiffre change sans vol. Le monde ne dit rien : l'interface annonce la récolte.
+ */
+function cueilletteStep(ctx, ev) {
+  let impacted = false;
+  const impact = () => { if (!impacted) { impacted = true; ctx.onImpact(ev); } };
+  const sync = () => {
+    const i = ctx.shown.batiments.findIndex((b) => b.id === ev.id);
+    const b = ctx.target.batiments.find((x) => x.id === ev.id);
+    if (i >= 0 && b) ctx.shown.batiments[i] = { ...b };
+    ctx.apply({ enter: false });
+  };
+  const apply = () => { sync(); impact(); };
+  const run = async () => {
+    const from = ctx.bulleCentre(ev.id);
+    sync();
+    if (ctx.reduced || !from || !ctx.compteur('nourriture')) { impact(); return; }
+    await ctx.fx.envol({ from, to: () => ctx.compteur('nourriture') || from, html: ctx.bulleHtml('recolte') });
+    impact();
   };
   return { apply, run, text: () => '' };
 }
@@ -235,6 +262,8 @@ function bandeStep(ctx) {
 }
 
 // ----------------------------------------------------------------------------- chef d'orchestre
+/** Les événements que le monde joue (les autres sont ignorés). */
+export const MOMENTS = new Set(['reward', 'quartier-monte', 'reflet', 'veille', 'etape', 'rang', 'cueillette']);
 function stepsFor(ctx, ev) {
   switch (ev.type) {
     case 'reward': return [rewardStep(ctx, ev)];
@@ -243,6 +272,7 @@ function stepsFor(ctx, ev) {
     case 'veille': return [veilleStep(ctx)];
     case 'etape': return [etapeStep(ctx, ev)];
     case 'rang': return [bandeStep(ctx)];
+    case 'cueillette': return [cueilletteStep(ctx, ev)];
     default: return [];
   }
 }

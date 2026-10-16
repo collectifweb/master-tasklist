@@ -26,9 +26,15 @@
 //   { type: 'landmark', id, sector, model }                  repère fixe (lanterne, établi, clôture, convoi…)
 //   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
+//   { type: 'bulle', id, sector, batiment, bulle, direct }   bulle au-dessus d'un bâtiment (lot L) : bulle = 'recolte' |
+//                                                            'famille' | 'commande' ; direct : la récolte tient entière
+//
+// options.compteur(res) : l'élément de la barre du haut où arrive une ressource ('nourriture'), visé par le vol d'une
+// récolte faite sur sa bulle (événement cueillette, ajouté par l'hôte) ; sans lui, le chiffre change sans vol.
 //
 // Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape, rang (la
-// forêt recule quand le rang gagne une bande de terrain, lot F).
+// forêt recule quand le rang gagne une bande de terrain, lot F), cueillette ({ id } : la récolte d'une bulle s'envole vers
+// son compteur, lot L).
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
@@ -43,8 +49,8 @@ import { createTicker, createBus } from './ticker.js';
 import { promeneurs, trajet } from './habitants.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, batimentNom, batimentEtat } from './texts.js';
-import { playEvents, cloneView } from './moments.js';
+import { makeTexts, batimentNom, batimentEtat, fmt } from './texts.js';
+import { playEvents, cloneView, MOMENTS } from './moments.js';
 
 export { createWorldPlan } from './plan.js';
 
@@ -76,6 +82,24 @@ const CTL_GLYPH = {
   out: 'M5 12h14',
   fit: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
 };
+
+/**
+ * Pictos des bulles (lot L) : la récolte (panier de la Nourriture), la famille (Habitants), la commande (barque du quai),
+ * les mêmes tracés que design/icons.svg ; chevrons des flèches au bord.
+ */
+const BULLE_GLYPH = {
+  recolte: '<path d="M3.5 11.5h17l-2.1 8.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/><path d="M3.5 11.5h17l-2.1 8.3H5.6zM9.4 14.3v2.9M14.6 14.3v2.9M7.8 11.5a4.2 4.2 0 0 1 8.4 0M12 7.3c0-1.3.6-2.5 1.7-3.2"/><path d="M12.6 6c.6-1.4 2-2.1 3.6-1.9-.5 1.5-1.9 2.2-3.6 1.9z" fill="currentColor" stroke-width="1.2"/>',
+  famille: '<path d="M3.4 19.8c.4-3.7 2.7-5.9 5.6-5.9s5.2 2.2 5.6 5.9z" fill="currentColor" opacity=".22" stroke="none"/><circle cx="9" cy="8.2" r="3.1"/><circle cx="16.4" cy="8.9" r="2.5"/><path d="M3.4 19.8c.4-3.7 2.7-5.9 5.6-5.9s5.2 2.2 5.6 5.9zM16.4 14c2.4.3 3.9 2.5 4.2 5.8h-3.4"/>',
+  commande: '<path d="M2.8 14.6h18.4l-2.4 4.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/><path d="M2.8 14.6h18.4l-2.4 4.3H5.6zM5.2 14.6V9.4M12 14.6V9.4M4 9.4h9.2M18 14.6V4.2l3 1.6-3 1.6"/>',
+  monte: '<path d="m6 14.5 6-6 6 6" stroke-width="2.6"/>',
+  gauche: '<path d="m14.5 6-6 6 6 6" stroke-width="2.4"/>',
+  droite: '<path d="m9.5 6 6 6-6 6" stroke-width="2.4"/>',
+  haut: '<path d="m6 14.5 6-6 6 6" stroke-width="2.4"/>',
+  bas: '<path d="m6 9.5 6 6 6-6" stroke-width="2.4"/>',
+};
+const bulleGlyph = (k, size = 24) => `<svg class="ow-glyph" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" focusable="false">${BULLE_GLYPH[k] || ''}</svg>`;
+const BULLE_W = 48, BULLE_H = 56; // rond de 48 px et sa queue : la pointe touche le haut du bâtiment
+const COTES = ['gauche', 'droite', 'haut', 'bas'];
 
 function glyph(id, cls = '') {
   return `<svg class="ow-glyph ${cls}" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="${SECTOR_GLYPH[id] || ''}"/></svg>`;
@@ -263,9 +287,10 @@ export function createWorld(container, options = {}) {
   terrainHost.setAttribute('aria-hidden', 'true');
 
   const plaques = el('div', 'ow-plaques');
+  const bulles = el('div', 'ow-bulles');
   const tag = el('div', 'ow-tag', { 'aria-hidden': 'true' });
   tag.hidden = true;
-  content.append(far, sky, stage, plaques, tag);
+  content.append(far, sky, stage, plaques, bulles, tag);
   scroller.append(content);
 
   const fxv = el('div', 'ow-fxv', { 'aria-hidden': 'true' });
@@ -297,7 +322,8 @@ export function createWorld(container, options = {}) {
   skipBtn.hidden = true;
   let live = null;
   if (!options.announce) { live = el('p', 'ow-sr', { role: 'status', 'aria-live': 'polite' }); }
-  root.append(scroller, hint, fxv, zoom, skipBtn, ctlProbe);
+  const bords = el('div', 'ow-bords'); // flèches au bord : ce qui attend un geste hors de la zone libre (lot L)
+  root.append(scroller, hint, fxv, bords, zoom, skipBtn, ctlProbe);
   if (live) root.append(live);
   container.appendChild(root);
 
@@ -316,6 +342,7 @@ export function createWorld(container, options = {}) {
   let tasks = [];
   let scheduled = false;
   let queued = 0, playing = 0;
+  let longs = 0; // moments en cours autres que le vol d'une récolte
   let chain = Promise.resolve();
   let selected = null;
   let active = options.activeSector || null;
@@ -381,12 +408,13 @@ export function createWorld(container, options = {}) {
       name,
       line: t('monde.niveau.court', { n: sv.niveau }),
       niveau: sv.niveau,
-      label: t('monde.plaque.label', { quartier: name, n: sv.niveau }),
+      monte: sv.monte || 0,
+      label: t(sv.monte ? 'monde.plaque.monte' : 'monde.plaque.label', { quartier: name, n: sv.niveau, m: sv.monte }),
     };
   }
   function makePlaque(s) {
     const b = el('button', 'ow-plaque', { type: 'button', 'data-sector': s, tabindex: '-1' });
-    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true">${glyph(s)}</span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-plaque-sep">·</span><span class="ow-plaque-val num"></span></span></span>`;
+    b.innerHTML = `<span class="ow-plaque-icon" aria-hidden="true">${glyph(s)}</span><span class="ow-plaque-text" aria-hidden="true"><span class="ow-plaque-name"></span><span class="ow-plaque-line"><span class="ow-plaque-sep">·</span><span class="ow-plaque-val num"></span></span></span><span class="ow-plaque-monte" aria-hidden="true" hidden>${bulleGlyph('monte', 14)}</span>`;
     plaques.appendChild(b);
     plaqueEls[s] = b;
     return b;
@@ -400,6 +428,7 @@ export function createWorld(container, options = {}) {
     plaqueLast[sv.id] = key;
     b.dataset.niveau = String(m.niveau);
     b.setAttribute('aria-label', m.label);
+    b.querySelector('.ow-plaque-monte').hidden = !m.monte; // on peut le monter : la pastille, la fiche dit le prix
     b.querySelector('.ow-plaque-name').textContent = m.name;
     b.querySelector('.ow-plaque-val').textContent = m.line;
     // le texte change de longueur : la plaque se remesure et se replace (sinon elle déborde sous la colonne de zoom)
@@ -455,6 +484,7 @@ export function createWorld(container, options = {}) {
     if (first || destroyed) return;
     measureZoom();
     placePlaques();
+    placeBords();
     placeTag();
   }
   function placePlaques() {
@@ -479,8 +509,167 @@ export function createWorld(container, options = {}) {
       }
       // rangée « Vue » dépliée : la plaque remonte juste au-dessus d'elle, sans changer de côté
       if (rowBox && hit(rowBox)) vt = Math.max(camera.top + m, rowBox[1] - h);
+      // une bulle (lot L) pointe un bâtiment : la plaque, un simple nom, prend la place libre la plus proche (à côté d'une
+      // bulle, dessous ou dessus), dans la zone libre, hors de la colonne, et sans couvrir un dessin touchable plus qu'à sa
+      // place (le chaland du quai, une parcelle) ; sans telle place, elle reste où elle est et la bulle passe devant
+      const boxes = bulleBoxes();
+      const libre = (x, y) => !boxes.some((q) => x + w > q[0] && x < q[2] && y + h > q[1] && y < q[3]);
+      if (!libre(vl, vt)) {
+        const objs = objetBoxes();
+        const sur = (x, y) => objs.map((q) => Math.max(0, Math.min(x + w, q[2]) - Math.max(x, q[0])) * Math.max(0, Math.min(y + h, q[3]) - Math.max(y, q[1])));
+        const avant = sur(vl, vt);
+        const sage = ([x, y]) => sur(x, y).every((a, i) => a <= avant[i] + 0.04 * (objs[i][2] - objs[i][0]) * (objs[i][3] - objs[i][1]));
+        const dans = ([x, y]) => x >= m && x <= camera.W - w - m && y >= camera.top + m && y <= camera.H - camera.bottom - h - m
+          && !(x + w > z[0] && x < z[2] && y + h > z[1] && y < z[3]);
+        const d = ([x, y]) => Math.hypot(x - vl, y - vt);
+        const best = boxes.flatMap((q) => [[q[0] - w, vt], [q[2], vt], [vl, q[3]], [vl, q[1] - h]])
+          .filter((c) => dans(c) && libre(...c) && sage(c)).sort((a, c) => d(a) - d(c))[0];
+        if (best) [vl, vt] = best;
+      }
       b.style.transform = `translate(${f(vl + camera.sx)}px, ${f(vt + camera.sy)}px)`;
     }
+  }
+
+  // ---- bulles (lot L) : au-dessus de ce qui attend un geste (view.js, b.bulle), dans le contenu défilable comme les
+  // plaques ; elles ne se rangent pas au bord : ce qui sort de la zone libre se compte dans une flèche collée au bord
+  const bulleEls = new Map(); // id du bâtiment → bouton
+  let bulleList = [];          // [{ id, kind }] de la vue affichée
+  function bulleLabel(b) {
+    const nom = batimentNom(t, b);
+    if (b.bulle.kind === 'recolte') return t(b.bulle.direct ? 'monde.bulle.recolte' : 'monde.bulle.recolte.fiche', { nom, n: fmt(b.bulle.n) });
+    return t(`monde.bulle.${b.bulle.kind}`, { nom });
+  }
+  function applyBulles(v) {
+    const list = (v.batiments || []).filter((b) => b.bulle && scene.get(b.id));
+    for (const b of list) {
+      let n = bulleEls.get(b.id);
+      if (!n) {
+        n = el('button', 'ow-bulle', { type: 'button', 'data-de': b.id, tabindex: '-1' });
+        n.innerHTML = '<span class="ow-bulle-flot"><span class="ow-bulle-rond"></span><span class="ow-bulle-queue"></span></span>';
+        bulles.appendChild(n);
+        bulleEls.set(b.id, n);
+      }
+      if (n.dataset.bulle !== b.bulle.kind) { n.dataset.bulle = b.bulle.kind; n.querySelector('.ow-bulle-rond').innerHTML = bulleGlyph(b.bulle.kind); }
+      const label = bulleLabel(b);
+      if (n.getAttribute('aria-label') !== label) n.setAttribute('aria-label', label);
+    }
+    const ids = new Set(list.map((b) => b.id));
+    for (const [id, n] of bulleEls) if (!ids.has(id)) { n.remove(); bulleEls.delete(id); }
+    bulleList = list.map((b) => ({ id: b.id, kind: b.bulle.kind }));
+    placeBulles();
+    placePlaques();
+  }
+  function placeBulles() {
+    for (const { id } of bulleList) {
+      const n = bulleEls.get(id), p = scene.pointOf(id, 1);
+      if (!n || !p) continue;
+      const [x, y] = camera.toContent(p[0], p[1]);
+      n.style.transform = `translate(${f(x - BULLE_W / 2)}px, ${f(y - BULLE_H - 2)}px)`;
+      n._at = [x, y - 2 - BULLE_H + BULLE_W / 2]; // centre du rond, dans le contenu
+    }
+    placeBords();
+  }
+  /** Boîtes des bulles dans la vue, avec une marge : [gauche, haut, droite, bas] (les plaques s'en écartent). */
+  function bulleBoxes() {
+    const out = [], k = 4;
+    for (const { id } of bulleList) {
+      const n = bulleEls.get(id);
+      if (!n?._at) continue;
+      const x = n._at[0] - camera.sx, y = n._at[1] - camera.sy;
+      out.push([x - BULLE_W / 2 - k, y - BULLE_W / 2 - k, x + BULLE_W / 2 + k, y - BULLE_W / 2 + BULLE_H + k]);
+    }
+    return out;
+  }
+  /** Boîtes des dessins touchables (bâtiments, repères, caisses) dans la vue : [gauche, haut, droite, bas]. */
+  function objetBoxes() {
+    const out = [];
+    for (const n of scene.nodes.values()) {
+      if (!n.e.interactive || !n.art) continue;
+      const [x, y] = camera.toView(n.X + n.art.x, n.Y + n.art.y);
+      out.push([x, y, x + n.art.w * camera.s, y + n.art.h * camera.s]);
+    }
+    return out;
+  }
+  /** Centre d'une bulle dans la vue (départ du vol d'une récolte), ou sa place au-dessus du bâtiment si elle est déjà
+   *  partie (deux récoltes enchaînées : la fin du premier vol a montré l'état final), ou null. */
+  function bulleCentre(id) {
+    const n = bulleEls.get(id);
+    if (n?._at) return [n._at[0] - camera.sx, n._at[1] - camera.sy];
+    const p = scene.pointOf(id, 1);
+    if (!p) return null;
+    const [x, y] = camera.toView(p[0], p[1]);
+    return [x, y - 2 - BULLE_H + BULLE_W / 2];
+  }
+
+  // Flèches au bord : une par côté, avec le picto de ce qui attend et leur nombre. Ce qui est sous la barre du haut ou le
+  // panneau compte comme hors de vue. Elles évitent la colonne des commandes.
+  const bordEls = {};
+  function makeBord(c) {
+    const b = el('button', 'ow-bord', { type: 'button', 'data-cote': c });
+    b.innerHTML = `${bulleGlyph(c, 20)}<span class="ow-bord-icone"></span><span class="ow-bord-n num" aria-hidden="true"></span>`;
+    b.hidden = true;
+    bords.appendChild(b);
+    bordEls[c] = b;
+    return b;
+  }
+  function bordLabel(kind, n, c) {
+    const cote = t(`monde.bord.${c}`);
+    if (kind === 'recolte') return t(`monde.bord.recolte.${n === 1 ? 'one' : 'other'}`, { n, cote });
+    if (kind === 'mixte' || n > 1) return t('monde.bord.mixte', { n, cote });
+    return t(`monde.bord.${kind}`, { cote });
+  }
+  function placeBords() {
+    const m = 8, h = 48;
+    const side = { gauche: [], droite: [], haut: [], bas: [] };
+    for (const b of bulleList) {
+      const n = bulleEls.get(b.id);
+      if (!n?._at) continue;
+      const vx = n._at[0] - camera.sx, vy = n._at[1] - camera.sy;
+      const sous = zoomBox && vx > zoomBox[0] && vy > zoomBox[1] && vy < zoomBox[3]; // sous la colonne des commandes
+      const c = vx < m ? 'gauche' : vx > camera.W - m || sous ? 'droite' : vy < camera.top + m ? 'haut' : vy > camera.H - camera.bottom - m ? 'bas' : null;
+      if (c) side[c].push({ ...b, vx, vy });
+    }
+    for (const c of COTES) {
+      const list = side[c];
+      const b = bordEls[c] || (list.length ? makeBord(c) : null);
+      if (!b) continue;
+      b._list = list;
+      if (!list.length) { if (!b.hidden) b.hidden = true; continue; }
+      const kinds = new Set(list.map((x) => x.kind));
+      const kind = kinds.size === 1 ? list[0].kind : 'mixte';
+      const key = `${kind}:${list[0].kind}:${list.length}`;
+      if (b.dataset.key !== key) {
+        b.dataset.key = key;
+        b.querySelector('.ow-bord-icone').innerHTML = bulleGlyph(list[0].kind, 22);
+        b.querySelector('.ow-bord-n').textContent = list.length > 1 ? String(list.length) : '';
+        b.setAttribute('aria-label', bordLabel(kind, list.length, c));
+      }
+      if (b.hidden) b.hidden = false;
+      const w = b.offsetWidth;
+      const avg = (k) => list.reduce((sum, q) => sum + q[k], 0) / list.length;
+      const z = zoomBox;
+      let x, y;
+      if (c === 'gauche' || c === 'droite') {
+        x = c === 'gauche' ? 0 : camera.W - w;
+        y = Math.max(camera.top + m, Math.min(camera.H - camera.bottom - h - m, avg('vy') - h / 2));
+        if (c === 'droite' && z && y + h > z[1] && y < z[3]) y = Math.max(camera.top + m, z[1] - h);
+      } else {
+        x = Math.max(m, Math.min(camera.W - w - m, avg('vx') - w / 2));
+        y = c === 'haut' ? camera.top : camera.H - camera.bottom - h;
+        if (z && x + w > z[0] && y + h > z[1] && y < z[3]) x = Math.max(m, z[0] - w);
+      }
+      b.style.transform = `translate(${f(x)}px, ${f(y)}px)`;
+    }
+  }
+  /** Toucher une flèche : la caméra amène dans la zone libre ce qui attend de ce côté, le plus proche d'abord. */
+  function allerBord(c) {
+    const list = bordEls[c]?._list || [];
+    if (!list.length) return;
+    const [x0, y0] = camera.freeCenter();
+    const best = list.reduce((a, q) => (Math.hypot(q.vx - x0, q.vy - y0) < Math.hypot(a.vx - x0, a.vy - y0) ? q : a));
+    const p = scene.pointOf(best.id);
+    if (p) camera.centerOn(p[0], p[1], !reduced);
+    wake();
   }
 
   function apply(v, { quiet = false, enter = true } = {}) {
@@ -491,6 +680,7 @@ export function createWorld(container, options = {}) {
     if (aurore.hidden !== aur) aurore.hidden = aur;
     applyPlaques(v);
     const res = scene.sync(entitiesFor(v, tasks), { quiet });
+    applyBulles(v);
     if (!habTimer) scene.habDepths(); // île immobile : une figurine neuve ou un trajet changé reste à la bonne profondeur
     if (!quiet && enter) {
       for (const eid of res.added) {
@@ -537,6 +727,7 @@ export function createWorld(container, options = {}) {
     sizePlaques();
     measureZoom();
     measurePlaques();
+    placeBulles();
     placePlaques();
     placeTag();
     placeSkip();
@@ -778,8 +969,23 @@ export function createWorld(container, options = {}) {
     const z = ev.target.closest('[data-zoom]');
     if (z) { if (z.getAttribute('aria-disabled') !== 'true') zoomTo(z.dataset.zoom); return; }
     if (ev.target.closest('.ow-skip')) { skip(); return; }
+    // bulle (lot L) : l'hôte récolte d'un coup ou ouvre la fiche (il garde le double toucher). Pendant le vol d'une récolte,
+    // une autre bulle se touche (les récoltes s'enchaînent) ; pendant un autre moment, non.
+    const bu = ev.target.closest('.ow-bulle');
+    if (bu) {
+      if (longs) return;
+      clearVeille();
+      const b = shown?.batiments.find((x) => x.id === bu.dataset.de);
+      if (!b?.bulle) return;
+      const info = { type: 'bulle', id: b.id, sector: scene.get(b.id)?.e.sector, batiment: b.type, bulle: b.bulle.kind, direct: !!b.bulle.direct };
+      options.onSelect?.(info);
+      bus.emit('select', info);
+      return;
+    }
     if (playing) return;
     clearVeille();
+    const bo = ev.target.closest('.ow-bord');
+    if (bo) { allerBord(bo.dataset.cote); return; }
     const pl = ev.target.closest('.ow-plaque');
     if (pl) {
       const s = pl.dataset.sector;
@@ -901,6 +1107,7 @@ export function createWorld(container, options = {}) {
   }
   function onScroll() {
     placePlaques();
+    placeBords();
     placeTag();
     if (root.dataset.ambient !== 'on') wake();
   }
@@ -954,6 +1161,16 @@ export function createWorld(container, options = {}) {
     threadFrom: null,
     objName,
     onStep: placeSkip, // le bouton « Passer l'animation » reste touchable à chaque étape
+    bulleCentre,
+    bulleHtml: (k) => bulleGlyph(k),
+    /** Centre du compteur de la barre du haut où arrive une ressource, dans la vue (options.compteur), ou null. */
+    compteur(res) {
+      const n = options.compteur?.(res);
+      const r = n?.getBoundingClientRect?.();
+      if (!r || !r.width) return null;
+      const R = root.getBoundingClientRect();
+      return [r.left + r.width / 2 - R.left, r.top + r.height / 2 - R.top];
+    },
   };
 
   function originFrom(from) {
@@ -975,9 +1192,14 @@ export function createWorld(container, options = {}) {
     root.dataset.joue = '1';
     root.dataset.ambient = 'on';
     syncHab();
-    skipBtn.hidden = false;
-    placeSkip();
-    win.setTimeout(placeSkip, 320); // un panneau qui s'ouvre en glissant peut le recouvrir après coup
+    // le vol d'une récolte (cueillette, lot L) dure une demi-seconde : pas de bouton « Passer l'animation » pour lui seul
+    const long = list.some((e) => MOMENTS.has(e.type) && e.type !== 'cueillette');
+    if (long) {
+      longs++;
+      skipBtn.hidden = false;
+      placeSkip();
+      win.setTimeout(placeSkip, 320); // un panneau qui s'ouvre en glissant peut le recouvrir après coup
+    }
     clearVeille();
     fx.reset();
     if (pending) { tasks = pending.tasks; target = derive(pending); }
@@ -988,6 +1210,7 @@ export function createWorld(container, options = {}) {
       console.error(err);
     } finally {
       playing--;
+      if (long) longs--;
       fx.reset();
       if (!playing) {
         skipBtn.hidden = true;

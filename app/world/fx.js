@@ -159,6 +159,26 @@ export class Fx {
     return run();
   }
 
+  /**
+   * Un picto qui vole de from à to() (coordonnées de vue, to relu à chaque image) : la récolte d'une bulle vers son
+   * compteur (lot L). Il monte en arc et rapetisse en arrivant ; résout à l'arrivée.
+   */
+  envol({ from, to, html, dur = 640 }) {
+    const el = document.createElement('div');
+    el.className = 'ow-envol';
+    el.innerHTML = html;
+    const S = from;
+    el.style.transform = `translate(${f(S[0])}px, ${f(S[1])}px)`;
+    this.L.view.appendChild(el);
+    return this.tween(dur, (p) => {
+      const T = to();
+      const C = [(S[0] + T[0]) / 2, Math.min(S[1], T[1]) - 48];
+      const h = easeInOut(p);
+      const H = quad(S, C, T, h);
+      el.style.transform = `translate(${f(H[0])}px, ${f(H[1])}px) scale(${f(1 - 0.4 * h)})`;
+    }).then(() => el.remove(), () => el.remove());
+  }
+
   spark([x, y]) {
     const el = this.sparks.take();
     const dx = rand(-10, 10), dy = rand(6, 18);

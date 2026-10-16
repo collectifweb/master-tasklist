@@ -19,7 +19,7 @@ import {
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
-import { openBatiment, refreshBatiment, coutText, ressource, ressourcesText } from './ui/batiment.js';
+import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ressourcesText } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { openQuartier, refreshQuartier, monteText, showMonte } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
@@ -47,6 +47,7 @@ let world = null;
 let worldPlan = null;
 let started = false;
 let touchFrom = null; // [x, y] du bouton « Fait » touché : le fil de lumière part de là
+let cueillette = null; // l'emplacement récolté d'un toucher sur sa bulle (lot L), le temps du geste : sa récolte s'envole
 
 const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: maintenant() });
 const story = createStory({
@@ -264,6 +265,8 @@ function worldEvents(payload) {
   const events = [...((payload && payload.events) || [])];
   if (!world || !payload || !payload.action) return events;
   const { action, params = {}, result } = payload;
+  const vol = volDe(payload);
+  if (vol) events.push({ type: 'cueillette', id: vol.id });
   const done = action === 'completeQuest' || (action === 'createQuest' && params.alreadyDone);
   if (done && result) {
     const id = params.id || ((result.ops || []).find((o) => o.type === 'task.upsert') || {}).task?.id;
@@ -277,9 +280,16 @@ function worldEvents(payload) {
   return events;
 }
 
+/** La récolte faite sur une bulle (lot L), si ce geste en est une et qu'elle rapporte : sa Nourriture s'envole vers la barre. */
+function volDe(payload) {
+  if (!cueillette || payload?.action !== 'recolter' || payload.params?.id !== cueillette) return null;
+  const e = (payload.events || []).find((x) => x.type === 'recolte');
+  return e && entierGain(e.nourriture) > 0 ? e : null;
+}
+
 store.on('change', (payload) => {
   const events = (payload && payload.events) || [];
-  renderAll({ deferHud: events.some((e) => e.type === 'reward') });
+  renderAll({ deferHud: events.some((e) => e.type === 'reward') || !!volDe(payload) });
   if (payload && payload.action && started) react(payload);
   if (world && events.length) {
     const from = touchFrom && Date.now() - touchFrom.at < 4000 ? [touchFrom.x, touchFrom.y] : undefined;
@@ -415,9 +425,24 @@ function focusQuestList() {
 /** Toucher la carte : une caisse ouvre sa quête ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
 function onWorldSelect(info) {
   if (!info) return;
+  if (info.type === 'bulle') { onBulle(info); return; }
   if (info.type === 'batiment') { openBatimentSheet(info.id); return; }
   if (info.taskId) { if (findTask(info.taskId)) openFiche(ctx(), info.taskId); return; }
   if (info.sector) openQuartierSheet(info.sector);
+}
+/**
+ * Toucher une bulle de la carte (lot L). Une récolte mûre qui tient entière dans la réserve, sans dégât, se fait d'un coup
+ * (la fiche le dirait de même : pas d'avertissement, pas de raison) ; sinon la fiche s'ouvre, avec son avertissement. Une
+ * famille ou une commande ouvre la fiche : le geste dépense, la décision y reste. Un double toucher ne récolte qu'une fois.
+ */
+function onBulle(info) {
+  const key = `bulle:${info.id}`;
+  if (spent.key === key && Date.now() - spent.at < SPEND_AGAIN_MS) return;
+  spent = { key, at: Date.now() };
+  const m = info.bulle === 'recolte' && store.view ? batimentModel(ctx(), info.id) : null;
+  if (!m || m.etat.kind !== 'mure' || m.etat.note || m.raison || (m.degat && !m.degat.fini)) { openBatimentSheet(info.id); return; }
+  cueillette = info.id;
+  try { run('recolter', { id: info.id }); } finally { cueillette = null; }
 }
 // La fiche ouverte par un toucher sur la carte se ferme : l'objet n'est plus sélectionné (le toucher suivant la rouvre)
 $('#dlg-fiche').addEventListener('close', () => { if (world) world.clearSelection(); });
@@ -869,6 +894,7 @@ async function start() {
     announce: createVoice($('#live-world')),
     onImpact: () => { if (hudPending) flushHud(); },
     onSelect: onWorldSelect,
+    compteur: (res) => $(`.res[data-res="${res}"] .res-tile`),
     panelId: 'panel',
     controls: {
       build: openConstruire,

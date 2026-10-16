@@ -1,5 +1,6 @@
 // 31. Niveaux de quartier achetés par permis.
-//   - compteur « Permis » de la barre des ressources (et plus de pastille sur « Construire ») ; plaques « Champs · niv. 0 », sans barre ;
+//   - compteur « Permis » de la barre des ressources (et plus de pastille sur « Construire ») ; plaques « Champs · niv. 0 », sans barre,
+//     avec la pastille « on peut monter » (lot L) tant qu'un niveau est payable ;
 //   - toucher une plaque ouvre la fiche du quartier (lot L) : l'avant et l'après (« 4 → 5 », « +1 »), le prix en pastilles
 //     (en pointillés avec « il manque N » quand il en manque), la règle dans un repli fermé ; plus les permis en main ;
 //   - achat : un double toucher n'achète qu'un niveau ; la phrase « Champs : niveau 1. … » est lue dans la feuille ;
@@ -60,7 +61,7 @@ const fiche = (page) => page.evaluate(() => {
 const plaque = (page, s) => page.evaluate((s) => {
   const b = document.querySelector(`.ow-plaque[data-sector="${s}"]`);
   const tx = (sel) => (b.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
-  return { label: b.getAttribute('aria-label'), niveau: b.dataset.niveau, text: [tx('.ow-plaque-name'), tx('.ow-plaque-sep'), tx('.ow-plaque-val')].join(' '), barre: !!b.querySelector('.ow-plaque-bar') };
+  return { label: b.getAttribute('aria-label'), niveau: b.dataset.niveau, text: [tx('.ow-plaque-name'), tx('.ow-plaque-sep'), tx('.ow-plaque-val')].join(' '), barre: !!b.querySelector('.ow-plaque-bar'), monte: !b.querySelector('.ow-plaque-monte').hidden };
 }, s);
 /** Compteur « Permis » de la barre des ressources, et « Construire » (qui ne porte plus de pastille). */
 const badge = (page) => page.evaluate(() => {
@@ -92,7 +93,8 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   let bd = await badge(page);
   R.check('compteur « Permis : 3 » dans la barre ; « Construire » sans pastille ni chiffre', bd.text === '3' && bd.label === 'Permis\u00a0: 3' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
   let pc = await plaque(page, 'champs');
-  R.check('plaque des Champs : « Champs · niv. 0 », lue « Champs : niveau 0. », sans barre', pc.text === 'Champs · niv. 0' && pc.label === 'Champs : niveau 0.' && pc.niveau === '0' && !pc.barre, JSON.stringify(pc));
+  // on peut le monter (lot L) : la pastille de la plaque, et son nom lu le dit
+  R.check('plaque des Champs : « Champs · niv. 0 », lue « Champs : niveau 0. Tu peux monter au niveau 1. », pastille, sans barre', pc.text === 'Champs · niv. 0' && pc.label === 'Champs : niveau 0. Tu peux monter au niveau 1.' && pc.monte && pc.niveau === '0' && !pc.barre, JSON.stringify(pc));
   const pg = await plaque(page, 'garage');
   R.check('plaque du Garage : son niveau acheté (2)', pg.text === 'Garage · niv. 2' && pg.label === 'Garage : niveau 2.', JSON.stringify(pg));
 
@@ -133,7 +135,8 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   const v = await L.voice(page, 'live');
   R.check('… et un lecteur d’écran la reçoit (région non inerte)', v.sheet === 'dlg-quartier' && v.ignored === false, JSON.stringify(v));
   pc = await plaque(page, 'champs');
-  R.check('plaque à jour : « Champs · niv. 1 », lue « Champs : niveau 1. »', pc.text === 'Champs · niv. 1' && pc.label === 'Champs : niveau 1.' && pc.niveau === '1', JSON.stringify(pc));
+  // la pastille et la phrase « Tu peux monter au niveau 2. » vont ensemble (lot L)
+  R.check('plaque à jour : « Champs · niv. 1 », lue « Champs : niveau 1. », pastille et phrase d’accord', pc.text === 'Champs · niv. 1' && pc.label === `Champs : niveau 1.${pc.monte ? ' Tu peux monter au niveau 2.' : ''}` && pc.niveau === '1', JSON.stringify(pc));
   await L.waitFor(async () => (await badge(page)).text === '2', 4000); // le compteur monte à l'impact, après l'écriture
   bd = await badge(page);
   R.check('compteur à jour : « Permis : 2 »', bd.text === '2' && bd.label === 'Permis\u00a0: 2' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));

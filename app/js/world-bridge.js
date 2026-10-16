@@ -1,10 +1,12 @@
 // Pont vers le monde (app/world/world.js). S'il manque ou échoue, l'illustration statique de la coquille reste en place.
 // Le monde ne connaît ni le magasin ni l'écran : tout passe par les options ci-dessous.
 //
-//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion,
-//                               economie, controls, panelId });
+//   const w = await initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, compteur, now,
+//                               reducedMotion, economie, controls, panelId });
 //   economie : économie de batterie au départ (l'île ne s'anime qu'après un geste) ; w.setEconomie(bool) la change
-//   onSelect({ type: 'sector' | 'object' | 'landmark' | 'batiment', id, sector?, taskId? }) : sector est le quartier touché.
+//   onSelect({ type: 'sector' | 'object' | 'landmark' | 'batiment' | 'bulle', id, sector?, taskId?, bulle? }) : sector est
+//   le quartier touché ; bulle : ce qu'attend la bulle touchée (lot L), 'recolte' | 'famille' | 'commande'.
+//   compteur(res) : l'élément de la barre du haut où arrive une ressource (vol de la récolte d'une bulle).
 //   controls = { build, quests, plan } : boutons « Construire », « Quêtes » et « Carte en liste » de la carte ;
 //   panelId : l'élément que « Quêtes » montre ou cache (aria-controls).
 //   w.render(game, tasks, ledger); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
@@ -12,7 +14,7 @@
 //   w.batiments(game, ledger) → emplacements de l'île dans l'ordre du cœur ; w.focusEntity(id) cadre l'un d'eux
 //   w.setQuestsShown(bool) → état du bouton « Quêtes »
 //   w.plan(conteneur, { onFocusSector, onQuartier, onBatiment }) → { render, focus, destroy }
-export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, now, reducedMotion, economie, controls, panelId }) {
+export async function initWorld({ container, slot, content, announce, onImpact, onSelect, threadFrom, compteur, now, reducedMotion, economie, controls, panelId }) {
   let mod, view;
   try {
     [mod, view] = await Promise.all([import('../world/world.js'), import('../world/view.js')]);
@@ -23,7 +25,7 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
   try {
     const texts = content.ui;
     const anchors = content.ancres;
-    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, now, economie, controls, panelId });
+    const world = mod.createWorld(container, { texts, anchors, announce, onImpact, onSelect, threadFrom, compteur, now, economie, controls, panelId });
     world.setReducedMotion(reducedMotion());
     container.hidden = false;
     slot.dataset.world = 'live';

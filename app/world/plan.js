@@ -46,7 +46,7 @@ export function createWorldPlan(container, options = {}) {
     const q = quetesText(t, sv.quetes, QUARTIERS[s]?.domain);
     return {
       title: `${name} · ${t('monde.niveau', { n: sv.niveau })}`,
-      lines: [`${q.charAt(0).toUpperCase()}${q.slice(1)}.`],
+      lines: [`${q.charAt(0).toUpperCase()}${q.slice(1)}.`, ...(sv.monte ? [t('monde.plan.monte', { m: sv.monte })] : [])],
     };
   }
 
