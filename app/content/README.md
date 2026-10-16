@@ -160,10 +160,10 @@ Un objet plat `clé → texte`. Les clés sont stables, en anglais minuscule ave
 
 | Préfixe | Usage |
 |---|---|
-| `app`, `nav` | Nom du produit, onglets |
-| `today`, `fil`, `card` | Fil du jour, son état vide et ses trois cartes |
+| `nav` | Nom du bouton des Réglages |
+| `fil`, `card` | Fil du jour : la raison de la quête quand aucune autre ne s'applique, les étiquettes « Victoire rapide » et « Grand chantier » |
 | `quest`, `step`, `field`, `recurrence`, `status` | Boutons, formulaire et statuts d'une quête |
-| `sort`, `filter`, `search` | Les 7 tris (Cote, Priorité, Échéance, Courtes d'abord, Faciles d'abord, Plus anciennes, Plus récentes) et les filtres |
+| `sort` | Les 7 tris (Cote, Priorité, Échéance, Courtes d'abord, Faciles d'abord, Plus anciennes, Plus récentes) |
 | `why` | Gabarits du « Pourquoi? », une ligne par composante de la Cote |
 | `duration`, `deadline` | Durée estimée ; échéance en pastille (`deadline.label.*`, majuscule) ou dans une phrase (`deadline.phrase.*`) |
 | `resource`, `gain` | Noms des ressources et du Permis (`resource.permis`, cinquième puce de la barre), gains affichés (dont `gain.permis`, « +1 permis », lu aux lecteurs d'écran ; à l'écran, l'annonce montre « +1 » et le pictogramme) |
@@ -175,7 +175,7 @@ Un objet plat `clé → texte`. Les clés sont stables, en anglais minuscule ave
 | `quartier` | Formes de chaque nom de quartier (`name`, `the`, `of`, `in`) et domaine regroupé (`domain`) ; la fiche d'un quartier : `fiche` (lignes, boutons, raisons ; `fiche.prix.sr`, le prix lu ; `fiche.repli` et `fiche.regle`, le repli « Comment ça marche »), `compare` (l'avant et l'après, lot L : le nom de chaque réglage, les légendes, le sens quand un chiffre plus bas est meilleur, les phrases lues), `prix.manque` (« il manque N » sous une pastille), `effet` (une phrase par réglage que les niveaux changent), `cout` (le prix d'un niveau en permis, lu par le catalogue), `sr` (phrase lue après l'achat, reprise par la carte de récompense) ; `recompense` (la carte de récompense, lot L : « Niveau {n} », « Continuer ») ; `catalogue` (onglet « Quartiers » du catalogue « Construire » ; `catalogue.unite.<réglage>`, le mot court après « 4 → 5 ») |
 | `accueil`, `pas`, `bandeau`, `saison` | Les trois écrans d'accueil, les cinq premiers pas (`pas.<id>.nom`, `pas.geste.*`), le bandeau d'objectifs, les saisons |
 | `monde` | La carte : région, commandes (Construire, Quêtes, Vue, Rapprocher, Éloigner, Toute l'île, Carte en liste), plaques de quartier (`monde.niveau.court`, « niv. 2 »), noms des objets, carte en liste (quêtes à faire par quartier : `monde.quetes.*` ; bouton « Ouvrir la fiche » : `monde.plan.open*`) |
-| `help`, `res`, `permis` | Aide des quatre premières puces de la barre (Énergie, Matériaux, Nourriture, Habitants) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue (gabarit, voir plus haut). La puce Permis ouvre sa propre fiche, lot L : `permis.fiche.*` (sous-titre, « En main » et « sur 4 au plus », « Le prochain » et son délai au singulier, au pluriel ou à zéro, la règle des crans, la phrase du plafond, le coût des niveaux, le repli des autres sources) |
+| `help`, `permis` | Aide des quatre premières puces de la barre (Énergie, Matériaux, Nourriture, Habitants) : ce que c'est, d'où ça vient, à quoi ça sert. La phrase « d'où ça vient » des Matériaux dit la semaine tenue (gabarit, voir plus haut). La puce Permis ouvre sa propre fiche, lot L : `permis.fiche.*` (sous-titre, « En main » et « sur 4 au plus », « Le prochain » et son délai au singulier, au pluriel ou à zéro, la règle des crans, la phrase du plafond, le coût des niveaux, le repli des autres sources) |
 | `essai` | Version d'essai : texte du décalage de date et bouton « Jour suivant » |
 | `migration`, `token`, `settings` | Messages du passage à la v2 (gestes de la v1 écartés de la file), code d'accès, réglages (prénom ; « Quête par défaut » : `settings.quete`, `settings.quete.hint`, `settings.quete.attente` pour la feuille ouverte avant la lecture de la partie, `settings.saved.quete` ; « Économie de batterie », lot E : `settings.batterie`, `settings.batterie.hint`, et l'annonce de l'enregistrement, `settings.saved.batterie` quand elle est cochée, `settings.saved.vivante` quand elle est décochée ; « Météo du village », lot Q : `settings.meteo.*`, `settings.saved.ville` et `settings.saved.ville.retiree` ; « Version du jeu », lot U : `settings.maj.*`, 17 clés, dont les phrases d'état de la mise à jour) |
 

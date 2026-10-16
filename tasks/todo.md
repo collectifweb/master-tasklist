@@ -2017,6 +2017,14 @@ Vérifié : série complète, 46 scénarios réussis aux trois largeurs, 3 904 c
 
 Ordre : L0, validation, puis L1, L3, L2, L6, L5, L4, L7. Un commit par étape vérifiée.
 
+### Après la v2.16 — textes (accord d'Alex, 15 octobre au soir)
+Réponse d'Alex : les répliques de Fanal aux niveaux 2 et 3, plus tard ; « tu peux supprimer » les textes morts ; « tu peux fixer » les deux phrases.
+- [x] 99 clés de `interface.json` que plus aucun code ne lit, retirées : les 91 signalées (la v1, la liste, les filtres, la recherche…), plus 7 noms de tris que le jeu ne propose jamais (`sort.label`, `sort.priority`…) et `monde.obj.fanal.travail`, jamais construite. Deux recherches séparées (un agent, puis moi) ; aucun code ne parcourt les textes par préfixe. Le README des textes suit (familles `app`, `filter`, `search`, `res`, `today` parties).
+- [x] Poulailler et cabane : « à ta prochaine quête terminée aujourd'hui » devient « à ton prochain passage au village », comme la scierie et l'éolienne (le temps du jeu passe à l'ouverture, au retour dans l'onglet et après une quête, `js/main.js`).
+- [x] Ligne de la cabane raccourcie, de 129 à 80 caractères : « Une cabane de bois rond et son lanterneau. Au printemps, l'eau d'érable y bout. »
+- [x] Cache `oree-coquille-v31` (les textes sont dans la coquille).
+Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (84), 19 (81), 44 (74) et 45 (78) réussis aux trois largeurs. Envoi : étiquette `v2.16.1`, sur l'accord d'Alex.
+
 ### Relevé par la critique, hors de ce lot
 - Deux sortes de jours (« de passage » pour les cultures, « travaillés » pour les permis) : une règle du jeu, à discuter à part.
 - Comptes à rebours sur la carte (« 2 j » au-dessus d'une parcelle, « 2/2 » sur un chalet).

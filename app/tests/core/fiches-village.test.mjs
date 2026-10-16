@@ -79,7 +79,7 @@ test('maintenant, bâti pendant la visite : il donne sa part du jour tout de sui
   assert.equal(fiche(w, 'scierie-1', D).maintenant, `Elle a scié aujourd’hui : ${PRODUCTION.scierie.materials} Matériaux de plus.`);
 });
 
-test('maintenant, réserve pleine à la visite puis vidée : les œufs du jour attendent la prochaine quête terminée', () => {
+test('maintenant, réserve pleine à la visite puis vidée : les œufs du jour attendent le prochain passage au village', () => {
   const D = '2026-10-06';
   const w0 = monde(['poulailler']);
   const max = stockage(w0.game);
@@ -87,7 +87,7 @@ test('maintenant, réserve pleine à la visite puis vidée : les œufs du jour a
   let w = visite(w0, D);
   assert.equal(fiche(w, 'poulailler-1', D).maintenant, `La réserve est pleine (${max} sur ${max}) : rien n’entre aujourd’hui tant qu’elle le reste.`);
   w.game.resources.food = max - 5; // une famille accueillie entre-temps
-  assert.equal(fiche(w, 'poulailler-1', D).maintenant, 'Les œufs du jour seront ramassés à ta prochaine quête terminée aujourd’hui.');
+  assert.equal(fiche(w, 'poulailler-1', D).maintenant, 'Les œufs du jour seront ramassés à ton prochain passage au village.');
   w = quete(w, 'q0', at(D, 16));
   assert.equal(fiche(w, 'poulailler-1', D).maintenant, `Les œufs du jour sont ramassés : ${PRODUCTION.poulailler.food} Nourriture de plus.`);
 });
@@ -107,7 +107,7 @@ test('maintenant, cabane à sucre : elle dort hors saison, même réserve pleine
   w.game.resources.food = stockage(w.game);
   assert.equal(fiche(w, 'cabane-1', '2027-02-20').maintenant, 'Elle dort jusqu’au temps des sucres, le 1er mars.');
   const m = monde(['cabane'], '2027-03-16');
-  assert.equal(fiche(m, 'cabane-1', '2027-03-16').maintenant, 'C’est le temps des sucres : elle bouillira à ta prochaine quête terminée aujourd’hui.');
+  assert.equal(fiche(m, 'cabane-1', '2027-03-16').maintenant, 'C’est le temps des sucres : elle bouillira à ton prochain passage au village.');
   const apres = visite(m, '2027-03-16');
   assert.equal(fiche(apres, 'cabane-1', '2027-03-16').maintenant, `Elle a bouilli aujourd’hui : ${PRODUCTION.cabane.food} Nourriture de plus.`);
   // sur la carte et dans la liste
