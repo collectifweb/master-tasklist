@@ -37,7 +37,13 @@ export function closeSheet(dlg) {
     dlg.classList.remove('is-closing');
     dlg._cancelClose = null;
   };
-  const finish = () => { cleanup(); dlg.close(); };
+  const finish = () => {
+    // plusieurs feuilles qui se ferment ensemble : celle du dessus d'abord, chacune rendant le focus à ce qui l'a ouverte
+    const dessus = $$('dialog.sheet.is-closing[open]').find((x) => x !== dlg && (x._z || 0) > (dlg._z || 0));
+    if (dessus) { dessus.addEventListener('close', finish, { once: true }); return; }
+    cleanup();
+    dlg.close();
+  };
   dlg._cancelClose = cleanup;
   if (reducedMotion()) return finish();
   dlg.addEventListener('animationend', onEnd);

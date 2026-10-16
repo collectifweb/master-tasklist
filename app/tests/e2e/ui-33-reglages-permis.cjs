@@ -8,8 +8,8 @@
 //     chiffre ni pastille ;
 //   - la barre de cinq puces tient à 360, 390, 834 et 1280 px : aucun chiffre ni mot coupé, aucune puce hors de la barre, cibles
 //     de 44 px, aucun défilement horizontal ;
-//   - fiche de quartier : le bouton d'achat reste au même endroit avant et après un achat, et le second toucher tombe sur ce
-//     même bouton, désormais verrouillé et expliqué, sans rien acheter. Données fictives seulement.
+//   - fiche de quartier : l'achat range les feuilles (lot L) ; un second toucher au même endroit, une fois la fiche partie,
+//     n'achète rien, ne touche à aucune quête et n'ouvre rien d'autre que la carte de récompense. Données fictives seulement.
 const L = require('./lib.cjs');
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const TASKS = [
@@ -241,7 +241,8 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   R.check('quête seule enregistrée (priorité 7) : le serveur la porte', await L.waitFor(() => srv.game()?.reglages?.queteDefaut?.priority === 7, 8000), JSON.stringify(srv.game()?.reglages));
   R.check('annonce : seule la quête par défaut est dite, sans la phrase du prénom', await L.waitFor(() => page.evaluate(() => /Quête par défaut enregistrée\s:\spriorité 7/.test(document.getElementById('live').textContent) && !/Aucun prénom|Prénom enregistré/.test(document.getElementById('live').textContent)), 3000), await page.textContent('#live'));
 
-  // ───── fiche de quartier : le bouton d'achat ne bouge pas (en compact, le panneau ouvert recouvre la colonne : on le replie)
+  // ───── fiche de quartier : l'achat range les feuilles (lot L) ; le second toucher d'un double toucher, tombé sur ce qui
+  // était dessous (le panneau, « Fait », une plaque), n'achète ni n'ouvre rien ; puis la carte de récompense, seule
   if (await page.evaluate(() => document.getElementById('app').dataset.panel === 'open') && await page.locator('.panel-toggle').isVisible()) {
     await page.click('.panel-toggle');
     await page.waitForTimeout(450);
@@ -255,27 +256,18 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   await page.click('#dlg-construire .cat-qrt-go[data-quartier="champs"]');
   await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-quartier').open), 2000);
   await settle(page);
-  const SEL = '#dlg-quartier [data-action="qrt-monter"]';
-  const avant = await center(page, SEL);
-  const dlgAvant = await page.evaluate(() => { const r = document.getElementById('dlg-quartier').getBoundingClientRect(); return [r.top, r.height]; });
+  const avant = await center(page, '#dlg-quartier [data-action="qrt-monter"]');
+  const taches = JSON.stringify(srv.readTasks());
   await page.touchscreen.tap(avant[0], avant[1]);
   R.check('achat : Champs au niveau 1', await L.waitFor(() => srv.game()?.niveaux?.champs === 1, 6000), JSON.stringify(srv.game()?.niveaux));
-  await settle(page);
-  const apres = await center(page, SEL);
-  const dlgApres = await page.evaluate(() => { const r = document.getElementById('dlg-quartier').getBoundingClientRect(); return [r.top, r.height]; });
-  R.check(`fiche à ${tag} px : le bouton d’achat est au même endroit avant et après l’achat (±1 px)`, Math.abs(apres[0] - avant[0]) <= 1 && Math.abs(apres[1] - avant[1]) <= 1, JSON.stringify({ avant, apres, dlgAvant, dlgApres }));
-  if (!compact || tag >= 700) R.check('fiche centrée (tablette, bureau) : la feuille garde sa hauteur', Math.abs(dlgApres[1] - dlgAvant[1]) <= 1 && Math.abs(dlgApres[0] - dlgAvant[0]) <= 1, JSON.stringify({ dlgAvant, dlgApres }));
-  const etat = await page.evaluate(() => { const b = document.querySelector('#dlg-quartier [data-action="qrt-monter"]'); return { off: b.getAttribute('aria-disabled') === 'true', texte: b.textContent.trim(), raison: (document.getElementById('qrt-raison')?.textContent || '').trim(), vu: (() => { const r = b.getBoundingClientRect(); const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!at && b.contains(at); })() }; });
-  R.check('niveau 2 trop cher : le même bouton, verrouillé, avec la raison écrite à côté', etat.off && etat.texte === 'Monter au niveau 2' && /^Il manque/.test(etat.raison) && etat.vu, JSON.stringify(etat));
-  const g2 = JSON.stringify(srv.game());
-  await page.touchscreen.tap(apres[0], apres[1]);
-  await page.waitForTimeout(900);
-  R.check('le second toucher tombe sur ce même bouton et n’achète rien', JSON.stringify(srv.game()) === g2 && srv.game().niveaux.champs === 1, JSON.stringify(srv.game().niveaux));
-  await shot(page, '33-fiche');
+  const apres = JSON.stringify(srv.game());
+  await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-quartier').open), 1000);
+  await page.touchscreen.tap(avant[0], avant[1]); // la fiche partie : le doigt tombe sur ce qui était dessous
+  R.check('la carte de récompense s’ouvre, seule', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-recompense').open), 4000)
+    && await page.evaluate(() => [...document.querySelectorAll('dialog.sheet[open]')].map((x) => x.id).join()) === 'dlg-recompense', await page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.id).join()));
+  R.check('le second toucher n’achète rien et ne touche à aucune quête', JSON.stringify(srv.game()) === apres && JSON.stringify(srv.readTasks()) === taches, JSON.stringify(srv.game().niveaux));
+  await shot(page, '33-recompense');
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(500);
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(500);
   await L.waitFor(() => page.evaluate(() => !document.querySelector('dialog.sheet[open]')), 2000);
   await L.waitFor(async () => (await valeur()) === 2, 4000);
   R.check('compteur « Permis » à jour après l’achat : 2', await valeur() === 2 && srv.game().permis.dispo === 2, String(await valeur()));

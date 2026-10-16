@@ -3,9 +3,10 @@
 //     avec la pastille « on peut monter » (lot L) tant qu'un niveau est payable ;
 //   - toucher une plaque ouvre la fiche du quartier (lot L) : l'avant et l'après (« 4 → 5 », « +1 »), le prix en pastilles
 //     (en pointillés avec « il manque N » quand il en manque), la règle dans un repli fermé ; plus les permis en main ;
-//   - achat : un double toucher n'achète qu'un niveau ; la phrase « Champs : niveau 1. … » est lue dans la feuille ;
-//     plaque, compteur et fiche à jour, le bouton d'achat reste à sa place et garde le focus ; le niveau suivant, trop cher, reste visible avec
-//     le cadenas et la raison du cœur, redite au toucher, sans rien acheter ;
+//   - achat : un double toucher n'achète qu'un niveau ; la fiche se range, puis la carte de récompense (lot L) : « Niveau 1 »,
+//     « Champs », 4 → 5, la réplique de Fanal (au niveau 1 seulement, pas dans sa bulle), nommée et décrite pour le lecteur
+//     d'écran, le focus sur « Continuer » ; plaque et compteur à jour ; la fiche rouverte montre le niveau suivant ; le
+//     niveau 3, trop cher, reste visible avec le cadenas et la raison du cœur, redite au toucher, sans rien acheter ;
 //   - même chemin au clavier par « Construire » → onglet Quartiers, atteint par la flèche droite (lot L : « 6 → 7 par
 //     récolte », le prix en pastilles, en pointillés quand il en manque ; la fiche s'empile sur le catalogue, Échap la referme
 //     seule) et par « Vue » → Carte en liste ; « Voir les quêtes » ferme toutes les feuilles et filtre la liste ;
@@ -52,7 +53,6 @@ const fiche = (page) => page.evaluate(() => {
     monter: b ? { text: sp(b.textContent), niveau: b.dataset.niveau, off: b.getAttribute('aria-disabled') === 'true', primaire: b.classList.contains('btn--primary'), desc: b.getAttribute('aria-describedby'), lock: !!b.querySelector('use[href$="#i-lock"]') } : null,
     raison: raison ? { text: sp(raison.textContent), cache: raison.classList.contains('sr-only') } : null,
     max: sp(d.querySelector('.qrt-max')?.textContent),
-    monte: (() => { const p = d.querySelector('.qrt-monte'); if (!p) return null; const r = p.getBoundingClientRect(); return { text: sp(p.textContent), check: !!p.querySelector('use[href$="#i-check"]'), premier: p === d.querySelector('.qrt-body').firstElementChild, vu: r.height > 0 && r.top >= 0 && r.bottom <= innerHeight }; })(),
     quetes: sp(d.querySelector('[data-action="qrt-quetes"]')?.textContent),
     focus: document.activeElement && d.contains(document.activeElement) ? (document.activeElement.dataset.action || document.activeElement.className) : null,
     focusNiveau: document.activeElement?.dataset?.niveau || null,
@@ -69,6 +69,21 @@ const badge = (page) => page.evaluate(() => {
   const r = document.querySelector('.res[data-res="permis"]');
   const b = document.querySelector('[data-ow="build"]');
   return { text: r.querySelector('.res-value').textContent.trim(), label: r.getAttribute('aria-label'), pastille: !!b.querySelector('.ow-badge'), build: b.getAttribute('aria-label') };
+});
+/** Carte de récompense (lot L) : ce qu'elle montre, son nom et sa description lus, le focus, la bulle de Fanal. */
+const carte = (page) => page.evaluate(() => {
+  const d = document.getElementById('dlg-recompense');
+  const sp = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+  const txt = (ids) => (ids || '').split(' ').map((id) => document.getElementById(id)?.textContent).filter(Boolean).map(sp).join(' ');
+  const b = d.querySelector('.btn');
+  return {
+    niveau: sp(d.querySelector('.recompense-niveau')?.textContent), titre: sp(d.querySelector('.recompense-titre')?.textContent),
+    compare: [...d.querySelectorAll('.recompense-val b')].map((x) => sp(x.textContent)).join(' '), label: sp(d.querySelector('.recompense-label')?.textContent),
+    fanal: sp(d.querySelector('.recompense-fanal')?.textContent), nom: txt(d.getAttribute('aria-labelledby')), desc: txt(d.getAttribute('aria-describedby')),
+    focus: d.contains(document.activeElement) ? sp(document.activeElement.textContent) : null, bouton: b ? b.getBoundingClientRect().height : 0,
+    wide: [...d.querySelectorAll('*')].some((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.right > innerWidth + 1); }),
+    pile: [...document.querySelectorAll('dialog.sheet[open]')].map((x) => x.id).join(), bulle: !document.getElementById('speech').hidden,
+  };
 });
 /** Centre touchable d'une plaque (rien par-dessus), ou null. */
 const hit = (page, s) => page.evaluate((s) => {
@@ -120,7 +135,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('fiche : une région lue dans la feuille', await page.evaluate(() => !!document.querySelector('#dlg-quartier > [data-live][role="status"]')));
   await shot(page, '31-fiche');
 
-  // ───── achat par un double toucher : un seul niveau
+  // ───── achat par un double toucher : un seul niveau ; la fiche se range, le moment se joue sur la plaque, puis la carte
   await L.said(page, true);
   const g0 = srv.game();
   const go = await page.evaluate(() => { const r = document.querySelector('#dlg-quartier [data-action="qrt-monter"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
@@ -128,38 +143,52 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForTimeout(90);
   await page.touchscreen.tap(go[0], go[1]);
   R.check('achat enregistré : Champs au niveau 1', await L.waitFor(() => srv.game()?.niveaux?.champs === 1, 6000), JSON.stringify(srv.game()?.niveaux));
-  await page.waitForTimeout(1200);
+  R.check('la fiche se range aussitôt (lot L)', await closed(page, 'dlg-quartier'));
+  R.check('la carte de récompense s’ouvre après le moment', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-recompense').open), 4000));
+  await page.waitForTimeout(450);
   let g = srv.game();
   R.check('double toucher : un seul niveau payé (1 permis, 80 Énergie, 60 Matériaux)', g.niveaux.champs === 1 && g.permis.dispo === g0.permis.dispo - 1 && g.resources.energy === g0.resources.energy - 80 && g.resources.materials === g0.resources.materials - 60, JSON.stringify({ n: g.niveaux, avant: [g0.permis, g0.resources], apres: [g.permis, g.resources] }));
-  let dits = (await L.said(page)).filter((x) => /^Champs : niveau/.test(sp(x.text)));
-  R.check('annonce « Champs : niveau 1. 5 Nourriture par récolte du potager. », une seule fois, dans la fiche', dits.length === 1 && sp(dits[0].text).startsWith('Champs : niveau 1. 5 Nourriture par récolte du potager.') && dits[0].sheet === 'dlg-quartier', JSON.stringify(await L.said(page)));
-  const v = await L.voice(page, 'live');
-  R.check('… et un lecteur d’écran la reçoit (région non inerte)', v.sheet === 'dlg-quartier' && v.ignored === false, JSON.stringify(v));
+  let k = await carte(page);
+  R.check('carte : « Niveau 1 », « Champs », 4 → 5, « Nourriture par récolte du potager », seule feuille ouverte', k.niveau === 'Niveau 1' && k.titre === 'Champs' && k.compare === '4 5' && k.label === 'Nourriture par récolte du potager' && k.pile === 'dlg-recompense', JSON.stringify(k));
+  R.check('carte : la réplique de Fanal au niveau 1, sur la carte et pas dans sa bulle', !!k.fanal && !k.bulle, JSON.stringify(k));
+  R.check('carte : nommée « Champs », décrite par « Champs : niveau 1. 5 Nourriture par récolte du potager. » et Fanal', k.nom === 'Champs' && k.desc.startsWith('Champs : niveau 1. 5 Nourriture par récolte du potager. Fanal : '), JSON.stringify(k));
+  R.check('carte : le focus sur « Continuer » (44 px), aucun débordement', k.focus === 'Continuer' && k.bouton >= 43.99 && !k.wide, JSON.stringify(k));
+  const dits = (await L.said(page)).filter((x) => /^Champs : niveau/.test(sp(x.text)));
+  R.check('rien n’est annoncé en double : la carte dit la montée', dits.length === 0, JSON.stringify(await L.said(page)));
   pc = await plaque(page, 'champs');
   // la pastille et la phrase « Tu peux monter au niveau 2. » vont ensemble (lot L)
   R.check('plaque à jour : « Champs · niv. 1 », lue « Champs : niveau 1. », pastille et phrase d’accord', pc.text === 'Champs · niv. 1' && pc.label === `Champs : niveau 1.${pc.monte ? ' Tu peux monter au niveau 2.' : ''}` && pc.niveau === '1', JSON.stringify(pc));
   await L.waitFor(async () => (await badge(page)).text === '2', 4000); // le compteur monte à l'impact, après l'écriture
   bd = await badge(page);
   R.check('compteur à jour : « Permis : 2 »', bd.text === '2' && bd.label === 'Permis\u00a0: 2' && !bd.pastille && bd.build === 'Construire', JSON.stringify(bd));
-  const apres = await page.evaluate(() => { const r = document.querySelector('#dlg-quartier [data-action="qrt-monter"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
-  R.check('le bouton d’achat n’a pas bougé après l’achat (second toucher sur le même bouton)', Math.abs(apres[0] - go[0]) <= 1 && Math.abs(apres[1] - go[1]) <= 1, JSON.stringify({ avant: go, apres }));
-  f = await fiche(page);
-  R.check('fiche à jour sur place : niveau 1, 5 → 6, niveau 2 à 2 permis, 160 Énergie et 120 Matériaux', f.open && f.ligne.endsWith('niveau 1') && f.compare.avant === '5' && f.compare.apres === '6' && f.compare.legendes === 'maintenant | niveau 2' && f.pastilles === 'permis 2 plein, energie 160 plein, materiaux 120 plein' && !f.permis, JSON.stringify(f));
-  // la fiche a une hauteur fixe dès 700 px : la ligne de réussite ne la fait plus grandir ni descendre son bouton
-  R.check('le focus reste sur le bouton (« Monter au niveau 2 »)', f.focus === 'qrt-monter' && f.focusNiveau === '2', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
-  R.check('niveau 2 achetable : bouton actif', f.monter && !f.monter.off && f.monter.niveau === '2', JSON.stringify(f.monter));
-  R.check('réussite visible dans la fiche : coche et « Champs : niveau 1. 5 Nourriture par récolte du potager. », en tête, à l’écran', f.monte && f.monte.check && f.monte.premier && f.monte.vu && f.monte.text === 'Champs : niveau 1. 5 Nourriture par récolte du potager.', JSON.stringify(f.monte));
   await shot(page, '31-achat');
+  await page.keyboard.press('Enter'); // « Continuer »
+  R.check('« Continuer » ferme la carte', await closed(page, 'dlg-recompense'));
 
-  // ───── niveau 2, puis le 3 trop cher : cadenas et raison du cœur
+  // ───── la fiche rouverte : le niveau suivant ; niveau 2 acheté (sans réplique), puis le 3 trop cher
+  const rouvrir = async () => {
+    await page.waitForTimeout(300);
+    const p2 = await hit(page, 'champs');
+    if (compact && p2) await page.touchscreen.tap(p2[0], p2[1]); else await page.click('.ow-plaque[data-sector="champs"]');
+    await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-quartier').open), 2000);
+    await page.waitForTimeout(450);
+  };
+  await rouvrir();
+  f = await fiche(page);
+  R.check('fiche rouverte : niveau 1, 5 → 6, niveau 2 à 2 permis, 160 Énergie et 120 Matériaux', f.open && f.ligne.endsWith('niveau 1') && f.compare.avant === '5' && f.compare.apres === '6' && f.compare.legendes === 'maintenant | niveau 2' && f.pastilles === 'permis 2 plein, energie 160 plein, materiaux 120 plein' && f.prix === 'Prix : 2 permis, 160 Énergie et 120 Matériaux.' && !f.permis, JSON.stringify(f));
+  R.check('niveau 2 achetable : bouton actif', f.monter && !f.monter.off && f.monter.niveau === '2', JSON.stringify(f.monter));
   await L.said(page, true);
   await page.click('#dlg-quartier [data-action="qrt-monter"]');
   R.check('niveau 2 acheté', await L.waitFor(() => srv.game()?.niveaux?.champs === 2, 6000));
-  await page.waitForTimeout(900);
+  R.check('… sa carte, sans réplique de Fanal (il ne parle qu’au niveau 1)', await L.waitFor(() => page.evaluate(() => document.getElementById('dlg-recompense').open), 4000));
+  await page.waitForTimeout(450);
+  k = await carte(page);
+  R.check('carte du niveau 2 : 5 → 6, décrite par la phrase seule', k.niveau === 'Niveau 2' && k.compare === '5 6' && !k.fanal && k.desc === 'Champs : niveau 2. 6 Nourriture par récolte du potager.', JSON.stringify(k));
+  await page.keyboard.press('Escape');
+  R.check('Échap ferme la carte', await closed(page, 'dlg-recompense'));
+  await rouvrir();
   f = await fiche(page);
   R.check('niveau 3 trop cher : bouton à plat, aria-disabled, cadenas, décrit par la raison', f.monter && f.monter.off && !f.monter.primaire && f.monter.lock && f.monter.desc === 'qrt-raison' && f.monter.text === 'Monter au niveau 3', JSON.stringify(f.monter));
-  R.check('le focus reste sur le bouton après l’achat (« Monter au niveau 3 », verrouillé)', f.focus === 'qrt-monter' && f.focusNiveau === '3', JSON.stringify({ focus: f.focus, n: f.focusNiveau }));
-  R.check('réussite du niveau 2 visible en tête de la fiche', f.monte && f.monte.check && f.monte.premier && f.monte.vu && /^Champs : niveau 2\. \d+ Nourriture par récolte du potager\.$/.test(f.monte.text), JSON.stringify(f.monte));
   g = srv.game();
   const raison = `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`;
   R.check('raison écrite par le cœur, lue mais pas affichée (les pastilles la montrent)', f.raison && f.raison.cache && f.raison.text === raison, JSON.stringify({ vu: f.raison, attendu: raison }));
@@ -241,7 +270,6 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('Entrée sur la ligne du Garage : sa fiche, posée sur le catalogue', f.open && f.quartier === 'garage' && f.pile.join() === 'dlg-construire,dlg-quartier', JSON.stringify({ q: f.quartier, pile: f.pile }));
   R.check('Garage au plus haut : pas de bouton d’achat ni de prix, « Niveau 2 : le plus haut pour l’instant. », la valeur seule (3)', !f.monter && !f.pastilles && f.max === 'Niveau 2 : le plus haut pour l’instant.' && f.compare.avant === '3' && f.compare.apres === null && f.compare.sr === 'Maintenant : 3 jours de passage pour qu’une culture mûrisse.', JSON.stringify({ max: f.max, compare: f.compare, p: f.pastilles }));
   R.check('le focus est dans la fiche', await page.evaluate(() => document.getElementById('dlg-quartier').contains(document.activeElement)));
-  R.check('une autre fiche ouverte : plus de ligne de réussite', f.monte === null, JSON.stringify(f.monte));
   await shot(page, '31-pile');
   await page.keyboard.press('Escape');
   await closed(page, 'dlg-quartier');

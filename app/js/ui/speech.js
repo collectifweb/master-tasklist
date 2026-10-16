@@ -63,8 +63,8 @@ export function createSpeech(root) {
     timer = setTimeout(() => { el.hidden = true; }, 7000);
   }
   return {
-    /** Renvoie la réplique jouée (ou null). */
-    react({ action, params, events, task, now }) {
+    /** Renvoie la réplique jouée (ou null). montrer: false la choisit sans l'afficher (la carte de récompense la porte). */
+    react({ action, params, events, task, now, montrer = true }) {
       const sit = situationFor(action, params || {}, events || [], task);
       if (!sit) return null;
       const monte = (events || []).find((e) => e.type === 'quartier-monte');
@@ -75,7 +75,7 @@ export function createSpeech(root) {
         length: task ? (task.frozen ? task.frozen.length : task.length) : 0,
         vars: { ...replyVars(task, quartier), rang: rang ? rang.name : null },
       });
-      if (reply) show(reply);
+      if (reply && montrer) show(reply);
       return reply;
     },
     showText(nom, texte) { show({ nom, texte }); },

@@ -1036,27 +1036,102 @@
 .permis-niv-t { font-size: 0.8125rem; font-weight: var(--w-bold); color: var(--text-soft); }
 .permis-niv .pastille { height: 32px; padding: 0 8px; font-size: var(--text-15); }
 .permis-niv .pastille .icon { width: 16px; height: 16px; }
-/* Tablette et plus : la feuille est centrée, donc une feuille qui grandit (ligne de réussite après un achat, raison d'un
-   refus) descend son bouton d'achat sous le doigt. Hauteur fixe : le corps défile s'il le faut, le pied ne bouge plus.
+/* Tablette et plus : la feuille est centrée, donc une feuille qui grandit (une ligne cochée, la raison d'un refus)
+   descend son bouton d'achat sous le doigt. Hauteur fixe : le corps défile s'il le faut, le pied ne bouge plus.
    Sur téléphone, la feuille est posée en bas : en grandissant, elle monte et le pied reste en place. */
 @media (min-width: 700px) {
   #dlg-quartier { height: min(620px, calc(100dvh - 48px)); }
 }
-/* achat réussi, en tête de la fiche : la coche et le sauge de « Disponible » (catalogue), jusqu'à la prochaine ouverture */
-.qrt-monte {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
+/* Carte de récompense (lot L) : après une montée de niveau, une carte centrée à toutes les largeurs, le picto du quartier
+   dans un rond qui dépasse en haut, « Niveau 2 » en galet sauge, le nom, « 5 → 6 » en grand, la réplique de Fanal sur
+   lavis de verre, « Continuer ». Elle apparaît en grandissant un peu ; en mouvement réduit, un fondu seul (--motion). */
+.recompense:not(.sheet--inline) {
+  inset: 0;
+  width: min(360px, calc(100% - 32px));
+  max-height: calc(100dvh - 96px);
+  margin: auto;
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-float);
+  overflow: visible;
+}
+.recompense[open] { animation: recompense-in var(--t-medium) var(--ease-out); }
+.recompense.is-closing { animation: recompense-out var(--t-short) var(--ease-in) forwards; }
+@keyframes recompense-in {
+  from { opacity: 0; transform: scale(calc(1 - var(--motion) * 0.08)); }
+}
+@keyframes recompense-out {
+  to { opacity: 0; transform: scale(calc(1 - var(--motion) * 0.04)); }
+}
+.recompense-picto {
+  position: absolute;
+  top: -44px;
+  left: calc(50% - 46px);
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  box-sizing: border-box;
+  border: 4px solid var(--c-paper);
+  border-radius: 50%;
+  background: var(--c-sage-wash);
+  box-shadow: var(--shadow-card);
+}
+.recompense-picto .icon { width: 44px; height: 44px; color: var(--c-sage-deep); }
+.recompense-body {
+  justify-items: center;
+  gap: var(--sp-3);
+  padding-top: 60px;
+  text-align: center;
+}
+.recompense-niveau {
   margin: 0;
-  font-weight: var(--w-semibold);
-  color: var(--c-sage-deep);
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  font-family: var(--font-num);
+  font-size: var(--text-15);
+  font-weight: var(--w-heavy);
 }
-.qrt-monte .icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
+.recompense-titre {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-28);
+  font-weight: var(--w-display);
+  line-height: 1.1;
 }
+.recompense-compare {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-1) 0 0;
+}
+.recompense-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+}
+.recompense-val b { font-size: 2.25rem; font-weight: var(--w-heavy); line-height: 1; }
+.recompense-val .icon { width: 26px; height: 26px; }
+.recompense-val--apres { color: var(--c-sage-deep); }
+.recompense-val--apres b { font-size: 3.25rem; }
+.recompense-val--apres .icon { width: 32px; height: 32px; }
+.recompense-fleche { width: 28px; height: 28px; color: var(--c-sage); }
+.recompense-label { margin: 0; color: var(--text-soft); }
+.recompense-fanal {
+  display: grid;
+  gap: 2px;
+  justify-self: stretch;
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--c-glass-wash);
+  text-align: left;
+}
+.recompense-body > .btn { justify-self: stretch; margin-top: var(--sp-2); }
 .qrt-max {
   flex: 1 1 100%;
   margin: 0;

@@ -21,7 +21,7 @@ import {
 import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ressourcesText } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
-import { openQuartier, refreshQuartier, monteText, showMonte } from './ui/quartier.js';
+import { openQuartier, refreshQuartier, monteText, openRecompense } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -48,6 +48,7 @@ let worldPlan = null;
 let started = false;
 let touchFrom = null; // [x, y] du bouton « Fait » touché : le fil de lumière part de là
 let cueillette = null; // l'emplacement récolté d'un toucher sur sa bulle (lot L), le temps du geste : sa récolte s'envole
+let recompense = null; // la montée de niveau qui attend sa carte (lot L) : { e (quartier-monte), reply (Fanal, ou null) }
 
 const ctx = () => ({ tasks: store.view.tasks, game: store.view.game, ledger: store.view.ledger, now: maintenant() });
 const story = createStory({
@@ -124,6 +125,13 @@ function flushHud() {
 // ───────── Réactions à une action ─────────
 function react(payload) {
   const { action, params = {}, events = [], result, now } = payload;
+  // une montée de niveau (lot L) : la carte de récompense dit tout, après le moment ; la réplique de Fanal y va, pas dans
+  // sa bulle, et rien n'est annoncé avant elle
+  const monte = action === 'monterQuartier' && events.find((e) => e.type === 'quartier-monte');
+  if (monte) {
+    recompense = { e: monte, reply: speech.react({ action, params, events, now: now || maintenant(), montrer: false }) };
+    return;
+  }
   const s = summarize(events);
   const created = action === 'createQuest' ? ((result.ops || []).find((o) => o.type === 'task.upsert') || {}).task?.id : null;
   const taskId = params.id || created || (events.find((e) => e.type === 'reward' && e.taskId) || {}).taskId || null;
@@ -297,11 +305,20 @@ store.on('change', (payload) => {
     const run = world.play(worldEvents(payload), { from });
     Promise.resolve(run).then(() => {
       if (hudPending) flushHud();
+      if (payload.action === 'monterQuartier') ouvrirRecompense();
       // plus aucune quête ouverte après un « Fait » : la visite se termine d'elle-même
       if (payload.action === 'completeQuest' && !topCards(store.view.tasks, maintenant()).first) setTimeout(endVisit, 600);
     });
-  }
+  } else if (payload?.action === 'monterQuartier') ouvrirRecompense();
 });
+
+/** La carte de récompense d'une montée de niveau, une fois son moment joué (lot L). */
+function ouvrirRecompense() {
+  if (!recompense) return;
+  const { e, reply } = recompense;
+  recompense = null;
+  openRecompense(e, reply, { open: openSheet });
+}
 // Un message court ou une erreur d'enregistrement (« Réessayer ») vit dans la zone d'état du panneau : panneau caché,
 // il revient replié avant que le texte s'écrive, pour être vu et lu. « Enregistrement… » et « Enregistré » ne le font pas.
 store.on('sync', (s) => { if (s && (s.state === 'error' || s.state === 'offline')) showPanel(); sync.set(s); });
@@ -509,6 +526,13 @@ const markSpent = (action, target) => {
   const dlg = target.closest('dialog');
   if (dlg) dlg._spentAt = spent.at; // sa feuille peut rapetisser : le second toucher tomberait au fond (sheets.js)
 };
+// Une feuille rangée par un geste qui dépense (lot L : l'achat d'un niveau, une construction du catalogue) : le second
+// toucher d'un double toucher tomberait sur ce qui était dessous (« Fait » du panneau, une plaque, la colonne) ; il est
+// ignoré, en mouvement réduit aussi, où la feuille part aussitôt.
+let range = 0;
+document.addEventListener('click', (e) => {
+  if (Date.now() - range < SPEND_AGAIN_MS) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 
 document.addEventListener('click', (e) => {
   const target = e.target.closest('button, [data-action], [data-close], input[data-action]');
@@ -642,6 +666,7 @@ document.addEventListener('click', (e) => {
       markSpent(action, target);
       const bid = target.dataset.id;
       if (!run('construire', { type: target.dataset.type, id: bid })) return;
+      range = Date.now();
       closeSheet($('#dlg-construire'));
       return world && world.focusEntity(bid); // la carte montre le bâtiment neuf (mouvement réduit respecté)
     }
@@ -652,8 +677,14 @@ document.addEventListener('click', (e) => {
       if (disabled(target)) return announce.say(($('#qrt-raison') || target).textContent.trim());
       markSpent(action, target);
       const r = run('monterQuartier', { quartier: target.dataset.quartier, niveau: Number(target.dataset.niveau) });
-      const monte = r && r.events.find((x) => x.type === 'quartier-monte');
-      return monte && showMonte(ctx(), monte); // la réussite se voit dans la fiche, pas seulement sur la carte derrière
+      // la fiche se range (lot L), et les feuilles sous elle, de la plus haute à la plus basse (chacune rend le focus à ce
+      // qui l'a ouverte : à la fin, la plaque ou « Construire ») ; le moment se joue sur la plaque, visible, puis la carte
+      // de récompense (store.on('change'))
+      if (r && r.events.some((x) => x.type === 'quartier-monte')) {
+        range = Date.now();
+        for (const d of $$('dialog.sheet[open]').sort((a, b) => (b._z || 0) - (a._z || 0))) closeSheet(d);
+      }
+      return r;
     }
     case 'qrt-quetes': {
       // le panneau s'ouvre derrière : toutes les feuilles se ferment (fiche, catalogue, carte en liste)

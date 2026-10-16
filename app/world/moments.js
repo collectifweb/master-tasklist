@@ -122,15 +122,18 @@ function cueilletteStep(ctx, ev) {
 }
 
 // ----------------------------------------------------------------------------- un quartier monte de niveau (acheté)
+// La fiche s'est rangée (lot L) : la plaque vient dans la zone libre, le temps que la feuille parte, puis monte.
 function niveauStep(ctx, ev) {
   const S = ctx.shown.sectors[ev.quartier] ? ev.quartier : null;
   const apply = () => { if (S) { ctx.shown.sectors[S] = { ...ctx.target.sectors[S] }; ctx.updatePlaque(ctx.shown.sectors[S]); } ctx.apply({ enter: false }); };
   const run = async () => {
+    if (!S) { apply(); return; }
+    const [x, y] = sectorPx(S);
+    ctx.reveal(x, y, 90);
+    if (!ctx.reduced) await ctx.fx.wait(260);
     apply();
-    if (!S) return;
     const b = ctx.plaqueEls[S];
     if (ctx.reduced) { if (b) await fade(ctx, b, 0.35, 1); return; }
-    const [x, y] = sectorPx(S);
     plaquePop(ctx, S, 1.18);
     ctx.fx.ring(x, y, 46, { dur: 800, cls: 'is-gold' });
     ctx.fx.ring(x, y, 30, { dur: 700, delay: 160 });

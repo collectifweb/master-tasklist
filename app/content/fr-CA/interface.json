@@ -265,6 +265,8 @@
   "quartier.effet.stockagePlace": "{n} Nourriture de plus en réserve",
   "quartier.cout.permis": "{n} permis",
   "quartier.sr.monte": "{quartier} : niveau {n}. {effet}.",
+  "quartier.recompense.niveau": "Niveau {n}",
+  "quartier.recompense.continuer": "Continuer",
   "quartier.catalogue.section": "Quartiers",
   "quartier.catalogue.nom": "{quartier} · niveau {n}",
   "quartier.catalogue.unite.recoltePotager": "par récolte",

@@ -6,7 +6,8 @@
 // que la fiche d'un bâtiment (batiment.js), avec ses propres identifiants : elle s'ouvre aussi par-dessus le catalogue
 // « Construire » ou la Carte en liste.
 // Rien n'est calculé ici qui ne vienne de core/quartiers.js ; l'achat passe par data-action="qrt-monter", l'ancien
-// filtre de la liste par data-action="qrt-quetes" (main.js).
+// filtre de la liste par data-action="qrt-quetes" (main.js). Un achat réussi range la fiche (main.js) : le moment se joue
+// sur la plaque, puis la carte de récompense (openRecompense) ; le niveau suivant se lit à la prochaine ouverture.
 // La fiche de la Place porte aussi ce que la Nourriture achète (lot N, core/nourriture.js et objectifs.js) : du 1er mars
 // au 30 avril, la partie de sucre, au dessin de la commande du quai (Demande / Laisse, « Faire la partie de sucre » en
 // bouton secondaire : « Monter au niveau » reste le seul geste principal de la fiche), puis le repas de la semaine, au
@@ -168,10 +169,6 @@ function repasHtml(r) {
       ${action}${r.raison ? `<p class="offre-raison" id="repas-raison">${icon('lock')}<span>${esc(r.raison)}</span></p>` : ''}</li></ul></section>`;
 }
 
-// Dernier achat réussi : sa phrase reste en tête de la fiche (coche, sauge) tant qu'elle montre ce niveau ; une
-// nouvelle ouverture l’efface. Hors région lue : le lecteur d’écran l’a déjà entendue par l’annonce de la feuille.
-let monte = null;
-
 // « 4 → 5 +1 » : la valeur d'aujourd'hui en encre douce, celle du niveau suivant en sauge et en gros, l'écart en pastille
 // (et son sens en toutes lettres quand plus bas est meilleur) ; au plus haut, la valeur seule. Dessin muet, phrase lue à côté.
 function compareHtml(c) {
@@ -194,11 +191,9 @@ function prixHtml(m) {
 }
 
 function bodyHtml(m) {
-  const ok = monte && monte.quartier === m.id && monte.niveau === m.niveau
-    ? `<p class="qrt-monte">${icon('check')}<span>${esc(monte.text)}</span></p>` : '';
   const note = m.maintenant ? `<p class="qrt-note">${esc(m.maintenant)}</p>` : '';
   const repli = `<details class="repli"><summary>${esc(t('quartier.fiche.repli'))}${icon('chevron-down')}</summary><p>${esc(m.regle)}</p></details>`;
-  return `${ok}${compareHtml(m.compare)}${note}${m.suivant ? prixHtml(m) : ''}${repli}${m.sucres ? sucresHtml(m.sucres) : ''}${m.repas ? repasHtml(m.repas) : ''}`;
+  return `${compareHtml(m.compare)}${note}${m.suivant ? prixHtml(m) : ''}${repli}${m.sucres ? sucresHtml(m.sucres) : ''}${m.repas ? repasHtml(m.repas) : ''}`;
 }
 
 function footHtml(m) {
@@ -213,7 +208,6 @@ function footHtml(m) {
 export function openQuartier(c, quartier, { open } = {}) {
   const m = quartierModel(c, quartier);
   if (!m) return false;
-  monte = null;
   const dlg = $('#dlg-quartier');
   dlg.dataset.quartier = quartier;
   dlg.innerHTML = `
@@ -263,13 +257,46 @@ export function refreshQuartier(c) {
   if (m) fill(dlg, m);
 }
 
-/** Achat réussi (événement quartier-monte) : la fiche ouverte le montre en tête, avec la phrase lue. */
-export function showMonte(c, e) {
-  monte = { quartier: e.quartier, niveau: e.niveau, text: monteText(e) };
-  refreshQuartier(c);
-}
-
 /** Phrase lue après l'achat : « Champs : niveau 2. 6 Nourriture par récolte du potager. » */
 export function monteText(e) {
   return t('quartier.sr.monte', { quartier: t(`quartier.${e.quartier}.name`), n: e.niveau, effet: effetText(e.quartier, e.niveau) });
+}
+
+// ───────── Carte de récompense (lot L) ─────────
+/**
+ * Une montée de niveau (événement quartier-monte) : { quartier, nom, niveau (« Niveau 2 »), picto, avant (la valeur du
+ * niveau d'avant), apres, label, sens, sr (la phrase lue) }. Valeurs du cœur, comme la ligne comparative de la fiche.
+ */
+export function recompenseModel(e) {
+  const { reglage, niveaux } = EFFETS_QUARTIERS[e.quartier];
+  const avant = e.niveau > 1 ? niveaux[e.niveau - 2] : valeur({}, reglage);
+  return {
+    quartier: e.quartier, nom: t(`quartier.${e.quartier}.name`), niveau: t('quartier.recompense.niveau', { n: e.niveau }),
+    picto: PICTO[reglage], avant: num(avant), apres: num(niveaux[e.niveau - 1]),
+    label: t(`quartier.compare.${reglage}`), sens: SENS[reglage] ? t(SENS[reglage]) : '', sr: monteText(e),
+  };
+}
+
+/**
+ * Carte de récompense (#dlg-recompense), une fois le moment joué sur la plaque : le picto du quartier, « Niveau 2 », le
+ * nom, « 5 → 6 » en grand, ce que ça compte, la réplique de Fanal quand il en a une (reply, ou null), « Continuer ». Le
+ * dessin est muet ; la feuille est nommée par le quartier et décrite par la phrase lue, Fanal compris.
+ */
+export function openRecompense(e, reply, { open }) {
+  const m = recompenseModel(e);
+  const dlg = $('#dlg-recompense');
+  const val = (v, apres) => `<span class="recompense-val${apres ? ' recompense-val--apres' : ''}">${icon(m.picto)}<b>${esc(v)}</b></span>`;
+  dlg.dataset.quartier = m.quartier;
+  dlg.innerHTML = `
+    <span class="recompense-picto" aria-hidden="true">${icon(m.quartier)}</span>
+    <div class="sheet-body recompense-body">
+      <p class="recompense-niveau">${esc(m.niveau)}</p>
+      <h2 class="recompense-titre" id="recompense-t">${esc(m.nom)}</h2>
+      <p class="recompense-compare" aria-hidden="true">${val(m.avant)}${icon('fleche', 'recompense-fleche')}${val(m.apres, true)}</p>
+      <p class="recompense-label" aria-hidden="true">${esc(m.label)}${m.sens ? ` · ${esc(m.sens)}` : ''}</p>
+      <p class="sr-only" id="recompense-d">${esc(m.sr)}${reply ? ` ${esc(reply.nom)}\u00a0: ${esc(reply.texte)}` : ''}</p>
+      ${reply ? `<p class="recompense-fanal"><span class="speech-name">${esc(reply.nom)}</span><span>${esc(reply.texte)}</span></p>` : ''}
+      <button class="btn btn--primary btn--block" type="button" data-close>${esc(t('quartier.recompense.continuer'))}</button>
+    </div>`;
+  open(dlg);
 }
