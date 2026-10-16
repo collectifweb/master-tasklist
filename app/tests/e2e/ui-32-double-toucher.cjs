@@ -1,7 +1,7 @@
 // 32. Double toucher sur un geste qui dépense : rien n'est dépensé par le second toucher.
 //   - deux touchers sur « Construire » (colonne de la carte) : le second tombe dans le catalogue qui vient de s'ouvrir,
 //     rien n'est bâti ;
-//   - deux touchers sur une ligne de la section « Quartiers » : la fiche s'ouvre, aucun niveau n'est acheté ;
+//   - deux touchers sur une ligne de l'onglet « Quartiers » : la fiche s'ouvre, aucun niveau n'est acheté ;
 //   - deux touchers sur « Accueillir une famille » : une seule famille ;
 //   - au clavier, rien ne change : Entrée bâtit aussitôt après l'ouverture du catalogue. Données fictives seulement.
 const L = require('./lib.cjs');
@@ -47,12 +47,15 @@ L.runScenario('32. Double toucher : un geste qui dépense ne se fait qu’une fo
   await page.touchscreen.tap(...await center(page, '[data-ow="build"]'));
   await L.waitFor(() => isOpen(page, 'dlg-construire'), 2000);
   await page.waitForTimeout(800);
+  await page.touchscreen.tap(...await center(page, '#cat-qrts-t'));
+  await page.waitForTimeout(300);
   const dispo = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire .cat-qrt')].map((li) => {
     const e = li.querySelector('.cat-etat');
-    return { q: li.dataset.quartier, data: li.dataset.etat || '', etat: e.hidden ? '' : e.textContent.trim(), check: !!e.querySelector('use[href$="#i-check"]') };
+    const p = [...li.querySelectorAll('.cat-prix .pastille')];
+    return { q: li.dataset.quartier, data: li.dataset.etat || '', etat: e.hidden ? '' : e.textContent.trim(), prix: p.length, manque: p.some((x) => x.hasAttribute('data-manque')) };
   }));
   const peut = dispo;
-  R.check('section Quartiers : « Disponible » avec la coche quand le niveau suivant s’achète (comme les bâtiments)', peut.length === 6 && peut.every((r) => r.data === 'libre' && r.check && r.etat === 'Disponible'), JSON.stringify(dispo));
+  R.check('onglet Quartiers : chaque niveau suivant s’achète, prix en pastilles pleines, sans ligne d’état', peut.length === 6 && peut.every((r) => r.data === 'libre' && r.etat === '' && r.prix > 0 && !r.manque), JSON.stringify(dispo));
   const q = compact ? 'place' : 'ecole';
   await page.evaluate((q) => document.querySelector(`#dlg-construire .cat-qrt-go[data-quartier="${q}"]`).scrollIntoView({ block: 'center' }), q);
   await page.waitForTimeout(400);

@@ -6,7 +6,7 @@
 //   - la semaine figée (« Jour suivant » jusqu'au lundi) porte la ligne « Semaine tenue : +12 Matériaux » au bilan, les
 //     semaines plus anciennes (non tenue, ou sans le champ) n'en portent aucune ; aide des Matériaux, couleur du compteur Permis ;
 //   - largeur 360 : rien ne déborde (barre, bilan).
-//   Partie B (un lundi de janvier, village au Hameau) : la 2e serre se bâtit par le catalogue, se sème l'hiver (chauffage
+//   Partie B (un lundi de janvier, village au Hameau) : la 2e serre se bâtit par le catalogue (sa rangée en part ensuite), se sème l'hiver (chauffage
 //   compris) depuis sa fiche, mûrit après 5 jours de passage (la visite du jour, lot J) et se récolte.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
@@ -143,7 +143,9 @@ const jourSuivant = async (page, srv, k) => {
     const serre = await ligne(page, 'serre');
     R.check('catalogue : la 1re serre est bâtie, la 2e est verrouillée avec sa raison', serre.off && serre.etat === RAISON && serre.id === 'serre-2' && serre.label === 'Bâtir : Petite serre' && serre.cout === 'Coûte 6 Énergie et 25 Matériaux.', JSON.stringify(serre));
     const effetAtelier = await page.evaluate(() => document.querySelector('#dlg-construire .cat-qrt[data-quartier="atelier"] .cat-suivant').textContent.replace(/ /g, ' '));
-    R.check('catalogue : l’effet de l’Atelier parle de chaque petite serre', /par récolte de chaque petite serre/.test(effetAtelier), effetAtelier);
+    R.check('catalogue : l’effet de l’Atelier parle de chaque petite serre (phrase lue de sa rangée)', /par récolte de chaque petite serre/.test(effetAtelier), effetAtelier);
+    const atelierCache = await page.evaluate(() => document.querySelector('#dlg-construire .cat-row[data-type="atelier"]').hidden);
+    R.check('catalogue : l’atelier, unique et déjà debout, n’y figure plus', atelierCache);
     R.check('catalogue : boutons de 44 px au moins', serre.h >= 43.99, String(serre.h));
     await shot(page, '34-catalogue-serre');
     await closeCatalogue(page);
@@ -316,7 +318,7 @@ const jourSuivant = async (page, srv, k) => {
       const b0 = srvB.game();
       await openCatalogue(pb);
       let r = await ligne(pb, 'serre');
-      R.check('Hameau : la 2e serre est disponible au catalogue, sur serre-2', !r.off && r.etat === 'Disponible' && r.id === 'serre-2' && r.label === 'Bâtir : Petite serre', JSON.stringify(r));
+      R.check('Hameau : la 2e serre est disponible au catalogue, sur serre-2', !r.off && r.etat === '' && r.id === 'serre-2' && r.label === 'Bâtir : Petite serre', JSON.stringify(r));
       await shot(pb, '34-catalogue-hameau');
       await pb.click('#dlg-construire .cat-row[data-type="serre"] .cat-go');
       R.check('serre-2 bâtie : enregistrée, 6 Énergie et 25 Matériaux dépensés', await L.waitFor(() => {
@@ -327,7 +329,8 @@ const jourSuivant = async (page, srv, k) => {
       await pb.waitForTimeout(900);
       await openCatalogue(pb);
       r = await ligne(pb, 'serre');
-      R.check('2 serres bâties : la ligne dit qu’il n’y a plus d’emplacement libre', r.off && r.etat === 'Plus d’emplacement libre pour une petite serre.', JSON.stringify(r));
+      const serreCachee = await pb.evaluate(() => document.querySelector('#dlg-construire .cat-row[data-type="serre"]').hidden);
+      R.check('2 serres bâties : la rangée de la serre quitte le catalogue (plus rien à bâtir)', serreCachee, JSON.stringify(r));
       await closeCatalogue(pb);
       await pb.waitForTimeout(500);
 

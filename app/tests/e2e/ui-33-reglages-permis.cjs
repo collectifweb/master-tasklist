@@ -249,6 +249,7 @@ L.runScenario('33. Réglages (quête par défaut sur tous les appareils) et comp
   await page.click('[data-ow="build"]');
   await page.waitForSelector('#dlg-construire[open]');
   await settle(page);
+  await page.click('#cat-qrts-t');
   await page.evaluate(() => document.querySelector('#dlg-construire .cat-qrt-go[data-quartier="champs"]').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(300);
   await page.click('#dlg-construire .cat-qrt-go[data-quartier="champs"]');

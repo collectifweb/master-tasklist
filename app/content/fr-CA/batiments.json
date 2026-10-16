@@ -1,5 +1,5 @@
 {
-  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (la ligne d’ambiance sous le nom), fait (ce que ça fait : à bâtir, en tête de la fiche; debout, dans le repli « Comment ça marche »), regle (parcelle et serre : le repli « Comment ça pousse », qui parle en crans), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js); comptoir.jour : l’échange du jour, sous les offres de la semaine (lot T). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I). tour, scierie, poulailler, cabane : le rang Village (lot B); leur phrase d’état dit la production du jour (maintenant.fait), la cabane hors saison (maintenant.dort) et la réserve pleine (fiche.production.plein); la fiche montre leur gain du jour en pastille (fiche.parJour, fiche.donne). fiche : l’état dessiné du lot L (crans d’une culture, places du village, réserve), lu par la phrase d’état.",
+  "_doc": "Bâtiments du village (lot 4). Lus sous bat.<groupe>.<clé> : content.js les ajoute aux textes de l’interface, que le monde lit aussi. Par bâtiment : nom (debout), vide (l’emplacement avant la construction), quoi / quoiVide (la ligne d’ambiance sous le nom), fait (ce que ça fait : à bâtir, en tête de la fiche; debout, dans le repli « Comment ça marche »), regle (parcelle et serre : le repli « Comment ça pousse », qui parle en crans), geste (le bouton qui le bâtit). Les nombres entre accolades viennent de core/batiments.js. Les raisons de refus sont écrites par le cœur. comptoir : la fiche du quai quand le marchand est là (core/visiteurs.js); comptoir.jour : l’échange du jour, sous les offres de la semaine (lot T). commande : le visiteur à commande de la semaine, au-dessus du comptoir (lot C). degat : un mauvais imprévu dans la fiche du bâtiment touché (core/imprevus.js, lot I). tour, scierie, poulailler, cabane : le rang Village (lot B); leur phrase d’état dit la production du jour (maintenant.fait), la cabane hors saison (maintenant.dort) et la réserve pleine (fiche.production.plein); la fiche montre leur gain du jour en pastille (fiche.parJour, fiche.donne). fiche : l’état dessiné du lot L (crans d’une culture, places du village, réserve), lu par la phrase d’état. catalogue : la feuille « Construire » (lot L), en deux onglets; effet.<type> est la ligne courte d’une rangée, à côté du picto de sa ressource (la phrase lue reste fait).",
   "chalet": {
     "nom": "Chalet",
     "vide": "Chalet vide",
@@ -300,10 +300,21 @@
   },
   "catalogue": {
     "titre": "Construire",
-    "intro": "Choisis un bâtiment : il se bâtit sur le premier emplacement libre, et la carte te le montre.",
+    "onglets": "Catalogue",
     "section": "Bâtiments",
-    "dispo": "Disponible",
+    "vide": "Tout est bâti pour l’instant.",
     "geste.label": "{geste} : {nom}",
-    "fermer": "Fermer"
+    "fermer": "Fermer",
+    "effet.chalet": "+{n} places",
+    "effet.parcelle": "+{n} tous les {jours} jours",
+    "effet.atelier": "Débloque la serre, l’éolienne et la scierie",
+    "effet.serre": "+{n} tous les {jours} jours",
+    "effet.eolienne": "+{n} par jour",
+    "effet.grenier": "+{n} en réserve",
+    "effet.quai": "Marchand et commandes chaque semaine",
+    "effet.tour": "Tempêtes vues {n} jours avant",
+    "effet.scierie": "+{n} par jour",
+    "effet.poulailler": "+{n} par jour",
+    "effet.cabane": "+{n} par jour en mars et avril"
   }
 }

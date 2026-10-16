@@ -6,7 +6,8 @@
 //   - achat : un double toucher n'achète qu'un niveau ; la phrase « Champs : niveau 1. … » est lue dans la feuille ;
 //     plaque, compteur et fiche à jour, le bouton d'achat reste à sa place et garde le focus ; le niveau suivant, trop cher, reste visible avec
 //     le cadenas et la raison du cœur, redite au toucher, sans rien acheter ;
-//   - même chemin au clavier par « Construire » → Quartiers (la fiche s'empile sur le catalogue, Échap la referme
+//   - même chemin au clavier par « Construire » → onglet Quartiers, atteint par la flèche droite (lot L : « 6 → 7 par
+//     récolte », le prix en pastilles, en pointillés quand il en manque ; la fiche s'empile sur le catalogue, Échap la referme
 //     seule) et par « Vue » → Carte en liste ; « Voir les quêtes » ferme toutes les feuilles et filtre la liste ;
 //   - cibles de 44 px, aucun défilement horizontal. Données fictives seulement.
 const L = require('./lib.cjs');
@@ -193,6 +194,13 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.keyboard.press('Enter');
   await page.waitForSelector('#dlg-construire[open]');
   await page.waitForTimeout(450);
+  const onglets0 = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire [role="tab"]')].map((t) => `${t.id}:${t.getAttribute('aria-selected')}`).join());
+  R.check('catalogue : deux onglets, ouvert sur « Bâtiments »', onglets0 === 'cat-bats-t:true,cat-qrts-t:false', onglets0);
+  await page.focus('#cat-bats-t');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(150);
+  const onglet = await page.evaluate(() => ({ focus: document.activeElement?.id, sel: document.getElementById('cat-qrts-t').getAttribute('aria-selected'), bats: document.getElementById('cat-bats').hidden, qrts: document.getElementById('cat-qrts').hidden, h: document.getElementById('cat-qrts-t').getBoundingClientRect().height }));
+  R.check('flèche droite : l’onglet Quartiers a le focus et s’affiche (44 px)', onglet.focus === 'cat-qrts-t' && onglet.sel === 'true' && onglet.bats && !onglet.qrts && onglet.h >= 43.99, JSON.stringify(onglet));
   const cat = await page.evaluate(() => {
     const sp = (s) => String(s || '').replace(/\s+/g, ' ').trim();
     const d = document.getElementById('dlg-construire');
@@ -202,8 +210,11 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
       rows: [...d.querySelectorAll('.cat-qrt')].map((li) => {
         const b = li.querySelector('.cat-qrt-go'), r = b.getBoundingClientRect();
         const e = li.querySelector('.cat-etat');
-        return { q: li.dataset.quartier, nom: sp(li.querySelector('.cat-nom').textContent), suivant: sp(li.querySelector('.cat-suivant').textContent), prix: li.querySelector('.cat-prix').hidden ? '' : sp(li.querySelector('.cat-prix').textContent), w: r.width, h: r.height,
-          etat: e && !e.hidden ? sp(e.textContent) : '', data: li.dataset.etat || '', lock: !!e?.querySelector('use[href$="#i-lock"]') };
+        const c = li.querySelector('.cat-compare');
+        return { q: li.dataset.quartier, nom: sp(li.querySelector('.cat-nom').textContent), label: sp(b.getAttribute('aria-label')), suivant: sp(li.querySelector('.cat-suivant').textContent),
+          compare: [c.querySelector('.cat-avant')?.textContent, c.querySelector('b')?.textContent, c.querySelector('.cat-unite')?.textContent].filter(Boolean).join(' '),
+          prix: [...li.querySelectorAll('.cat-prix .pastille')].map((p) => sp(p.textContent) + (p.hasAttribute('data-manque') ? '…' : '')).join(' '), w: r.width, h: r.height,
+          etat: e && !e.hidden ? sp(e.textContent) : '', lu: !!e?.classList.contains('sr-only'), data: li.dataset.etat || '', lock: !!e?.querySelector('use[href$="#i-lock"]') };
       }),
       wide: [...d.querySelectorAll('*')].some((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.right > innerWidth + 1); }),
       bats: d.querySelectorAll('.cat-row').length,
@@ -211,15 +222,16 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   });
   const row = (id) => cat.rows.find((r) => r.q === id) || {};
   R.check('catalogue : plus de ligne des permis en tête (la fiche « Permis » le dit)', !cat.permis);
-  R.check('catalogue : section « Quartiers », six lignes, après les 11 bâtiments', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 11, JSON.stringify(cat.rows.map((r) => r.q)));
-  R.check('ligne des Champs : niveau, effet suivant et prix', row('champs').nom === 'Champs · niveau 2' && row('champs').suivant === 'Niveau 3 : 7 Nourriture par récolte du potager' && row('champs').prix === '3 permis, 240 Énergie et 180 Matériaux', JSON.stringify(row('champs')));
-  R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').suivant === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
+  R.check('catalogue : onglet « Quartiers », six lignes (les 11 bâtiments dans l’autre onglet)', cat.titre === 'Quartiers' && cat.rows.map((r) => r.q).join() === 'champs,atelier,mairie,ecole,garage,place' && cat.bats === 11, JSON.stringify(cat.rows.map((r) => r.q)));
+  R.check('ligne des Champs : niveau, « 6 → 7 par récolte », prix en pastilles, la phrase lue', row('champs').nom === 'Champs · niveau 2' && row('champs').label === 'Champs · niveau 2' && row('champs').compare === '6 7 par récolte'
+    && row('champs').prix === '3… 240… 180…'
+    && row('champs').suivant === 'Maintenant : 6 Nourriture par récolte du potager. Niveau 3 : 7 Nourriture par récolte du potager. Prix : 3 permis, 240 Énergie et 180 Matériaux.', JSON.stringify(row('champs')));
+  R.check('ligne du Garage : le plus haut pour l’instant, sans prix', row('garage').nom === 'Garage · niveau 2' && row('garage').compare === '3 jours pour mûrir' && row('garage').etat === 'Le plus haut pour l’instant' && row('garage').prix === '', JSON.stringify(row('garage')));
   const manque = (await (async () => { const g = srv.game(); return `Il manque 3 permis, ${Math.ceil(Math.round((240 - g.resources.energy) * 10) / 10)} Énergie et ${Math.ceil(Math.round((180 - g.resources.materials) * 10) / 10)} Matériaux.`; })());
-  R.check('ligne des Champs : ce qui manque (la phrase de la fiche), avec le cadenas', row('champs').data === 'verrou' && row('champs').lock && row('champs').etat === manque, JSON.stringify({ vu: row('champs'), attendu: manque }));
-  R.check('ligne de l’Atelier : « Il manque 1 permis… », cadenas', row('atelier').data === 'verrou' && row('atelier').lock && /^Il manque 1 permis/.test(row('atelier').etat), JSON.stringify(row('atelier')));
-  R.check('ligne du Garage : pas de ligne d’état (déjà au plus haut)', row('garage').etat === '' && row('garage').data === '', JSON.stringify(row('garage')));
+  R.check('ligne des Champs : ce qui manque (la phrase de la fiche), lue seulement : les pointillés le montrent', row('champs').data === 'manque' && row('champs').lu && row('champs').etat === manque, JSON.stringify({ vu: row('champs'), attendu: manque }));
+  R.check('ligne de l’Atelier : « Il manque 1 permis… », lue, la pastille du permis en pointillés', row('atelier').data === 'manque' && row('atelier').lu && /^Il manque 1 permis/.test(row('atelier').etat) && /^1…/.test(row('atelier').prix), JSON.stringify(row('atelier')));
+  R.check('ligne du Garage : au plus haut, sans cadenas', row('garage').data === 'max' && !row('garage').lock && !row('garage').lu, JSON.stringify(row('garage')));
   R.check('lignes des quartiers : cibles de 44 px, aucun débordement', cat.rows.every((r) => r.h >= 43.99 && r.w >= 43.99) && !cat.wide, JSON.stringify({ h: cat.rows.map((r) => Math.round(r.h)), wide: cat.wide }));
-  await page.evaluate(() => document.getElementById('cat-qrts-t').scrollIntoView({ block: 'start' }));
   await shot(page, '31-catalogue');
   await page.focus('#dlg-construire .cat-qrt-go[data-quartier="garage"]');
   await page.keyboard.press('Enter');

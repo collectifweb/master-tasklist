@@ -3,7 +3,8 @@
 //     « Passer l'animation » ni sous une plaque (rangée « Vue » dépliée comprise) ;
 //   - « Vue » au clavier : Entrée déplie, Échap replie et rend le focus à « Vue » sans toucher au panneau ; aux limites
 //     du zoom, aria-disabled (le bouton garde le focus) ; « Carte en liste » s'ouvre de la rangée et rend le focus à « Vue » ;
-//   - catalogue : une ligne par type, coût, « Disponible » ou la raison du cœur ; un geste verrouillé redit la raison et
+//   - catalogue (lot L) : deux onglets, ouvert sur « Bâtiments » ; une rangée touchable par type, l'effet en une ligne à
+//     picto (« +2 places »), le prix en pastilles, ou le cadenas et la raison du cœur sans prix ; un geste verrouillé redit la raison et
 //     ne bâtit rien ; un double toucher bâtit une seule fois, le catalogue se ferme et la carte montre le bâtiment ;
 //     une synchronisation le met à jour sur place sans perdre le focus ; aucun défilement horizontal.
 const L = require('./lib.cjs');
@@ -111,16 +112,22 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
     const r = b.getBoundingClientRect();
     return {
       type: li.dataset.type, nom: li.querySelector('.cat-nom').textContent, cout: li.querySelector('.cat-cout').textContent.replace(/ /g, ' '),
-      etat: li.querySelector('.cat-etat').textContent.replace(/ /g, ' '), off: b.getAttribute('aria-disabled') === 'true', id: b.dataset.id || null,
+      effet: li.querySelector('.cat-effet').textContent, prix: [...li.querySelectorAll('.cat-prix .pastille')].map((p) => p.textContent.trim() + (p.hasAttribute('data-manque') ? '…' : '')).join(' '),
+      cache: li.hidden, data: li.dataset.etat,
+      etat: li.querySelector('.cat-etat').hidden ? '' : li.querySelector('.cat-etat').textContent.replace(/ /g, ' '), off: b.getAttribute('aria-disabled') === 'true', id: b.dataset.id || null,
       label: b.getAttribute('aria-label').replace(/ /g, ' '), h: r.height, thumb: !!li.querySelector('.cat-thumb svg'),
     };
   }));
   const row = (t) => cat.find((c) => c.type === t) || {};
   R.check('catalogue : une ligne par type de bâtiment (11, le rang Village compris), avec son dessin', cat.map((c) => c.type).join() === 'chalet,parcelle,atelier,serre,eolienne,grenier,quai,tour,scierie,poulailler,cabane' && cat.every((c) => c.thumb), JSON.stringify(cat.map((c) => c.type)));
-  R.check('catalogue : coût écrit (chalet)', row('chalet').cout === 'Coûte 15 Matériaux.', row('chalet').cout);
-  R.check('catalogue : chalet disponible, sur le premier emplacement libre', !row('chalet').off && row('chalet').etat === 'Disponible' && row('chalet').id === 'chalet-1' && row('chalet').label === 'Rebâtir : Chalet', JSON.stringify(row('chalet')));
+  const onglets = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire [role="tab"]')].map((t) => ({ id: t.id, sel: t.getAttribute('aria-selected'), h: t.getBoundingClientRect().height })));
+  R.check('catalogue : deux onglets de 44 px, ouvert sur « Bâtiments »', onglets.map((o) => `${o.id}:${o.sel}`).join() === 'cat-bats-t:true,cat-qrts-t:false' && onglets.every((o) => o.h >= 43.99), JSON.stringify(onglets));
+  R.check('catalogue : aucun type au complet au départ, rien de caché', cat.every((c) => !c.cache), JSON.stringify(cat.filter((c) => c.cache).map((c) => c.type)));
+  R.check('catalogue : coût lu (chalet), prix en pastille', row('chalet').cout === 'Coûte 15 Matériaux.' && row('chalet').prix === '15', JSON.stringify(row('chalet')));
+  R.check('catalogue : l’effet en une ligne (chalet « +2 places », éolienne « +3 par jour »)', row('chalet').effet === '+2 places' && row('eolienne').effet === '+3 par jour', JSON.stringify([row('chalet').effet, row('eolienne').effet]));
+  R.check('catalogue : chalet disponible, sur le premier emplacement libre, sans ligne d’état', !row('chalet').off && row('chalet').data === 'libre' && row('chalet').etat === '' && row('chalet').id === 'chalet-1' && row('chalet').label === 'Rebâtir : Chalet', JSON.stringify(row('chalet')));
   R.check('catalogue : parcelle sur la 2e (la 1re est là depuis le départ)', row('parcelle').id === 'parcelle-2', JSON.stringify(row('parcelle')));
-  R.check('catalogue : grenier verrouillé avec la raison du cœur (comme la fiche)', row('grenier').off && row('grenier').etat === 'Hameau : encore 3 habitants.', JSON.stringify(row('grenier')));
+  R.check('catalogue : grenier verrouillé avec la raison du cœur (comme la fiche), sans prix', row('grenier').off && row('grenier').data === 'verrou' && row('grenier').etat === 'Hameau : encore 3 habitants.' && row('grenier').prix === '', JSON.stringify(row('grenier')));
   R.check('catalogue : serre verrouillée (il faut d’abord un atelier)', row('serre').off && row('serre').etat === 'Il faut d’abord un atelier.', JSON.stringify(row('serre')));
   R.check('catalogue : boutons de 44 px au moins', cat.every((c) => c.h >= 43.99), JSON.stringify(cat.map((c) => c.h)));
   R.check('catalogue : une région lue dans la feuille', await page.evaluate(() => !!document.querySelector('#dlg-construire > [data-live][role="status"]')));

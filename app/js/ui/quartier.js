@@ -80,7 +80,7 @@ const liste = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} et ${xs.at
  * L'avant et l'après : { picto, label, avant, apres (null au plus haut), niveau (« niveau 2 »), ecart (« +1 », « −3 »),
  * sens (« moins cher » ou ''), sr (la phrase lue) }. Valeurs du cœur (valeur, EFFETS_QUARTIERS).
  */
-function compareModel(game, quartier, niveau, max) {
+export function compareModel(game, quartier, niveau, max) {
   const { reglage, niveaux } = EFFETS_QUARTIERS[quartier];
   const avant = valeur(game, reglage);
   const apres = niveau < max ? niveaux[niveau] : null;

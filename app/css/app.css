@@ -723,20 +723,67 @@
   color: var(--text-muted);
 }
 
-/* Catalogue « Construire » : les lignes de la carte en liste (.ow-plan-bat), avec le dessin du bâtiment debout à gauche */
+/* Catalogue « Construire » (lot L) : deux onglets sur papier creusé, puis des rangées touchables en entier — le dessin,
+   le nom, l'effet en une ligne à picto, le prix en pastilles à droite (sous le texte quand la place manque) */
 .cat-body {
-  gap: 0;
+  gap: var(--sp-3);
 }
-.cat-intro {
-  margin-bottom: var(--sp-4);
+.cat-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: calc(var(--r-md) + 2px);
+  background: var(--c-sunken);
+}
+.cat-tab {
+  min-height: var(--target);
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
   color: var(--text-soft);
+  cursor: pointer;
+  transition: background-color var(--t-micro), color var(--t-micro);
 }
-.cat-body .cat-section {
-  margin-top: 0;
+.cat-tab[aria-selected="true"] {
+  background: var(--c-paper-raised);
+  box-shadow: 0 1px 0 var(--c-line-strong), 0 1px 4px rgb(66 43 25 / 0.10);
+  font-weight: var(--w-heavy);
+  color: var(--text);
 }
-.cat-row {
-  flex-wrap: nowrap;
-  min-height: calc(var(--target) + 2 * var(--sp-2));
+.cat-tab:focus { outline: none; }
+.cat-tab:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 1px; }
+.cat-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cat-btn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-3);
+  row-gap: var(--sp-2);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--sp-2) 4px;
+  border: 0;
+  border-bottom: 1px solid var(--c-line);
+  background: none;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.cat-btn[aria-disabled="true"] { cursor: default; }
+.cat-btn:focus { outline: none; }
+.cat-btn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: -3px; border-radius: var(--r-md); }
+@media (hover: hover) {
+  .cat-btn:not([aria-disabled="true"]):hover .cat-nom { text-decoration: underline; text-underline-offset: 3px; }
 }
 .cat-thumb {
   flex: none;
@@ -748,14 +795,48 @@
   background: var(--c-sage-wash);
 }
 .cat-thumb svg { width: 44px; height: 44px; overflow: visible; }
+.cat-qrt-picto .icon { width: 28px; height: 28px; color: var(--c-sage-deep); }
+/* verrouillée par le rang ou un autre bâtiment : le dessin passe au gris, sur papier creusé */
 .cat-row[data-etat="verrou"] .cat-thumb,
 .cat-qrt[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
+.cat-row[data-etat="verrou"] .cat-thumb svg { filter: grayscale(1); opacity: 0.6; }
+.cat-text {
+  flex: 1 1 9rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cat-nom { font-weight: var(--w-bold); }
+.cat-effet {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+.cat-effet .icon { flex: none; width: 18px; height: 18px; }
+.cat-effet[data-res] { font-weight: var(--w-heavy); color: var(--res); }
+.cat-effet[data-res="energie"] { --res: var(--res-energie); }
+.cat-effet[data-res="materiaux"] { --res: var(--res-materiaux); }
+.cat-effet[data-res="nourriture"] { --res: var(--res-nourriture); }
+.cat-effet[data-res="habitants"] { --res: var(--res-habitants); }
+/* « 4 → 5 par récolte » : la valeur d'aujourd'hui en encre douce, celle du niveau suivant en sauge */
+.cat-compare { color: var(--text-soft); }
+.cat-compare .icon { color: var(--c-sage-deep); }
+.cat-compare b { font-weight: var(--w-heavy); color: var(--c-sage-deep); }
+.cat-compare .cat-fleche { width: 16px; height: 16px; color: var(--c-sage); }
+.cat-unite { margin-left: 2px; font-family: var(--font-ui); font-size: var(--text-14); font-weight: var(--w-semibold); }
 .cat-etat {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin: 2px 0 0;
   font-size: var(--text-14);
+  font-weight: var(--w-bold);
   line-height: 1.35;
   color: var(--text-soft);
 }
@@ -766,51 +847,34 @@
   margin-top: 1px;
   color: var(--text-muted);
 }
-.cat-row[data-etat="libre"] .cat-etat,
-.cat-qrt[data-etat="libre"] .cat-etat {
-  font-weight: var(--w-semibold);
-  color: var(--c-sage-deep);
-}
-.cat-row[data-etat="libre"] .cat-etat .icon,
-.cat-qrt[data-etat="libre"] .cat-etat .icon { color: currentColor; }
-.cat-go { flex: none; }
-/* très étroit (360 px) : le bouton passe sous le texte plutôt que d'écraser le nom */
-@media (max-width: 380px) {
-  .cat-row { flex-wrap: wrap; }
-  .cat-row .ow-plan-bat-text { flex-basis: calc(100% - 52px - var(--sp-3)); }
-  .cat-go { margin-left: calc(52px + var(--sp-3)); }
-}
-/* section « Quartiers » : toute la ligne est un bouton qui ouvre la fiche, picto du quartier à gauche, chevron à droite */
-.cat-qrt { padding: 0; }
-.cat-qrt-go {
+/* le prix : les pastilles de la fiche, en petit ; à droite, ou sous le texte quand la place manque */
+.cat-prix {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  width: 100%;
-  min-height: calc(var(--target) + 2 * var(--sp-2));
-  padding: var(--sp-2) 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
+  align-items: flex-start;
+  gap: 6px;
+  margin-left: auto;
 }
-.cat-qrt-go .ow-plan-bat-text > span { display: block; }
-.cat-qrt-go .ow-plan-bat-text > .cat-etat { display: flex; }
-.cat-qrt-picto .icon { width: 28px; height: 28px; color: var(--c-sage-deep); }
+.cat-prix:empty { display: none; }
+.cat-prix .pastille { height: 32px; padding: 0 8px; border-radius: var(--r-sm); font-size: var(--text-15); }
+.cat-prix .pastille .icon { width: 16px; height: 16px; }
+/* une rangée de quartier ouvre sa fiche, qui détaille ce qui manque : ici, les pointillés seuls */
+.cat-qrt .pastille-manque { display: none; }
+/* le chevron reste au milieu de la rangée, même quand le prix passe sous le texte */
+.cat-qrt-go { position: relative; padding-right: 32px; }
 .cat-qrt-chev {
-  flex: none;
+  position: absolute;
+  top: calc(50% - 10px);
+  right: 4px;
   width: 20px;
   height: 20px;
   color: var(--text-muted);
   transform: rotate(-90deg);
 }
-@media (hover: hover) {
-  .cat-qrt-go:hover .cat-nom { text-decoration: underline; text-underline-offset: 3px; }
+.cat-vide {
+  margin: 0;
+  padding: var(--sp-4) 4px;
+  color: var(--text-soft);
 }
-.cat-qrt-go:focus { outline: none; }
-.cat-qrt-go:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; border-radius: var(--r-sm); }
 
 /* Fiche d'un quartier : le gabarit de la fiche d'un bâtiment, picto du quartier dans la vignette */
 .qrt-head {

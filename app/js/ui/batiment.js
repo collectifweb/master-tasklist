@@ -44,6 +44,14 @@ const N_FAIT = {
   scierie: PRODUCTION.scierie.materials, poulailler: PRODUCTION.poulailler.food, cabane: PRODUCTION.cabane.food,
 };
 
+/** « Ce que ça fait » d'un type de bâtiment, avec les valeurs du cœur (aussi la phrase lue d'une ligne du catalogue). */
+export function faitText(game, type) {
+  return t(`bat.${type}.fait`, {
+    loge: placesParChalet(game), recolte: recolteDe(game, BATIMENTS[type].culture), jours: valeur(game, 'joursPousse'),
+    chauffage: CHAUFFAGE, n: N_FAIT[type], base: TEMPETE.annonce, sirop: num(SIROP.energie),
+  });
+}
+
 /** « 15 Matériaux », « 4 Énergie et 20 Matériaux » (les mêmes mots et le même ordre que le HUD et les prix des quartiers). */
 export function coutText(cout) {
   const parts = [];
@@ -137,10 +145,7 @@ export function batimentModel(c, id) {
     id, type, bati,
     nom: t(`bat.${type}.${bati ? 'nom' : 'vide'}`),
     quoi: t(`bat.${type}.${bati ? 'quoi' : 'quoiVide'}`),
-    fait: t(`bat.${type}.fait`, {
-      loge: placesParChalet(game), recolte: recolteDe(game, def.culture), jours: pousse, chauffage: CHAUFFAGE,
-      n: N_FAIT[type], base: TEMPETE.annonce, sirop: num(SIROP.energie),
-    }),
+    fait: faitText(game, type),
     regle: null, repli: 'bat.fiche.repli', maintenant: '', muet: false, etat: { kind: 'phrase' }, prix: null,
     raison: null, manque: false, geste: null, comptoir: null, duJour: null, commande: null, degat: bati ? degatModel(game, id, now) : null,
   };

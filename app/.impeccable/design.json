@@ -939,6 +939,22 @@
       "css": ".ds-pastilles{display:flex;gap:10px}.ds-gain{display:inline-flex;align-items:center;height:36px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:var(--c-sage-wash);color:var(--c-sage-deep);font-family:var(--font-num);font-size:1.125rem;font-weight:800}.ds-gain--energie{background:var(--c-glass-wash);color:var(--c-glass-deep)}"
     },
     {
+      "name": "Onglets",
+      "kind": "custom",
+      "refersTo": "cat-tabs",
+      "description": "Deux vues d'une même feuille (lot L, catalogue « Construire ») : deux moitiés de 44 px sur papier creusé ; l'onglet choisi en papier neuf, ombre d'une ligne, graisse 800 ; l'autre en encre douce, graisse 700. Les flèches passent de l'un à l'autre.",
+      "html": "<div class=\"ds-onglets\" role=\"tablist\" aria-label=\"Catalogue\"><button type=\"button\" role=\"tab\" aria-selected=\"true\">Bâtiments</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">Quartiers</button></div>",
+      "css": ".ds-onglets{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--c-sunken)}.ds-onglets button{min-height:44px;border:0;border-radius:var(--r-sm);background:transparent;font:inherit;font-size:.9375rem;font-weight:700;color:var(--text-soft)}.ds-onglets [aria-selected=\"true\"]{background:var(--c-paper-raised);box-shadow:0 1px 0 var(--c-line-strong),0 1px 4px rgb(66 43 25 / .10);font-weight:800;color:var(--text)}"
+    },
+    {
+      "name": "Rangée du catalogue",
+      "kind": "custom",
+      "refersTo": "cat-btn",
+      "description": "Une chose à bâtir (lot L) : toute la rangée est le bouton. Dessin sur lavis sauge, nom, effet en une ligne à picto dans l'encre de sa ressource, prix en pastilles compactes à droite (sous le texte quand la place manque). Verrouillée : dessin gris, pas de prix, cadenas et raison du cœur.",
+      "html": "<div class=\"ds-rangee\"><span class=\"ds-rangee-vignette\"></span><span class=\"ds-rangee-texte\"><b>Éolienne</b><span class=\"ds-rangee-effet\">+3 par jour</span></span><span class=\"ds-pastille ds-pastille--energie\">5</span></div>",
+      "css": ".ds-rangee{display:flex;align-items:center;gap:12px;min-height:72px;padding:8px 4px;border-bottom:1px solid var(--c-line)}.ds-rangee-vignette{width:52px;height:52px;border-radius:var(--r-md);background:var(--c-sage-wash)}.ds-rangee-texte{flex:1;display:flex;flex-direction:column;gap:2px}.ds-rangee-effet{font-family:var(--font-num);font-size:.9375rem;font-weight:800;color:var(--c-glass-deep)}.ds-rangee .ds-pastille{height:32px;padding:0 8px;border-radius:var(--r-sm);font-size:.9375rem}"
+    },
+    {
       "name": "Bulle de la carte",
       "kind": "custom",
       "refersTo": "ow-bulle",
