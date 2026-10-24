@@ -2,11 +2,11 @@
 
 Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour à chaque envoi en production. Le détail de chaque lot (mesures, essais, décisions) est dans `tasks/todo.md`. Les règles du jeu sont dans `docs/BIBLE-JEU.md`.
 
-*Dernière mise à jour : 15 octobre 2026.*
+*Dernière mise à jour : 23 octobre 2026.*
 
 ## Où en est le jeu
 
-La version 2.16.1 est en ligne depuis le 15 octobre 2026. La 2.16, du même soir, a apporté des fiches qu’on lit d’un coup d’œil, avec moins de texte.
+La version 2.16.2 est en ligne depuis le 23 octobre 2026. La 2.16, du 15 octobre, a apporté des fiches qu’on lit d’un coup d’œil, avec moins de texte.
 
 ## Fait
 
@@ -36,18 +36,20 @@ La version 2.16.1 est en ligne depuis le 15 octobre 2026. La 2.16, du même soir
 | 2.15.1 | 12 octobre | Le texte du total, dans la fiche « Pourquoi ? » de la Cote, avait un double espace que le navigateur cachait : corrigé. Avec la vidéo dans le README et cette feuille de route. |
 | 2.16 | 15 octobre | Des fiches qu’on lit d’un coup d’œil, avec moins de texte. Monter un quartier montre l’avant et l’après du niveau (« 4 → 5 ») et se termine sur une carte de récompense. Un bâtiment dit d’abord son état, avec des crans pour les jours qui restent. Les permis ont leur propre fiche, en cases. Le catalogue « Construire » a deux onglets et montre l’effet et le prix de chaque bâtiment. Sur la carte, une bulle signale ce qui attend un geste, et une récolte se fait d’un toucher. Avec « L’Orée » dans le dernier texte qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés. |
 | 2.16.1 | 15 octobre | Le poulailler et la cabane à sucre disent qu’ils produisent à ton prochain passage au village (ils parlaient encore de la prochaine quête terminée), la description de la cabane est plus courte, et 99 textes que le jeu n’affichait plus sont retirés. |
+| 2.16.2 | 23 octobre | Les bulles de la carte montrent enfin leur dessin en clair sur le vert, comme prévu : il sortait presque noir. Les flèches au bord de l’écran retrouvent leurs gros chiffres arrondis. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
 ## En cours ou en attente
 
+- Les retours de jeu d’Alex du 23 octobre sont en cours : des plaques de quartier plus discrètes sur la carte, l’éolienne déplacée pour ne plus cacher l’emplacement de la cabane à sucre, puis un comptoir du marchand en images, inspiré du marché d’Age of Empires.
 - L’installation d’une amie : le défaut de l’iPhone a disparu chez elle (elle l’a confirmé le 12 octobre). Reste à savoir si le bouton « Mettre à jour » marche chez son hébergeur : il n’a encore servi chez aucun vrai hébergeur.
 - Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
 
 ## À venir
 
-Décidé dans la bible, pas encore construit. Aucun lot n’est fixé : depuis le 12 octobre, les nouveautés sont en pause, le temps de jouer et de noter ce qui gêne.
+Décidé dans la bible, pas encore construit. Aucun lot n’est fixé pour ces éléments. Les nouveautés sont en pause depuis le 12 octobre : les retours de jeu passent avant.
 
 - Le contenu des rangs Bourg et Ville. Le jeu compte déjà ces rangs (Bourg à 11 habitants, Ville à 21, puis un palier tous les 15), mais rien ne s’y ouvre encore. Au Bourg : une nouvelle bande de terrain, un marché, une école qui fait produire un peu plus les habitants, une centrale solaire, un garage à chasse-neige qui protège des tempêtes. À la Ville : une île voisine reliée par un pont, une gare, un musée. À chaque palier suivant : du terrain, un bâtiment, un permis, un nouveau visiteur.
 - Une bande de terrain au rang Village : seule celle du Hameau existe.

@@ -2031,15 +2031,15 @@ Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (
 - Le plafond de Nourriture absent de la barre du haut ; à 390 px, 5 plaques de quartier sur 6 sans nom ; Construire, Quêtes et Vue sans mot visible.
 - La bulle de Fanal : interligne serré, recouverte au tiers par une plaque à 390 px (détecteur).
 
-## Lot G — Ce qui gêne en jouant (retours d'Alex du 23 octobre 2026, proposé, à valider)
+## Lot G — Ce qui gêne en jouant (retours d'Alex du 23 octobre 2026, validé)
 
-**Statut : proposé le 23 octobre 2026, à valider.** Fin de la pause des nouveautés (12 octobre) : Alex a joué et nomme quatre gênes. Sa partie a été lue en production par une lecture seule de l'API (GET, avec son accord), recopiée dans une copie locale du jeu, hors du dépôt (dossier de travail de la session, effacé ensuite), et regardée aux trois largeurs. Les mesures ci-dessous viennent de cette copie.
+**Statut : validé par Alex le 23 octobre 2026 : G0 envoyé (v2.16.2), plaques en ronds (G1, piste A), éolienne déplacée (G2, piste A), maquette du marchand d'après le marché d'Age of Empires (G3 ; « de souvenir, dans AoE, ça correspondait au bâtiment du marché », pas d'exemple précis).** Fin de la pause des nouveautés (12 octobre) : Alex a joué et nomme quatre gênes. Sa partie a été lue en production par une lecture seule de l'API (GET, avec son accord), recopiée dans une copie locale du jeu, hors du dépôt (dossier de travail de la session, effacé ensuite), et regardée aux trois largeurs. Les mesures ci-dessous viennent de cette copie.
 
 ### G0 — Les bulles de la carte : un picto presque noir
 - [x] Cause prouvée dans le navigateur : `.ow button { font: inherit; color: inherit; }` (`css/world.css`, depuis le 5 octobre) pèse plus lourd que `.ow-bulle` ; la bulle prend l'encre (rgb 39, 48, 38) au lieu du papier, et son panier sort presque noir sur la sauge profonde. Même effet sur la flèche au bord (chiffre en police ordinaire 16 px, encre, au lieu des chiffres arrondis 18 px graisse 800 en papier) et sur « Passer l'animation » (16 px normal au lieu de 15 px gras). `DESIGN.md` prévoyait déjà le papier.
 - [x] Correctif : la règle passe sous `:where(.ow button)`, sans poids. Mesuré bouton par bouton (51 boutons de l'île, à 390 et 834 px, avec la nouvelle règle puis avec l'ancienne remise) : seuls les bulles, les flèches au bord et « Passer » changent ; plaques, commandes de la carte et bâtiments identiques. Cache `oree-coquille-v32`.
 - [x] Scénarios qui touchent ces boutons, réussis aux trois largeurs : 49 (98), 12 (96), 26 (87), 30 (132), 21 (84), `world-s3` (97), `world-perf` (aucune erreur en mouvement réduit). Le scénario 49 gagne deux contrôles par largeur, lus sur le style calculé : le picto des bulles a la couleur de leur cerne, le chiffre de la flèche au bord est en papier, 18 px, graisse 800. Contre-épreuve à 390 px, l'ancienne règle remise le temps de l'essai : les deux échouent (encre, 16 px, 400) ; avec le correctif, 104 contrôles, 0 échec.
-- [ ] Envoi `v2.16.2`, sur l'accord d'Alex.
+- [x] Envoi `v2.16.2` sur l'accord d'Alex (« Oui »), le 23 octobre à 21 h 26 : contrôles de l'envoi comme attendu (app 200, API 401 sans code et 200 avec, données 403, configuration vide, cache v32, pas de bac à sable, `main` sur GitHub = v2.16.2) ; 5 fichiers servis comparés à l'étiquette, identiques. Jeu en ligne pas ouvert dans un navigateur.
 - [ ] Alex regarde les bulles corrigées : assez visibles, ou une bulle « de jeu » plus marquée (à maquetter avec G3) ?
 
 ### G1 — Les plaques de quartier prennent la vue
