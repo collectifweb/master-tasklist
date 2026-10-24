@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.18 est en ligne depuis le 24 octobre 2026. Le marchand du quai a maintenant un étal : ses offres sont des tuiles, qu’on touche avant d’échanger. Au lancement, le panneau du Fil du jour reste caché, et c’est l’icône « Quêtes » qui l’ouvre. La 2.17, du 23 octobre, avait dégagé la carte : les plaques de quartier en petits ronds, l’éolienne qui ne cache plus la cabane à sucre.
+Les versions 2.18 et 2.18.1 sont en ligne depuis le 24 octobre 2026. Le marchand du quai a maintenant un étal : ses offres sont des tuiles, qu’on touche avant d’échanger. Au lancement, le panneau du Fil du jour reste caché, et c’est l’icône « Quêtes » qui l’ouvre. Sur téléphone et sur tablette tenue en hauteur, il se cache aussi après le « Fait » du Fil, pour qu’on voie le fil de lumière filer sur la carte. La 2.17, du 23 octobre, avait dégagé la carte : les plaques de quartier en petits ronds, l’éolienne qui ne cache plus la cabane à sucre.
 
 ## Fait
 
@@ -39,12 +39,13 @@ La version 2.18 est en ligne depuis le 24 octobre 2026. Le marchand du quai a ma
 | 2.16.2 | 23 octobre | Les bulles de la carte montrent enfin leur dessin en clair sur le vert, comme prévu : il sortait presque noir. Les flèches au bord de l’écran retrouvent leurs gros chiffres arrondis. |
 | 2.17 | 23 octobre | Une carte plus dégagée. Les plaques de quartier deviennent de petits ronds avec leur seul picto, sur tous les écrans ; leur nom se lit dans la fiche du quartier. L’éolienne passe au coin du fond, côté École, car à son ancienne place elle cachait la cabane à sucre, qu’on avait du mal à toucher. |
 | 2.18 | 24 octobre | L’étal du marchand, et plus de place pour la carte. Au quai, les quatre offres de la semaine sont des tuiles en grille, avec le rachat du jour en tuile large dessous. On touche une offre, puis « Échanger » dans la barre du bas : deux gestes, pour ne plus rien dépenser d’un toucher par mégarde. La commande d’un visiteur montre ce qu’il demande en pastilles, avec une jauge de ce que la réserve en a déjà. Le panneau du Fil du jour reste caché au lancement, sur tous les écrans, et l’icône « Quêtes » l’ouvre en entier. Sur téléphone, Alex le trouvait gênant même replié, et y touchait parfois « + » sans le vouloir. |
+| 2.18.1 | 24 octobre | Sur téléphone et sur tablette tenue en hauteur, le « Fait » du Fil du jour cache maintenant le panneau, qui couvrait la carte. Le fil de lumière file donc à la vue jusqu’au bâtiment, et les compteurs montent à son arrivée. Les coches de la liste laissent le panneau ouvert, pour en cocher plusieurs à la suite. Sur grand écran, rien ne change. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
 ## En cours ou en attente
 
-- Sur les retours de jeu d’Alex du 23 octobre, tout est en ligne : les plaques et l’éolienne (2.17), l’étal et le panneau caché (2.18). Une question reste ouverte. Sur téléphone, quand on termine une quête panneau ouvert, le fil de lumière part sur la carte, sous le panneau, et on ne le voit pas.
+- Sur les retours de jeu d’Alex du 23 octobre, tout est en ligne : les plaques et l’éolienne (2.17), l’étal et le panneau caché (2.18), puis le fil de lumière de nouveau visible sur téléphone (2.18.1).
 - L’installation d’une amie : le défaut de l’iPhone a disparu chez elle (elle l’a confirmé le 12 octobre). Reste à savoir si le bouton « Mettre à jour » marche chez son hébergeur : il n’a encore servi chez aucun vrai hébergeur.
 - Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
