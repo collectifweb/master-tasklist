@@ -30,6 +30,7 @@ L.runScenario('jalon : forme réelle, aucun champ perdu', async ({ R, srv, newPa
   const id1 = await page.getAttribute('#fil-quest', 'data-task-id');
   await page.click('#fil-quest [data-action="complete"]');
   await L.waitFor(() => srv.readTasks().find((t) => t.id === id1).status === 'done');
+  await L.openPanel(page); // en compact, le « Fait » du Fil cache le panneau
   // priorité d'une autre quête à faire
   const id2 = orig.find((t) => t.status === 'todo' && t.id !== id1).id;
   await page.locator(`#quest-list > li[data-task-id="${id2}"] [data-action="open"]`).click();

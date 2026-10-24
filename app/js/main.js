@@ -369,6 +369,8 @@ function advanceTime() {
 //   retour au Fil (focusHome)      caché : focus sur « Quêtes », le panneau reste caché ; sinon inchangé
 //   « Voir sur la carte »          ouvert → caché ; replié et caché inchangés
 //   bandeau déplié (compact)       ouvert → caché (la carte des objectifs passerait sous le panneau)
+//   « Fait » du Fil (compact)      ouvert ou replié → caché, focus sur « Quêtes » : le fil de lumière se joue sur la carte ;
+//                                  les coches de la liste ne changent rien
 //   focus clavier entrant          replié → ouvert s'il tombe hors de la partie visible ; caché : impossible (inert)
 //   message court, erreur          caché → replié avant que le texte s'écrive
 function setPanel(state) {
@@ -621,7 +623,14 @@ document.addEventListener('click', (e) => {
     case 'complete': {
       const r = target.getBoundingClientRect();
       touchFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2, at: Date.now() };
-      return run('completeQuest', { id });
+      const fait = run('completeQuest', { id });
+      // en compact, le panneau couvre la carte : un « Fait » du Fil du jour le cache, pour que le fil de lumière se voie ;
+      // les coches de la liste le laissent ouvert, pour en cocher plusieurs à la suite
+      if (fait && !LARGE.matches && target.closest('#fil-quest, #alts')) {
+        setPanel('cache');
+        $('[data-ow="quetes"]')?.focus(); // le panneau devient inert : le focus n'y reste pas
+      }
+      return;
     }
     case 'open-settings': return story.openSettings();
     case 'meteo-chercher': return story.chercherVille();

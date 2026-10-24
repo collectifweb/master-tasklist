@@ -31,6 +31,16 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
   await page.keyboard.press('Enter');
   await page.waitForTimeout(800);
   R.check('Entrée sur « Fait » termine la quête', (await L.resValue(page, 'energie')) > e0 && (await page.textContent('#fil-quest .fil-title')).trim() !== title);
+  // en compact, le « Fait » du Fil cache le panneau (le fil de lumière se joue sur la carte), focus sur « Quêtes » ;
+  // Entrée le rouvre sur « Fait » de la quête suivante
+  if (!(size[0] >= 1000 || (size[0] >= 700 && size[0] > size[1]))) {
+    R.check('en compact, « Fait » cache le panneau et met le focus sur « Quêtes »', await page.getAttribute('#app', 'data-panel') === 'cache'
+      && await page.evaluate(() => document.activeElement.matches('[data-ow="quetes"]')), await page.evaluate(() => document.activeElement.outerHTML.slice(0, 80)));
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(500);
+    R.check('Entrée sur « Quêtes » rouvre le panneau, focus sur « Fait » de la quête suivante', await page.getAttribute('#app', 'data-panel') === 'open'
+      && await page.evaluate(() => document.activeElement.matches('#fil-quest [data-action="complete"]')), await page.evaluate(() => document.activeElement.outerHTML.slice(0, 80)));
+  }
   // ouverture du panneau et de l'ajout au clavier
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Shift+Tab');
@@ -73,6 +83,7 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
     return k.some((f) => f.transform && f.transform !== 'none' && !/^(translate[XY]?\((calc\(0 ?\* ?-?[\d.]+px\)|-?0(px)?)\)|translate\(0(px)?, ?0(px)?\)|matrix\(1, 0, 0, 1, 0, 0\)|scale\(1\))$/.test(String(f.transform).trim()));
   }).map((a) => a.animationName || a.constructor.name));
   R.check('mouvement réduit : aucune animation de déplacement ou d’échelle après « Fait »', moving.length === 0, moving.join(','));
+  await L.openPanel(pr); // en compact, le « Fait » du Fil cache le panneau
   await pr.click('.panel-head [data-action="add"]').catch(() => {});
   await pr.waitForSelector('#dlg-add[open]');
   await pr.keyboard.press('Escape');

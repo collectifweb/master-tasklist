@@ -244,7 +244,7 @@ Le monde d'origine (006, « La lisière réparée ») est étendu, pas remplacé
 
 **The Doubled Color Rule.** Toute couleur est doublée : un mot, un picto ou un motif (case pleine avec coche, puce active avec coche dessinée, bord en tirets pour le désactivé, cadenas, « · plein »).
 
-**The World First Rule.** Au lancement, le panneau est caché, à toutes les largeurs (lot G5 : replié, il prenait encore le bas de l'écran du téléphone) ; la carte prend tout l'écran et la quête n° 1 se lit dans « Aujourd'hui », en haut. « Quêtes », dans la colonne de la carte, ouvre le panneau en entier. Le replié ne sert plus qu'à montrer un message court ou une erreur d'enregistrement ; il ne prend que 30 % de l'écran compact, et rien de nouveau n'y est ajouté sans retirer autre chose : la quête n° 1, sa Cote, sa raison et deux boutons.
+**The World First Rule.** Au lancement, le panneau est caché, à toutes les largeurs (lot G5 : replié, il prenait encore le bas de l'écran du téléphone) ; la carte prend tout l'écran et la quête n° 1 se lit dans « Aujourd'hui », en haut. « Quêtes », dans la colonne de la carte, ouvre le panneau en entier. En disposition compacte, le « Fait » du Fil du jour (quête n° 1, victoire rapide, grand chantier) cache le panneau, qui couvre alors la carte : le fil de lumière et la récompense se jouent à la vue ; les coches de la liste le laissent ouvert. Le replié ne sert plus qu'à montrer un message court ou une erreur d'enregistrement ; il ne prend que 30 % de l'écran compact, et rien de nouveau n'y est ajouté sans retirer autre chose : la quête n° 1, sa Cote, sa raison et deux boutons.
 
 ## Colors
 

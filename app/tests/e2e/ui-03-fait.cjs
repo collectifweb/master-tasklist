@@ -1,11 +1,15 @@
 // 3. « Fait » → ressources en hausse, annonce visible qui ne couvre aucun bouton, entrée au registre ;
-//    Remballer → retour en arrière ; « Fait » de nouveau → aucun gain.
+//    Remballer → retour en arrière ; « Fait » de nouveau → aucun gain. En compact (le panneau couvre la carte), le « Fait »
+//    du Fil cache le panneau, le focus sur « Quêtes » ; en grand écran, le panneau latéral reste ouvert ; une coche de la
+//    liste le laisse ouvert partout.
 const L = require('./lib.cjs');
 L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, shot, size, core }) => {
   const { page } = await newPage();
   await page.goto(srv.url);
   await L.ready(page);
   const compact = size[0] < 700;
+  const large = size[0] >= 1000 || (size[0] >= 700 && size[0] > size[1]); // la requête LARGE de main.js
+  const panneau = () => page.evaluate(() => document.getElementById('app').dataset.panel);
   const snap = async () => ({ e: await L.resValue(page, 'energie'), m: await L.resValue(page, 'materiaux'), f: await L.resValue(page, 'nourriture'), h: await L.resValue(page, 'habitants') });
   const quartiers = () => ({ ...(srv.game()?.quartiers || {}) });
   // l'ouverture paie son bonus et, la liste ayant déjà des quêtes, le pas « Ajouter ta première vraie tâche » : on attend
@@ -20,8 +24,14 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   const q = core.quartierOfTask(srv.readTasks().find((t) => t.id === id));
   const q0 = quartiers();
   await page.click('#fil-quest [data-action="complete"]');
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(250);
+  await shot(page, '03-fil'); // le fil de lumière en vol, à la vue
+  await page.waitForTimeout(450);
   const s1 = await snap();
+  R.check(large ? '« Fait » du Fil : le panneau latéral reste ouvert' : '« Fait » du Fil : le panneau se cache, la carte reste à la vue',
+    (await panneau()) === (large ? 'open' : 'cache'), await panneau());
+  if (!large) R.check('« Fait » du Fil : le focus passe sur « Quêtes »', await page.evaluate(() => !!document.activeElement?.matches('[data-ow="quetes"]')),
+    await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80)));
   R.check('Énergie en hausse', s1.e > s0.e, `${s0.e} → ${s1.e}`);
   R.check('Matériaux en hausse', s1.m > s0.m, `${s0.m} → ${s1.m}`);
   R.check('Nourriture et Habitants inchangés (ils viennent des récoltes et des logements)', s1.f === s0.f && s1.h === s0.h, JSON.stringify({ s0, s1 }));
@@ -89,6 +99,7 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   await page.locator(`#quest-list > li[data-task-id="${id}"] [data-action="complete"]`).click();
   await page.waitForTimeout(800);
   const s3 = await snap();
+  R.check('une coche de la liste laisse le panneau ouvert', (await panneau()) === 'open', await panneau());
   R.check('« Fait » de nouveau : aucun gain', s3.e === s2.e && s3.m === s2.m && s3.f === s2.f && s3.h === s2.h, JSON.stringify({ s2, s3 }));
   R.check('« Fait » de nouveau : le quartier ne compte pas la tâche deux fois', (quartiers()[q] || 0) === (q0[q] || 0), JSON.stringify({ q0, q3: quartiers() }));
   R.check('« Fait » de nouveau : toujours une seule entrée reward', srv.ledger().filter((e) => e.key === `reward:${id}:1`).length === 1);

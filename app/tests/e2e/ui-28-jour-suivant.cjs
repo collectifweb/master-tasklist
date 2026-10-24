@@ -57,6 +57,7 @@ L.runScenario('28. jour suivant', async ({ R, srv, newPage, shot, core }) => {
   // une quête le samedi ; l'historique est encore vide
   await page.click('#fil-quest [data-action="complete"]');
   R.check('samedi : la quête est payée au registre', await L.waitFor(() => srv.ledger().some((e) => e.type === 'reward' && e.day === ymd(0)), 5000));
+  await L.openPanel(page); // en compact, le « Fait » du Fil cache le panneau
   await page.click('[data-action="open-review"]');
   R.check('le bilan s’ouvre', await L.waitFor(() => reviewOpen(page), 3000));
   R.check('historique vide : la phrase qui l’explique', /Semaines passées/.test(await page.textContent('#dlg-review')) && /Chaque semaine finie/.test(await page.textContent('#dlg-review')));
