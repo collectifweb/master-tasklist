@@ -21,7 +21,8 @@
 }
 .ow [hidden] { display: none !important; }
 .ow svg { max-width: none; }
-.ow button { font: inherit; color: inherit; }
+/* sans poids (:where) : la police et la couleur propres d'un bouton (bulle, flèche au bord, Passer…) l'emportent */
+:where(.ow button) { font: inherit; color: inherit; }
 
 .ow-scroller {
   position: absolute;

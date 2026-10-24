@@ -89,6 +89,17 @@ L.runScenario('49 · les bulles de la carte : récolte d\'un toucher, réserve p
   R.check(`une bulle de famille sur un chalet (${tag})`, de('famille').length === 1 && /^chalet-/.test(de('famille')[0]), JSON.stringify(e0.bulles.map((b) => [b.de, b.kind])));
   R.check(`bulles de 44 px au moins (${tag})`, e0.bulles.every((b) => b.r[2] >= 44 && b.r[3] >= 44), JSON.stringify(e0.bulles.map((b) => b.r)));
   R.check(`bulles hors de l'ordre de tabulation (${tag})`, e0.bulles.every((b) => b.tab === '-1'), JSON.stringify(e0.bulles.map((b) => b.tab)));
+  // le picto en papier, comme le cerne (lot G : une règle commune des boutons de l'île le mettait à l'encre)
+  const teintes = await page.evaluate(() => {
+    const cs = (n) => n && getComputedStyle(n);
+    const bords = [...document.querySelectorAll('.ow-bord')].filter((n) => !n.hidden);
+    return {
+      bulles: [...document.querySelectorAll('.ow-bulle')].map((n) => [cs(n.querySelector('svg')).stroke, cs(n.querySelector('.ow-bulle-rond')).borderTopColor]),
+      bords: bords.map((n) => [cs(n).color, cs(n).borderTopColor, cs(n).fontSize, cs(n).fontWeight]),
+    };
+  });
+  R.check(`picto des bulles en papier, comme leur cerne (${tag})`, teintes.bulles.length > 0 && teintes.bulles.every(([p, c]) => p === c), JSON.stringify(teintes.bulles));
+  R.check(`flèches au bord : chiffre en papier, 18 px, graisse 800 (${tag})`, teintes.bords.every(([c, b, fs, fw]) => c === b && fs === '18px' && fw === '800'), JSON.stringify(teintes.bords));
   R.check(`nom lu d'une récolte : « récolter +n Nourriture » (${tag})`, e0.bulles.filter((b) => b.kind === 'recolte').every((b) => gainDe(b) > 0), JSON.stringify(e0.bulles.map((b) => b.label)));
   const cachees = e0.bulles.filter((b) => !b.touchable).length;
   R.check(`toute bulle hors de vue est comptée dans une flèche au bord (${tag})`, e0.bords.reduce((s, b) => s + b.n, 0) === cachees, JSON.stringify({ cachees, bords: e0.bords }));

@@ -2030,3 +2030,38 @@ Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (
 - Comptes à rebours sur la carte (« 2 j » au-dessus d'une parcelle, « 2/2 » sur un chalet).
 - Le plafond de Nourriture absent de la barre du haut ; à 390 px, 5 plaques de quartier sur 6 sans nom ; Construire, Quêtes et Vue sans mot visible.
 - La bulle de Fanal : interligne serré, recouverte au tiers par une plaque à 390 px (détecteur).
+
+## Lot G — Ce qui gêne en jouant (retours d'Alex du 23 octobre 2026, proposé, à valider)
+
+**Statut : proposé le 23 octobre 2026, à valider.** Fin de la pause des nouveautés (12 octobre) : Alex a joué et nomme quatre gênes. Sa partie a été lue en production par une lecture seule de l'API (GET, avec son accord), recopiée dans une copie locale du jeu, hors du dépôt (dossier de travail de la session, effacé ensuite), et regardée aux trois largeurs. Les mesures ci-dessous viennent de cette copie.
+
+### G0 — Les bulles de la carte : un picto presque noir
+- [x] Cause prouvée dans le navigateur : `.ow button { font: inherit; color: inherit; }` (`css/world.css`, depuis le 5 octobre) pèse plus lourd que `.ow-bulle` ; la bulle prend l'encre (rgb 39, 48, 38) au lieu du papier, et son panier sort presque noir sur la sauge profonde. Même effet sur la flèche au bord (chiffre en police ordinaire 16 px, encre, au lieu des chiffres arrondis 18 px graisse 800 en papier) et sur « Passer l'animation » (16 px normal au lieu de 15 px gras). `DESIGN.md` prévoyait déjà le papier.
+- [x] Correctif : la règle passe sous `:where(.ow button)`, sans poids. Mesuré bouton par bouton (51 boutons de l'île, à 390 et 834 px, avec la nouvelle règle puis avec l'ancienne remise) : seuls les bulles, les flèches au bord et « Passer » changent ; plaques, commandes de la carte et bâtiments identiques. Cache `oree-coquille-v32`.
+- [x] Scénarios qui touchent ces boutons, réussis aux trois largeurs : 49 (98), 12 (96), 26 (87), 30 (132), 21 (84), `world-s3` (97), `world-perf` (aucune erreur en mouvement réduit). Le scénario 49 gagne deux contrôles par largeur, lus sur le style calculé : le picto des bulles a la couleur de leur cerne, le chiffre de la flèche au bord est en papier, 18 px, graisse 800. Contre-épreuve à 390 px, l'ancienne règle remise le temps de l'essai : les deux échouent (encre, 16 px, 400) ; avec le correctif, 104 contrôles, 0 échec.
+- [ ] Envoi `v2.16.2`, sur l'accord d'Alex.
+- [ ] Alex regarde les bulles corrigées : assez visibles, ou une bulle « de jeu » plus marquée (à maquetter avec G3) ?
+
+### G1 — Les plaques de quartier prennent la vue
+Constat : à 834 et 1280 px, les six plaques sont dépliées dès l'ouverture (picto, nom, niveau ; de 137 à 208 px de large sur 44 de haut), parce que `sizePlaques()` (`world/world.js`) déplie tout dès que l'échelle de la caméra atteint 0,9. À 390 px, seule celle du quartier actif est dépliée (Place du village, 208 px au milieu de l'île) ; les cinq autres sont des ronds de 44 px.
+- Piste A (recommandée) : toutes les plaques en rond de 44 px, à toutes les largeurs. Le nom quitte la carte ; il reste dans la fiche du quartier, dans le nom lu et dans la carte en liste. La pastille « on peut monter » reste au coin du rond.
+- Piste B : le nom s'affiche un moment quand on touche la plaque, puis se replie.
+- Piste C : plus de plaques sur la carte, sauf avec le bouton Vue.
+- La note de la critique du lot L (« à 390 px, 5 plaques sur 6 sans nom ») tombe avec A : à l'usage, Alex ne cherche pas les noms sur la carte.
+
+### G2 — L'éolienne cache la cabane à sucre
+Constat, sur sa partie, aux trois largeurs : la boîte de l'éolienne couvre 74 % de celle des piquets de la cabane à sucre, posés juste derrière, sur la bande du Hameau (éolienne r 0,5 c 10,6, cabane r −1,25 c 8,35 : presque la même colonne à l'écran, c − r = 10,1 contre 9,6, l'éolienne devant). Le mât et les pales passent devant les piquets ; une fois la cabane bâtie, ce sera pareil.
+- Piste A (recommandée) : déplacer l'éolienne (ou la cabane) pour que rien de touchable ne reste derrière un objet haut. La place vient de `EMPLACEMENTS` (`world/layout.js`), pas de la partie : rien à migrer. Plus un contrôle dans un scénario : aucun objet touchable couvert à plus d'une part fixée par un autre, aux trois largeurs, tous les bâtiments posés.
+- Piste B : un objet haut devient translucide et laisse passer le toucher quand il cache quelque chose de touchable.
+- Piste C, faire pivoter la carte d'un geste : chaque dessin n'a que son dessus et ses deux faces avant, sous une lumière fixe (`world/models.js`, `world/iso.js`). Pivoter demande de dessiner le dos de chaque modèle, de refaire l'ordre de profondeur, les chemins des habitants, la caméra, les plaques et les bulles. Un lot entier pour une seule gêne ; pas recommandé maintenant.
+
+### G3 — Le marchand en images
+Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la commande de la scientifique, puis quatre lignes d'échange de la semaine (« 30 Énergie → 15 Matériaux », un cadenas et « Il manque 21 Énergie. » sous celles qu'il ne peut pas faire), la phrase du rachat des Matériaux et sa ligne, puis « Comment ça marche ». Alex voudrait plus imagé, à la Age of Empires : « tu donnes ça, tu reçois ça » en gros pictos.
+- Maquette d'abord (/impeccable, comme L0), deux ou trois pistes, validées par Alex avant le code : une carte par échange, gros picto et chiffre de chaque côté d'une flèche, le bouton dessous ; ce qui manque se lit sur le picto donné (9 sur 30) plutôt que dans une phrase ; la commande du visiteur sur le même modèle.
+
+### G4 — Contrat, tests, envoi
+- [ ] `app/DESIGN.md` et `app/.impeccable/design.json` dans le même commit que chaque écran.
+- [ ] Scénarios à revoir selon les pistes retenues (plaques : 12, 31, 49 ; quai : 36, 40, 42), série complète avant l'envoi.
+- [ ] Feuille de route, ligne de version de `CLAUDE.md`, envoi sur l'accord d'Alex.
+
+Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.
