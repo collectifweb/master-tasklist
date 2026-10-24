@@ -2075,7 +2075,7 @@ Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la comman
   - [x] `DESIGN.md` (Étal, Barre, Réserve, Commande du quai ; le paragraphe du marchand renvoie vers eux), `ARCHITECTURE.md` (Commande du visiteur, Étal du marchand), `.impeccable/design.json` (Tuile de l'étal, Barre de l'étal, Pastille de commande), cache `oree-coquille-v35`.
   - [x] Scénarios 36, 40, 42 réécrits pour l'étal ; avec le 43 (il livre une commande) et le 45 (les sucres de la Place, au même dessin), réussis du premier coup. Les flèches du clavier passent d'une tuile à l'autre, la barre suit (sonde, trois largeurs).
   - [x] Série complète sur `b583946` (24 octobre, de 2 h à 2 h 50) : 47 scénarios réussis sur 47, 3 978 vérifications. Tests de logique et d'API sur le même commit : un échec, la typographie (trois « : » sans espace insécable dans des phrases lues, écrites par l'étal). Corrigé ; relance : 674 réussis sur 676, aucun échec (deux marqués « à faire »), scénarios 40 et 42 réussis de nouveau.
-  - [ ] Envoi seulement sur l'accord d'Alex.
+  - [ ] Envoi en `v2.18`, l'étal et le panneau ensemble, accordé par Alex le 24 octobre au matin (« Ok envoie »).
 
 ### G4 — Contrat, tests, envoi
 - [x] `app/DESIGN.md` et `app/.impeccable/design.json` dans le même commit que chaque écran : `DESIGN.md` avec les plaques et l'éolienne (`38610b4`), le panneau (`5388258`) et l'étal (`b583946`) ; `design.json` n'a changé qu'avec l'étal (trois composants).
@@ -2100,6 +2100,6 @@ Aujourd'hui (`js/main.js`, `setPanel`) : trois états. Replié (`peek`, l'état 
   - [x] Reprise des 15 scénarios touchés (les 13, plus le 9 et le 29) : tous réussis aux trois largeurs. `world-s3` (103 contrôles) et `world-perf` (aucune erreur) réussis ; tests de logique et d'API : 674 réussis sur 676, aucun échec (les deux autres sont les avertissements connus).
   - [ ] À trancher avec Alex : à 390 px, « Fait » se touche panneau ouvert, qui couvre la carte : le fil de lumière part sous le panneau et ne se voit plus ; on voit les compteurs monter et l'annonce « +4 Énergie +9 Matériaux → Atelier ». Avant G5, le panneau replié laissait voir le fil. Piste : cacher le panneau après « Fait » en compact, pour que la récompense se joue sur la carte. Pas fait sans son avis.
   - [x] Série complète sur le commit `5388258`, lancée le 24 octobre vers 0 h 50 depuis une copie détachée : 47 scénarios réussis sur 47 (3 942 vérifications), aux trois largeurs.
-  - [ ] Envoi seulement sur l'accord d'Alex.
+  - [ ] Envoi en `v2.18`, l'étal et le panneau ensemble, accordé par Alex le 24 octobre au matin (« Ok envoie »).
 
 Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.

@@ -2,11 +2,11 @@
 
 Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour à chaque envoi en production. Le détail de chaque lot (mesures, essais, décisions) est dans `tasks/todo.md`. Les règles du jeu sont dans `docs/BIBLE-JEU.md`.
 
-*Dernière mise à jour : 23 octobre 2026.*
+*Dernière mise à jour : 24 octobre 2026.*
 
 ## Où en est le jeu
 
-La version 2.17 est en ligne depuis le 23 octobre 2026. La carte y est plus dégagée : les plaques de quartier ne montrent plus que leur picto, et l’éolienne ne cache plus la cabane à sucre. La 2.16, du 15 octobre, a apporté des fiches qu’on lit d’un coup d’œil, avec moins de texte.
+La version 2.18 est en ligne depuis le 24 octobre 2026. Le marchand du quai a maintenant un étal : ses offres sont des tuiles, qu’on touche avant d’échanger. Au lancement, le panneau du Fil du jour reste caché, et c’est l’icône « Quêtes » qui l’ouvre. La 2.17, du 23 octobre, avait dégagé la carte : les plaques de quartier en petits ronds, l’éolienne qui ne cache plus la cabane à sucre.
 
 ## Fait
 
@@ -38,12 +38,13 @@ La version 2.17 est en ligne depuis le 23 octobre 2026. La carte y est plus dég
 | 2.16.1 | 15 octobre | Le poulailler et la cabane à sucre disent qu’ils produisent à ton prochain passage au village (ils parlaient encore de la prochaine quête terminée), la description de la cabane est plus courte, et 99 textes que le jeu n’affichait plus sont retirés. |
 | 2.16.2 | 23 octobre | Les bulles de la carte montrent enfin leur dessin en clair sur le vert, comme prévu : il sortait presque noir. Les flèches au bord de l’écran retrouvent leurs gros chiffres arrondis. |
 | 2.17 | 23 octobre | Une carte plus dégagée. Les plaques de quartier deviennent de petits ronds avec leur seul picto, sur tous les écrans ; leur nom se lit dans la fiche du quartier. L’éolienne passe au coin du fond, côté École, car à son ancienne place elle cachait la cabane à sucre, qu’on avait du mal à toucher. |
+| 2.18 | 24 octobre | L’étal du marchand, et plus de place pour la carte. Au quai, les quatre offres de la semaine sont des tuiles en grille, avec le rachat du jour en tuile large dessous. On touche une offre, puis « Échanger » dans la barre du bas : deux gestes, pour ne plus rien dépenser d’un toucher par mégarde. La commande d’un visiteur montre ce qu’il demande en pastilles, avec une jauge de ce que la réserve en a déjà. Le panneau du Fil du jour reste caché au lancement, sur tous les écrans, et l’icône « Quêtes » l’ouvre en entier. Sur téléphone, Alex le trouvait gênant même replié, et y touchait parfois « + » sans le vouloir. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
 ## En cours ou en attente
 
-- Sur les retours de jeu d’Alex du 23 octobre, les plaques et l’éolienne sont faites (2.17). Viennent ensuite le comptoir du marchand en images, d’après la maquette « l’étal » qu’Alex a choisie (les offres en grille, on touche une offre puis on échange), et le panneau du Fil du jour en bas de l’écran, qu’Alex voudrait voir caché tant qu’on ne l’ouvre pas.
+- Sur les retours de jeu d’Alex du 23 octobre, tout est en ligne : les plaques et l’éolienne (2.17), l’étal et le panneau caché (2.18). Une question reste ouverte. Sur téléphone, quand on termine une quête panneau ouvert, le fil de lumière part sur la carte, sous le panneau, et on ne le voit pas.
 - L’installation d’une amie : le défaut de l’iPhone a disparu chez elle (elle l’a confirmé le 12 octobre). Reste à savoir si le bouton « Mettre à jour » marche chez son hébergeur : il n’a encore servi chez aucun vrai hébergeur.
 - Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
