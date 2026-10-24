@@ -333,7 +333,7 @@ function offreHtml(o, choix, quand = t('bat.comptoir.fait.quand')) {
     : ligne;
   return `<label class="offre etal-offre${jour ? ' etal-offre--jour' : ''}" data-offre="${o.id}" data-etat="${etat}">
     <input type="radio" name="etal-offre" value="${o.id}"${o.id === choix ? ' checked' : ''}>
-    <span class="etal-carte">${troc}<span class="sr-only">${esc(jour ? `${t('bat.comptoir.jour.titre')} : ${lu}` : lu)}. </span>${texte}<span class="etal-tick" aria-hidden="true">${icon('check')}</span></span></label>`;
+    <span class="etal-carte">${troc}<span class="sr-only">${esc(jour ? `${t('bat.comptoir.jour.titre')}\u00a0: ${lu}` : lu)}. </span>${texte}<span class="etal-tick" aria-hidden="true">${icon('check')}</span></span></label>`;
 }
 
 function comptoirHtml(offres, duJour, choix) {
@@ -382,9 +382,9 @@ function commandeHtml(c) {
     <h3 class="commande-titre" id="commande-t">${icon('note')}<span>${esc(c.nom)}</span>${c.sansJours ? '' : `<small class="commande-jours">${esc(c.jours)}</small>`}</h3>
     <p class="commande-qui">${esc(c.qui)}</p>
     <div class="commande-echange">
-      <p class="commande-demande"><span class="sr-only">${esc(t('bat.commande.demande'))} : </span>${c.demande.map((r, i) => (i ? `<span class="commande-et" aria-hidden="true">+</span><span class="sr-only"> ${esc(t('bat.commande.et'))} </span>` : '') + commandeResHtml(r)).join('')}</p>
+      <p class="commande-demande"><span class="sr-only">${esc(t('bat.commande.demande'))}\u00a0: </span>${c.demande.map((r, i) => (i ? `<span class="commande-et" aria-hidden="true">+</span><span class="sr-only"> ${esc(t('bat.commande.et'))} </span>` : '') + commandeResHtml(r)).join('')}</p>
       ${icon('fleche', 'commande-fleche')}
-      <p class="commande-laisse"><span class="sr-only">${esc(t('bat.commande.laisse'))} : </span>${recoit}</p>
+      <p class="commande-laisse"><span class="sr-only">${esc(t('bat.commande.laisse'))}\u00a0: </span>${recoit}</p>
     </div>
     ${c.recoit.note ? `<p class="commande-note">${esc(c.recoit.note)}</p>` : ''}${c.taille ? `<p class="commande-taille">${esc(c.taille)}</p>` : ''}
     ${action}</section>`;
