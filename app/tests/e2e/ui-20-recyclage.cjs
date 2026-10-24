@@ -66,6 +66,7 @@ L.runScenario('20. jour du recyclage', async ({ R, srv, newPage, shot }) => {
   await page.waitForTimeout(500);
 
   // ───── une quête, puis le bilan rouvert à la main
+  await L.openPanel(page); // le panneau part caché (lot G5)
   await page.click('#fil-quest [data-action="complete"]');
   await L.waitFor(() => srv.ledger().some((e) => e.type === 'reward'), 5000);
   await page.waitForTimeout(800);

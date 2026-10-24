@@ -2063,7 +2063,15 @@ Constat, sur sa partie, aux trois largeurs : la boîte de l'éolienne couvre 74 
 Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la commande de la scientifique, puis quatre lignes d'échange de la semaine (« 30 Énergie → 15 Matériaux », un cadenas et « Il manque 21 Énergie. » sous celles qu'il ne peut pas faire), la phrase du rachat des Matériaux et sa ligne, puis « Comment ça marche ». Alex voudrait plus imagé, à la Age of Empires : « tu donnes ça, tu reçois ça » en gros pictos.
 - Maquette d'abord (/impeccable, comme L0), deux ou trois pistes, validées par Alex avant le code : une carte par échange, gros picto et chiffre de chaque côté d'une flèche, le bouton dessous ; ce qui manque se lit sur le picto donné (9 sur 30) plutôt que dans une phrase ; la commande du visiteur sur le même modèle.
 - [x] Maquette sur une toile de design privée (hors du dépôt), deux pistes à 390 px qu'on peut essayer, avec les vraies offres (`core/visiteurs.js`) et une réserve fictive (46 Énergie, 182 Matériaux, 3 Nourriture) : A, une carte par échange (tuile donnée, flèche, tuile reçue, bouton à droite ; la jauge « 3 sur 10 » sur la tuile donnée quand il manque quelque chose ; la commande en tuiles, « Il demande » et « Il laisse ») ; B, l'étal (la réserve en tête, les quatre offres en grille 2 × 2, le rachat du jour en large, on touche une offre puis « Échanger » dans une barre en bas). Recherche sur le marché d'Age of Empires II : les résumés de résultats décrivent le mécanisme (bois, pierre et nourriture échangés contre de l'or, à des prix qui bougent à chaque échange), aucun la disposition de l'écran, et les wikis ont refusé l'accès ; les deux pistes partent du souvenir d'Alex et du mien, pas d'une capture du jeu.
-- [x] Alex choisit la piste B, l'étal (23 octobre au soir). Reste à la construire : plan à écrire et à faire valider.
+- [x] Alex choisit la piste B, l'étal (23 octobre au soir). Plan ci-dessous ; Alex a laissé l'ordre libre (« tu commences par ce que tu veux ») et la nuit en autonomie, sans accord d'envoi pour ce lot.
+- Plan de construction (fiche du quai, `js/ui/batiment.js` : `comptoirHtml`, `offreHtml`, `commandeHtml` ; styles dans `css/app.css` ; textes dans `content/fr-CA/batiments.json`), à faire passer par /impeccable :
+  - [ ] Les quatre offres de la semaine en grille 2 × 2 de tuiles-boutons (`aria-pressed`) : ce qu'on donne (picto, chiffre), une flèche vers le bas, ce qu'on reçoit ; une ligne d'état dessous (« Il manque 7 Nourriture », « Fait cette semaine »).
+  - [ ] Le rachat du jour en tuile large sous la grille, même comportement, avec « Il garde toujours 150 Matériaux au village. ».
+  - [ ] Une barre collée au bas de la fiche : l'offre choisie en grand (donné → reçu) et « Échanger », ou le cadenas et « Il manque N », ou « Fait ». À l'ouverture, la première offre faisable est choisie (sinon la première). Deux gestes pour échanger : on ne dépense plus d'un seul toucher par mégarde.
+  - [ ] La commande du visiteur en tuiles avec jauge (« 3/8 »), « Livrer » avec la raison sur la même ligne.
+  - [ ] La réserve en tête de la fiche seulement si la barre des ressources n'est pas visible au-dessus de la fiche (à mesurer aux trois largeurs).
+  - [ ] Ce qui ne change pas : les offres, les prix, les règles et les gestes du cœur (`echanger`, `livrer`), les noms lus (« Échanger 30 Énergie contre 15 Matériaux »), la protection du double toucher.
+  - [ ] `DESIGN.md` et `.impeccable/design.json` (nouveaux composants), scénarios 36, 40, 42 (et 26, 32 s'ils visent la fiche du quai), série complète ; envoi seulement sur l'accord d'Alex.
 
 ### G4 — Contrat, tests, envoi
 - [ ] `app/DESIGN.md` et `app/.impeccable/design.json` dans le même commit que chaque écran.
@@ -2074,14 +2082,19 @@ Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la comman
 ### G5 — Le Fil du jour caché tant qu'on ne l'ouvre pas (demande d'Alex du 23 octobre au soir)
 Alex : le panneau du bas, qui montre la quête prioritaire, gêne la vue, et on accroche parfois le bouton d'ajout sans le vouloir. Il propose qu'il soit caché par défaut et qu'il ne s'ouvre en entier qu'avec le bouton des quêtes.
 Aujourd'hui (`js/main.js`, `setPanel`) : trois états. Replié (`peek`, l'état de départ fixé dans `index.html`) montre la quête n° 1, sa Cote et « Fait » ; ouvert (`open`) montre toute la liste ; caché (`cache`) laisse toute la place à la carte. « Quêtes » (colonne de la carte) passe de caché à replié et retour. Un message court ou une erreur d'enregistrement fait revenir le panneau caché en replié.
-- Plan proposé (en attente de l'accord d'Alex) :
-  - [ ] Au lancement, le panneau est caché (`data-panel="cache"`), à chaque ouverture du jeu.
-  - [ ] « Quêtes » : caché → ouvert en entier ; ouvert → caché.
-  - [ ] « Replier », Échap et le glissement vers le bas cachent le panneau au lieu de le replier.
-  - [ ] « Aujourd'hui » (bandeau du haut) ouvre le panneau en entier, le focus sur « Fait » de la quête n° 1.
-  - [ ] Inchangé : un message court ou une erreur d'enregistrement fait encore revenir le panneau replié, pour être vu (rare).
-  - [ ] Question 1 : en grand écran (colonne à droite, ordinateur ou tablette à l'horizontale), caché aussi au départ ? Recommandé : oui, une seule règle partout.
-  - [ ] Question 2 : le cas des messages et erreurs ci-dessus convient-il ?
-  - [ ] Contrat : `DESIGN.md` (règle « World First », états du panneau) et `ARCHITECTURE.md` ; scénarios à revoir : 29 (rabat), puis tous ceux qui partent du panneau replié (à recenser par grep), série complète avant l'envoi.
+- Plan validé par Alex le 23 octobre au soir (« J'aurais préféré que son état par défaut soit pas là et qu'on clique sur l'icône à droite pour finalement l'ouvrir ») :
+  - [x] Au lancement, le panneau est caché (`data-panel="cache"` et `inert` dans `index.html`), à chaque ouverture du jeu.
+  - [x] « Quêtes » : caché → ouvert en entier ; ouvert → caché. En compact, le panneau ouvert couvre la colonne de la carte (déjà le cas avant) : il se ferme par « Fermer », l'en-tête ou Échap.
+  - [x] « Replier » (devenu « Fermer »), Échap (focus rendu à « Quêtes ») et le toucher ou le glissement vers le bas de l'en-tête cachent le panneau au lieu de le replier.
+  - [x] « Aujourd'hui » (bandeau du haut) ouvre le panneau en entier, le focus sur « Fait » de la quête n° 1. Une feuille qui se ferme rend le focus à « Quêtes » sans faire revenir le panneau.
+  - [x] Inchangé : un message court ou une erreur d'enregistrement fait encore revenir le panneau replié, pour être vu (rare).
+  - [x] Question 1 : en grand écran aussi, caché au départ (Alex : « je peux suivre ta recommandation, mais honnêtement, il n'était pas gênant »).
+  - [x] Question 2 : les messages et erreurs gardent leur comportement (Alex : « c'est correct »).
+  - [x] Contrat : `DESIGN.md` (règle « World First ») et `ARCHITECTURE.md` ; cache `oree-coquille-v34`. `L.ready` attend le Fil du jour rendu (plus visible). Scénario 29 réécrit : réussi aux trois largeurs (82 contrôles).
+  - [x] Série complète du 23 octobre vers 23 h 25 : 13 scénarios en échec (1, 2, 3, 6, 9 suite, 12, 19, 20, 21, 27, 30, 33, 44), tous parce qu'ils touchaient le panneau sans l'ouvrir ou attendaient le replié au lancement. Ils ouvrent maintenant le panneau par « Quêtes » ; l'ajout compte un geste de plus depuis le lancement (« Quêtes », « + », le titre, valider), voulu.
+  - [x] Cinq défauts réels trouvés en les réparant, corrigés : (1) Entrée sur « Quêtes » laissait le focus sur « Quêtes », caché sous le panneau ouvert à 390 px : il passe sur « Fait » de la quête n° 1 ; (2) « Fermer » au clavier laissait tomber le focus au début de la page (le panneau devient inert) : il revient à « Quêtes » ; (3) à 390 px, déplier le bandeau d'objectifs panneau ouvert glissait sa carte sous le panneau : le panneau se cache ; (4) l'échec du chargement écrivait son message et « Réessayer » dans le panneau caché : le panneau revient replié ; (5) pendant une animation de la carte, Entrée sur « Quêtes » passait l'animation au lieu d'ouvrir le panneau (au clic, ça marchait) : Entrée et Espace activent les commandes de la carte et du zoom, comme le clic.
+  - [x] Reprise des 15 scénarios touchés (les 13, plus le 9 et le 29) : tous réussis aux trois largeurs. `world-s3` (103 contrôles) et `world-perf` (aucune erreur) réussis ; tests de logique et d'API : 674 réussis sur 676, aucun échec (les deux autres sont les avertissements connus).
+  - [ ] À trancher avec Alex : à 390 px, « Fait » se touche panneau ouvert, qui couvre la carte : le fil de lumière part sous le panneau et ne se voit plus ; on voit les compteurs monter et l'annonce « +4 Énergie +9 Matériaux → Atelier ». Avant G5, le panneau replié laissait voir le fil. Piste : cacher le panneau après « Fait » en compact, pour que la récompense se joue sur la carte. Pas fait sans son avis.
+  - [ ] Série complète après ces corrections, puis envoi seulement sur l'accord d'Alex.
 
 Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.

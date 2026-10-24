@@ -1,4 +1,4 @@
-// 9 (suite). Navigation au clavier jusqu'à « Fait » ; mouvement réduit respecté ; 40 quêtes dont 10 en retard, sans rouge.
+// 9 (suite). Navigation au clavier jusqu'à « Fait » (par « Quêtes », le panneau part caché) ; mouvement réduit respecté ; 40 quêtes dont 10 en retard, sans rouge.
 const L = require('./lib.cjs');
 const today = new Date().toISOString().slice(0, 10);
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -14,12 +14,17 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
   const { page } = await newPage();
   await page.goto(srv.url);
   await L.ready(page);
-  let n = 0, onFait = false;
-  for (; n < 20 && !onFait; n++) {
+  // le panneau part caché (lot G5) : Tab mène à « Quêtes » sur la carte ; Entrée ouvre le panneau, focus sur « Fait »
+  let n = 0, onQuetes = false;
+  for (; n < 20 && !onQuetes; n++) {
     await page.keyboard.press('Tab');
-    onFait = await page.evaluate(() => document.activeElement && document.activeElement.matches('#fil-quest [data-action="complete"]'));
+    onQuetes = await page.evaluate(() => document.activeElement && document.activeElement.matches('[data-ow="quetes"]'));
   }
-  R.check('Tab atteint « Fait » du Fil du jour', onFait, `${n} touches`);
+  R.check('Tab atteint « Quêtes » sur la carte', onQuetes, `${n} touches`);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  R.check('Entrée sur « Quêtes » ouvre le panneau, focus sur « Fait » du Fil du jour', await page.getAttribute('#app', 'data-panel') === 'open'
+    && await page.evaluate(() => document.activeElement.matches('#fil-quest [data-action="complete"]')), await page.evaluate(() => document.activeElement.outerHTML.slice(0, 80)));
   R.check('le focus est visible (anneau)', await page.evaluate(() => { const cs = getComputedStyle(document.activeElement); return cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2; }));
   const e0 = await L.resValue(page, 'energie');
   const title = (await page.textContent('#fil-quest .fil-title')).trim();
@@ -38,10 +43,10 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
     await page.focus('.panel-toggle');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(500);
-    R.check('Entrée sur « Tout voir » ouvre le panneau', await page.getAttribute('#app', 'data-panel') === 'open');
-    await page.keyboard.press('Escape');
+    R.check('Entrée sur « Fermer » cache le panneau et rend le focus à « Quêtes »', await page.getAttribute('#app', 'data-panel') === 'cache' && await page.evaluate(() => document.activeElement.matches('[data-ow="quetes"]')));
+    await page.keyboard.press('Enter');
     await page.waitForTimeout(500);
-    R.check('Échap referme le panneau et rend le focus à la bascule', await page.getAttribute('#app', 'data-panel') === 'peek' && await page.evaluate(() => document.activeElement.matches('.panel-toggle')));
+    R.check('Entrée sur « Quêtes » le rouvre', await page.getAttribute('#app', 'data-panel') === 'open');
   }
   await page.focus('.panel-head [data-action="add"]');
   await page.keyboard.press('Enter');
@@ -56,6 +61,7 @@ L.runScenario('9 (suite). clavier, mouvement réduit, 40 quêtes dont 10 en reta
   const { page: pr } = await newPage({}, { reducedMotion: 'reduce' });
   await pr.goto(srv.url);
   await L.ready(pr);
+  await L.openPanel(pr);
   const m = await pr.evaluate(() => { const cs = getComputedStyle(document.documentElement); return [cs.getPropertyValue('--motion').trim(), cs.getPropertyValue('--t-medium').trim(), cs.getPropertyValue('--ambient').trim()]; });
   R.check('mouvement réduit : --motion 0, durées de 150 ms, boucles à l’arrêt', m[0] === '0' && m[1] === '150ms' && m[2] === 'paused', m.join(' '));
   R.check('mouvement réduit : le panneau ne glisse plus (fondu seulement)', /opacity/.test(await pr.evaluate(() => getComputedStyle(document.querySelector('.panel')).transitionProperty)) && !/transform/.test(await pr.evaluate(() => getComputedStyle(document.querySelector('.panel')).transitionProperty)));

@@ -63,9 +63,10 @@ const story = createStory({
   focusBandeau: () => { if (!document.activeElement || document.activeElement === document.body) $('.bandeau-today').focus(); },
   arrivee: () => { annonceAllure(); annonceVisiteur(); annonceImprevu(); annonceTempete(); },
 });
-/** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme. */
+/** Le clavier repart du Fil du jour (« Fait » de la quête n° 1) quand une feuille ouverte seule se ferme ; panneau caché
+ *  (l'état de départ depuis le lot G5), de « Quêtes », sans le faire revenir. */
 function focusHome() {
-  showPanel(); // panneau caché : il revient replié avant que le focus y entre
+  if (app.dataset.panel === 'cache') { $('[data-ow="quetes"]')?.focus(); return; }
   const done = $('#fil-quest:not([hidden]) [data-action="complete"]');
   (done || $('.panel-head [data-action="add"]')).focus();
 }
@@ -355,15 +356,19 @@ function advanceTime() {
 }
 
 // ───────── Panneau ─────────
-// Trois états : 'open' (ouvert), 'peek' (replié : le Fil du jour), 'cache' (caché par « Quêtes » : la carte prend tout
-// l'écran ; le panneau est inert). true / false valent 'open' / 'peek'. Table des passages :
-//   « Tout voir » / « Replier »    replié ↔ ouvert (hors d'atteinte quand il est caché)
-//   en-tête, compact seulement     toucher : replié ↔ ouvert ; glisser vers le haut : ouvert ; vers le bas : replié
-//   « Quêtes » (carte)             ouvert ou replié → caché ; caché → replié
-//   Échap                          ouvert → replié, focus sur « Tout voir » (rien si une feuille est ouverte)
+// Trois états : 'open' (ouvert), 'peek' (replié : le Fil du jour), 'cache' (caché : la carte prend tout l'écran ; le
+// panneau est inert). Caché au lancement, à toutes les largeurs (lot G5 : replié, il prenait le bas de l'écran du
+// téléphone) ; replié ne sert plus qu'à montrer un message. true / false valent 'open' / 'peek'. Table des passages :
+//   « Tout voir » / « Fermer »     replié → ouvert ; ouvert → caché, focus sur « Quêtes » (hors d'atteinte quand il est caché)
+//   en-tête, compact seulement     toucher : replié → ouvert, ouvert → caché ; glisser vers le haut : ouvert ; vers le bas : caché
+//   « Quêtes » (carte)             caché → ouvert, focus sur le « Fait » du Fil (en compact, le panneau couvre « Quêtes ») ;
+//                                  ouvert ou replié → caché
+//   Échap                          ouvert → caché, focus sur « Quêtes » (rien si une feuille est ouverte)
 //   filtre par quartier            tout état → ouvert
-//   « Aujourd'hui », retour au Fil caché → replié avant que le focus entre ; sinon inchangé
-//   « Voir sur la carte »          ouvert → replié ; replié et caché inchangés
+//   « Aujourd'hui » (quête n° 1)   tout état → ouvert, focus sur son « Fait »
+//   retour au Fil (focusHome)      caché : focus sur « Quêtes », le panneau reste caché ; sinon inchangé
+//   « Voir sur la carte »          ouvert → caché ; replié et caché inchangés
+//   bandeau déplié (compact)       ouvert → caché (la carte des objectifs passerait sous le panneau)
 //   focus clavier entrant          replié → ouvert s'il tombe hors de la partie visible ; caché : impossible (inert)
 //   message court, erreur          caché → replié avant que le texte s'écrive
 function setPanel(state) {
@@ -404,8 +409,8 @@ head.addEventListener('pointerup', (e) => {
   if (!headDown || e.pointerId !== headDown.id) return;
   const dx = e.clientX - headDown.x, dy = e.clientY - headDown.y;
   headDown = null;
-  if (Math.hypot(dx, dy) <= SWIPE_PX) setPanel(app.dataset.panel !== 'open');
-  else if (Math.abs(dy) > Math.abs(dx)) setPanel(dy < 0);
+  if (Math.hypot(dx, dy) <= SWIPE_PX) setPanel(app.dataset.panel === 'open' ? 'cache' : 'open');
+  else if (Math.abs(dy) > Math.abs(dx)) setPanel(dy < 0 ? 'open' : 'cache');
 });
 head.addEventListener('pointercancel', () => { headDown = null; });
 
@@ -568,8 +573,13 @@ document.addEventListener('click', (e) => {
   }
 
   switch (action) {
-    case 'toggle-panel': return setPanel(app.dataset.panel !== 'open');
-    case 'bandeau-toggle': return bandeau.toggle();
+    case 'toggle-panel':
+      if (app.dataset.panel !== 'open') return setPanel('open');
+      setPanel('cache');
+      return $('[data-ow="quetes"]')?.focus(); // le panneau devient inert : le focus n'y reste pas
+    case 'bandeau-toggle':
+      if (bandeau.toggle() && app.dataset.panel === 'open') setPanel('cache'); // la carte dépliée passerait dessous
+      return;
     case 'bandeau-go': return goToday();
     case 'visiteur-go': {
       bandeau.toggle(false);
@@ -822,7 +832,7 @@ function goToday() {
   // la quête est au Fil du jour : son « Fait » est là, la carte s'éclaire un instant et « Fait » prend le focus
   const fil = $('#fil-quest:not([hidden])');
   if (fil && fil.dataset.taskId === id) {
-    showPanel();
+    setPanel('open');
     $('[data-action="complete"]', fil).focus();
     restart(fil, 'is-pointed');
     return;
@@ -876,8 +886,8 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.key === 'Escape' && app.dataset.panel === 'open' && !document.querySelector('dialog[open]')) {
-    setPanel(false);
-    $('[data-action="toggle-panel"]').focus();
+    setPanel('cache');
+    $('[data-ow="quetes"]')?.focus();
   }
 });
 
@@ -890,6 +900,7 @@ function fillSortOptions() {
 }
 
 function showLoadError(text) {
+  showPanel(); // le message et « Réessayer » sont dans le panneau, caché au lancement
   $('#fil-skeleton').hidden = true;
   $('#load-error').hidden = false;
   setText($('#load-error-text'), text);
@@ -929,18 +940,23 @@ async function start() {
     panelId: 'panel',
     controls: {
       build: openConstruire,
-      quests: () => setPanel(app.dataset.panel === 'cache' ? 'peek' : 'cache'),
+      quests: () => {
+        const montrer = app.dataset.panel === 'cache';
+        setPanel(montrer ? 'open' : 'cache');
+        if (montrer) focusHome();
+      },
       plan: openPlan,
     },
   }).then((w) => {
     world = w;
     setTimeout(() => story.welcome(), world ? 400 : 0);
     if (!world) return;
+    world.setQuestsShown(app.dataset.panel !== 'cache'); // « Quêtes » naît « déplié » ; le panneau part caché
     world.render(store.view.game, store.view.tasks, store.view.ledger);
     const host = $('#dlg-plan');
     host.innerHTML = `<header class="sheet-head"><span></span><button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('plan.close'))}"><svg class="icon" aria-hidden="true"><use href="${document.querySelector('.res-tile use').getAttribute('href').split('#')[0]}#i-x"/></svg></button></header><div class="sheet-body" id="plan-host"></div>`;
     worldPlan = world.plan($('#plan-host'), {
-      onFocusSector: (id) => { closeSheet(host); if (app.dataset.panel === 'open') setPanel(false); world.focusSector(id); },
+      onFocusSector: (id) => { closeSheet(host); if (app.dataset.panel === 'open') setPanel('cache'); world.focusSector(id); },
       onQuartier: (id) => openQuartierSheet(id),
       onBatiment: (id) => openBatimentSheet(id),
     });

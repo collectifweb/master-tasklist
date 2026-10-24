@@ -40,7 +40,7 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
     R.check(`${label} : aucun défilement horizontal`, a.scrollW <= a.innerW && a.overflow.length === 0, `scrollWidth ${a.scrollW}/${a.innerW} ${a.overflow.slice(0, 4).join(' ; ')}`);
     R.check(`${label} : toutes les cibles ≥ 44 px`, a.small.length === 0, a.small.slice(0, 6).join(' ; '));
   };
-  await audit('Fil du jour replié');
+  await audit('carte au lancement (panneau caché)');
   // aide d'une ressource (trois lignes : ce que c'est, d'où ça vient, à quoi ça sert)
   await page.click('.res[data-res="nourriture"]');
   await page.waitForSelector('#dlg-help[open]'); await page.waitForTimeout(400);
@@ -76,7 +76,7 @@ L.runScenario('9. qualité : défilement, cibles, mouvement réduit, clavier', a
   await audit('carte en liste');
   await shot(page, '09-carte-en-liste');
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
-  await L.openPanel(page); // la carte en liste s'ouvre panneau replié (colonne de la carte) ; le bilan est dans le panneau
+  await L.openPanel(page); // la carte en liste s'ouvre panneau caché (colonne de la carte) ; le bilan est dans le panneau
   await page.click('[data-action="open-review"]');
   await page.waitForSelector('#dlg-review[open]'); await page.waitForTimeout(500);
   await audit('bilan de la semaine');

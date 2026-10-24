@@ -39,7 +39,7 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
     k: b.dataset.ow, label: b.getAttribute('aria-label'), exp: b.getAttribute('aria-expanded'), ctl: b.getAttribute('aria-controls'), pop: b.getAttribute('aria-haspopup'),
   })));
   R.check('colonne : Construire, Quêtes, Vue (dans cet ordre, nommés)', col.map((c) => `${c.k}:${c.label}`).join('|') === 'build:Construire|quetes:Quêtes|vue:Vue', JSON.stringify(col));
-  R.check('« Quêtes » commande le panneau (aria-controls, aria-expanded)', col[1].ctl === 'panel' && col[1].exp === 'true', JSON.stringify(col[1]));
+  R.check('« Quêtes » commande le panneau, caché au lancement (aria-controls, aria-expanded=false)', col[1].ctl === 'panel' && col[1].exp === 'false', JSON.stringify(col[1]));
   R.check('« Vue » : aria-expanded=false et aria-controls vers sa rangée', col[2].exp === 'false' && !!col[2].ctl && await page.evaluate((id) => { const r = document.getElementById(id); return !!r && r.hidden; }, col[2].ctl), JSON.stringify(col[2]));
   let lay = await layout(page);
   R.check('colonne : cibles de 44 px', lay.btns.length === 3 && lay.btns.every((b) => b.w >= 43.99 && b.h >= 43.99), JSON.stringify(lay.btns.map((b) => [b.k, b.w, b.h])));

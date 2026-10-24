@@ -244,7 +244,7 @@ Le monde d'origine (006, « La lisière réparée ») est étendu, pas remplacé
 
 **The Doubled Color Rule.** Toute couleur est doublée : un mot, un picto ou un motif (case pleine avec coche, puce active avec coche dessinée, bord en tirets pour le désactivé, cadenas, « · plein »).
 
-**The World First Rule.** Le panneau replié ne prend que 30 % de l'écran compact. Rien de nouveau n'est ajouté au panneau replié sans retirer autre chose : la quête n° 1, sa Cote, sa raison et deux boutons.
+**The World First Rule.** Au lancement, le panneau est caché, à toutes les largeurs (lot G5 : replié, il prenait encore le bas de l'écran du téléphone) ; la carte prend tout l'écran et la quête n° 1 se lit dans « Aujourd'hui », en haut. « Quêtes », dans la colonne de la carte, ouvre le panneau en entier. Le replié ne sert plus qu'à montrer un message court ou une erreur d'enregistrement ; il ne prend que 30 % de l'écran compact, et rien de nouveau n'y est ajouté sans retirer autre chose : la quête n° 1, sa Cote, sa raison et deux boutons.
 
 ## Colors
 
@@ -537,7 +537,7 @@ Forme : 12 px, hauteur 48 px (`.btn--small` 44 px, `.btn--icon` 44 px carré), p
 - **Do** donner au bouton désactivé une raison écrite et un cadenas.
 - **Do** multiplier toute distance animée par `var(--motion)`.
 - **Do** utiliser `aria-pressed` pour une bascule et `aria-expanded` pour un dépliage.
-- **Do** laisser le monde dominer : panneau replié à 30 % au plus en compact.
+- **Do** laisser le monde dominer : panneau caché au lancement, replié à 30 % au plus en compact quand un message le ramène.
 
 ### Don't:
 - **Don't** mettre de la braise sur une échéance dépassée ; c'est une caisse de terre.
@@ -558,7 +558,7 @@ Pour l'équipe qui branche les données. Le comportement de référence est dans
 ### Structure de la coquille
 
 ```html
-<div class="app" id="app" data-panel="peek">      <!-- peek | open -->
+<div class="app" id="app" data-panel="cache">     <!-- cache (au lancement) | open | peek -->
   <div class="world-slot">…</div>
   <header class="hud" aria-label="Ressources">…</header>
   <div class="announce-lane" aria-hidden="true"><p class="announce" id="announce">…</p></div>

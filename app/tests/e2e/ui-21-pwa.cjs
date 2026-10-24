@@ -70,6 +70,7 @@ L.runScenario('21. application installable et lancement hors ligne', async ({ R,
   R.check('il contrôle la page', await L.waitFor(() => page.evaluate(() => !!navigator.serviceWorker.controller), 5000));
 
   // une quête faite (POST à l'API) avant de regarder le cache
+  await L.openPanel(page); // le panneau part caché (lot G5)
   const done = await page.getAttribute('#fil-quest', 'data-task-id');
   await page.click('#fil-quest [data-action="complete"]');
   R.check('la quête faite part au serveur', await L.waitFor(() => srv.readTasks().find((x) => x.id === done)?.status === 'done', 5000));

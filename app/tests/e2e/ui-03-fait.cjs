@@ -13,6 +13,7 @@ L.runScenario('3. Fait, Remballer, Fait de nouveau', async ({ R, srv, newPage, s
   await L.waitFor(() => srv.ledger().some((e) => e.bonus === 'ouverture') && srv.ledger().some((e) => e.key === 'pas:tache'), 5000);
   const e0 = 10 + srv.ledger().reduce((s, e) => s + (e.energy || 0), 0); // 10 = Énergie de départ
   await L.waitFor(async () => (await L.resValue(page, 'energie')) === e0, 3000);
+  await L.openPanel(page); // le panneau part caché (lot G5) : « Quêtes » l'ouvre
   const s0 = await snap();
   const title = (await page.textContent('#fil-quest .fil-title')).trim();
   const id = await page.getAttribute('#fil-quest', 'data-task-id');

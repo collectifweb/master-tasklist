@@ -1,10 +1,11 @@
-// 1. Premier chargement : Fil du jour visible et lisible, quête n° 1 conforme à topCards.
+// 1. Premier chargement : Fil du jour rendu, quête n° 1 conforme à topCards ; le panneau part caché (lot G5),
+//    « Quêtes » l'ouvre et le Fil du jour s'y lit.
 const L = require('./lib.cjs');
 L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, shot }) => {
   const { page } = await newPage();
   const t0 = Date.now();
   await page.goto(srv.url);
-  await page.waitForSelector('#fil-quest:not([hidden])');
+  await page.waitForSelector('#fil-quest:not([hidden])', { state: 'attached' });
   const elapsed = Date.now() - t0;
   const tasks = core.normalizeTasks(srv.readTasks(), new Date());
   const cards = core.topCards(tasks, new Date());
@@ -12,7 +13,10 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   R.check('la quête n° 1 est celle de topCards', title === cards.first.task, `${title} / ${cards.first.task}`);
   const coteShown = (await page.textContent('#fil-quest .cote-value')).trim();
   R.check('la Cote affichée est celle du cœur', coteShown === String(core.cote(cards.first, new Date())), coteShown);
-  R.check('Fil du jour lisible rapidement (< 2 s)', elapsed < 2000, elapsed + ' ms');
+  R.check('Fil du jour rendu rapidement (< 2 s)', elapsed < 2000, elapsed + ' ms');
+  R.check('au lancement, le panneau est caché et « Quêtes » le dit fermé', await page.evaluate(() => document.getElementById('app').dataset.panel === 'cache'
+    && document.querySelector('[data-ow="quetes"]').getAttribute('aria-expanded') === 'false'));
+  await L.openPanel(page);
   // mesure sur une page posée : police chargée, panneau arrivé (sous charge, une police de repli ou une transition décale « Fait »)
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -38,7 +42,7 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   await shot(page, '01-fil');
   // rechargement : aucun nouveau bonus
   await page.reload();
-  await page.waitForSelector('#fil-quest:not([hidden])');
+  await L.ready(page);
   await page.waitForTimeout(500);
   R.check('rechargement : pas de second bonus d’ouverture', srv.ledger().filter((e) => e.bonus === 'ouverture').length === 1);
   // le panneau ouvert montre les alternatives et la liste

@@ -222,9 +222,9 @@ async function waitFor(fn, ms = 8000, step = 100) {
   }
 }
 
-/** Attend que l'app ait fini son premier rendu (Fil du jour visible). */
+/** Attend que l'app ait fini son premier rendu (Fil du jour rendu ; le panneau, lui, part caché depuis le lot G5). */
 async function ready(page) {
-  await page.waitForSelector('#fil-quest:not([hidden]), #fil-empty:not([hidden])', { timeout: 10000 });
+  await page.waitForSelector('#fil-quest:not([hidden]), #fil-empty:not([hidden])', { timeout: 10000, state: 'attached' });
   await page.waitForTimeout(150);
 }
 
@@ -259,7 +259,7 @@ async function openPanel(page) {
 
 /**
  * Ouvre la carte en liste par la colonne de la carte : « Vue », puis « Carte en liste ». En compact, le panneau ouvert
- * recouvre la colonne : il se replie d'abord, comme le ferait le joueur.
+ * recouvre la colonne : « Fermer » le cache d'abord, comme le ferait le joueur.
  */
 async function openPlan(page) {
   await page.waitForSelector('[data-ow="vue"]', { timeout: 8000 });

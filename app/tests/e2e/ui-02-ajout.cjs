@@ -1,4 +1,4 @@
-// 2. Ajout en 3 gestes, domaine deviné, quête présente après rechargement et dans tasks.json avec TOUS ses champs.
+// 2. Ajout en 4 gestes depuis le lancement (« Quêtes » ouvre le panneau, caché depuis le lot G5), domaine deviné, quête présente après rechargement et dans tasks.json avec TOUS ses champs.
 const L = require('./lib.cjs');
 L.runScenario('2. ajout rapide', async ({ R, srv, newPage, shot }) => {
   const { page } = await newPage();
@@ -6,18 +6,21 @@ L.runScenario('2. ajout rapide', async ({ R, srv, newPage, shot }) => {
   await L.ready(page);
   const before = srv.readTasks();
   let gestes = 0;
-  // geste 1 : toucher « + »
+  // geste 1 : « Quêtes » ouvre le panneau
+  await page.click('[data-ow="quetes"]'); gestes++;
+  await page.waitForTimeout(450);
+  // geste 2 : toucher « + »
   await page.click('.panel-head [data-action="add"]'); gestes++;
   await page.waitForSelector('#dlg-add[open] #add-title');
-  // geste 2 : écrire le titre
+  // geste 3 : écrire le titre
   await page.fill('#add-title', 'Tondre la pelouse du devant'); gestes++;
   const sector = await page.$eval('input[name="add-sector"]:checked', (e) => e.value);
   R.check('le domaine est deviné (pelouse → champs)', sector === 'champs', sector);
   R.check('l’étiquette « Deviné » est visible', await page.isVisible('#add-guess') && /pelouse/i.test(await page.textContent('#add-guess')), await page.textContent('#add-guess'));
   await shot(page, '02-ajout');
-  // geste 3 : valider
+  // geste 4 : valider
   await page.click('#dlg-add [data-action="add-submit"]'); gestes++;
-  R.check('trois gestes au plus', gestes <= 3, String(gestes));
+  R.check('quatre gestes au plus, « Quêtes » compris', gestes <= 4, String(gestes));
   await page.waitForSelector('#dlg-add:not([open])', { state: 'attached' });
   await L.waitFor(() => srv.readTasks().length === before.length + 1);
   const after = srv.readTasks();

@@ -98,12 +98,14 @@ L.runScenario('27. bandeau d’objectifs : visible, lisible, compact à 390, sui
   R.check('… et rien n’est coupé ni ne déborde', b && !b.coupes.length && !b.deborde, JSON.stringify(b && b.coupes));
 
   // ───── après un autre geste : une quête faite
+  await L.openPanel(page); // le panneau part caché (lot G5)
   await page.click('#fil-quest [data-action="complete"]');
   b = await L.waitFor(async () => { const x = await lire(page); return x.semaine === 'Premiers pas : 3 sur 5' ? x : null; }, 5000);
   R.check('quête faite : le bandeau suit (« Sème le vieux potager », 3 sur 5)', b && b.today === 'Sème le vieux potager', JSON.stringify(b || await lire(page)));
   if (compact) {
     await page.click('.bandeau-more');
     await page.waitForTimeout(350);
+    R.check('390 : déplier le bandeau cache le panneau ouvert (sa carte passerait dessous)', await page.getAttribute('#app', 'data-panel') === 'cache', await page.getAttribute('#app', 'data-panel'));
     b = await lire(page);
     R.check('390 déplié : trois pas cochés, « Semer ta première parcelle » maintenant', b.pas.filter((p) => p.fait).length === 3 && /Semer ta première parcelle/.test(b.pas.find((p) => p.now)?.tx || ''), JSON.stringify(b.pas));
     await page.click('.bandeau-more');

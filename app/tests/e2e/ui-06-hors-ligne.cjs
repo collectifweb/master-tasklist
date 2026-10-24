@@ -6,6 +6,7 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   page.on('request', (r) => { if (r.method() === 'POST' && /api\.php/.test(r.url())) posts.push({ at: Date.now(), body: r.postData() }); });
   await page.goto(srv.url);
   await L.ready(page);
+  await L.openPanel(page); // le panneau part caché (lot G5) : « Quêtes » l'ouvre
   await page.waitForTimeout(600);
   const base = posts.length;
   const id = await page.getAttribute('#fil-quest', 'data-task-id');
@@ -42,6 +43,7 @@ L.runScenario('6. hors ligne', async ({ R, srv, newPage, shot }) => {
   await page.unroute('**/api/api.php');
   await page.reload();
   await L.ready(page);
+  await L.openPanel(page);
   await page.waitForTimeout(800);
 
   // stockage de l'appareil plein (d'autres pages du site l'ont rempli) : le geste est refusé, et le message le dit

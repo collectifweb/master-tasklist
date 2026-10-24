@@ -178,6 +178,7 @@ async function plan(page) {
     // une quête faite puis remballée : rien ne produit de plus, rien n'est repris aux bâtiments (lot J)
     const prods = () => srv.ledger().filter((e) => e.type === 'prod').map((e) => e.key).sort().join(' ');
     const avant = prods();
+    await L.openPanel(page); // le panneau part caché (lot G5)
     const id = await page.getAttribute('#fil-quest', 'data-task-id');
     await L.said(page, true);
     await page.click('#fil-quest [data-action="complete"]');

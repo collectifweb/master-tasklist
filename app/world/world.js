@@ -1030,7 +1030,8 @@ export function createWorld(container, options = {}) {
       if (selected) { select(null); ev.preventDefault(); }
       return;
     }
-    if (playing) { if (ev.key === ' ' || ev.key === 'Enter') { skip(); ev.preventDefault(); } return; }
+    // pendant une animation, Espace ou Entrée la passe ; sur une commande de la carte ou du zoom, la touche l'active (comme le clic)
+    if (playing) { if ((ev.key === ' ' || ev.key === 'Enter') && !ev.target.closest?.('[data-ow], [data-zoom]')) { skip(); ev.preventDefault(); } return; }
     const k = ev.key;
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(k)) {
       if ((k === '+' || k === '=') && scroller.contains(doc.activeElement)) { zoomTo('in'); ev.preventDefault(); }

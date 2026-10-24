@@ -37,6 +37,7 @@ L.runScenario('12. monde : fil de lumière, impact, plaque de quartier, repos', 
   const e0 = await L.resValue(page, 'energie');
   const g0 = srv.game();
   const plaque0 = await page.getAttribute('.ow-plaque[data-sector="atelier"]', 'aria-label');
+  await L.openPanel(page); // le panneau part caché (lot G5) ; en compact, ouvert, il couvre la carte : le fil passe dessous
   await page.evaluate(SAMPLER);
   const btn = await L.rect(page, '#fil-quest [data-action="complete"]');
   const root = await L.rect(page, '.ow');
@@ -85,6 +86,8 @@ L.runScenario('12. monde : fil de lumière, impact, plaque de quartier, repos', 
   R.check('le monde est au repos (plus de bouton « Passer »), l’île vivante (data-ambient=on)', await page.evaluate(() => document.querySelector('.ow').dataset.ambient === 'on' && document.querySelector('.ow-skip').hidden));
 
   // toucher un quartier sur la carte : sa fiche s'ouvre ; « Voir les quêtes » ouvre le panneau filtré sur lui
+  await page.keyboard.press('Escape'); // le panneau se cache : la carte est de nouveau à portée
+  await page.waitForTimeout(450);
   await page.click('.ow-plaque[data-sector="champs"]');
   R.check('toucher un quartier ouvre sa fiche', await L.waitFor(() => page.evaluate(() => {
     const d = document.getElementById('dlg-quartier');
@@ -129,6 +132,7 @@ L.runScenario('12. monde : fil de lumière, impact, plaque de quartier, repos', 
   await pr.waitForTimeout(800);
   const left = await pr.evaluate(() => document.querySelector('.ow').dataset.mouvement);
   R.check('mouvement réduit : le monde le sait', left === 'reduit', left);
+  await L.openPanel(pr);
   const id2 = await pr.getAttribute('#fil-quest', 'data-task-id');
   const er0 = await L.resValue(pr, 'energie');
   await pr.evaluate(SAMPLER);
