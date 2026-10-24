@@ -70,7 +70,8 @@ const badge = (page) => page.evaluate(() => {
   const b = document.querySelector('[data-ow="build"]');
   return { text: r.querySelector('.res-value').textContent.trim(), label: r.getAttribute('aria-label'), pastille: !!b.querySelector('.ow-badge'), build: b.getAttribute('aria-label') };
 });
-/** Carte de récompense (lot L) : ce qu'elle montre, son nom et sa description lus, le focus, la bulle de Fanal. */
+/** Carte de récompense (lot L) : ce qu'elle montre, son nom et sa description lus, le focus, le texte de la bulle de Fanal
+ *  (vide si elle est cachée : un imprévu de la semaine peut y parler, selon le calendrier). */
 const carte = (page) => page.evaluate(() => {
   const d = document.getElementById('dlg-recompense');
   const sp = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -82,7 +83,7 @@ const carte = (page) => page.evaluate(() => {
     fanal: sp(d.querySelector('.recompense-fanal')?.textContent), nom: txt(d.getAttribute('aria-labelledby')), desc: txt(d.getAttribute('aria-describedby')),
     focus: d.contains(document.activeElement) ? sp(document.activeElement.textContent) : null, bouton: b ? b.getBoundingClientRect().height : 0,
     wide: [...d.querySelectorAll('*')].some((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.right > innerWidth + 1); }),
-    pile: [...document.querySelectorAll('dialog.sheet[open]')].map((x) => x.id).join(), bulle: !document.getElementById('speech').hidden,
+    pile: [...document.querySelectorAll('dialog.sheet[open]')].map((x) => x.id).join(), bulle: document.getElementById('speech').hidden ? '' : sp(document.getElementById('speech').textContent),
   };
 });
 /** Centre touchable d'une plaque (rien par-dessus), ou null. */
@@ -150,7 +151,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   R.check('double toucher : un seul niveau payé (1 permis, 80 Énergie, 60 Matériaux)', g.niveaux.champs === 1 && g.permis.dispo === g0.permis.dispo - 1 && g.resources.energy === g0.resources.energy - 80 && g.resources.materials === g0.resources.materials - 60, JSON.stringify({ n: g.niveaux, avant: [g0.permis, g0.resources], apres: [g.permis, g.resources] }));
   let k = await carte(page);
   R.check('carte : « Niveau 1 », « Champs », 4 → 5, « Nourriture par récolte du potager », seule feuille ouverte', k.niveau === 'Niveau 1' && k.titre === 'Champs' && k.compare === '4 5' && k.label === 'Nourriture par récolte du potager' && k.pile === 'dlg-recompense', JSON.stringify(k));
-  R.check('carte : la réplique de Fanal au niveau 1, sur la carte et pas dans sa bulle', !!k.fanal && !k.bulle, JSON.stringify(k));
+  R.check('carte : la réplique de Fanal au niveau 1, sur la carte et pas dans sa bulle', !!k.fanal && !k.bulle.includes(k.fanal.replace(/^Fanal\s*/, '')), JSON.stringify(k));
   R.check('carte : nommée « Champs », décrite par « Champs : niveau 1. 5 Nourriture par récolte du potager. » et Fanal', k.nom === 'Champs' && k.desc.startsWith('Champs : niveau 1. 5 Nourriture par récolte du potager. Fanal : '), JSON.stringify(k));
   R.check('carte : le focus sur « Continuer » (44 px), aucun débordement', k.focus === 'Continuer' && k.bouton >= 43.99 && !k.wide, JSON.stringify(k));
   const dits = (await L.said(page)).filter((x) => /^Champs : niveau/.test(sp(x.text)));

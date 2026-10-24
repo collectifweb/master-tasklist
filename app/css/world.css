@@ -427,7 +427,7 @@
 }
 .ow-plaque-sep { color: var(--text-muted); }
 .ow-plaque-val { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
-/* plaque repliée (autre quartier que l'actif sur petit écran, ou vue d'ensemble) : son picto seul, 44 × 44 */
+/* plaque repliée (toutes, à toutes les largeurs depuis le lot G ; et en vue d'ensemble) : son picto seul, 44 × 44 */
 .ow-plaque[data-court],
 .ow[data-lod="loin"] .ow-plaque { padding: 6px; gap: 0; border-radius: 50%; }
 .ow-plaque[data-court] .ow-plaque-text,

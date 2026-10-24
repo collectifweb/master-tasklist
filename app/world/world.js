@@ -446,16 +446,15 @@ export function createWorld(container, options = {}) {
     changed = sizePlaques() || changed;
     if (changed && !first) { measurePlaques(); placePlaques(); }
   }
-  /** Plaque dépliée : celle du secteur actif, ou toutes quand la carte est assez grande pour les porter. */
+  /** Plaques repliées en rond à toutes les largeurs (lot G : dépliées, elles cachaient l'île) ; le nom reste dans la
+   *  fiche du quartier, le nom lu et la carte en liste. */
   function sizePlaques() {
     let changed = false;
-    const roomy = camera.s >= 0.9;
-    const act = defaultActive();
     for (const s of SECTOR_ORDER) {
       const b = plaqueEls[s];
-      if (!b) continue;
-      const short = !(roomy || s === act);
-      if (b.hasAttribute('data-court') !== short) { b.toggleAttribute('data-court', short); changed = true; }
+      if (!b || b.hasAttribute('data-court')) continue;
+      b.setAttribute('data-court', '');
+      changed = true;
     }
     return changed;
   }

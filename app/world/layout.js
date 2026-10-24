@@ -116,7 +116,9 @@ export const EMPLACEMENTS = {
   parcelle: [{ r: 8.4, c: 0.4, h: 1.6, w: 1.6 }, { r: 10.3, c: 0.4, h: 1.6, w: 1.6 }, { r: 10.3, c: 2.4, h: 1.6, w: 1.6 }],
   atelier: [{ r: 9, c: 9, h: 1, w: 2 }],
   serre: [{ r: 10.3, c: 9.7, h: 1.5, w: 1.9 }, { r: 7.2, c: 10.05, h: 1.5, w: 1.9 }],
-  eolienne: [{ r: 0.5, c: 10.6, h: 1, w: 1 }],
+  // au coin du fond, côté École (lot G) : rien de touchable derrière elle. Côté Mairie (r 0,5 c 10,6), son mât cachait
+  // les trois quarts de la cabane à sucre ; tout le bord droit cachait la cabane ou le grenier (mesuré case par case)
+  eolienne: [{ r: 1.5, c: 1.5, h: 1, w: 1 }],
   grenier: [{ r: 1, c: 8, h: 2, w: 2 }],
   quai: [{ r: 12, c: 5.5, h: 0.9, w: 1, lac: true, sector: 'place' }],
   // rang Village (lot B) : sur la bande du Hameau, devant la lisière replantée, de part et d'autre de la trouée de la
