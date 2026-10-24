@@ -2073,6 +2073,15 @@ Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la comman
 
 ### G5 — Le Fil du jour caché tant qu'on ne l'ouvre pas (demande d'Alex du 23 octobre au soir)
 Alex : le panneau du bas, qui montre la quête prioritaire, gêne la vue, et on accroche parfois le bouton d'ajout sans le vouloir. Il propose qu'il soit caché par défaut et qu'il ne s'ouvre en entier qu'avec le bouton des quêtes.
-- [ ] Plan à écrire après lecture du rabat actuel (scénario 29, ses trois états) et à faire valider.
+Aujourd'hui (`js/main.js`, `setPanel`) : trois états. Replié (`peek`, l'état de départ fixé dans `index.html`) montre la quête n° 1, sa Cote et « Fait » ; ouvert (`open`) montre toute la liste ; caché (`cache`) laisse toute la place à la carte. « Quêtes » (colonne de la carte) passe de caché à replié et retour. Un message court ou une erreur d'enregistrement fait revenir le panneau caché en replié.
+- Plan proposé (en attente de l'accord d'Alex) :
+  - [ ] Au lancement, le panneau est caché (`data-panel="cache"`), à chaque ouverture du jeu.
+  - [ ] « Quêtes » : caché → ouvert en entier ; ouvert → caché.
+  - [ ] « Replier », Échap et le glissement vers le bas cachent le panneau au lieu de le replier.
+  - [ ] « Aujourd'hui » (bandeau du haut) ouvre le panneau en entier, le focus sur « Fait » de la quête n° 1.
+  - [ ] Inchangé : un message court ou une erreur d'enregistrement fait encore revenir le panneau replié, pour être vu (rare).
+  - [ ] Question 1 : en grand écran (colonne à droite, ordinateur ou tablette à l'horizontale), caché aussi au départ ? Recommandé : oui, une seule règle partout.
+  - [ ] Question 2 : le cas des messages et erreurs ci-dessus convient-il ?
+  - [ ] Contrat : `DESIGN.md` (règle « World First », états du panneau) et `ARCHITECTURE.md` ; scénarios à revoir : 29 (rabat), puis tous ceux qui partent du panneau replié (à recenser par grep), série complète avant l'envoi.
 
 Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.
