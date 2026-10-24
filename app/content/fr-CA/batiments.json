@@ -119,7 +119,10 @@
     "maintenant.plein.sansQuai": "La réserve est pleine ({stock} sur {max}) : rien n’entre aujourd’hui. Avec le quai rebâti, le marchand achèterait le sirop."
   },
   "comptoir": {
-    "titre": "Le comptoir du marchand",
+    "titre": "L’étal du marchand",
+    "sous": "une fois chacune, cette semaine",
+    "choisir": "Choisis une offre",
+    "reserve": "Ta réserve",
     "intro": "Chaque offre se prend une fois par semaine. Il revient lundi avec les mêmes.",
     "geste": "Échanger",
     "geste.label": "Échanger {donne} contre {recoit}",
@@ -127,6 +130,8 @@
     "fait": "Fait",
     "fait.quand": "cette semaine",
     "jour.intro": "Chaque jour, il rachète aussi tes Matériaux en trop.",
+    "jour.titre": "Rachat du jour",
+    "jour.garde": "Il garde toujours {n} Matériaux au village.",
     "jour.fait.quand": "aujourd’hui"
   },
   "commande": {
@@ -147,6 +152,7 @@
     "demande": "Demande",
     "et": "et",
     "laisse": "Laisse",
+    "enReserve": "{n} en réserve",
     "recoit.habitants": "habitant de plus",
     "recoit.habitants.note": "Sans payer la Nourriture d’accueil.",
     "recoit.permis": "permis",

@@ -2,14 +2,16 @@
 //   Partie A (un samedi, quai bâti, version d'essai) :
 //   - arrivée : Fanal annonce le visiteur de la semaine une fois sur l'appareil (une variante de « commande.arrive.<id> »),
 //     pas au rechargement ; son bateau est amarré dans le dessin du quai, et le toucher ouvre la fiche du quai ;
-//   - « Cette semaine » : « Commande au quai, encore 2 jours », qui ouvre la fiche ; la commande au-dessus du comptoir :
-//     qui, ce qu'il demande, ce qu'il laisse, « Livrer » (principal, 44 px au moins), rien ne déborde ;
+//   - « Cette semaine » : « Commande au quai, encore 2 jours », qui ouvre la fiche ; la commande au-dessus de l'étal :
+//     qui, ce qu'il demande (en pastilles, la réserve suffit : une coche, jauge pleine), ce qu'il laisse, « Livrer »
+//     (principal, 44 px au moins), rien ne déborde ;
 //   - double toucher : une seule livraison (une entrée commande:{lundi} au registre, la demande payée une fois, aucune offre
-//     du comptoir prise par le second toucher), la phrase lue et le merci de Fanal ; « Commande livrée » à sa place ;
+//     de l’étal prise par le second toucher), la phrase lue et le merci de Fanal ; « Commande livrée » à sa place ;
 //   - le bandeau, le nom du quai et la carte en liste disent la commande livrée ;
 //   - « Jour suivant » : dimanche, toujours livrée ; lundi, le visiteur suivant, sa commande ouverte, Fanal l'annonce.
-//   Partie B (allure au ralenti, réserves trop basses) : petite commande et sa phrase, la récompense inchangée ; « Livrer »
-//   verrouillé avec la raison du cœur ; le toucher ne livre rien et redit la raison.
+//   Partie B (allure au ralenti, réserves trop basses) : petite commande et sa phrase, la récompense inchangée ; ce qui
+//   manque se lit sur la pastille (« 2/6 », jauge partielle) ; « Livrer » verrouillé avec la raison du cœur sur le bouton ;
+//   le toucher ne livre rien et redit la raison.
 //   Partie C (retour d'absence cette semaine) : commande allégée, et la fiche le dit sans reproche.
 //   Partie D (deux appareils) : le second livre au clavier (le focus reste sur la ligne cochée) ; le premier, pas encore
 //   relu, livre à son tour : le serveur refuse, l'appareil se remet à jour et dit pourquoi ; une seule livraison.
@@ -78,11 +80,17 @@ const fiche = (page) => page.evaluate(() => {
   const r = d.getBoundingClientRect();
   const go = c?.querySelector('.commande-go');
   const gr = go?.getBoundingClientRect();
-  const dd = [...(c?.querySelectorAll('.commande-troc dd') || [])];
+  // la demande en pastilles (lot G) : nombre, mot (lu seulement, sans « (3 en réserve) »), compte en main et jauge
+  const pastilles = [...(c?.querySelectorAll('.commande-demande .commande-res') || [])].map((p) => ({
+    res: p.dataset.res, n: s(p.querySelector('b')?.textContent), nom: s(p.querySelector('.sr-only')?.textContent).replace(/ \(.*\)$/, ''),
+    assez: p.hasAttribute('data-assez'), coche: !!p.querySelector('.commande-ok'), a: s(p.querySelector('.commande-a')?.textContent),
+    jauge: Math.round(parseFloat(p.querySelector('.commande-jauge > span')?.style.width || '0')) }));
+  const noms = pastilles.map((p) => `${p.n} ${p.nom}`);
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', commande: !!c, visiteur: c?.dataset.visiteur || '', etat: c?.dataset.etat || '',
     nom: s(c?.querySelector('.commande-titre > span')?.textContent), jours: s(c?.querySelector('.commande-jours')?.textContent), quai: s(d.querySelector('#bat-now')?.textContent),
-    demande: s(dd[0]?.textContent), laisse: s(dd[1]?.textContent), taille: s(c?.querySelector('.commande-taille')?.textContent),
+    demande: noms.length > 1 ? `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}` : noms.join(''), pastilles,
+    laisse: s(c?.querySelector('.commande-laisse .commande-res-v')?.textContent), taille: s(c?.querySelector('.commande-taille')?.textContent),
     raison: s(c?.querySelector('.commande-raison')?.textContent), fait: s(c?.querySelector('.commande-fait')?.textContent),
     go: go ? { label: go.getAttribute('aria-label'), off: go.getAttribute('aria-disabled') === 'true', primaire: go.classList.contains('btn--primary'), h: gr.height, w: gr.width } : null,
     avantComptoir: !!c && !!d.querySelector('.comptoir') && !!(c.compareDocumentPosition(d.querySelector('.comptoir')) & Node.DOCUMENT_POSITION_FOLLOWING),
@@ -172,13 +180,15 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
     R.check('« Cette semaine » : « Commande au quai, encore 2 jours », la barque, rien de coupé', b1.shown && b1.text === 'Commande au quai, encore 2 jours' && /i-barque$/.test(b1.icone) && !b1.coupe, JSON.stringify(b1));
     let f = await ouvrirParBandeau(page, compact);
     const demande0 = demandeText(cmd0.demande);
-    R.check('fiche : la commande du visiteur, au-dessus du comptoir', f.id === 'quai-1' && f.visiteur === v0 && f.nom === BAT.commande[`${v0}.nom`] && f.avantComptoir, JSON.stringify([f.id, f.visiteur, f.nom, f.avantComptoir]));
-    R.check('fiche : les jours dits une seule fois (« encore 2 jours », dans l’état du quai) et sa demande, à la taille régulière', !f.jours && /encore 2 jours\.$/.test(f.quai) && sp(f.demande.replace(/\+/g, ' ')) === demande0 && !f.taille, JSON.stringify([f.jours, f.quai, f.demande, demande0, f.taille]));
+    R.check('fiche : la commande du visiteur, au-dessus de l’étal', f.id === 'quai-1' && f.visiteur === v0 && f.nom === BAT.commande[`${v0}.nom`] && f.avantComptoir, JSON.stringify([f.id, f.visiteur, f.nom, f.avantComptoir]));
+    R.check('fiche : les jours dits une seule fois (« encore 2 jours », dans l’état du quai) et sa demande, à la taille régulière', !f.jours && /encore 2 jours\.$/.test(f.quai) && f.demande === demande0 && !f.taille, JSON.stringify([f.jours, f.quai, f.demande, demande0, f.taille]));
     R.check('fiche : « Livrer » est l’action principale, la seule de la fiche, 44 px au moins, et dit tout', f.go && !f.go.off && f.go.primaire && f.primaires === 1 && f.go.h >= 43.99 && f.go.label === `Livrer ${demande0} ${au(v0)}`, JSON.stringify([f.go, f.primaires]));
+    R.check('fiche : la réserve suffit, chaque pastille demandée a sa coche et sa jauge pleine ; ce qu’il laisse en « +n »',
+      f.pastilles.length > 0 && f.pastilles.every((p) => p.assez && p.coche && !p.a && p.jauge === 100) && /^\+\d+ \S/.test(f.laisse), JSON.stringify([f.pastilles, f.laisse]));
     R.check('fiche : rien ne déborde', f.debord.length === 0, JSON.stringify(f.debord));
     await shot(page, '40-commande');
 
-    // double toucher : une seule livraison, et le second toucher ne prend aucune offre du comptoir
+    // double toucher : une seule livraison, et le second toucher ne prend aucune offre de l’étal
     await L.said(page, true);
     const gA = srv.game();
     const pt = await centre(page, GO);
@@ -194,7 +204,7 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
     const e0 = commandes(srv);
     const paye = Object.entries(cmd0.demande).every(([k, n]) => Math.round((gA.resources[k] - gB.resources[k]) * 10) / 10 === n - (k === 'materials' ? (cmd0.recoit.materials || 0) : 0));
     R.check('double toucher : une seule livraison au serveur, la demande payée une fois', e0.length === 1 && e0[0].key === `commande:${LUNDI}` && e0[0].visiteur === v0 && paye, `${res(gA)} → ${res(gB)} ${JSON.stringify(e0)}`);
-    R.check('double toucher : aucune offre du comptoir prise par le second toucher', !gB.visite && !gB.echangeDuJour, JSON.stringify([gB.visite, gB.echangeDuJour]));
+    R.check('double toucher : aucune offre de l’étal prise par le second toucher', !gB.visite && !gB.echangeDuJour, JSON.stringify([gB.visite, gB.echangeDuJour]));
     R.check('livraison : ce que laisse le visiteur (Matériaux, une famille ou 1 permis)',
       v0 === 'convoi' ? e0[0].materials === cmd0.recoit.materials && Math.round((gB.resources.materials - gA.resources.materials) * 10) / 10 === cmd0.recoit.materials : v0 === 'famille' ? gB.habitants === gA.habitants + 1 : (gB.permis?.dispo ?? 0) === (gA.permis?.dispo ?? 0) + 1, JSON.stringify({ v0, h: [gA.habitants, gB.habitants], p: [gA.permis, gB.permis], e: e0[0] }));
     R.check('livraison : les tâches sont intactes', JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])));
@@ -250,7 +260,15 @@ async function ouvrir(newPage, srv, opts = {}, ctx = {}, time = SAMEDI) {
       R.check('ralenti : la demande est la moitié (arrondie au-dessus), la récompense ne change pas',
         Object.entries(core.VISITEURS[cR.id].demande).every(([k, n]) => cR.demande[k] === Math.ceil(n / 2)) && JSON.stringify(cR.recoit) === JSON.stringify(core.VISITEURS[cR.id].recoit)
         && fR.go.label === `Livrer ${demandeText(cR.demande)} ${au(cR.id)}`, JSON.stringify([cR, fR.go]));
-      R.check('verrou : « Livrer » à plat, cadenas, et la raison du cœur dessous', fR.go.off && !fR.go.primaire && /^Il manque /.test(raison) && fR.raison === raison, JSON.stringify([fR.go, fR.raison, raison]));
+      const KEY = { energie: 'energy', materiaux: 'materials', nourriture: 'food' };
+      const enMain = sB.game().resources;
+      const lu = fR.pastilles.map((p) => {
+        const k = KEY[p.res], n = cR.demande[k], have = Math.floor(Math.round(enMain[k] * 10) / 10);
+        return have >= n ? p.assez && p.coche && !p.a && p.jauge === 100 : !p.assez && !p.coche && p.a === `${have}/${n}` && p.jauge === Math.min(100, Math.round((100 * enMain[k]) / n));
+      });
+      R.check('verrou : ce qui manque se lit sur la pastille (« 2/6 » et jauge partielle), la coche où il y en a assez',
+        lu.length === Object.values(cR.demande).filter((n) => n > 0).length && lu.every(Boolean) && fR.pastilles.some((p) => !p.assez), JSON.stringify([fR.pastilles, enMain, cR.demande]));
+      R.check('verrou : « Livrer » à plat, cadenas, et la raison du cœur sur le bouton', fR.go.off && !fR.go.primaire && /^Il manque /.test(raison) && fR.raison === raison, JSON.stringify([fR.go, fR.raison, raison]));
       await L.said(pB, true);
       const g0 = sB.game();
       await pB.click(GO, { force: true }); // verrouillé (aria-disabled) : Playwright attendrait qu'il s'ouvre

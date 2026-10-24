@@ -1,14 +1,17 @@
-// 42. L'échange du jour au comptoir du marchand (lot T), à l'écran.
+// 42. L'échange du jour (lot T) à l'étal du marchand (lot G), à l'écran.
 //   Horloge figée un dimanche à 3 h 40, heure de Montréal (le jour de jeu est encore samedi), quai bâti, 200 Matériaux :
-//   - la ligne du jour sous les quatre offres de la semaine, après sa phrase : « 20 Matériaux → 10 Énergie », « Échanger »
-//     de 44 px, rien ne déborde ;
+//   - le rachat du jour en tuile large sous la grille des quatre offres de la semaine : « Rachat du jour », « 20 Matériaux
+//     contre 10 Énergie », ce que le marchand laisse au village ; sa règle dans le repli ; choisi, « Échanger » de 44 px
+//     dans la barre du pied, rien ne déborde ;
 //   - double toucher sur « Échanger » : un seul échange (−20 Matériaux, +10 Énergie), la cible de chaque toucher notée ;
-//     « Fait aujourd'hui » à sa place, une seule phrase lue, rien au registre ni dans les tâches, les offres de la semaine
-//     intactes ;
+//     « Fait aujourd'hui » sur la tuile et dans la barre, une seule phrase lue, rien au registre ni dans les tâches, les
+//     offres de la semaine intactes ;
 //   - deux appareils : le second, pas encore relu, échange à son tour : le serveur refuse, l'appareil se remet à jour et dit
 //     pourquoi ; l'échange n'est payé qu'une fois ;
-//   - passage de 4 h : la ligne s'ouvre de nouveau ; au clavier, Entrée échange et le focus reste sur la ligne ;
-//   - 169 Matériaux : bouton verrouillé, cadenas et raison du cœur ; le toucher ne dépense rien et redit la raison.
+//   - passage de 4 h : la tuile s'ouvre de nouveau ; au clavier (Espace sur la tuile, Tab, Entrée), le focus passe sur
+//     « Fait aujourd'hui » ;
+//   - 169 Matériaux : la tuile dit ce qui manque, la barre le bouton verrouillé et la raison du cœur ; le toucher ne
+//     dépense rien et redit la raison.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -31,7 +34,8 @@ const TASKS = [
 ];
 const BAT = JSON.parse(fs.readFileSync(path.join(L.REPO, 'app', 'content', 'fr-CA', 'batiments.json'), 'utf8'));
 const JOUR = 'materiaux-energie-jour';
-const BTN = `#dlg-batiment .offre[data-offre="${JOUR}"] .offre-go`;
+const TUILE = `#dlg-batiment .etal-offre[data-offre="${JOUR}"]`;
+const BTN = '#dlg-batiment .etal-go';
 const GARDE = 'Le marchand en laisse toujours 150 au village pour les chantiers.';
 const DEJA = 'Déjà fait aujourd’hui : le marchand rachète de nouveau demain.';
 
@@ -57,30 +61,40 @@ const comptoir = (page) => page.evaluate((JOUR) => {
   const d = document.getElementById('dlg-batiment');
   const s = (x) => String(x || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
   const r = d.getBoundingClientRect();
-  const li = d.querySelector(`.offre[data-offre="${JOUR}"]`);
-  const b = li?.querySelector('.offre-go');
-  const br = b && b.getBoundingClientRect();
-  const listes = [...d.querySelectorAll('.comptoir-offres')];
+  const li = d.querySelector(`.etal-offre[data-offre="${JOUR}"]`);
+  const grille = d.querySelector('.etal-grille');
+  const barre = d.querySelector('.etal-barre');
+  const go = barre?.querySelector('.etal-go');
+  const gr = go?.getBoundingClientRect();
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '',
-    debord: [...d.querySelectorAll('.comptoir *')].filter((e) => { const x = e.getBoundingClientRect(); return x.width && (x.left < r.left - 1 || x.right > r.right + 1); }).map((e) => e.className.baseVal ?? e.className),
-    semaine: [...(listes[0]?.querySelectorAll('.offre') || [])].map((o) => [o.dataset.offre, o.dataset.etat]),
-    phrase: s(d.querySelector('.comptoir-jour')?.textContent),
-    // la phrase du jour vient après la liste de la semaine, et la ligne du jour dans la liste qui la suit
-    ordre: !!listes[0] && !!li && listes.length === 2 && listes[1].contains(li) && !!(listes[0].compareDocumentPosition(d.querySelector('.comptoir-jour')) & Node.DOCUMENT_POSITION_FOLLOWING),
+    debord: [...d.querySelectorAll('.etal *, .etal-barre *')].filter((e) => { const x = e.getBoundingClientRect(); return x.width && (x.left < r.left - 1 || x.right > r.right + 1); }).map((e) => e.className.baseVal ?? e.className),
+    semaine: [...(grille?.querySelectorAll('.etal-offre') || [])].map((o) => [o.dataset.offre, o.dataset.etat]),
+    regle: s(d.querySelector('.repli')?.textContent),
+    // la tuile du jour vient après la grille de la semaine, hors d'elle
+    ordre: !!grille && !!li && !grille.contains(li) && !!(grille.compareDocumentPosition(li) & Node.DOCUMENT_POSITION_FOLLOWING),
     jour: li ? {
-      etat: li.dataset.etat, troc: s(li.querySelector('.offre-troc').textContent), fait: s(li.querySelector('.offre-fait')?.textContent),
-      raison: s(li.querySelector('.offre-raison')?.textContent), off: b ? b.getAttribute('aria-disabled') === 'true' : null,
-      decrit: b ? b.getAttribute('aria-describedby') : null, label: b ? b.getAttribute('aria-label') : null, h: br ? br.height : 0, w: br ? br.width : 0,
+      etat: li.dataset.etat, choisie: li.querySelector('input').checked, large: li.classList.contains('etal-offre--jour'),
+      troc: s(li.querySelector('.etal-carte > .sr-only').textContent), titre: s(li.querySelector('.etal-jour-t')?.textContent),
+      garde: s(li.querySelector('.etal-jour-garde')?.textContent), fait: s(li.querySelector('.offre-fait')?.textContent), raison: s(li.querySelector('.offre-raison')?.textContent),
+    } : null,
+    barre: barre ? {
+      offre: barre.dataset.offre, etat: barre.dataset.etat, off: go ? go.getAttribute('aria-disabled') === 'true' : null, decrit: go ? go.getAttribute('aria-describedby') : null,
+      label: go ? go.getAttribute('aria-label') : null, raison: s(barre.querySelector('.etal-raison')?.textContent), fait: s(barre.querySelector('.etal-fait')?.textContent), h: gr ? gr.height : 0, w: gr ? gr.width : 0,
     } : null,
   };
 }, JOUR);
+// choisir la tuile du jour : seule la barre du pied change
+async function choisirJour(page) {
+  await page.click(TUILE);
+  return L.waitFor(async () => { const c = await comptoir(page); return c.barre?.offre === JOUR ? c : null; }, 2000);
+}
 async function ouvrirParBandeau(page, compact) {
   if (compact && await page.getAttribute('.bandeau-more', 'aria-expanded') !== 'true') { await page.click('.bandeau-more'); await page.waitForTimeout(300); }
   await page.click('.bandeau-visiteur');
   const c = await L.waitFor(async () => { const x = await comptoir(page); return x.open && x.jour ? x : null; }, 4000);
   await page.waitForTimeout(700); // un toucher juste après l'ouverture serait le second de celui qui l'a ouverte
-  await page.evaluate((sel) => document.querySelector(sel)?.closest('.offre').scrollIntoView({ block: 'center' }), `#dlg-batiment .offre[data-offre="${JOUR}"] p`);
+  await page.evaluate((sel) => document.querySelector(sel)?.scrollIntoView({ block: 'center' }), TUILE);
   await page.waitForTimeout(300);
   return c;
 }
@@ -108,12 +122,16 @@ const r1 = (x) => Math.round(x * 10) / 10;
     await L.closeWelcome(page, 1500);
     await page.waitForTimeout(800);
     let c = await ouvrirParBandeau(page, compact);
-    R.check('fiche : le comptoir du quai, avec la ligne du jour', !!c && c.id === 'quai-1', String(c && c.id));
-    R.check('ligne du jour : après les quatre offres de la semaine, sous sa propre phrase',
-      c.ordre && c.semaine.length === 4 && !c.semaine.some(([id]) => id === JOUR) && c.phrase === sp(BAT.comptoir['jour.intro']), JSON.stringify([c.ordre, c.semaine, c.phrase]));
-    R.check('ligne du jour : « 20 Matériaux contre 10 Énergie », « Échanger » ouvert, nommé pour le lecteur d’écran',
-      c.jour.troc === '20 Matériaux contre 10 Énergie' && c.jour.etat === 'libre' && c.jour.off === false && c.jour.label === 'Échanger 20 Matériaux contre 10 Énergie', JSON.stringify(c.jour));
-    R.check('ligne du jour : bouton de 44 px au moins, rien ne déborde', c.jour.h >= 43.99 && c.jour.w >= 44 && c.debord.length === 0, JSON.stringify([c.jour.w, c.jour.h, c.debord]));
+    R.check('fiche : l’étal du quai, avec la tuile du jour', !!c && c.id === 'quai-1', String(c && c.id));
+    R.check('tuile du jour : large, après la grille des quatre offres de la semaine ; sa règle dans le repli',
+      c.ordre && c.jour.large && c.semaine.length === 4 && !c.semaine.some(([id]) => id === JOUR) && c.regle.includes(sp(BAT.comptoir['jour.intro'])), JSON.stringify([c.ordre, c.jour.large, c.semaine, c.regle]));
+    R.check('tuile du jour : « Rachat du jour », ce qui est lu (« 20 Matériaux contre 10 Énergie »), ce que le marchand laisse au village',
+      c.jour.etat === 'libre' && c.jour.titre === sp(BAT.comptoir['jour.titre']) && c.jour.troc === `${sp(BAT.comptoir['jour.titre'])} : 20 Matériaux contre 10 Énergie.`
+      && c.jour.garde === sp(BAT.comptoir['jour.garde'].replace('{n}', '150')), JSON.stringify(c.jour));
+    c = await choisirJour(page);
+    R.check('barre : la tuile du jour choisie, « Échanger » ouvert, nommé pour le lecteur d’écran',
+      !!c && c.jour.choisie && c.barre.etat === 'libre' && c.barre.off === false && c.barre.label === 'Échanger 20 Matériaux contre 10 Énergie', JSON.stringify(c && [c.jour, c.barre]));
+    R.check('barre : bouton de 44 px au moins, rien ne déborde', c.barre.h >= 43.99 && c.barre.w >= 44 && c.debord.length === 0, JSON.stringify([c.barre.w, c.barre.h, c.debord]));
     await shot(page, '42-jour');
 
     const { page: p2 } = await newPage({}, { reducedMotion: 'reduce' });
@@ -123,20 +141,21 @@ const r1 = (x) => Math.round(x * 10) / 10;
     await L.closeWelcome(p2, 1500);
     await p2.waitForTimeout(600);
     const c2 = await ouvrirParBandeau(p2, compact);
-    R.check('second appareil : la ligne du jour est ouverte, lui aussi', c2.jour.etat === 'libre', JSON.stringify(c2.jour));
+    R.check('second appareil : la tuile du jour est ouverte, lui aussi', c2.jour.etat === 'libre', JSON.stringify(c2.jour));
+    await choisirJour(p2);
 
     // ───── double toucher : un seul échange ; on note où tombe chaque toucher
     const gA = srv.game();
     const l0 = srv.ledger().length;
     await L.said(page, true);
     const pt = await centre(page, BTN);
-    await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(`${e.target.closest('.offre')?.dataset.offre}:${e.target.closest('.offre-go:not([aria-disabled])') ? 'echanger' : e.target.closest('.offre-fait') ? 'fait' : e.target.closest('button')?.className || e.target.tagName}`), true); });
+    await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(`${e.target.closest('.etal-barre')?.dataset.offre}:${e.target.closest('.etal-go:not([aria-disabled])') ? 'echanger' : e.target.closest('.etal-fait') ? 'fait' : e.target.closest('button')?.className || e.target.tagName}`), true); });
     await page.touchscreen.tap(pt[0], pt[1]);
     await page.waitForTimeout(150);
     await page.touchscreen.tap(pt[0], pt[1]);
     const taps = await page.evaluate(() => window.__taps);
     console.log(`  note : cible des deux touchers (${tag}) : ${taps.join(', ')}`);
-    R.check('double toucher : le premier toucher tombe sur « Échanger » du jour, le second sur la même ligne', taps.length === 2 && taps[0] === `${JOUR}:echanger` && taps[1].startsWith(`${JOUR}:`), JSON.stringify(taps));
+    R.check('double toucher : le premier toucher tombe sur « Échanger » du jour, le second sur la même barre', taps.length === 2 && taps[0] === `${JOUR}:echanger` && taps[1].startsWith(`${JOUR}:`), JSON.stringify(taps));
     const g1 = await L.waitFor(() => { const g = srv.game(); return g.echangeDuJour ? g : null; }, 5000);
     await page.waitForTimeout(1200);
     const gB = srv.game();
@@ -145,7 +164,8 @@ const r1 = (x) => Math.round(x * 10) / 10;
     R.check('échange : la partie note le jour (samedi), les offres de la semaine intactes', gB.echangeDuJour === SAM && JSON.stringify(gB.visite) === JSON.stringify(gA.visite), JSON.stringify([gB.echangeDuJour, gB.visite]));
     R.check('échange : rien au registre, les tâches intactes', srv.ledger().length === l0 && JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])), JSON.stringify(srv.ledger().slice(l0)));
     c = await comptoir(page);
-    R.check('ligne du jour : « Fait aujourd’hui » à la place du bouton', c.jour.etat === 'fait' && c.jour.fait === `${BAT.comptoir.fait} ${sp(BAT.comptoir['jour.fait.quand'])}`, JSON.stringify(c.jour));
+    const faitJour = `${BAT.comptoir.fait} ${sp(BAT.comptoir['jour.fait.quand'])}`;
+    R.check('tuile du jour : « Fait aujourd’hui », et dans la barre à la place du bouton', c.jour.etat === 'fait' && c.jour.fait === faitJour && c.barre.offre === JOUR && c.barre.etat === 'fait' && c.barre.fait === faitJour, JSON.stringify([c.jour, c.barre]));
     const dits = (await L.said(page)).map((x) => sp(x.text));
     R.check('échange : une seule phrase lue, « Échange fait : 20 Matériaux contre 10 Énergie. »', dits.filter((t) => /Échange fait/.test(t)).length === 1 && dits.includes('Échange fait : 20 Matériaux contre 10 Énergie.'), JSON.stringify(dits));
     R.check('barre : les chiffres du serveur', !!await L.waitFor(async () => (await L.resValue(page, 'energie')) === Math.floor(gB.resources.energy) && (await L.resValue(page, 'materiaux')) === Math.floor(gB.resources.materials), 3000));
@@ -159,25 +179,30 @@ const r1 = (x) => Math.round(x * 10) / 10;
     const note = await L.waitFor(() => p2.evaluate((t) => { const n = document.getElementById('notice'); const s = (x) => String(x || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim(); return n && !n.hidden && s(n.textContent).includes(t) ? s(n.textContent) : null; }, DEJA), 4000);
     R.check('second appareil : remis à jour, il dit pourquoi (« Déjà fait aujourd’hui… »)', !!note, String(note));
     const c2b = await L.waitFor(async () => { const x = await comptoir(p2); return x.jour?.etat === 'fait' ? x : null; }, 3000);
-    R.check('second appareil : la ligne dit « Fait aujourd’hui », la barre montre les chiffres du serveur',
+    R.check('second appareil : la tuile dit « Fait aujourd’hui », la barre du haut montre les chiffres du serveur',
       !!c2b && !!await L.waitFor(async () => (await L.resValue(p2, 'materiaux')) === Math.floor(g3.resources.materials) && (await L.resValue(p2, 'energie')) === Math.floor(g3.resources.energy), 4000), JSON.stringify(c2b && c2b.jour));
     await p2.close();
 
-    // ───── passage de 4 h : la ligne s'ouvre de nouveau ; au clavier, le focus reste sur la ligne
+    // ───── passage de 4 h : la tuile s'ouvre de nouveau ; au clavier, le focus passe sur « Fait aujourd'hui »
     await fermer(page);
     await page.clock.fastForward(APRES.getTime() - await page.evaluate(() => Date.now()));
     await L.closeWelcome(page, 2500);
     await page.waitForTimeout(800);
     c = await ouvrirParBandeau(page, compact);
-    R.check('4 h : la ligne du jour est de nouveau ouverte', c.jour.etat === 'libre' && c.jour.off === false, JSON.stringify(c.jour));
+    R.check('4 h : la tuile du jour est de nouveau ouverte', c.jour.etat === 'libre', JSON.stringify(c.jour));
     const gC = srv.game();
     await L.said(page, true);
-    await page.focus(BTN);
+    await page.focus(`${TUILE} input`);
+    await page.keyboard.press('Space');
+    R.check('clavier : Espace choisit la tuile du jour', !!await L.waitFor(async () => (await comptoir(page)).barre?.offre === JOUR, 2000));
+    let tabs = 0;
+    while (tabs < 4 && !await page.evaluate(() => !!document.activeElement?.closest('.etal-go'))) { await page.keyboard.press('Tab'); tabs++; }
+    R.check('clavier : Tab mène à « Échanger » (deux au plus)', tabs <= 2, String(tabs));
     await page.keyboard.press('Enter');
     const g4 = await L.waitFor(() => { const g = srv.game(); return g.echangeDuJour === DIM ? g : null; }, 5000);
     R.check('clavier : l’échange du dimanche arrive au serveur (−20 Matériaux, +10 Énergie)', !!g4 && r1(g4.resources.materials - gC.resources.materials) === -20 && r1(g4.resources.energy - gC.resources.energy) === 10, `${res(gC)} → ${g4 && res(g4)}`);
-    const focus = await L.waitFor(() => page.evaluate((JOUR) => { const a = document.activeElement; return a?.closest(`.offre[data-offre="${JOUR}"]`) ? { cls: a.className, ligne: a.closest('.offre').dataset.etat } : null; }, JOUR), 2000);
-    R.check('clavier : le focus reste sur la ligne, sur « Fait aujourd’hui »', !!focus && focus.cls === 'offre-fait' && focus.ligne === 'fait', JSON.stringify(focus));
+    const focus = await L.waitFor(() => page.evaluate((JOUR) => { const a = document.activeElement; return a?.closest(`.etal-barre[data-offre="${JOUR}"]`) ? { cls: a.className, etat: a.closest('.etal-barre').dataset.etat } : null; }, JOUR), 2000);
+    R.check('clavier : le focus passe sur « Fait aujourd’hui », dans la barre', !!focus && focus.cls === 'etal-fait' && focus.etat === 'fait', JSON.stringify(focus));
     await page.close();
 
     // ───── 169 Matériaux : le cadenas et la raison ; le toucher ne dépense rien
@@ -197,8 +222,10 @@ const r1 = (x) => Math.round(x * 10) / 10;
     R.check('169 Matériaux : la partie relue en a bien 169', g6.resources.materials === 169 && await L.resValue(p3, 'materiaux') === 169, res(g6));
     c = await ouvrirParBandeau(p3, compact);
     const raison = `Il manque 1 Matériau. ${GARDE}`;
-    R.check('169 Matériaux : bouton verrouillé, cadenas et raison du cœur sous la ligne, reliée au bouton',
-      c.jour.etat === 'verrou' && c.jour.off === true && c.jour.raison === raison && c.jour.decrit === `offre-${JOUR}-raison`, JSON.stringify(c.jour));
+    R.check('169 Matériaux : la tuile dit ce qui manque (les 150 Matériaux gardés au village comptés)', c.jour.etat === 'verrou' && c.jour.raison === 'Il manque 1 Matériau.', JSON.stringify(c.jour));
+    c = await choisirJour(p3);
+    R.check('169 Matériaux : la barre montre le bouton verrouillé, et la raison du cœur dessous, reliée au bouton',
+      !!c && c.barre.etat === 'verrou' && c.barre.off === true && c.barre.raison === raison && c.barre.decrit === 'etal-raison', JSON.stringify(c && c.barre));
     R.check('169 Matériaux : la raison tient dans la fiche, rien ne déborde', c.debord.length === 0, JSON.stringify(c.debord));
     await shot(p3, '42-manque');
     await L.said(p3, true);

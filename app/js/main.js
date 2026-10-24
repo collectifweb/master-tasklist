@@ -19,7 +19,7 @@ import {
   confirmDelete, confirmRemballer, openToken, openHelp, openVeille, openSheet, closeSheet, handleStep,
 } from './ui/sheets.js';
 import { initWorld } from './world-bridge.js';
-import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ressourcesText } from './ui/batiment.js';
+import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ressourcesText, choisirOffre } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { openQuartier, refreshQuartier, monteText, openRecompense } from './ui/quartier.js';
 import { createStory } from './ui/story.js';
@@ -859,6 +859,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'sort') { ui.sort = e.target.value; renderAll(); }
   else if (e.target.name === 'statut') { ui.status = e.target.value; renderAll(); }
   else if (e.target.name === 'add-sector') onAddSectorChange();
+  else if (e.target.name === 'etal-offre') choisirOffre(ctx(), e.target.value);
 });
 document.addEventListener('submit', (e) => {
   if (e.target.id === 'add-form') {

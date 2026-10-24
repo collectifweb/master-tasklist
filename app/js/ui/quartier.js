@@ -9,7 +9,7 @@
 // filtre de la liste par data-action="qrt-quetes" (main.js). Un achat réussi range la fiche (main.js) : le moment se joue
 // sur la plaque, puis la carte de récompense (openRecompense) ; le niveau suivant se lit à la prochaine ouverture.
 // La fiche de la Place porte aussi ce que la Nourriture achète (lot N, core/nourriture.js et objectifs.js) : du 1er mars
-// au 30 avril, la partie de sucre, au dessin de la commande du quai (Demande / Laisse, « Faire la partie de sucre » en
+// au 30 avril, la partie de sucre, au gabarit Demande / Laisse des commandes (« Faire la partie de sucre » en
 // bouton secondaire : « Monter au niveau » reste le seul geste principal de la fiche), puis le repas de la semaine, au
 // dessin d'une offre du comptoir (le troc, « Servir le repas »). Chacun : le cadenas et la raison du cœur, ou sa ligne
 // cochée à la même place. Les gestes passent par data-action="bat-geste", comme ceux d'un bâtiment.

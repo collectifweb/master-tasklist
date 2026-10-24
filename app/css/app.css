@@ -462,9 +462,10 @@
   height: 18px;
 }
 
-/* Commande du visiteur (lot C), au-dessus du comptoir, sous le même filet : titre avec la note en sauge et les jours
-   restants en petit à droite ; qui il est ; deux lignes « Demande » / « Laisse » (le terme à gauche, les puces du comptoir
-   à droite, « + » gris entre deux ressources) ; la taille de la semaine en note quand elle n'est pas régulière ; « Livrer »,
+/* Commande du visiteur (lot C), au-dessus de l'étal, sous le même filet : titre avec la note en sauge et les jours
+   restants en petit à droite ; qui il est ; ce qu'il demande et ce qu'il laisse (au quai, en pastilles à jauge, plus bas ;
+   la partie de sucre de la Place garde deux lignes « Demande » / « Laisse », le terme à gauche, les puces à droite, « + »
+   gris entre deux ressources) ; la taille de la semaine en note quand elle n'est pas régulière ; « Livrer »,
    seule action principale de la fiche, sur toute la largeur, ou à plat avec le cadenas et la raison du cœur ; livrée, la
    ligne cochée en sauge foncée à la même place ; la règle (jamais obligatoire) en petit pour finir. */
 .commande {
@@ -595,10 +596,10 @@
   color: var(--text-soft);
 }
 
-/* Comptoir du marchand (lot V) : la fiche du quai quand il est là. Une ligne par offre, séparées par des filets (comme
-   la carte en liste) : le troc, ce que tu donnes → ce que tu reçois (picto teinté de la ressource, doublé du nombre et du
-   mot), puis « Échanger » (secondaire, aucune action principale ici), « Fait cette semaine » (coche, sauge), ou le
-   cadenas et la raison du cœur sous la ligne. */
+/* Comptoir (lot V) : le dessin d'une offre en ligne, que garde la Place (sucres, repas de la semaine) ; au quai, l'étal
+   (lot G, plus bas) le remplace. Une ligne par offre, séparées par des filets (comme la carte en liste) : le troc, ce que
+   tu donnes → ce que tu reçois (picto teinté de la ressource, doublé du nombre et du mot), puis l'action (secondaire),
+   « Fait cette semaine » (coche, sauge), ou le cadenas et la raison du cœur sous la ligne. */
 .comptoir {
   padding-top: var(--sp-4);
   border-top: 1px solid var(--c-line);
@@ -624,10 +625,6 @@
   font-size: var(--text-14);
   line-height: 1.4;
   color: var(--text-soft);
-}
-/* l'échange du jour (lot T) : sous les offres de la semaine, sa phrase puis sa ligne, dessinée pareil */
-.comptoir-jour {
-  margin-top: var(--sp-5);
 }
 .comptoir-offres {
   margin: 0;
@@ -721,6 +718,335 @@
   height: 16px;
   margin-top: 1px;
   color: var(--text-muted);
+}
+
+/* Commande du quai (lot G) : ce qu'il demande en pastilles sur le lavis de la ressource, le compte en main (« 3/8 ») ou
+   une coche, et une jauge dessous, teintée de la même encre ; « + » entre deux, une flèche, ce qu'il laisse (« +1 »).
+   Verrouillé, « Livrer » porte la raison du cœur sur le bouton même, qui passe à la ligne au besoin. La partie de sucre de
+   la Place garde le gabarit Demande / Laisse (`dl.commande-troc`). */
+.commande-echange {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.commande-demande,
+.commande-laisse {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.commande-res {
+  display: inline-grid;
+  gap: 5px;
+  padding: 6px var(--sp-2) 7px;
+  border-radius: var(--r-sm);
+  background: var(--res-wash);
+  color: var(--res);
+}
+.commande-res-v {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.commande-res-v .icon { flex: none; width: 20px; height: 20px; }
+.commande-res-v b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-18);
+  font-weight: var(--w-heavy);
+  line-height: 1;
+}
+.commande-res-v .commande-ok { width: 16px; height: 16px; }
+.commande-a {
+  font-size: var(--text-12);
+  font-weight: var(--w-bold);
+  font-variant-numeric: tabular-nums;
+}
+.commande-jauge {
+  display: block;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  overflow: hidden;
+}
+.commande-jauge > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+.commande-res--laisse { padding-block: 9px; }
+.commande-fleche {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.commande-go[aria-disabled="true"] {
+  flex-wrap: wrap;
+  padding-block: var(--sp-2);
+  white-space: normal;
+}
+.commande-go .commande-raison {
+  display: inline;
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  color: inherit;
+}
+
+/* L'étal du marchand (lot G, piste B) : la réserve en trois pastilles, puis les offres en tuiles qu'on choisit (boutons
+   radio dans des cartes, comme le choix du quartier à l'ajout) : le troc en gros, ce que tu donnes, une flèche vers le
+   bas, ce que tu reçois, puis l'état écrit (cadenas et ce qui manque, ou coche et « Fait cette semaine »). La tuile
+   choisie passe en sauge, avec la coche dans son coin : la couleur n'est jamais seule. Le rachat du jour, en large, a son
+   nom et ce que le marchand laisse au village à côté du troc. L'échange se fait dans la barre du pied. */
+.etal-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.etal-sous {
+  margin: 0;
+  font-size: var(--text-14);
+  color: var(--text-soft);
+}
+.etal-reserve {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.etal-reserve .pastille {
+  justify-content: center;
+  height: var(--target);
+}
+.etal-offres {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.etal-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.etal-offre {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0; /* le gabarit .offre en ligne (la Place) trace un filet sous chaque offre : pas ici */
+  cursor: pointer;
+}
+.etal-offre input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.etal-carte {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  min-height: 132px;
+  padding: var(--sp-3) var(--sp-2) 10px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-card);
+  text-align: center;
+  transition: background-color var(--t-micro), border-color var(--t-micro);
+}
+.etal-offre .offre-troc {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.etal-res {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.etal-res .icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--res);
+}
+.etal-res b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-28);
+  font-weight: var(--w-heavy);
+  line-height: 1.05;
+}
+.etal-fleche {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transform: rotate(90deg);
+}
+.etal-offre .offre-raison,
+.etal-offre .offre-fait {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 0;
+  font-size: 0.8125rem;
+  font-weight: var(--w-bold);
+  line-height: 1.25;
+}
+.etal-offre .offre-raison { color: var(--text-soft); }
+.etal-offre .offre-fait { color: var(--c-sage-deep); }
+.etal-offre .offre-raison .icon,
+.etal-offre .offre-fait .icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+}
+.etal-offre .offre-raison .icon { color: var(--text-muted); }
+/* faite : papier creusé, le troc en encre douce ; verrouillée : les chiffres en encre douce, les pictos gardent leur teinte */
+.etal-offre[data-etat="fait"] .etal-carte { background: var(--surface-sunken); }
+.etal-offre[data-etat="fait"] .etal-res { --res: var(--text-muted); }
+.etal-offre[data-etat="fait"] .etal-res b,
+.etal-offre[data-etat="verrou"] .etal-res b { color: var(--text-soft); }
+.etal-tick {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--c-paper);
+  border-radius: 50%;
+  background: var(--c-sage-deep);
+  color: var(--c-paper);
+  opacity: 0;
+  transition: opacity var(--t-micro);
+}
+.etal-tick .icon { width: 13px; height: 13px; }
+.etal-offre input:checked + .etal-carte {
+  border-color: var(--c-sage-deep);
+  background: var(--c-sage-wash);
+  box-shadow: inset 0 0 0 1px var(--c-sage-deep);
+}
+.etal-offre input:checked + .etal-carte .etal-tick { opacity: 1; }
+.etal-offre input:focus-visible + .etal-carte {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .etal-offre:hover .etal-carte { border-color: var(--c-sage-deep); }
+}
+/* le rachat du jour : le troc en ligne à gauche, son nom et sa règle à droite */
+.etal-offre--jour .etal-carte {
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  column-gap: 14px;
+  min-height: 76px;
+  padding: 10px 14px;
+  text-align: left;
+}
+.etal-offre--jour .offre-troc {
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 6px;
+}
+.etal-offre--jour .etal-res b { font-size: var(--text-24); }
+.etal-offre--jour .etal-fleche { transform: none; }
+.etal-jour {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.etal-jour-t {
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  line-height: 1.25;
+}
+.etal-jour-garde {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+.etal-offre--jour .offre-raison,
+.etal-offre--jour .offre-fait { justify-content: flex-start; }
+
+/* La barre de l'étal, au pied de la fiche : l'offre choisie en pastilles, puis « Échanger » (secondaire : « Livrer » reste
+   la seule action principale de la fiche), ou le bouton verrouillé et la raison du cœur sur toute la largeur dessous, ou
+   « ✓ Fait » sur lavis sauge, « cette semaine » en petit dessous. */
+.etal-barre {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+.etal-choix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+.etal-choix-fleche {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+.etal-go { min-width: 124px; }
+.etal-raison {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-14);
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+.etal-raison .icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.etal-fait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-lg);
+  margin: 0;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+  font-weight: var(--w-bold);
+  white-space: nowrap;
+}
+.etal-fait .icon { flex: none; width: 18px; height: 18px; }
+.etal-fait span { line-height: 1.15; }
+.etal-fait small {
+  display: block;
+  font-size: var(--text-12);
+  font-weight: var(--w-semibold);
 }
 
 /* Catalogue « Construire » (lot L) : deux onglets sur papier creusé, puis des rangées touchables en entier — le dessin,

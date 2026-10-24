@@ -5,14 +5,15 @@
 //   Partie B (même samedi, quai bâti, version d'essai) :
 //   - arrivée : Fanal annonce une fois sur l'appareil le visiteur à commande de la semaine (lot C : le marchand, là chaque
 //     semaine, n'est annoncé qu'au quai rebâti) ; chaland dans le dessin du quai, au repos en mouvement réduit ;
-//   - « Cette semaine » : « Commande au quai, encore 2 jours » (lot C), qui ouvre la fiche du quai et son comptoir ; le
+//   - « Cette semaine » : « Commande au quai, encore 2 jours » (lot C), qui ouvre la fiche du quai et son étal ; le
 //     compte des quêtes dessous ;
-//   - comptoir : quatre offres, raisons du cœur (réserve pleine, manque), boutons de 44 px, rien ne déborde ;
-//   - un geste verrouillé ne dépense rien ; un double toucher n'échange qu'une fois ; au clavier, le focus reste sur la
-//     ligne ; la phrase lue dit l'échange ;
+//   - étal (lot G, piste B) : quatre tuiles, raisons du cœur (réserve pleine, manque), la première offre possible choisie à
+//     l'ouverture, tuiles et « Échanger » de 44 px au moins, rien ne déborde ; choisir une tuile ne dépense rien ;
+//   - un geste verrouillé ne dépense rien ; un double toucher sur « Échanger » n'échange qu'une fois ; au clavier (Espace sur
+//     la tuile, Tab jusqu'à « Échanger », Entrée), le focus passe sur « Fait cette semaine » ; la phrase lue dit l'échange ;
 //   - deux appareils : le second prend une offre, le premier (pas encore relu) la reprend : le serveur refuse, l'appareil se
 //     remet à jour et dit pourquoi ; l'offre n'est payée qu'une fois ;
-//   - carte en liste : le quai dit que le marchand est là (et la commande du visiteur) et ouvre le comptoir ;
+//   - carte en liste : le quai dit que le marchand est là (et la commande du visiteur) et ouvre l'étal ;
 //   - « Jour suivant » : dimanche, dernier jour ; lundi, le marchand revient, offres de nouveau ouvertes, Fanal annonce le
 //     visiteur à commande de la nouvelle semaine.
 // Données fictives seulement. Chaque geste attend l'écriture du serveur avant de la vérifier.
@@ -65,15 +66,20 @@ const comptoir = (page) => page.evaluate(() => {
   const d = document.getElementById('dlg-batiment');
   const s = (x) => String(x || '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
   const r = d.getBoundingClientRect();
+  const barre = d.querySelector('.etal-barre');
+  const go = barre?.querySelector('.etal-go');
+  const gr = go?.getBoundingClientRect();
   return {
     open: d.open && !d.classList.contains('is-closing'), id: d.dataset.batId || '', now: s(d.querySelector('#bat-now')?.textContent),
-    debord: [...d.querySelectorAll('.comptoir *')].filter((e) => { const b = e.getBoundingClientRect(); return b.width && (b.left < r.left - 1 || b.right > r.right + 1); }).map((e) => e.className.baseVal ?? e.className),
-    // les quatre offres de la semaine ; l'échange du jour (lot T), dessous, a son scénario (ui-42)
-    offres: [...d.querySelectorAll('.offre:not([data-offre="materiaux-energie-jour"])')].map((li) => {
-      const b = li.querySelector('.offre-go');
-      const br = b && b.getBoundingClientRect();
-      return { id: li.dataset.offre, etat: li.dataset.etat, troc: s(li.querySelector('.offre-troc').textContent), raison: s(li.querySelector('.offre-raison')?.textContent), off: b ? b.getAttribute('aria-disabled') === 'true' : null, label: b ? b.getAttribute('aria-label') : null, h: br ? br.height : 0, w: br ? br.width : 0 };
+    debord: [...d.querySelectorAll('.etal *, .etal-reserve *, .etal-barre *')].filter((e) => { const b = e.getBoundingClientRect(); return b.width && (b.left < r.left - 1 || b.right > r.right + 1); }).map((e) => e.className.baseVal ?? e.className),
+    // les quatre tuiles de la semaine (le troc lu, sans le point) ; le rachat du jour (lot T), dessous, a son scénario (ui-42)
+    offres: [...d.querySelectorAll('.etal-offre:not([data-offre="materiaux-energie-jour"])')].map((li) => {
+      const b = li.getBoundingClientRect();
+      return { id: li.dataset.offre, etat: li.dataset.etat, choisie: li.querySelector('input').checked, troc: s(li.querySelector('.etal-carte > .sr-only').textContent).replace(/\.$/, ''), raison: s(li.querySelector('.offre-raison')?.textContent), off: li.dataset.etat === 'verrou', h: b.height, w: b.width };
     }),
+    // la barre du pied : l'offre choisie et son geste
+    barre: barre && { offre: barre.dataset.offre, etat: barre.dataset.etat, off: go ? go.getAttribute('aria-disabled') === 'true' : null, label: go ? go.getAttribute('aria-label') : null,
+      raison: s(barre.querySelector('.etal-raison')?.textContent), fait: s(barre.querySelector('.etal-fait')?.textContent), h: gr ? gr.height : 0, w: gr ? gr.width : 0 },
   };
 });
 const offre = (c, id) => (c && c.offres.find((o) => o.id === id)) || {};
@@ -91,7 +97,13 @@ async function fermer(page) {
   await L.waitFor(() => page.evaluate(() => !document.getElementById('dlg-batiment').open), 2000);
 }
 const centre = (page, sel) => page.evaluate((sel) => { const r = document.querySelector(sel).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, sel);
-const btn = (id) => `#dlg-batiment .offre[data-offre="${id}"] .offre-go`;
+const tuile = (id) => `#dlg-batiment .etal-offre[data-offre="${id}"]`;
+const GO = '#dlg-batiment .etal-go';
+// choisir une offre (toucher ou clic sur sa tuile) : seule la barre du pied change
+async function choisir(page, id) {
+  await page.click(tuile(id));
+  return L.waitFor(async () => { const c = await comptoir(page); return c.barre?.offre === id ? c : null; }, 2000);
+}
 const jourSuivant = async (page, srv, k) => {
   await L.openPanel(page);
   await page.click('[data-action="jour-suivant"]');
@@ -151,7 +163,7 @@ const res = (g) => JSON.stringify(g.resources);
       R.check('chaland : sous le doigt, c’est le quai', pb.quai, JSON.stringify(pb));
       await p0.mouse.click(pb.x, pb.y);
       const cb = await L.waitFor(async () => { const x = await comptoir(p0); return x.open && x.offres.length === 4 ? x : null; }, 4000);
-      R.check('chaland : le toucher ouvre le comptoir du quai', !!cb && cb.id === 'quai-1', String(cb && cb.id));
+      R.check('chaland : le toucher ouvre l’étal du quai', !!cb && cb.id === 'quai-1', String(cb && cb.id));
       await p0.close();
     } finally {
       sans.stop();
@@ -174,41 +186,42 @@ const res = (g) => JSON.stringify(g.resources);
     let c = await ouvrirParBandeau(page, compact);
     R.check('bandeau : sa ligne ouvre la fiche du quai', c.id === 'quai-1', c.id);
     R.check('fiche : « Maintenant » dit jusqu’à quand', c.now === 'Le marchand est au quai jusqu’à dimanche : encore 2 jours.', c.now);
-    R.check('comptoir : quatre offres dans l’ordre, chacune « ce que tu donnes → ce que tu reçois »',
+    R.check('étal : quatre tuiles dans l’ordre, chacune « ce que tu donnes → ce que tu reçois »',
       c.offres.map((o) => o.troc).join(' | ') === '30 Énergie contre 15 Matériaux | 20 Énergie contre 10 Nourriture | 15 Matériaux contre 15 Énergie | 10 Nourriture contre 10 Énergie', JSON.stringify(c.offres.map((o) => o.troc)));
     const gA = srv.game();
     const manqueM = sp(core.refusEchanger(gA, { offre: 'materiaux-energie' }, SAMEDI.toISOString()));
-    R.check('comptoir : réserve pleine, manque de Matériaux (raisons du cœur), deux offres ouvertes',
+    R.check('étal : réserve pleine, manque de Matériaux (raisons du cœur), deux offres ouvertes',
       offre(c, 'energie-materiaux').etat === 'libre' && offre(c, 'nourriture-energie').etat === 'libre'
       && offre(c, 'energie-nourriture').off && offre(c, 'energie-nourriture').raison === 'La réserve est pleine (20 sur 20).'
       && /^Il manque \d+ Matériaux?\.$/.test(manqueM) && offre(c, 'materiaux-energie').off && offre(c, 'materiaux-energie').raison === manqueM, JSON.stringify({ manqueM, res: gA.resources, offres: c.offres }));
-    R.check('comptoir : chaque bouton dit l’échange entier (« Échanger 30 Énergie contre 15 Matériaux »)', offre(c, 'energie-materiaux').label === 'Échanger 30 Énergie contre 15 Matériaux', String(offre(c, 'energie-materiaux').label));
-    R.check('comptoir : boutons de 44 px au moins', c.offres.every((o) => o.h >= 43.99 && o.w >= 44), JSON.stringify(c.offres.map((o) => [o.w, o.h])));
-    R.check('comptoir : rien ne déborde de la fiche', c.debord.length === 0, JSON.stringify(c.debord));
+    R.check('étal : à l’ouverture, la première offre possible est choisie, et la barre la montre', offre(c, 'energie-materiaux').choisie && c.barre?.offre === 'energie-materiaux' && c.barre.etat === 'libre' && !c.barre.off, JSON.stringify(c.barre));
+    R.check('barre : « Échanger » dit l’échange entier (« Échanger 30 Énergie contre 15 Matériaux »)', c.barre?.label === 'Échanger 30 Énergie contre 15 Matériaux', String(c.barre?.label));
+    R.check('étal : tuiles et « Échanger » de 44 px au moins', c.offres.every((o) => o.h >= 43.99 && o.w >= 44) && c.barre.h >= 43.99 && c.barre.w >= 44, JSON.stringify([c.offres.map((o) => [o.w, o.h]), [c.barre.w, c.barre.h]]));
+    R.check('étal : rien ne déborde de la fiche', c.debord.length === 0, JSON.stringify(c.debord));
     await shot(page, '36-comptoir');
 
-    // un geste verrouillé ne dépense rien, et sa raison est redite
+    // choisir une offre verrouillée ne dépense rien ; son geste non plus, et sa raison est redite
+    c = await choisir(page, 'energie-nourriture');
+    R.check('offre verrouillée choisie : la barre montre le bouton verrouillé et la raison du cœur', c?.barre.etat === 'verrou' && c.barre.off && c.barre.raison === 'La réserve est pleine (20 sur 20).', JSON.stringify(c?.barre));
+    R.check('choisir : rien n’est échangé', res(srv.game()) === res(gA) && !srv.game().visite, res(srv.game()));
     await L.said(page, true);
-    await page.click(btn('energie-nourriture'), { force: true }); // verrouillé (aria-disabled) : Playwright attendrait qu'il s'ouvre
+    await page.click(GO, { force: true }); // verrouillé (aria-disabled) : Playwright attendrait qu'il s'ouvre
     await page.waitForTimeout(700);
     R.check('offre verrouillée : rien n’est échangé', res(srv.game()) === res(gA) && !srv.game().visite, res(srv.game()));
     R.check('offre verrouillée : la raison est lue', (await L.said(page)).some((x) => sp(x.text) === 'La réserve est pleine (20 sur 20).'), JSON.stringify(await L.said(page)));
 
-    // double toucher : un seul échange
+    // double toucher sur « Échanger » : un seul échange. On note où tombent les deux touchers : sur le bouton ouvert (la
+    // garde de 800 ms le retient), ou sur « Fait cette semaine » qui l'a déjà remplacé (rien à toucher).
+    await choisir(page, 'energie-materiaux');
     await L.said(page, true);
     const l0 = srv.ledger().length;
-    // un double toucher dont le second tombe sur une autre offre (une ligne qui se décale sous le doigt) : la garde vaut pour
-    // toute la fiche pendant 800 ms. On note où tombent les touchers, pour que le contrôle prouve quelque chose. Le second
-    // bouton est visé après le premier toucher : l'échange peut faire remonter le comptoir (la raison « Il manque… » de la
-    // commande, au-dessus, disparaît), et le toucher doit tomber sur un bouton ouvert.
-    const pt = await centre(page, btn('energie-materiaux'));
-    await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(`${e.target.closest('.offre')?.dataset.offre}:${!!e.target.closest('.offre-go:not([aria-disabled])')}`), true); });
+    const pt = await centre(page, GO);
+    await page.evaluate(() => { window.__taps = []; document.addEventListener('click', (e) => window.__taps.push(e.target.closest('.etal-go:not([aria-disabled])') ? 'echanger' : e.target.closest('.etal-fait') ? 'fait' : String(e.target.className.baseVal ?? e.target.className)), true); });
     await page.touchscreen.tap(pt[0], pt[1]);
     await page.waitForTimeout(150);
-    const pt2 = await centre(page, btn('nourriture-energie'));
-    await page.touchscreen.tap(pt2[0], pt2[1]);
+    await page.touchscreen.tap(pt[0], pt[1]);
     const taps = await page.evaluate(() => window.__taps);
-    R.check('double toucher : les deux touchers tombent sur deux boutons « Échanger » ouverts', JSON.stringify(taps) === JSON.stringify(['energie-materiaux:true', 'nourriture-energie:true']), JSON.stringify(taps));
+    R.check('double toucher : le premier tombe sur « Échanger », le second sur « Échanger » ou sur « Fait cette semaine »', taps.length === 2 && taps[0] === 'echanger' && ['echanger', 'fait'].includes(taps[1]), JSON.stringify(taps));
     const g1 = await L.waitFor(() => { const g = srv.game(); return g.visite ? g : null; }, 5000);
     await page.waitForTimeout(1200);
     const g1b = srv.game();
@@ -218,17 +231,24 @@ const res = (g) => JSON.stringify(g.resources);
     R.check('échange : rien au registre', srv.ledger().length === l0, JSON.stringify(srv.ledger().slice(l0)));
     R.check('échange : les tâches sont intactes', JSON.stringify(srv.readTasks().map((x) => [x.id, x.status])) === JSON.stringify(TASKS.map((x) => [x.id, x.status])));
     c = await comptoir(page);
-    R.check('comptoir : l’offre prise dit « Fait cette semaine », celle des Matériaux s’ouvre', offre(c, 'energie-materiaux').etat === 'fait' && offre(c, 'materiaux-energie').etat === 'libre', JSON.stringify(c.offres.map((o) => [o.id, o.etat])));
+    R.check('étal : la tuile prise dit « Fait cette semaine », celle des Matériaux s’ouvre', offre(c, 'energie-materiaux').etat === 'fait' && offre(c, 'materiaux-energie').etat === 'libre', JSON.stringify(c.offres.map((o) => [o.id, o.etat])));
+    R.check('barre : l’offre prise reste choisie, « Fait cette semaine » à la place du bouton', c.barre?.offre === 'energie-materiaux' && c.barre.etat === 'fait' && c.barre.fait === 'Fait cette semaine', JSON.stringify(c.barre));
     const dits = (await L.said(page)).map((x) => sp(x.text));
     R.check('échange : une seule phrase lue, « Échange fait : 30 Énergie contre 15 Matériaux. »', dits.filter((t) => /Échange fait/.test(t)).length === 1 && dits.some((t) => t === 'Échange fait : 30 Énergie contre 15 Matériaux.'), JSON.stringify(dits));
     R.check('barre : les chiffres du serveur', await L.waitFor(async () => (await L.resValue(page, 'energie')) === Math.floor(g1b.resources.energy) && (await L.resValue(page, 'materiaux')) === Math.floor(g1b.resources.materials), 3000));
 
-    // au clavier : Entrée échange, le focus reste sur la ligne
-    await page.focus(btn('nourriture-energie'));
+    // au clavier : Espace choisit la tuile, Tab mène à « Échanger », Entrée échange ; le focus passe sur « Fait cette semaine »
+    await page.focus(`${tuile('nourriture-energie')} input`);
+    await page.keyboard.press('Space');
+    R.check('clavier : Espace choisit la tuile, la barre la montre', !!await L.waitFor(async () => (await comptoir(page)).barre?.offre === 'nourriture-energie', 2000));
+    let tabs = 0;
+    while (tabs < 4 && !await page.evaluate(() => !!document.activeElement?.closest('.etal-go'))) { await page.keyboard.press('Tab'); tabs++; }
+    R.check('clavier : « Échanger » à deux Tab au plus de la tuile (le repli « Comment ça marche » entre les deux)', tabs <= 2 && await page.evaluate(() => !!document.activeElement?.closest('.etal-go')), String(tabs));
     await page.keyboard.press('Enter');
     R.check('clavier : l’échange Nourriture → Énergie arrive au serveur', !!await L.waitFor(() => srv.game().resources.food === g1b.resources.food - 10 && srv.game().resources.energy === g1b.resources.energy + 10, 5000), res(srv.game()));
-    const focus = await page.evaluate(() => ({ cls: document.activeElement?.className, ligne: document.activeElement?.closest('.offre')?.dataset.offre }));
-    R.check('clavier : le focus reste sur la ligne, sur « Fait cette semaine »', focus.cls === 'offre-fait' && focus.ligne === 'nourriture-energie', JSON.stringify(focus));
+    const focus = await L.waitFor(() => page.evaluate(() => { const a = document.activeElement; return a?.classList.contains('etal-fait') ? { cls: a.className, offre: a.closest('.etal-barre')?.dataset.offre } : null; }), 2000)
+      || await page.evaluate(() => ({ cls: document.activeElement?.className, offre: null }));
+    R.check('clavier : le focus passe sur « Fait cette semaine », dans la barre de l’offre', focus.cls === 'etal-fait' && focus.offre === 'nourriture-energie', JSON.stringify(focus));
     c = await comptoir(page);
     R.check('réserve : de la place libérée, l’offre de Nourriture s’ouvre', offre(c, 'energie-nourriture').etat === 'libre', JSON.stringify(offre(c, 'energie-nourriture')));
 
@@ -245,11 +265,13 @@ const res = (g) => JSON.stringify(g.resources);
     R.check('mouvement : le chaland tangue quand l’île est réveillée, pas en mouvement réduit', complet === 'running' && reduit === 'paused', `${complet} / ${reduit}`);
     const c2 = await ouvrirParBandeau(p2, compact);
     R.check('second appareil : les offres déjà prises sont faites', offre(c2, 'energie-materiaux').etat === 'fait' && offre(c2, 'nourriture-energie').etat === 'fait', JSON.stringify(c2.offres.map((o) => [o.id, o.etat])));
-    await p2.click(btn('materiaux-energie'));
+    await choisir(p2, 'materiaux-energie');
+    await p2.click(GO);
     R.check('second appareil : Matériaux → Énergie enregistré', !!await L.waitFor(() => srv.game().visite.prises.includes('materiaux-energie'), 5000), JSON.stringify(srv.game().visite));
     const g2 = srv.game();
     await L.said(page, true);
-    await page.click(btn('materiaux-energie')); // le premier appareil n'a pas encore relu le serveur : son bouton est ouvert
+    await choisir(page, 'materiaux-energie'); // le premier appareil n'a pas encore relu le serveur : son bouton est ouvert
+    await page.click(GO);
     await page.waitForTimeout(2500);
     const g3 = srv.game();
     R.check('deux appareils : l’offre n’est payée qu’une fois (serveur inchangé après le second geste)', res(g3) === res(g2) && g3.visite.prises.filter((x) => x === 'materiaux-energie').length === 1, `${res(g2)} → ${res(g3)} ${JSON.stringify(g3.visite)}`);
@@ -269,7 +291,7 @@ const res = (g) => JSON.stringify(g.resources);
     R.check(`carte en liste : le quai dit « ${attendu} »`, sp(ligne) === attendu, ligne);
     await page.click('#dlg-plan [data-bat="quai-1"]');
     c = await L.waitFor(async () => { const x = await comptoir(page); return x.open && x.offres.length === 4 ? x : null; }, 4000);
-    R.check('carte en liste : son bouton ouvre le comptoir', !!c);
+    R.check('carte en liste : son bouton ouvre l’étal', !!c);
     await fermer(page);
     await page.keyboard.press('Escape'); // la carte en liste
     await L.waitFor(() => page.evaluate(() => !document.querySelector('dialog[open]')), 3000);

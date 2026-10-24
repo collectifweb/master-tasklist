@@ -483,12 +483,12 @@
   text-align: left;
   transition: transform var(--t-press) var(--ease-out), background-color var(--t-micro);
 }
-/* la feuille d'aide et les pastilles de prix (lot L) reprennent la matière de la tuile */
-.res[data-res="energie"], .help-title[data-res="energie"], .pastille[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
-.res[data-res="materiaux"], .help-title[data-res="materiaux"], .pastille[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
-.res[data-res="nourriture"], .help-title[data-res="nourriture"], .pastille[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
-.res[data-res="habitants"], .help-title[data-res="habitants"], .pastille[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
-.res[data-res="permis"], .help-title[data-res="permis"], .pastille[data-res="permis"] { --res: var(--res-permis); --res-wash: var(--res-permis-wash); }
+/* la feuille d'aide, les pastilles de prix (lot L), l'étal et la commande du quai (lot G) reprennent la matière de la tuile */
+.res[data-res="energie"], .help-title[data-res="energie"], .pastille[data-res="energie"], .etal-res[data-res="energie"], .commande-res[data-res="energie"] { --res: var(--res-energie); --res-wash: var(--res-energie-wash); }
+.res[data-res="materiaux"], .help-title[data-res="materiaux"], .pastille[data-res="materiaux"], .etal-res[data-res="materiaux"], .commande-res[data-res="materiaux"] { --res: var(--res-materiaux); --res-wash: var(--res-materiaux-wash); }
+.res[data-res="nourriture"], .help-title[data-res="nourriture"], .pastille[data-res="nourriture"], .etal-res[data-res="nourriture"], .commande-res[data-res="nourriture"] { --res: var(--res-nourriture); --res-wash: var(--res-nourriture-wash); }
+.res[data-res="habitants"], .help-title[data-res="habitants"], .pastille[data-res="habitants"], .etal-res[data-res="habitants"], .commande-res[data-res="habitants"] { --res: var(--res-habitants); --res-wash: var(--res-habitants-wash); }
+.res[data-res="permis"], .help-title[data-res="permis"], .pastille[data-res="permis"], .etal-res[data-res="permis"], .commande-res[data-res="permis"] { --res: var(--res-permis); --res-wash: var(--res-permis-wash); }
 
 .res-tile {
   display: grid;
