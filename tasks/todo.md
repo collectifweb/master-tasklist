@@ -2040,7 +2040,7 @@ Vérifié : tests du cœur et de l'API, 674 réussis, 0 échec ; scénarios 21 (
 - [x] Correctif : la règle passe sous `:where(.ow button)`, sans poids. Mesuré bouton par bouton (51 boutons de l'île, à 390 et 834 px, avec la nouvelle règle puis avec l'ancienne remise) : seuls les bulles, les flèches au bord et « Passer » changent ; plaques, commandes de la carte et bâtiments identiques. Cache `oree-coquille-v32`.
 - [x] Scénarios qui touchent ces boutons, réussis aux trois largeurs : 49 (98), 12 (96), 26 (87), 30 (132), 21 (84), `world-s3` (97), `world-perf` (aucune erreur en mouvement réduit). Le scénario 49 gagne deux contrôles par largeur, lus sur le style calculé : le picto des bulles a la couleur de leur cerne, le chiffre de la flèche au bord est en papier, 18 px, graisse 800. Contre-épreuve à 390 px, l'ancienne règle remise le temps de l'essai : les deux échouent (encre, 16 px, 400) ; avec le correctif, 104 contrôles, 0 échec.
 - [x] Envoi `v2.16.2` sur l'accord d'Alex (« Oui »), le 23 octobre à 21 h 26 : contrôles de l'envoi comme attendu (app 200, API 401 sans code et 200 avec, données 403, configuration vide, cache v32, pas de bac à sable, `main` sur GitHub = v2.16.2) ; 5 fichiers servis comparés à l'étiquette, identiques. Jeu en ligne pas ouvert dans un navigateur.
-- [ ] Alex regarde les bulles corrigées : assez visibles, ou une bulle « de jeu » plus marquée (à maquetter avec G3) ?
+- [x] Alex regarde les bulles corrigées : elles lui conviennent (23 octobre au soir), pas de bulle plus marquée.
 
 ### G1 — Les plaques de quartier prennent la vue
 Constat : à 834 et 1280 px, les six plaques sont dépliées dès l'ouverture (picto, nom, niveau ; de 137 à 208 px de large sur 44 de haut), parce que `sizePlaques()` (`world/world.js`) déplie tout dès que l'échelle de la caméra atteint 0,9. À 390 px, seule celle du quartier actif est dépliée (Place du village, 208 px au milieu de l'île) ; les cinq autres sont des ronds de 44 px.
@@ -2048,20 +2048,31 @@ Constat : à 834 et 1280 px, les six plaques sont dépliées dès l'ouverture (p
 - Piste B : le nom s'affiche un moment quand on touche la plaque, puis se replie.
 - Piste C : plus de plaques sur la carte, sauf avec le bouton Vue.
 - La note de la critique du lot L (« à 390 px, 5 plaques sur 6 sans nom ») tombe avec A : à l'usage, Alex ne cherche pas les noms sur la carte.
+- [x] Piste A faite : `sizePlaques()` replie toutes les plaques (`data-court`) à toutes les largeurs, le texte caché ; le nom lu reste « Champs : niveau 2. ». `DESIGN.md` et `ARCHITECTURE.md` le disent. Cache `oree-coquille-v33`.
 
 ### G2 — L'éolienne cache la cabane à sucre
 Constat, sur sa partie, aux trois largeurs : la boîte de l'éolienne couvre 74 % de celle des piquets de la cabane à sucre, posés juste derrière, sur la bande du Hameau (éolienne r 0,5 c 10,6, cabane r −1,25 c 8,35 : presque la même colonne à l'écran, c − r = 10,1 contre 9,6, l'éolienne devant). Le mât et les pales passent devant les piquets ; une fois la cabane bâtie, ce sera pareil.
 - Piste A (recommandée) : déplacer l'éolienne (ou la cabane) pour que rien de touchable ne reste derrière un objet haut. La place vient de `EMPLACEMENTS` (`world/layout.js`), pas de la partie : rien à migrer. Plus un contrôle dans un scénario : aucun objet touchable couvert à plus d'une part fixée par un autre, aux trois largeurs, tous les bâtiments posés.
 - Piste B : un objet haut devient translucide et laisse passer le toucher quand il cache quelque chose de touchable.
 - Piste C, faire pivoter la carte d'un geste : chaque dessin n'a que son dessus et ses deux faces avant, sous une lumière fixe (`world/models.js`, `world/iso.js`). Pivoter demande de dessiner le dos de chaque modèle, de refaire l'ordre de profondeur, les chemins des habitants, la caméra, les plaques et les bulles. Un lot entier pour une seule gêne ; pas recommandé maintenant.
+- [x] Piste A faite : l'éolienne passe au coin du fond, côté École (r 1,5 c 1,5 dans `EMPLACEMENTS`). 74 places libres mesurées à 834 px sur une copie du jeu, village complet (16 bâtiments), puis les quatre du coin gauche aux trois largeurs, en comptant pour chaque objet la part de sa zone de toucher où un toucher l'atteint lui : tout le bord droit, côté Mairie, cache la cabane ou le grenier ; les places du coin gauche laissent chaque bâtiment au moins à 65 % (la 2e serre à 390 px ; la scierie 72 %). À l'ancienne place, la cabane n'avait que 26 %. À 390 px, le coin est sous la bulle de Fanal à l'ouverture ; l'ancienne place était hors de l'écran à droite.
+- [x] Contrôle : scénario 50 (`ui-50-a-portee.cjs`), même partie, aux trois largeurs : chaque bâtiment à l'écran se touche sur au moins 50 % de sa zone. Réussi (15 contrôles). Contre-épreuve sur une copie du dépôt, l'ancienne place remise : échec à 834 et 1280 px sur la seule cabane (26 %, 114 points pris par l'éolienne) ; à 390 px, la cabane est hors de l'écran.
+- Restent bas, hors bâtiments et hors de ce lot (mesures à 390 px) : Fanal 47 %, deux clôtures à 33 et 47 %, une lanterne à 51 %.
 
 ### G3 — Le marchand en images
 Constat : la fiche du quai empile du texte. Sur sa partie, à 390 px : la commande de la scientifique, puis quatre lignes d'échange de la semaine (« 30 Énergie → 15 Matériaux », un cadenas et « Il manque 21 Énergie. » sous celles qu'il ne peut pas faire), la phrase du rachat des Matériaux et sa ligne, puis « Comment ça marche ». Alex voudrait plus imagé, à la Age of Empires : « tu donnes ça, tu reçois ça » en gros pictos.
 - Maquette d'abord (/impeccable, comme L0), deux ou trois pistes, validées par Alex avant le code : une carte par échange, gros picto et chiffre de chaque côté d'une flèche, le bouton dessous ; ce qui manque se lit sur le picto donné (9 sur 30) plutôt que dans une phrase ; la commande du visiteur sur le même modèle.
+- [x] Maquette sur une toile de design privée (hors du dépôt), deux pistes à 390 px qu'on peut essayer, avec les vraies offres (`core/visiteurs.js`) et une réserve fictive (46 Énergie, 182 Matériaux, 3 Nourriture) : A, une carte par échange (tuile donnée, flèche, tuile reçue, bouton à droite ; la jauge « 3 sur 10 » sur la tuile donnée quand il manque quelque chose ; la commande en tuiles, « Il demande » et « Il laisse ») ; B, l'étal (la réserve en tête, les quatre offres en grille 2 × 2, le rachat du jour en large, on touche une offre puis « Échanger » dans une barre en bas). Recherche sur le marché d'Age of Empires II : les résumés de résultats décrivent le mécanisme (bois, pierre et nourriture échangés contre de l'or, à des prix qui bougent à chaque échange), aucun la disposition de l'écran, et les wikis ont refusé l'accès ; les deux pistes partent du souvenir d'Alex et du mien, pas d'une capture du jeu.
+- [x] Alex choisit la piste B, l'étal (23 octobre au soir). Reste à la construire : plan à écrire et à faire valider.
 
 ### G4 — Contrat, tests, envoi
 - [ ] `app/DESIGN.md` et `app/.impeccable/design.json` dans le même commit que chaque écran.
-- [ ] Scénarios à revoir selon les pistes retenues (plaques : 12, 31, 49 ; quai : 36, 40, 42), série complète avant l'envoi.
-- [ ] Feuille de route, ligne de version de `CLAUDE.md`, envoi sur l'accord d'Alex.
+- [x] G1 et G2 : série complète (47 scénarios, avec le nouveau 50) le 23 octobre au soir. Tout réussi sauf le 31, une seule vérification aux trois largeurs : « la réplique de Fanal au niveau 1, sur la carte et pas dans sa bulle » exigeait la bulle de Fanal cachée, or un bon imprévu de la semaine (la bonne pêche) y parlait encore. Même échec sur `v2.16.1` et sur le commit d'avant G1 et G2 : la date en cause, pas le lot. La vérification lit maintenant le texte de la bulle et contrôle que la réplique du niveau n'y est pas ; le 31 réussit aux trois largeurs (198 contrôles).
+- [ ] Quai (piste B) : scénarios 36, 40, 42 à revoir avec l'écran.
+- [x] G1 et G2 : feuille de route, envoi `v2.17` sur l'accord d'Alex (« Je te donne l'accord pour envoyer les plaques et l'éolienne en production »).
+
+### G5 — Le Fil du jour caché tant qu'on ne l'ouvre pas (demande d'Alex du 23 octobre au soir)
+Alex : le panneau du bas, qui montre la quête prioritaire, gêne la vue, et on accroche parfois le bouton d'ajout sans le vouloir. Il propose qu'il soit caché par défaut et qu'il ne s'ouvre en entier qu'avec le bouton des quêtes.
+- [ ] Plan à écrire après lecture du rabat actuel (scénario 29, ses trois états) et à faire valider.
 
 Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.

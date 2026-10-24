@@ -6,7 +6,7 @@ Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour 
 
 ## Où en est le jeu
 
-La version 2.16.2 est en ligne depuis le 23 octobre 2026. La 2.16, du 15 octobre, a apporté des fiches qu’on lit d’un coup d’œil, avec moins de texte.
+La version 2.17 est en ligne depuis le 23 octobre 2026. La carte y est plus dégagée : les plaques de quartier ne montrent plus que leur picto, et l’éolienne ne cache plus la cabane à sucre. La 2.16, du 15 octobre, a apporté des fiches qu’on lit d’un coup d’œil, avec moins de texte.
 
 ## Fait
 
@@ -37,12 +37,13 @@ La version 2.16.2 est en ligne depuis le 23 octobre 2026. La 2.16, du 15 octobre
 | 2.16 | 15 octobre | Des fiches qu’on lit d’un coup d’œil, avec moins de texte. Monter un quartier montre l’avant et l’après du niveau (« 4 → 5 ») et se termine sur une carte de récompense. Un bâtiment dit d’abord son état, avec des crans pour les jours qui restent. Les permis ont leur propre fiche, en cases. Le catalogue « Construire » a deux onglets et montre l’effet et le prix de chaque bâtiment. Sur la carte, une bulle signale ce qui attend un geste, et une récolte se fait d’un toucher. Avec « L’Orée » dans le dernier texte qui disait « Quêtes du foyer », et quatre textes jamais affichés retirés. |
 | 2.16.1 | 15 octobre | Le poulailler et la cabane à sucre disent qu’ils produisent à ton prochain passage au village (ils parlaient encore de la prochaine quête terminée), la description de la cabane est plus courte, et 99 textes que le jeu n’affichait plus sont retirés. |
 | 2.16.2 | 23 octobre | Les bulles de la carte montrent enfin leur dessin en clair sur le vert, comme prévu : il sortait presque noir. Les flèches au bord de l’écran retrouvent leurs gros chiffres arrondis. |
+| 2.17 | 23 octobre | Une carte plus dégagée. Les plaques de quartier deviennent de petits ronds avec leur seul picto, sur tous les écrans ; leur nom se lit dans la fiche du quartier. L’éolienne passe au coin du fond, côté École, car à son ancienne place elle cachait la cabane à sucre, qu’on avait du mal à toucher. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
 ## En cours ou en attente
 
-- Les retours de jeu d’Alex du 23 octobre sont en cours : des plaques de quartier plus discrètes sur la carte, l’éolienne déplacée pour ne plus cacher l’emplacement de la cabane à sucre, puis un comptoir du marchand en images, inspiré du marché d’Age of Empires.
+- Sur les retours de jeu d’Alex du 23 octobre, les plaques et l’éolienne sont faites (2.17). Viennent ensuite le comptoir du marchand en images, d’après la maquette « l’étal » qu’Alex a choisie (les offres en grille, on touche une offre puis on échange), et le panneau du Fil du jour en bas de l’écran, qu’Alex voudrait voir caché tant qu’on ne l’ouvre pas.
 - L’installation d’une amie : le défaut de l’iPhone a disparu chez elle (elle l’a confirmé le 12 octobre). Reste à savoir si le bouton « Mettre à jour » marche chez son hébergeur : il n’a encore servi chez aucun vrai hébergeur.
 - Le nom du jeu : « L’Orée », gardé pour l’instant. Un nom qui dise mieux le village du Nord reste possible ; la vidéo et la revue d’octobre disent « Quêtes du foyer » (`PRODUCT.md`). Le carton de fin de la vidéo sera refait quand le nom sera arrêté.
 - Une vérification ouverte depuis le 5 octobre : une tâche ajoutée par Hermes doit apparaître dans l’app en 30 secondes au plus.
