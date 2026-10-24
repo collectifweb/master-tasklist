@@ -2108,3 +2108,9 @@ Aujourd'hui (`js/main.js`, `setPanel`) : trois états. Replié (`peek`, l'état 
   - [x] Envoi en `v2.18`, l'étal et le panneau ensemble, accordé par Alex le 24 octobre au matin (« Ok envoie ») : en ligne à 7 h 40 (voir G4).
 
 Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la maquette G3 et, si Alex le veut, une bulle plus marquée.
+
+### Bilan du lot G (24 octobre 2026)
+- Fait : le picto des bulles de la carte en papier (`v2.16.2`, 23 octobre) ; les plaques de quartier en ronds de 44 px à toutes les largeurs et l'éolienne au coin du fond, côté École (`v2.17`, 23 octobre) ; l'étal du marchand et le panneau du Fil du jour caché au lancement, partout (`v2.18`, 24 octobre à 7 h 40) ; en compact, le « Fait » du Fil du jour cache le panneau pour que le fil de lumière se voie sur la carte (`v2.18.1`, 24 octobre à 9 h 14).
+- Mesuré : série complète de 47 scénarios réussie sur le panneau (`5388258`, 3 942 vérifications) et sur l'étal (`b583946`, 3 978 vérifications) ; sur le fil de lumière, 44 sur 47, puis les trois autres réparés et réussis ; tests de logique et de l'API, 674 réussis sur 676, aucun échec ; après les envois 2.18 et 2.18.1, sept fichiers servis comparés à l'étiquette, identiques (cinq pour la 2.17).
+- Changé en route : panneau caché au lancement aussi sur grand écran, sur la recommandation suivie par Alex ; cinq défauts réels trouvés en réparant les scénarios du panneau, corrigés ; le « Fait » du Fil qui cache le panneau, choisi sur la délégation d'Alex (« Choisis, je sais pas le best ») ; trois « : » sans insécable dans des phrases lues, corrigés (`0bc8553`).
+- Reste : rien en attente d'Alex. Le jeu en ligne n'a pas été ouvert dans un navigateur (production lue en GET seulement) : l'étal et le fil de lumière n'ont été vus que sur les essais locaux.

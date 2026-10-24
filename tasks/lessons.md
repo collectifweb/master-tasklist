@@ -29,6 +29,7 @@
 ## Serveur (LiteSpeed)
 
 - **Un `.htaccess` remplacé n'est pas relu instantanément.** Juste après la bascule, l'ancienne API a répondu 405 (donc exécutée) au lieu de 403 ; quelques secondes plus tard, 403 stable. Règle : refaire les contrôles d'accès après une courte pause, plusieurs fois, avant de conclure dans un sens ou dans l'autre.
+- **Les `.md` de `app/` ne partent pas en ligne.** Lot G (24 octobre) : `DESIGN.md`, mis dans la liste des fichiers servis à comparer à l'étiquette, est sorti « différent » ; `deploy-prod.sh` retire les `.md`, `tests/` et `.impeccable` avant l'envoi, l'adresse répond 404. Règle : ne comparer que des fichiers que l'outil d'envoi met en ligne (code, styles, `content/`, `sw.js`, `index.html`).
 - **Un contrôle de mise en ligne ne doit jamais écrire.** Le premier script de bascule envoyait une liste vide à l'adresse de la liste de production pour vérifier qu'elle était bloquée : sans danger si le blocage tient, destructeur sinon. Règle : contrôles en lecture seule (GET), le blocage d'un fichier valant pour toutes les méthodes.
 
 - **Ne jamais réécrire la table des tâches planifiées par un tuyau.** Le 5 octobre, `(crontab -l; echo …) | crontab -` a remplacé les 10 lignes du compte par la seule ligne ajoutée. Restaurée en moins d'une minute grâce à la copie faite juste avant ; d'après les horaires, aucune tâche n'a été manquée. Règle : copier la table dans un fichier, ajouter la ligne au fichier, installer avec `crontab <fichier>`, puis comparer ligne à ligne avec la copie.
