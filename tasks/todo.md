@@ -2114,3 +2114,8 @@ Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la 
 - Mesuré : série complète de 47 scénarios réussie sur le panneau (`5388258`, 3 942 vérifications) et sur l'étal (`b583946`, 3 978 vérifications) ; sur le fil de lumière, 44 sur 47, puis les trois autres réparés et réussis ; tests de logique et de l'API, 674 réussis sur 676, aucun échec ; après les envois 2.18 et 2.18.1, sept fichiers servis comparés à l'étiquette, identiques (cinq pour la 2.17).
 - Changé en route : panneau caché au lancement aussi sur grand écran, sur la recommandation suivie par Alex ; cinq défauts réels trouvés en réparant les scénarios du panneau, corrigés ; le « Fait » du Fil qui cache le panneau, choisi sur la délégation d'Alex (« Choisis, je sais pas le best ») ; trois « : » sans insécable dans des phrases lues, corrigés (`0bc8553`).
 - Reste : rien en attente d'Alex. Le jeu en ligne n'a pas été ouvert dans un navigateur (production lue en GET seulement) : l'étal et le fil de lumière n'ont été vus que sur les essais locaux.
+
+## Notes pour plus tard (28 octobre 2026)
+
+- **Une ronde d'ajustements design**, à organiser (demande d'Alex, 28 octobre au soir), avec /impeccable. Il cite d'abord les routes : certaines sont très mal dessinées, ou mènent dans l'eau. Pas encore regardé.
+- **Deux écarts entre la bible (§9) et le code**, relevés le 28 octobre : la lettre de retour part dès 3 jours d'absence, au plus une fois tous les 14 jours (`openApp`, `core/quests.js`), et non à 5 jours ; les dates de l'objectif d'hiver du joueur très lent (29 janvier contre 18 février) datent d'avant la visite du jour : la simulation (k) du 28 octobre donne le 14 décembre contre le 26 décembre (départ du 1er juillet).
