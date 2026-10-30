@@ -18,16 +18,22 @@ import { joursTravailles, logements, manque } from './batiments.js';
 /** Jours travaillés pour bâtir une étape payée. */
 export const JOURS_PAR_ETAPE = 2;
 
-/** Les ouvrages, dans l'ordre du catalogue. Prix provisoires, à régler par la simulation (s). */
+/**
+ * Les ouvrages, dans l'ordre du catalogue. Prix réglés par la simulation (s) du 29 octobre 2026 (joueur le plus complet
+ * de (J)) : à 250 Énergie et 500 Matériaux l'étape, le joueur à 2 ou 3 quêtes par jour parti le 1er juillet finit le
+ * phare le 14 février et garde 333 Énergie et 351 Matériaux au 1er mars (1 453 et 2 291 sans lui) ; le rapide parti le
+ * 7 octobre, le 27 février (69 et 259) ; le rapide parti le 1er juillet, le 18 novembre, et garde 2 496 et 4 213 pour la
+ * suite (décors, escales). Aucun niveau perdu, aucune partie changée sans Bourg. À 150 et 400 : 673 et 781, 439 et 674.
+ */
 export const OUVRAGES = {
   phare: {
     rang: 'bourg',
     nom: 'le phare',
     etapes: [
-      { id: 'fondation', nom: 'la fondation', cout: { energy: 25, materials: 250 } },
-      { id: 'tour', nom: 'la tour', cout: { energy: 25, materials: 250 } },
-      { id: 'galerie', nom: 'la galerie', cout: { energy: 25, materials: 250 } },
-      { id: 'lanterne', nom: 'la lanterne', cout: { energy: 25, materials: 250 } },
+      { id: 'fondation', nom: 'la fondation', cout: { energy: 250, materials: 500 } },
+      { id: 'tour', nom: 'la tour', cout: { energy: 250, materials: 500 } },
+      { id: 'galerie', nom: 'la galerie', cout: { energy: 250, materials: 500 } },
+      { id: 'lanterne', nom: 'la lanterne', cout: { energy: 250, materials: 500 } },
     ],
   },
 };
