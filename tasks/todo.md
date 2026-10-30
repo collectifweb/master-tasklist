@@ -2152,6 +2152,7 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
   - 150 et 400 : 2 896 et 4 613 ; 673 et 781 ; le rapide parti le 7 octobre, 439 et 674 ;
   - **250 et 500 (retenu, à montrer à Alex)** : 1 000 Énergie et 2 000 Matériaux en tout. Le joueur à 2 ou 3 par jour parti le 1er juillet paie ses étapes aux jours 165, 186, 208 et 227, finit le 14 février et garde 333 et 351 (1 453 et 2 291 sans le phare) ; le rapide parti le 7 octobre finit le 27 février (69 et 259) ; le rapide parti le 1er juillet finit le 18 novembre et garde 2 496 et 4 213 pour la suite. Les autres n'ont pas de quoi le commencer avant le 1er mars.
   Avec le joueur complet, l'Énergie déborde presque autant que les Matériaux (1 453 contre 2 291), d'où une part d'Énergie plus forte que prévu. Le test (s) exige que qui a de quoi payer tout le phare l'ait fini avant le 1er mars.
+  Suite complète de logique et de l'API, simulation comprise, le 29 octobre vers minuit : 684 réussis sur 686, aucun échec (les deux « à faire » connus de (g)).
 
 **O3 — Maquette d'abord, vue par Alex avant le code [impeccable].** L'emplacement du phare : au bord du lac ou dans l'eau, comme le quai, mesuré case par case pour qu'il ne cache rien de touchable (leçon de l'éolienne, lot G). Le dessin des quatre étapes (et du vieux phare si (b)), l'onglet « Grands travaux », la fiche du phare. Captures aux trois largeurs.
 
