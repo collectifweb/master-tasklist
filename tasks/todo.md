@@ -2119,3 +2119,15 @@ Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la 
 
 - **Une ronde d'ajustements design**, à organiser (demande d'Alex, 28 octobre au soir), avec /impeccable. Il cite d'abord les routes : certaines sont très mal dessinées, ou mènent dans l'eau. Pas encore regardé.
 - **Deux écarts entre la bible (§9) et le code**, relevés le 28 octobre : la lettre de retour part dès 3 jours d'absence, au plus une fois tous les 14 jours (`openApp`, `core/quests.js`), et non à 5 jours ; les dates de l'objectif d'hiver du joueur très lent (29 janvier contre 18 février) datent d'avant la visite du jour : la simulation (k) du 28 octobre donne le 14 décembre contre le 26 décembre (départ du 1er juillet).
+
+## Grands travaux — décisions d'Alex (29 octobre 2026), plan à venir
+
+**Le problème, mesuré** (simulations (k) et (l) du 28 octobre, sans marchand) : tout ce qui s'achète a une fin (11 bâtiments en nombre limité ; 17 niveaux de quartier, 33 permis, 2 640 Énergie et 1 980 Matériaux en tout ; 15 habitants au plus, donc le rang Bourg, vide). Départ du 1er juillet, au 1er mars : le joueur à 6 quêtes par jour a ses 17 niveaux pendant 118 des soirs simulés et finit avec 2 292 Énergie et 6 804 Matériaux sans usage ; celui à 2 ou 3 par jour, 65 Énergie et 3 136 Matériaux. Des niveaux 4 et plus n'y suffiraient pas : le joueur rapide manque de permis, pas de ressources.
+
+**Décidé :**
+- Les « Grands travaux » (le nom : « Grand chantier » reste celui de la carte des longues quêtes du Fil du jour, `card.big_project`) : de gros ouvrages payés surtout en Matériaux, par étapes, à son rythme, sans date limite, chaque étape visible sur l'île.
+- Ouverts à tous dès le rang Bourg (11 habitants), quelle que soit l'allure (la bible les réservait au plein régime). Dans la simulation, les deux joueurs lents ne dépassent pas 9 habitants.
+- Un ouvrage fini n'a aucun effet sur le jeu : sa trace sur l'île et un moment de récit (un avantage qui fait gagner plus grossirait les réserves à vider).
+- Premier ouvrage proposé : le phare. Les décors à placer soi-même (bible §5) viennent ensuite, dans un second lot (ordre recommandé, à confirmer).
+
+**Idée d'Alex, à trancher** : un cadeau qui amène une responsabilité, donc plus de dépenses (son exemple : le phare attire des touristes qui mangent de la Nourriture et laissent des Matériaux). Contraintes : la Nourriture ne se dépense que par un geste choisi (bible §3), aucune perte en cas d'absence (§8) ; et ce que le cadeau rend ne doit pas être ce qui déborde déjà (les Matériaux), sinon la boucle remplit le grenier au lieu de le vider.
