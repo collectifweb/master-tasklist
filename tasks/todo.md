@@ -2184,6 +2184,14 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
 
 **O5 — Vérification.** Tests de logique et de l'API ; un scénario navigateur neuf (`ui-51`) : payer une étape, la voir monter, la fiche, au clavier, en mouvement réduit, aux trois largeurs ; les scénarios touchés (catalogue, carte, bulles) ; la série complète avant l'envoi.
 
+- [x] O4 validée par Alex le 30 octobre vers 18 h 05 : « les mots de fanal sont corrects » (les 15 répliques gardées telles quelles).
+- [x] O5a — Scénario 51 (`tests/e2e/ui-51-phare.cjs`), trois parties par largeur, chacune sur une partie neuve :
+  - au toucher : le vieux phare touchable et nommé, sa fiche (« 4 étapes à bâtir », l'avant et l'après, les quatre étapes, le prix en pastilles, la règle repliée, cibles de 44 px), un double toucher qui ne paie qu'une étape, la montée de l'échafaudage (animation `clip-path` relevée), la phrase lue, Fanal, le clavier sur le phare ; la fiche rouverte en chantier, « Bâtir la tour » à plat, son toucher qui redit le chantier sans rien payer ;
+  - au clavier, en mouvement réduit : la quête qui finit la tour (phrase lue, Fanal, l'étape neuve, lanterne éteinte, ni montée ni éclat), la rangée du catalogue (« Prochaine étape : la galerie », 2 crans sur 4), la fiche posée sur le catalogue, Échap qui ne ferme qu'elle, « Bâtir la galerie » : les deux feuilles rangées, le clavier sur « Construire » ;
+  - la fin : la lanterne allumée (vitres et halo) puis éteinte entre 2 et 4,5 secondes plus tard, la phrase lue, Fanal, la fiche « Debout » sans bouton, le phare sorti du catalogue.
+  L'état dessiné du phare se lit en comparant son dessin à chaque état possible (`artFor`). Réussi le 30 octobre vers 18 h 40 : 162 vérifications aux trois largeurs, 1 min 22.
+  - Vu en l'écrivant, au téléphone : le phare est hors de l'écran à l'arrivée (bord gauche du cadrage) ; le moment de la fin va le chercher, puis, si la même quête apporte d'autres gains (bonus, saison, permis), la carte suit ces moments-là et le phare ressort de l'écran. Même règle que tous les moments : chacun cadre son sujet.
+
 **O6 — Documents.** Bible §4 (le Bourg) et §9 (les Grands travaux, ouverts à tous dès le Bourg, sans effet) ; `docs/FEUILLE-DE-ROUTE.md` ; `app/ARCHITECTURE.md`, `app/DESIGN.md` ; la ligne de version du `CLAUDE.md`.
 
 **O7 — Envoi**, sur l'accord d'Alex : étiquette `v2.19`.
