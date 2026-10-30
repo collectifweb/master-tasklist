@@ -448,11 +448,12 @@ function focusQuestList() {
   h.tabIndex = -1;
   h.focus();
 }
-/** Toucher la carte : une caisse ouvre sa quête ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
+/** Toucher la carte : une caisse ouvre sa quête ; le phare, sa fiche ; une plaque, un repère ou Fanal ouvre la fiche du quartier (Fanal : la Place). */
 function onWorldSelect(info) {
   if (!info) return;
   if (info.type === 'bulle') { onBulle(info); return; }
   if (info.type === 'batiment') { openBatimentSheet(info.id); return; }
+  if (info.type === 'ouvrage') { openTravauxSheet(info.id); return; }
   if (info.taskId) { if (findTask(info.taskId)) openFiche(ctx(), info.taskId); return; }
   if (info.sector) openQuartierSheet(info.sector);
 }
@@ -484,7 +485,7 @@ function openQuartierSheet(id) {
   if (store.view) openQuartier(ctx(), id, { open: openSheet });
 }
 
-/** Fiche d'un ouvrage des Grands travaux (catalogue) : ses étapes, en dessins, et la prochaine à bâtir. */
+/** Fiche d'un ouvrage des Grands travaux (carte, catalogue) : ses étapes, en dessins, et la prochaine à bâtir. */
 function openTravauxSheet(id) {
   if (store.view) openTravaux(ctx(), id, { dessin: world ? (oid, v) => world.thumbOuvrage(oid, v) : null, open: openSheet });
 }
@@ -513,7 +514,10 @@ function openPlan() {
 function openConstruire() {
   if (!world || !store.view) return;
   const c = ctx();
-  openCatalogue(c, { slots: () => world.batiments(c.game, c.ledger), thumb: (type) => world.thumbType(type), open: openSheet });
+  openCatalogue(c, {
+    slots: () => world.batiments(c.game, c.ledger), thumb: (type) => world.thumbType(type),
+    thumbOuvrage: (id) => world.thumbOuvrage(id, ['4'])[0], open: openSheet,
+  });
 }
 
 // ───────── Clics ─────────

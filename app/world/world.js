@@ -25,6 +25,7 @@
 //   { type: 'sector', id, sector }                           plaque de quartier (id = sector)
 //   { type: 'landmark', id, sector, model }                  repère fixe (lanterne, établi, clôture, convoi…)
 //   { type: 'batiment', id, sector, model, batiment }        bâtiment ou emplacement (chalet-1, parcelle-2…) ; batiment = son type
+//   { type: 'ouvrage', id, sector, model }                   ouvrage des Grands travaux (lot O : le phare), à tous ses états
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //   { type: 'bulle', id, sector, batiment, bulle, direct }   bulle au-dessus d'un bâtiment (lot L) : bulle = 'recolte' |
 //                                                            'famille' | 'commande' ; direct : la récolte tient entière
@@ -144,12 +145,13 @@ export function entitiesFor(v, tasks = []) {
     if (v.reflets?.has?.(b.id)) e.reluit = true;
     list.push(e);
   }
-  // Grands travaux (lot O) : le vieux phare éteint dès le départ, puis ses étapes ; l'échafaudage pendant qu'on bâtit
+  // Grands travaux (lot O) : le vieux phare éteint dès le départ, puis ses étapes ; l'échafaudage pendant qu'on bâtit.
+  // Touché, il ouvre sa fiche.
   for (const [id, t] of Object.entries(v.travaux || {})) {
     const slot = OUVRAGES_ILE[id];
     if (!slot) continue;
     const lac = slot.lac ? D / 32 : 0;
-    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: false, ouvrage: id, light: null, allume: false });
+    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, ouvrage: id, light: null, allume: false });
   }
   for (const d of decorFor(v.bandes || [])) list.push(d); // la lisière recule avec les bandes gagnées (lot F)
   // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
@@ -1020,6 +1022,7 @@ export function createWorld(container, options = {}) {
   function selectInfo(e) {
     if (e.landmark) return { type: 'landmark', id: e.id, sector: e.sector, model: e.model };
     if (e.batiment) return { type: 'batiment', id: e.id, sector: e.sector, model: e.model, batiment: e.batiment.type };
+    if (e.ouvrage) return { type: 'ouvrage', id: e.id, sector: e.sector, model: e.model };
     return { type: 'object', id: e.id, sector: e.sector, model: e.kind === 'char' ? e.who : e.model, taskId: e.crate?.taskId ?? null };
   }
   function rovingTo(n) {

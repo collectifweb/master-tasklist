@@ -132,8 +132,10 @@ export const EMPLACEMENTS = {
 /**
  * Grands travaux (lot O) : le phare, sur un rocher du lac au coin gauche de l'île, au bout du rivage du quai (lac :
  * dessiné au niveau de l'eau). À gauche du coin, rien de l'île n'est derrière lui : il ne cache rien de touchable.
+ * Touchable, son emprise de 0,8 × 0,8 (et non 1 × 1, même dessin au même endroit) garde sa zone de toucher hors de celle
+ * de la parcelle la plus proche, à 834 px (mesuré le 30 octobre 2026).
  */
-export const OUVRAGES_ILE = { phare: { r: 11.75, c: -0.75, h: 1, w: 1, lac: true, sector: 'place' } };
+export const OUVRAGES_ILE = { phare: { r: 11.85, c: -0.65, h: 0.8, w: 0.8, lac: true, sector: 'place' } };
 
 /**
  * Habitants au travail (lot E, world/habitants.js), en grille [u, v] comme FANAL_HOME. PORTES : où un habitant sort de

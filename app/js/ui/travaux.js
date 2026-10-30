@@ -1,6 +1,6 @@
 // Fiche d'un ouvrage des Grands travaux (lot O) : le phare. Même gabarit que la fiche d'un quartier (quartier.js) : en
-// tête, le picto, le nom et « Grands travaux · 1 étape sur 4 » ; ce que c'est et ce que ça fait (rien : il reste) ; en
-// dessins, l'avant et l'après de la prochaine étape, ou l'étape que les ouvriers bâtissent et ses jours travaillés en
+// tête, le picto, le nom et « 1 étape sur 4 » ; ce que c'est (rien sur ce qu'il rapporte : il est là pour rester,
+// décision d'Alex) ; en dessins, l'avant et l'après de la prochaine étape, ou l'étape que les ouvriers bâtissent et ses jours travaillés en
 // crans ; les quatre étapes nommées, cochées une fois finies ; le prix en pastilles ; la règle dans le repli ; puis
 // « Bâtir la tour ». Un geste impossible reste visible, à plat, avec un cadenas et la raison écrite par le cœur
 // (refusTravaux) ; quand elle ne dit que ce qui manque, les pastilles la montrent et elle n'est plus que lue.
@@ -26,9 +26,8 @@ export function travauxModel({ game, ledger, now }, id) {
   return {
     id, def, etat: e,
     nom: t(`travaux.${id}.nom`),
-    ligne: e.fini ? t('travaux.fiche.ligne.fini') : e.finies ? tn('travaux.fiche.ligne', e.finies, { total: e.total }) : t('travaux.fiche.ligne.zero'),
+    ligne: e.fini ? t('travaux.fiche.ligne.fini') : e.finies ? tn('travaux.fiche.ligne', e.finies, { total: e.total }) : t('travaux.fiche.ligne.zero', { total: e.total }),
     quoi: t(e.fini ? `travaux.${id}.quoi.debout` : e.payees ? `travaux.${id}.quoi.chantier` : `travaux.${id}.quoi`),
-    fait: t(e.fini ? `travaux.${id}.fait.debout` : `travaux.${id}.fait`),
     etapes: def.etapes.map((x, i) => ({ id: x.id, nom: t(`travaux.${id}.etape.${x.id}`), fini: i < e.finies, enCours: e.enCours?.etape === i + 1 })),
     // l'avant et l'après : maintenant, puis l'étape suivante finie ; pendant les travaux, le chantier seul
     avant: varianteDe(e),
@@ -78,7 +77,7 @@ function bodyHtml(m, dessin) {
   const raison = !m.raison || m.enCours ? '' : m.manque ? `<p class="sr-only" id="trv-raison">${esc(m.raison)}</p>`
     : `<p class="bat-raison" id="trv-raison">${icon('lock')}<span>${esc(m.raison)}</span></p>`;
   const repli = `<details class="repli"><summary>${esc(t('travaux.fiche.repli'))}${icon('chevron-down')}</summary><p>${esc(m.regle)}</p></details>`;
-  return `<p class="trv-quoi">${esc(m.quoi)} <span class="trv-fait">${esc(m.fait)}</span></p>
+  return `<p class="trv-quoi">${esc(m.quoi)}</p>
     ${scene(m, dessin)}<p class="sr-only" id="trv-now">${esc(maintenantText(m))}</p>
     ${etapesHtml(m)}
     ${m.geste ? `${prixRangHtml(m.pastilles)}<p class="sr-only" id="trv-prix">${esc(m.prixSr)}</p>` : ''}${raison}${repli}`;

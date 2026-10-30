@@ -1056,7 +1056,7 @@
 }
 .cat-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   border-radius: calc(var(--r-md) + 2px);
@@ -1064,8 +1064,7 @@
 }
 .cat-tab {
   min-height: var(--target);
-  padding: 4px var(--sp-1);
-  line-height: 1.15;
+  padding: 0 var(--sp-2);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -1127,7 +1126,8 @@
 .cat-row[data-etat="verrou"] .cat-thumb,
 .cat-qrt[data-etat="verrou"] .cat-thumb,
 .cat-trv[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
-.cat-row[data-etat="verrou"] .cat-thumb svg { filter: grayscale(1); opacity: 0.6; }
+.cat-row[data-etat="verrou"] .cat-thumb svg,
+.cat-trv[data-etat="verrou"] .cat-thumb svg { filter: grayscale(1); opacity: 0.6; }
 .cat-text {
   flex: 1 1 9rem;
   min-width: 0;
@@ -1191,10 +1191,12 @@
 /* le chevron reste au milieu de la rangée, même quand le prix passe sous le texte */
 .cat-qrt-go,
 .cat-trv-go { position: relative; padding-right: 32px; }
-/* Grands travaux (lot O) : les quatre étapes en crans sauge, puis la prochaine ; pendant les travaux, le chantier */
+/* le phare (lot O), parmi les bâtiments : ses quatre étapes en crans sauge, puis la prochaine ; pendant les travaux, le
+   chantier */
 .cat-trv-etapes { font-family: var(--font-ui); font-size: var(--text-14); }
 .cat-trv-etapes .crans--mini { height: auto; margin-right: 4px; }
 .cat-trv-etapes .crans--mini > span { width: 14px; height: 8px; border-width: 1px; }
+.cat-trv-etapes .crans--mini > span[data-encours] { border-color: var(--c-sage); border-style: dashed; background: var(--c-sage-wash); }
 .cat-trv[data-etat="chantier"] .cat-etat .icon { color: var(--c-sage-deep); }
 .cat-qrt-chev {
   position: absolute;
@@ -1281,11 +1283,9 @@
 .qrt-legende--sens { justify-self: end; font-weight: var(--w-bold); color: var(--c-sage-deep); }
 .qrt-note { margin: 0; font-size: var(--text-14); color: var(--text-soft); }
 
-/* Fiche d'un ouvrage des Grands travaux (lot O) : ce que c'est, puis l'avant et l'après de la prochaine étape en
-   dessins, à la même échelle, sur l'eau du lac ; pendant les travaux, le chantier et ses jours en crans. Les quatre
-   étapes nommées dessous, cochées une fois finies. */
+/* Fiche du phare (lot O) : ce que c'est, puis l'avant et l'après de la prochaine étape en dessins, à la même échelle ;
+   pendant les travaux, le chantier et ses jours en crans. Les quatre étapes nommées dessous, cochées une fois finies. */
 .trv-quoi { margin: 0; color: var(--text-soft); }
-.trv-fait { font-weight: var(--w-semibold); color: var(--text); }
 .trv-scene {
   display: flex;
   align-items: flex-end;

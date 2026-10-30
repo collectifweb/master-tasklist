@@ -9,9 +9,10 @@
 // (main.js) ; la phrase lue de chaque rangée est la règle « Ce que ça fait » de la fiche, puis le prix.
 // Quartiers : une rangée par quartier, « 4 → 5 par récolte » (la ligne comparative de la fiche, en petit) et le prix du
 // niveau suivant en pastilles ; toute la rangée ouvre la fiche du quartier par-dessus le catalogue (data-action="qrt-ouvrir").
-// Grands travaux (lot O) : une rangée par ouvrage (le phare), ses quatre étapes en crans et la prochaine, son prix en
-// pastilles ; verrouillée avant le Bourg, ou pendant que les ouvriers bâtissent (avec les jours qui restent). Toute la
-// rangée ouvre la fiche de l'ouvrage (data-action="trv-ouvrir", js/ui/travaux.js).
+// Le phare (lot O) est un bâtiment comme les autres pour Alex : sa rangée suit les bâtiments, avec son dessin debout, ses
+// quatre étapes en crans et la prochaine, son prix en pastilles ; verrouillée avant le Bourg, ou pendant que les ouvriers
+// bâtissent (avec les jours qui restent). Il se paie par étapes : la rangée ouvre sa fiche (data-action="trv-ouvrir",
+// js/ui/travaux.js), d'où le chevron. Debout, il n'y figure plus.
 // La feuille est construite une fois, puis mise à jour sur place : le focus ne saute pas pendant une synchronisation.
 // Elle s'ouvre toujours sur « Bâtiments ».
 import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, EFFETS_QUARTIERS, niveauDe, niveauMax, coutNiveau, refusMonter,
@@ -93,11 +94,11 @@ const quartierRow = (q) => `<li class="cat-qrt" data-quartier="${q}">
       </button>
     </li>`;
 
-// Une rangée par ouvrage des Grands travaux : toute la rangée est un bouton qui ouvre sa fiche.
-const travauxRow = (id) => `<li class="cat-trv" data-ouvrage="${id}">
+// Une rangée par ouvrage (le phare), sous les bâtiments : toute la rangée est un bouton qui ouvre sa fiche.
+const travauxRow = (thumb) => (id) => `<li class="cat-trv" data-ouvrage="${id}">
       <button class="cat-btn cat-trv-go" type="button" data-action="trv-ouvrir" data-ouvrage="${id}"
         aria-describedby="cat-t-${id}-etat cat-t-${id}-sr">
-        <span class="cat-thumb cat-qrt-picto" aria-hidden="true">${icon(id)}</span>
+        <span class="cat-thumb" aria-hidden="true">${(thumb && thumb(id)) || icon(id)}</span>
         <span class="cat-text">
           <span class="cat-nom"></span>
           <span class="cat-effet cat-trv-etapes" aria-hidden="true"></span>
@@ -109,7 +110,7 @@ const travauxRow = (id) => `<li class="cat-trv" data-ouvrage="${id}">
       </button>
     </li>`;
 
-function build(dlg, thumb) {
+function build(dlg, thumb, thumbOuvrage) {
   const tab = (id, panel, label, on) => `<button class="cat-tab" type="button" role="tab" id="${id}" aria-controls="${panel}"
       aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(label)}</button>`;
   dlg.innerHTML = `
@@ -117,18 +118,14 @@ function build(dlg, thumb) {
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('bat.catalogue.fermer'))}">${icon('x')}</button></header>
     <div class="sheet-body cat-body">
       <div class="cat-tabs" role="tablist" aria-label="${esc(t('bat.catalogue.onglets'))}">
-        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}${
-  tab('cat-trvx-t', 'cat-trvx', t('travaux.catalogue.section'), false)}
+        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}
       </div>
       <section class="cat-panel" role="tabpanel" id="cat-bats" aria-labelledby="cat-bats-t">
-        <ul class="cat-list" role="list">${BATIMENT_IDS.map(row(thumb)).join('')}</ul>
+        <ul class="cat-list" role="list">${BATIMENT_IDS.map(row(thumb)).join('')}${OUVRAGE_IDS.map(travauxRow(thumbOuvrage)).join('')}</ul>
         <p class="cat-vide" hidden>${esc(t('bat.catalogue.vide'))}</p>
       </section>
       <section class="cat-panel" role="tabpanel" id="cat-qrts" aria-labelledby="cat-qrts-t" hidden>
         <ul class="cat-list" role="list">${QUARTIER_IDS.map(quartierRow).join('')}</ul>
-      </section>
-      <section class="cat-panel" role="tabpanel" id="cat-trvx" aria-labelledby="cat-trvx-t" hidden>
-        <ul class="cat-list" role="list">${OUVRAGE_IDS.map(travauxRow).join('')}</ul>
       </section>
     </div>`;
   dlg.addEventListener('click', (e) => {
@@ -151,7 +148,7 @@ function build(dlg, thumb) {
   dlg.dataset.built = '1';
 }
 
-/** Affiche l'onglet `id` (cat-bats-t, cat-qrts-t ou cat-trvx-t) et son panneau. */
+/** Affiche l'onglet `id` (cat-bats-t ou cat-qrts-t) et son panneau. */
 function choisir(dlg, id) {
   for (const b of $$('.cat-tab', dlg)) {
     const on = b.id === id;
@@ -190,7 +187,6 @@ function fill(dlg, list) {
     setAttr(b, 'aria-disabled', off ? 'true' : null);
     setAttr(b, 'aria-label', t('bat.catalogue.geste.label', { geste: r.geste, nom: r.nom }));
   }
-  $('.cat-vide', dlg).hidden = list.some((r) => !r.complet);
 }
 
 function fillQuartiers(dlg, c) {
@@ -229,11 +225,14 @@ function fillTravaux(dlg, c) {
     const li = $(`.cat-trv[data-ouvrage="${id}"]`, dlg);
     const m = travauxModel(c, id);
     const e = m.etat;
-    li.dataset.etat = e.fini ? 'max' : m.enCours ? 'chantier' : !m.raison ? 'libre' : m.manque ? 'manque' : 'verrou';
+    li.hidden = e.fini;
+    if (e.fini) continue;
+    li.dataset.etat = m.enCours ? 'chantier' : !m.raison ? 'libre' : m.manque ? 'manque' : 'verrou';
     setText($('.cat-nom', li), m.nom);
     setAttr($('.cat-trv-go', li), 'aria-label', m.nom);
-    const crans = `<span class="crans crans--mini">${m.etapes.map((x) => `<span${x.fini ? ' data-plein' : ''}></span>`).join('')}</span>`;
-    const suite = e.fini ? t('travaux.catalogue.debout') : m.enCours ? m.enCours.titre : t('travaux.catalogue.prochaine', { etape: m.def.etapes[e.payees].nom });
+    const crans = `<span class="crans crans--mini">${m.etapes.map((x) => `<span${x.fini ? ' data-plein' : x.enCours ? ' data-encours' : ''}></span>`).join('')}</span>`;
+    const suite = m.enCours ? m.enCours.titre : e.payees ? t('travaux.catalogue.prochaine', { etape: m.def.etapes[e.payees].nom })
+      : t('travaux.catalogue.etapes', { total: e.total });
     setHtml($('.cat-trv-etapes', li), `${crans}<span>${esc(suite)}</span>`);
     const el = $('.cat-etat', li);
     if (m.enCours) {
@@ -246,17 +245,23 @@ function fillTravaux(dlg, c) {
   }
 }
 
-/**
- * Ouvre le catalogue, sur l'onglet « Bâtiments ». slots() : emplacements de batimentsView ; thumb(type) : dessin SVG
- * d'un type debout (facultatif) ; open(dlg) : ouverture de la feuille (sheets.js).
- */
-export function openCatalogue(c, { slots, thumb, open }) {
-  const dlg = $('#dlg-construire');
-  if (!dlg.dataset.built) build(dlg, thumb);
-  choisir(dlg, 'cat-bats-t');
+function remplir(dlg, c, slots) {
   fill(dlg, rows(c, slots()));
   fillQuartiers(dlg, c);
   fillTravaux(dlg, c);
+  $('.cat-vide', dlg).hidden = !!$('#cat-bats .cat-list > li:not([hidden])', dlg);
+}
+
+/**
+ * Ouvre le catalogue, sur l'onglet « Bâtiments ». slots() : emplacements de batimentsView ; thumb(type) : dessin SVG
+ * d'un type debout (facultatif) ; thumbOuvrage(id) : celui d'un ouvrage debout (facultatif, sinon son picto) ;
+ * open(dlg) : ouverture de la feuille (sheets.js).
+ */
+export function openCatalogue(c, { slots, thumb, thumbOuvrage, open }) {
+  const dlg = $('#dlg-construire');
+  if (!dlg.dataset.built) build(dlg, thumb, thumbOuvrage);
+  choisir(dlg, 'cat-bats-t');
+  remplir(dlg, c, slots);
   open(dlg);
 }
 
@@ -264,7 +269,5 @@ export function openCatalogue(c, { slots, thumb, open }) {
 export function refreshCatalogue(c, { slots }) {
   const dlg = $('#dlg-construire');
   if (!dlg || !dlg.open || !dlg.dataset.built) return;
-  fill(dlg, rows(c, slots()));
-  fillQuartiers(dlg, c);
-  fillTravaux(dlg, c);
+  remplir(dlg, c, slots);
 }

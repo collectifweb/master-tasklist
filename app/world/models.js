@@ -920,7 +920,7 @@ function fut(a, cu, cv, R0, R1, z, h, m, { n = 8, hs = null, top = true } = {}) 
 
 // Les hauteurs du phare (px au-dessus de l'eau) : rocher, socle, tour, galerie, lanterne, dôme.
 const PH = { roc: 5, socle: 15, tour: 112, galerie: 115, lampe: 127, dome: 136 };
-const PC = 0.5; // centre de l'emprise
+const PC = 0.4; // centre de l'emprise (0,8 × 0,8 : world/layout.js, OUVRAGES_ILE)
 
 // Échafaudage autour du phare jusqu'à la hauteur zt : quatre perches, des lisses tous les 16 px, une écharpe par face de
 // devant. fond : les perches et lisses de derrière (avant le phare) ; sinon celles de devant (après).
