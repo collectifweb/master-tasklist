@@ -14,6 +14,9 @@ L.runScenario('1. premier chargement', async ({ R, srv, newPage, core, size, sho
   const coteShown = (await page.textContent('#fil-quest .cote-value')).trim();
   R.check('la Cote affichée est celle du cœur', coteShown === String(core.cote(cards.first, new Date())), coteShown);
   R.check('Fil du jour rendu rapidement (< 2 s)', elapsed < 2000, elapsed + ' ms');
+  // l'île (et sa colonne « Construire », « Quêtes », « Vue ») s'installe après le Fil : environ 240 ms plus tard, mesuré le
+  // 30 octobre 2026 avec chrome-headless-shell 151
+  await page.waitForSelector('[data-ow="quetes"]', { state: 'attached', timeout: 5000 });
   R.check('au lancement, le panneau est caché et « Quêtes » le dit fermé', await page.evaluate(() => document.getElementById('app').dataset.panel === 'cache'
     && document.querySelector('[data-ow="quetes"]').getAttribute('aria-expanded') === 'false'));
   await L.openPanel(page);
