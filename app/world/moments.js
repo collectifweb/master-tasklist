@@ -7,6 +7,7 @@
 //   l'objet-reflet reluit (reflet)                          tout est enregistré, les lanternes s'allument (veille)
 //   la forêt recule : un rang gagne une bande de terrain (rang, lot F)
 //   la récolte d'une bulle s'envole vers son compteur (cueillette, lot L)
+//   une étape du phare payée ou finie, sa lanterne allumée le temps du moment de la fin (travaux-etape-*, lot O)
 import { P, f } from './iso.js';
 import { SECTOR_CENTER, BANDES_ILE, EMPLACEMENTS, decorFor } from './layout.js';
 import { quartierOfTask } from '../core/domains.js';
@@ -264,9 +265,74 @@ function bandeStep(ctx) {
   return { apply, run, text: () => '' };
 }
 
+// ----------------------------------------------------------------------------- Grands travaux (lot O)
+/**
+ * Une étape d'un ouvrage payée (travaux-etape-payee : l'échafaudage monte du rocher) ou finie (travaux-etape-finie : il
+ * part, l'étape neuve brille). La carte cadre l'ouvrage de près, le temps que la fiche se range. Le phare debout (fini) :
+ * sa lanterne s'allume le temps du moment, vitres et halo, puis s'éteint ; l'allumer sera un geste (étape 3 des Grands
+ * travaux). En mouvement réduit, un fondu court, et la lanterne s'allume et s'éteint sans animation. L'interface dit la
+ * phrase et Fanal la réplique ; le monde dessine.
+ */
+function travauxStep(ctx, ev) {
+  const id = ev.ouvrage;
+  const sync = (allume) => {
+    const t = ctx.target.travaux?.[id];
+    if (t) ctx.shown.travaux = { ...ctx.shown.travaux, [id]: allume ? { ...t, allume: true } : t };
+    ctx.apply({ enter: false });
+  };
+  const apply = () => sync(false);
+  const art = () => ctx.scene.get(id)?.el.querySelector('.ow-art');
+  const lanterne = async () => {
+    sync(true);
+    const n = ctx.scene.get(id);
+    const a = n?.art.anchors.light;
+    if (!n?.halo || !a) return;
+    const [x, y] = [n.X + a[0], n.Y + a[1]];
+    if (ctx.reduced) {
+      await ctx.fx.anim(n.halo, [{ opacity: 0 }, { opacity: 1 }], { duration: 150, fill: 'forwards' }).finished.catch(() => {});
+      await ctx.fx.wait(1600);
+    } else {
+      ctx.fx.anim(n.halo, [{ opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1.2, offset: 0.55 }, { opacity: 1, scale: 1 }], { duration: 900, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+      const lit = art();
+      if (lit) ctx.fx.anim(lit, [{ filter: 'brightness(1)' }, { filter: 'brightness(1.3)', offset: 0.3 }, { filter: 'brightness(1)' }], { duration: 900, easing: 'ease-out' });
+      ctx.fx.twinkle([[x - 16, y - 4], [x + 14, y - 12], [x + 2, y - 26]]);
+      await ctx.fx.wait(2400);
+    }
+    // la lanterne s'éteint : le halo part, la scène retire la lumière
+    if (n.halo) await ctx.fx.anim(n.halo, [{ opacity: 1 }, { opacity: 0 }], { duration: ctx.reduced ? 150 : 700, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
+    sync(false);
+  };
+  const run = async () => {
+    const n = ctx.scene.get(id);
+    if (!n || !ctx.target.travaux?.[id]) { apply(); return; }
+    const [x, y] = ctx.scene.pointOf(id, 0.5);
+    ctx.rapprocher(x, y);
+    if (!ctx.reduced) await ctx.fx.wait(420);
+    apply();
+    const el = art();
+    const [bx, by] = ctx.scene.pointOf(id, 0);
+    if (ctx.reduced) await fade(ctx, el, 0.35, 1);
+    else if (ev.type === 'travaux-etape-payee') {
+      // l'échafaudage monte du rocher
+      if (el) ctx.fx.anim(el, [{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 760, easing: 'cubic-bezier(.16,1,.3,1)' });
+      ctx.fx.ring(bx, by, 30, { dur: 760 });
+      await ctx.fx.wait(800);
+    } else {
+      // l'échafaudage est parti : l'étape neuve brille, des éclats au sommet
+      if (el) ctx.fx.anim(el, [{ filter: 'brightness(1.45)' }, { filter: 'brightness(1)' }], { duration: 900, easing: 'ease-out' });
+      const [tx, ty] = ctx.scene.pointOf(id, 0.95);
+      ctx.fx.ring(bx, by, 34, { dur: 800 });
+      ctx.fx.twinkle([[tx - 12, ty + 6], [tx + 10, ty + 14], [tx - 2, ty + 26]]);
+      await ctx.fx.wait(ev.fini ? 520 : 820);
+    }
+    if (ev.type === 'travaux-etape-finie' && ev.fini) await lanterne();
+  };
+  return { apply, run, text: () => '' };
+}
+
 // ----------------------------------------------------------------------------- chef d'orchestre
 /** Les événements que le monde joue (les autres sont ignorés). */
-export const MOMENTS = new Set(['reward', 'quartier-monte', 'reflet', 'veille', 'etape', 'rang', 'cueillette']);
+export const MOMENTS = new Set(['reward', 'quartier-monte', 'reflet', 'veille', 'etape', 'rang', 'cueillette', 'travaux-etape-payee', 'travaux-etape-finie']);
 function stepsFor(ctx, ev) {
   switch (ev.type) {
     case 'reward': return [rewardStep(ctx, ev)];
@@ -276,6 +342,7 @@ function stepsFor(ctx, ev) {
     case 'etape': return [etapeStep(ctx, ev)];
     case 'rang': return [bandeStep(ctx)];
     case 'cueillette': return [cueilletteStep(ctx, ev)];
+    case 'travaux-etape-payee': case 'travaux-etape-finie': return [travauxStep(ctx, ev)];
     default: return [];
   }
 }

@@ -351,6 +351,39 @@
         {"id": "saison.sucres.05", "voix": "fanal", "texte": "La tire fige sur la neige. Tout le monde en redemande."}
       ]
     },
+    "phare.lance": {
+      "quand": "Une étape du phare est payée (geste « Bâtir » de sa fiche) : l’échafaudage monte, les ouvriers s’y mettent. Lot O. Ni prix ni nombre de jours : ils sont dans la phrase lue et la fiche.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "phare.lance.01", "voix": "fanal", "texte": "Échafaudage monté. Les ouvriers ont apporté leur dîner et leurs outils."},
+        {"id": "phare.lance.02", "voix": "fanal", "texte": "Le rocher a de la visite. Les ouvriers bâtissent les jours où tu travailles."},
+        {"id": "phare.lance.03", "voix": "fanal", "texte": "J’ai compté les planches deux fois. Le chantier du phare peut commencer."},
+        {"id": "phare.lance.04", "voix": "fanal", "texte": "Des pierres, des planches, des ouvriers. Le phare se relève, un morceau à la fois."},
+        {"id": "phare.lance.05", "voix": "fanal", "texte": "Chantier ouvert au bout du rivage. Je surveille. C’est ma grande spécialité."}
+      ]
+    },
+    "phare.etape": {
+      "quand": "Une étape du phare est finie, avec la quête payée qui la termine. Passe avant toute autre réplique du geste. Lot O.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "phare.etape.01", "voix": "fanal", "texte": "Une étape de finie au phare. Les ouvriers ont descendu l’échafaudage en chantant."},
+        {"id": "phare.etape.02", "voix": "fanal", "texte": "Le phare a pris du galon. On le voit mieux du rivage."},
+        {"id": "phare.etape.03", "voix": "fanal", "texte": "Les ouvriers ont fini leur étape. Le phare monte, pierre après pierre."},
+        {"id": "phare.etape.04", "voix": "fanal", "texte": "Une étape de plus au phare. Les goélands ont déjà leurs habitudes."},
+        {"id": "phare.etape.05", "voix": "fanal", "texte": "Le chantier avance. De la Place, on voit le phare grandir."}
+      ]
+    },
+    "phare.debout": {
+      "quand": "La dernière étape du phare est finie, avec la quête payée qui la termine : il est debout. Sa lanterne s’allume le temps du moment, puis s’éteint (l’allumer sera un geste, plus tard). Passe avant toute autre réplique du geste. Lot O. Aucun effet de jeu : n’en promettre aucun.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "phare.debout.01", "voix": "fanal", "texte": "Le phare est debout. On l’a allumé une fois, pour voir. Ça se voit de loin."},
+        {"id": "phare.debout.02", "voix": "fanal", "texte": "Debout, le phare. Sa lanterne a brillé un moment, on la garde pour une grande occasion."},
+        {"id": "phare.debout.03", "voix": "fanal", "texte": "Le phare est relevé. La lisière a son repère, et moi, un collègue plus grand."},
+        {"id": "phare.debout.04", "voix": "fanal", "texte": "Le vieux phare tient debout. On l’a allumé pour l’essayer : il a de bons yeux."},
+        {"id": "phare.debout.05", "voix": "fanal", "texte": "Fini, le phare. Les ouvriers ont applaudi, puis ils ont éteint pour ne rien gaspiller."}
+      ]
+    },
     "allure.ralentit": {
       "quand": "La semaine où l’allure du village descend d’un cran (plein régime vers régulier, ou régulier vers au ralenti) : dit une fois par appareil, à la première ouverture de la semaine, après l’accueil, la lettre et le bilan. Lot A. Aucun reproche, aucun chiffre, aucune promesse sur les imprévus.",
       "frequence": 1,

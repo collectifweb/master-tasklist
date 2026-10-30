@@ -1,7 +1,7 @@
 // Point d'entrée : branche l'état (store.js) sur l'écran (ui/*.js) et sur le monde (world-bridge.js).
 import {
   SORTS, gameDay, daysBetween, topCards, queteDefaut, visiteurDeLaSemaine, batimentsDuVillage, IMPREVUS, DEGATS, TEMPETE, alerteTempete,
-  findEntry, allureDe, commandeDeLaSemaine, BANDES,
+  findEntry, allureDe, commandeDeLaSemaine, BANDES, OUVRAGES, JOURS_PAR_ETAPE,
 } from '../core/index.js';
 import { Store, POLL_MS } from './store.js';
 import { token } from './api-client.js';
@@ -185,13 +185,17 @@ function react(payload) {
 // gestes du village dont le gain se dit avec leur phrase (réparer : l'éolienne réparée en payant tourne aussitôt)
 const BAT_ACTIONS = ['construire', 'semer', 'recolter', 'accueillir', 'monterQuartier', 'echanger', 'livrer', 'servirRepas', 'faireLesSucres', 'reparer'];
 
-/** Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine tenue. */
+/**
+ * Phrase lue quand un objectif est atteint : un premier pas (et le dernier des cinq), l'objectif de la saison, la semaine
+ * tenue, une étape du phare finie par la quête payée (lot O).
+ */
 function objectifsSay(events) {
   const out = [];
   for (const e of events) {
     if (e.type === 'premier-pas') out.push(t('sr.pas', { nom: t(`pas.${e.id}.nom`) }));
     else if (e.type === 'objectif-saison') out.push(t(`sr.saison.${e.objectif}`));
     else if (e.type === 'semaine-tenue') out.push(t('sr.semaine', { n: numGain(e.materials) }));
+    else if (e.type === 'travaux-etape-finie') out.push(t(`travaux.${e.ouvrage}.sr.${e.fini ? 'debout' : 'finie'}`, { etape: OUVRAGES[e.ouvrage].etapes[e.etape - 1].nom }));
   }
   if (events.some((e) => e.type === 'premier-pas' && e.id === 'famille')) out.push(t('sr.pas.fin'));
   return out.join(' ');
@@ -200,7 +204,8 @@ function objectifsSay(events) {
 /**
  * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang (et sa bande de
  * terrain), quartier monté,
- * échange au comptoir du marchand, commande livrée au visiteur de la semaine, repas servi, partie de sucre faite (lot N).
+ * échange au comptoir du marchand, commande livrée au visiteur de la semaine, repas servi, partie de sucre faite (lot N),
+ * étape du phare lancée (lot O).
  */
 function batimentSay(events) {
   const out = [];
@@ -218,6 +223,7 @@ function batimentSay(events) {
     else if (e.type === 'repas') out.push(t('bat.sr.repas', { donne: ressourcesText(e.donne), recoit: ressourcesText(e.recoit) }));
     else if (e.type === 'sucres') out.push(t('bat.sr.sucres', { n: numGain(e.nourriture) }));
     else if (e.type === 'reparation' && e.par === 'paiement') out.push(t(`bat.sr.reparation.${e.imprevu}`, { cout: coutText(e.cout) }));
+    else if (e.type === 'travaux-etape-payee') out.push(tn(`travaux.${e.ouvrage}.sr.lancee`, JOURS_PAR_ETAPE, { etape: OUVRAGES[e.ouvrage].etapes[e.etape - 1].nom, cout: coutText(e.cout) }));
   }
   return out.join(' ');
 }
@@ -707,7 +713,14 @@ document.addEventListener('click', (e) => {
       if (spendBlocked(e, target, action)) return;
       if (disabled(target)) return announce.say(($('#trv-raison') || $('#trv-now') || target).textContent.trim());
       markSpent(action, target);
-      return run('payerEtape', { ouvrage: target.dataset.ouvrage, etape: Number(target.dataset.etape) });
+      const r = run('payerEtape', { ouvrage: target.dataset.ouvrage, etape: Number(target.dataset.etape) });
+      // comme un niveau acheté (lot L) : les feuilles se rangent, de la plus haute à la plus basse, et l'échafaudage monte
+      // sur la carte, visible
+      if (r && r.events.some((x) => x.type === 'travaux-etape-payee')) {
+        range = Date.now();
+        for (const d of $$('dialog.sheet[open]').sort((a, b) => (b._z || 0) - (a._z || 0))) closeSheet(d);
+      }
+      return r;
     }
     case 'qrt-monter': {
       if (spendBlocked(e, target, action)) return;

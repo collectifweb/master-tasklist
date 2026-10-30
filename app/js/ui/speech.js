@@ -16,6 +16,9 @@ export function situationFor(action, params, events, task) {
   };
   const doneFlow = () => {
     if (has('sans-gain')) return null;
+    // une étape du phare finie par la quête (lot O) : la plus rare, elle passe avant tout le reste ; le phare debout a la sienne
+    const trv = events.find((e) => e.type === 'travaux-etape-finie');
+    if (trv) return `${trv.ouvrage}.${trv.fini ? 'debout' : 'etape'}`;
     if (events.some((e) => e.type === 'permis' && e.source === 'jours')) return 'permis.gagne';
     if (has('semaine-tenue')) return 'semaine.tenue';
     if (has('reparation')) return regle(); // la quête règle aussi un dégât de son domaine (lot I)
@@ -46,6 +49,11 @@ export function situationFor(action, params, events, task) {
     // le repas de la semaine et la partie de sucre, qui fait l'objectif du printemps (lot N)
     case 'servirRepas': return has('repas') ? 'repas.servi' : null;
     case 'faireLesSucres': return has('sucres') ? 'saison.sucres' : null;
+    // une étape du phare payée : le chantier s'ouvre (lot O)
+    case 'payerEtape': {
+      const e = events.find((x) => x.type === 'travaux-etape-payee');
+      return e ? `${e.ouvrage}.lance` : null;
+    }
     default: return null;
   }
 }

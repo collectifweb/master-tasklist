@@ -3,6 +3,7 @@
 // Fini, il n'a aucun effet de jeu. Titres fictifs génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   completeQuest, remballerQuest, payerEtape, refusTravaux, etatOuvrage, OUVRAGES, JOURS_PAR_ETAPE, RANGS, addDays,
 } from '../../core/index.js';
@@ -131,4 +132,47 @@ test('une partie abîmée (travaux illisibles) : rien de commencé, on peut paye
     assert.equal(e.payees, 0, JSON.stringify(abime));
     assert.equal(refusTravaux(w.game, w.ledger, { ouvrage: 'phare' }, at(JOUR)), null);
   }
+});
+
+// ---- O4 : la réplique de Fanal et la phrase lue (js/ui/speech.js, content/fr-CA/)
+const lire = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
+const rep = lire('../../content/fr-CA/repliques.json');
+const ui = lire('../../content/fr-CA/interface.json');
+
+test('réplique : l’étape payée, l’étape finie et le phare debout ont chacun la leur, avant le permis et la semaine tenue', async () => {
+  globalThis.document ??= { baseURI: 'http://localhost/' }; // content.js lit l'adresse de la page à l'import
+  const { situationFor } = await import('../../js/ui/speech.js');
+  const paye = { type: 'travaux-etape-payee', ouvrage: 'phare', etape: 1, cout: PHARE.etapes[0].cout };
+  const finie = (etape) => ({ type: 'travaux-etape-finie', ouvrage: 'phare', etape, fini: etape === 4 });
+  const quete = { type: 'reward', source: 'quete', taskId: 'q0' };
+  const autres = [{ type: 'permis', source: 'jours', dispo: 1 }, { type: 'semaine-tenue', materials: 12 }];
+  assert.equal(situationFor('payerEtape', {}, [paye]), 'phare.lance');
+  assert.equal(situationFor('payerEtape', {}, []), null);
+  assert.equal(situationFor('completeQuest', {}, [quete, ...autres, finie(2)], task({ id: 'q0' })), 'phare.etape');
+  assert.equal(situationFor('completeQuest', {}, [quete, ...autres, finie(4)], task({ id: 'q0' })), 'phare.debout');
+  assert.equal(situationFor('createQuest', { alreadyDone: true }, [quete, finie(1)], task({ id: 'q0' })), 'phare.etape');
+  assert.equal(situationFor('completeQuest', {}, [quete, ...autres], task({ id: 'q0' })), 'permis.gagne');
+});
+
+test('répliques du phare : 5 variantes de Fanal chacune, 20 mots au plus, sans chiffre ni gabarit', () => {
+  for (const k of ['phare.lance', 'phare.etape', 'phare.debout']) {
+    const sit = rep.situations[k];
+    assert.equal(sit.frequence, 1, k);
+    assert.equal(sit.variantes.length, 5, k);
+    for (const v of sit.variantes) {
+      assert.ok(v.id.startsWith(`${k}.`) && v.voix === 'fanal', v.id);
+      assert.ok(v.texte.split(/\s+/).length <= rep.voix.fanal.motsMax, v.id);
+      assert.ok(!/\d|\{/.test(v.texte), v.id);
+    }
+    assert.equal(new Set(sit.variantes.map((v) => v.id)).size, 5, k);
+  }
+});
+
+test('phrases lues : l’étape lancée (son prix, ses jours travaillés), l’étape finie, le phare debout', () => {
+  assert.equal(ui['travaux.phare.sr.lancee.other'], 'Phare\u00a0: les ouvriers commencent {etape}, pour {cout}. Ils la bâtissent pendant les {n} jours travaillés qui suivent.');
+  assert.equal(ui['travaux.phare.sr.lancee.one'], 'Phare\u00a0: les ouvriers commencent {etape}, pour {cout}. Ils la bâtissent pendant le jour travaillé qui suit.');
+  assert.equal(ui['travaux.phare.sr.finie'], 'Phare\u00a0: les ouvriers ont fini {etape}.');
+  assert.equal(ui['travaux.phare.sr.debout'], 'Phare\u00a0: les ouvriers ont fini {etape}. Le phare est debout.');
+  // les noms d'étape du cœur entrent tels quels après « commencent » et « ont fini »
+  assert.deepEqual(PHARE.etapes.map((x) => x.nom), ['la fondation', 'la tour', 'la galerie', 'la lanterne']);
 });

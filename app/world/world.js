@@ -35,7 +35,7 @@
 //
 // Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape, rang (la
 // forêt recule quand le rang gagne une bande de terrain, lot F), cueillette ({ id } : la récolte d'une bulle s'envole vers
-// son compteur, lot L).
+// son compteur, lot L), travaux-etape-payee et travaux-etape-finie (une étape du phare monte ou se finit, lot O).
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
@@ -146,12 +146,12 @@ export function entitiesFor(v, tasks = []) {
     list.push(e);
   }
   // Grands travaux (lot O) : le vieux phare éteint dès le départ, puis ses étapes ; l'échafaudage pendant qu'on bâtit.
-  // Touché, il ouvre sa fiche.
+  // Touché, il ouvre sa fiche. Sa lanterne ne s'allume que le temps du moment de la fin (allume, posé par moments.js).
   for (const [id, t] of Object.entries(v.travaux || {})) {
     const slot = OUVRAGES_ILE[id];
     if (!slot) continue;
     const lac = slot.lac ? D / 32 : 0;
-    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, ouvrage: id, light: null, allume: false });
+    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, ouvrage: id, light: t.allume ? 'lantern' : null, allume: !!t.allume });
   }
   for (const d of decorFor(v.bandes || [])) list.push(d); // la lisière recule avec les bandes gagnées (lot F)
   // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
@@ -1164,6 +1164,11 @@ export function createWorld(container, options = {}) {
     get shown() { return shown; }, get target() { return target; }, get tasks() { return tasks; },
     get reduced() { return reduced; },
     updatePlaque, reveal,
+    /** Cadre de près un point du monde (le moment du phare, lot O) : l'échelle proche au moins, comme focusEntity. */
+    rapprocher(x, y) {
+      if (camera.s < NEAR_SCALE - 0.001) camera.setScale(NEAR_SCALE);
+      camera.centerOn(x, y, !reduced && !fx.instant);
+    },
     /** Groupe d'une bande gagnée dans le terrain affiché (lot F), ou null. */
     bande: (bid) => terrainHost.querySelector(`[data-bande="${bid}"]`),
     onImpact(ev) { options.onImpact?.(ev); bus.emit('impact', ev); },
