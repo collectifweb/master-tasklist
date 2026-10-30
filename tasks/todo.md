@@ -2156,6 +2156,14 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
 
 **O3 — Maquette d'abord, vue par Alex avant le code [impeccable].** L'emplacement du phare : au bord du lac ou dans l'eau, comme le quai, mesuré case par case pour qu'il ne cache rien de touchable (leçon de l'éolienne, lot G). Le dessin des quatre étapes (et du vieux phare si (b)), l'onglet « Grands travaux », la fiche du phare. Captures aux trois largeurs.
 
+- [ ] O3, maquette montée le 30 octobre vers 1 h 40, **en attente de l'avis d'Alex** (page privée de captures). Montée directement dans le jeu plutôt qu'à part : les captures sont vraies, et ce qui sera validé est déjà le code d'O4. Rien n'est en ligne.
+  - Le phare (`world/models.js`, `phare(etat)`) : '0' le vieux phare écroulé et creux, '1' à '4' les étapes finies, '+chantier' l'étape payée à moitié montée dans un échafaudage. Tour blanche à bande sauge, galerie, lanterne éteinte (`lampg`), dôme vert. Planche des neuf états vue en grand.
+  - L'emplacement (`OUVRAGES_ILE` dans `world/layout.js`) : r 11,75, c −0,75, sur le lac (lac), au coin gauche de l'île. Mesuré dans la page, cinq états (vieux, fondation, tour et lanterne en chantier, debout) aux trois largeurs : sa boîte ne recouvre aucun des 40 éléments touchables de la carte. Au téléphone, il fait 21 px de large et 69 px de haut debout, à 14 px du bord gauche. `BOUNDS` (cadrage de la caméra) inchangé.
+  - La vue (`world/view.js`, `travaux`) et l'entité (`world/world.js`, pas encore touchable) ; `thumbOuvrage` (plusieurs états dans un même cadre) par `js/world-bridge.js`.
+  - Le troisième onglet du catalogue (`js/ui/catalogue.js`) et la fiche (`js/ui/travaux.js`, `#dlg-travaux`), le geste `payerEtape` branché (`js/store.js`, `trv-batir` dans `js/main.js`), le picto `i-phare`, les textes `travaux.*`, les styles `trv-*`.
+  - Tests de logique et de l'API : 684 réussis sur 686, aucun échec (les deux « à faire » connus de (g)). Scénarios navigateur non relancés : le n° 31 attend encore deux onglets (`ui-31-quartiers.cjs`, « catalogue : deux onglets »), à mettre à jour en O5.
+  - Questions posées à Alex : l'emplacement ; « Grands travaux » sur deux lignes au téléphone ou « Travaux » ; le phare touchable sur la carte ; les mots de la fiche.
+
 **O4 — Écran et textes [impeccable].** Le phare sur l'île (`world/models.js`, `layout.js`, `view.js`), l'onglet du catalogue (`js/ui/catalogue.js`), la fiche, l'annonce d'une étape payée ou finie, le moment de la fin (Fanal ; la lanterne s'allume le temps du moment, puis reste éteinte : l'allumer deviendra un geste à l'étape 3), les textes dans `content/fr-CA/`.
 
 **O5 — Vérification.** Tests de logique et de l'API ; un scénario navigateur neuf (`ui-51`) : payer une étape, la voir monter, la fiche, au clavier, en mouvement réduit, aux trois largeurs ; les scénarios touchés (catalogue, carte, bulles) ; la série complète avant l'envoi.

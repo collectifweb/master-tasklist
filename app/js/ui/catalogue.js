@@ -9,14 +9,18 @@
 // (main.js) ; la phrase lue de chaque rangée est la règle « Ce que ça fait » de la fiche, puis le prix.
 // Quartiers : une rangée par quartier, « 4 → 5 par récolte » (la ligne comparative de la fiche, en petit) et le prix du
 // niveau suivant en pastilles ; toute la rangée ouvre la fiche du quartier par-dessus le catalogue (data-action="qrt-ouvrir").
+// Grands travaux (lot O) : une rangée par ouvrage (le phare), ses quatre étapes en crans et la prochaine, son prix en
+// pastilles ; verrouillée avant le Bourg, ou pendant que les ouvriers bâtissent (avec les jours qui restent). Toute la
+// rangée ouvre la fiche de l'ouvrage (data-action="trv-ouvrir", js/ui/travaux.js).
 // La feuille est construite une fois, puis mise à jour sur place : le focus ne saute pas pendant une synchronisation.
 // Elle s'ouvre toujours sur « Bâtiments ».
 import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, EFFETS_QUARTIERS, niveauDe, niveauMax, coutNiveau, refusMonter,
-  compte, manque, placesParChalet, recolteDe, valeur, EOLIENNE_ENERGIE, GRENIER_STOCKAGE, PRODUCTION, TOUR_ANNONCE } from '../../core/index.js';
+  compte, manque, placesParChalet, recolteDe, valeur, EOLIENNE_ENERGIE, GRENIER_STOCKAGE, PRODUCTION, TOUR_ANNONCE, OUVRAGE_IDS } from '../../core/index.js';
 import { t } from '../content.js';
 import { $, $$, esc, icon, setText, setAttr, setHtml } from './dom.js';
 import { coutText, faitText, pastillesDe, pastilleHtml } from './batiment.js';
 import { compareModel, prixText } from './quartier.js';
+import { travauxModel } from './travaux.js';
 
 // La ligne courte d'un type : son picto (la ressource qu'il donne) et ses valeurs, lues au cœur comme dans la fiche
 const EFFET = {
@@ -89,6 +93,22 @@ const quartierRow = (q) => `<li class="cat-qrt" data-quartier="${q}">
       </button>
     </li>`;
 
+// Une rangée par ouvrage des Grands travaux : toute la rangée est un bouton qui ouvre sa fiche.
+const travauxRow = (id) => `<li class="cat-trv" data-ouvrage="${id}">
+      <button class="cat-btn cat-trv-go" type="button" data-action="trv-ouvrir" data-ouvrage="${id}"
+        aria-describedby="cat-t-${id}-etat cat-t-${id}-sr">
+        <span class="cat-thumb cat-qrt-picto" aria-hidden="true">${icon(id)}</span>
+        <span class="cat-text">
+          <span class="cat-nom"></span>
+          <span class="cat-effet cat-trv-etapes" aria-hidden="true"></span>
+          <span class="cat-etat" id="cat-t-${id}-etat"></span>
+        </span>
+        <span class="cat-prix" aria-hidden="true"></span>
+        ${icon('chevron-down', 'cat-qrt-chev')}
+        <span class="sr-only" id="cat-t-${id}-sr"></span>
+      </button>
+    </li>`;
+
 function build(dlg, thumb) {
   const tab = (id, panel, label, on) => `<button class="cat-tab" type="button" role="tab" id="${id}" aria-controls="${panel}"
       aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(label)}</button>`;
@@ -97,7 +117,8 @@ function build(dlg, thumb) {
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('bat.catalogue.fermer'))}">${icon('x')}</button></header>
     <div class="sheet-body cat-body">
       <div class="cat-tabs" role="tablist" aria-label="${esc(t('bat.catalogue.onglets'))}">
-        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}
+        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}${
+  tab('cat-trvx-t', 'cat-trvx', t('travaux.catalogue.section'), false)}
       </div>
       <section class="cat-panel" role="tabpanel" id="cat-bats" aria-labelledby="cat-bats-t">
         <ul class="cat-list" role="list">${BATIMENT_IDS.map(row(thumb)).join('')}</ul>
@@ -105,6 +126,9 @@ function build(dlg, thumb) {
       </section>
       <section class="cat-panel" role="tabpanel" id="cat-qrts" aria-labelledby="cat-qrts-t" hidden>
         <ul class="cat-list" role="list">${QUARTIER_IDS.map(quartierRow).join('')}</ul>
+      </section>
+      <section class="cat-panel" role="tabpanel" id="cat-trvx" aria-labelledby="cat-trvx-t" hidden>
+        <ul class="cat-list" role="list">${OUVRAGE_IDS.map(travauxRow).join('')}</ul>
       </section>
     </div>`;
   dlg.addEventListener('click', (e) => {
@@ -127,7 +151,7 @@ function build(dlg, thumb) {
   dlg.dataset.built = '1';
 }
 
-/** Affiche l'onglet `id` (cat-bats-t ou cat-qrts-t) et son panneau. */
+/** Affiche l'onglet `id` (cat-bats-t, cat-qrts-t ou cat-trvx-t) et son panneau. */
 function choisir(dlg, id) {
   for (const b of $$('.cat-tab', dlg)) {
     const on = b.id === id;
@@ -200,6 +224,28 @@ function fillQuartiers(dlg, c) {
   }
 }
 
+function fillTravaux(dlg, c) {
+  for (const id of OUVRAGE_IDS) {
+    const li = $(`.cat-trv[data-ouvrage="${id}"]`, dlg);
+    const m = travauxModel(c, id);
+    const e = m.etat;
+    li.dataset.etat = e.fini ? 'max' : m.enCours ? 'chantier' : !m.raison ? 'libre' : m.manque ? 'manque' : 'verrou';
+    setText($('.cat-nom', li), m.nom);
+    setAttr($('.cat-trv-go', li), 'aria-label', m.nom);
+    const crans = `<span class="crans crans--mini">${m.etapes.map((x) => `<span${x.fini ? ' data-plein' : ''}></span>`).join('')}</span>`;
+    const suite = e.fini ? t('travaux.catalogue.debout') : m.enCours ? m.enCours.titre : t('travaux.catalogue.prochaine', { etape: m.def.etapes[e.payees].nom });
+    setHtml($('.cat-trv-etapes', li), `${crans}<span>${esc(suite)}</span>`);
+    const el = $('.cat-etat', li);
+    if (m.enCours) {
+      setHtml(el, `${icon('chantier')}<span>${esc(t(`travaux.fiche.jours.${m.enCours.restants > 1 ? 'other' : 'one'}`, { n: m.enCours.restants }))}</span>`);
+      el.classList.remove('sr-only');
+      el.hidden = false;
+    } else etat(el, m.raison, m.manque);
+    setHtml($('.cat-prix', li), m.geste && (!m.raison || m.manque) ? m.pastilles.map(pastilleHtml).join('') : '');
+    setText($(`#cat-t-${id}-sr`, li), [`${t('travaux.fiche.etapes.sr', { n: e.finies, total: e.total })}`, m.prixSr].filter(Boolean).join(' '));
+  }
+}
+
 /**
  * Ouvre le catalogue, sur l'onglet « Bâtiments ». slots() : emplacements de batimentsView ; thumb(type) : dessin SVG
  * d'un type debout (facultatif) ; open(dlg) : ouverture de la feuille (sheets.js).
@@ -210,6 +256,7 @@ export function openCatalogue(c, { slots, thumb, open }) {
   choisir(dlg, 'cat-bats-t');
   fill(dlg, rows(c, slots()));
   fillQuartiers(dlg, c);
+  fillTravaux(dlg, c);
   open(dlg);
 }
 
@@ -219,4 +266,5 @@ export function refreshCatalogue(c, { slots }) {
   if (!dlg || !dlg.open || !dlg.dataset.built) return;
   fill(dlg, rows(c, slots()));
   fillQuartiers(dlg, c);
+  fillTravaux(dlg, c);
 }

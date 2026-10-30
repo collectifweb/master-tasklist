@@ -39,7 +39,7 @@ import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   SECTOR_ORDER, SECTOR_CENTER, plaqueAnchor, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
-  IMPREVU_SPOTS, FETE_SPOTS, decorFor,
+  IMPREVU_SPOTS, FETE_SPOTS, decorFor, OUVRAGES_ILE,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -143,6 +143,13 @@ export function entitiesFor(v, tasks = []) {
     if (b.degat) e.degat = b.degat.type; // éolienne en panne, parcelle visitée par l'ours ou gelée : dessin et marque braise
     if (v.reflets?.has?.(b.id)) e.reluit = true;
     list.push(e);
+  }
+  // Grands travaux (lot O) : le vieux phare éteint dès le départ, puis ses étapes ; l'échafaudage pendant qu'on bâtit
+  for (const [id, t] of Object.entries(v.travaux || {})) {
+    const slot = OUVRAGES_ILE[id];
+    if (!slot) continue;
+    const lac = slot.lac ? D / 32 : 0;
+    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: false, ouvrage: id, light: null, allume: false });
   }
   for (const d of decorFor(v.bandes || [])) list.push(d); // la lisière recule avec les bandes gagnées (lot F)
   // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
@@ -1242,6 +1249,16 @@ export function createWorld(container, options = {}) {
     thumbType(type) {
       const a = artFor({ model: type, variant: '' });
       return `<svg class="ow-thumb" viewBox="${a.x} ${a.y} ${a.w} ${a.h}" width="${a.w}" height="${a.h}" focusable="false" aria-hidden="true">${a.svg}</svg>`;
+    },
+    /**
+     * Dessins de plusieurs états d'un ouvrage des Grands travaux (lot O : phare '0' à '4', '+chantier'), dans un même
+     * cadre, celui qui les contient tous : côte à côte, ils se comparent à la même échelle (fiche du phare).
+     */
+    thumbOuvrage(id, variants) {
+      const arts = [].concat(variants).map((variant) => artFor({ model: id, variant }));
+      const x0 = Math.min(...arts.map((a) => a.x)), y0 = Math.min(...arts.map((a) => a.y));
+      const w = Math.max(...arts.map((a) => a.x + a.w)) - x0, h = Math.max(...arts.map((a) => a.y + a.h)) - y0;
+      return arts.map((a) => `<svg class="ow-thumb" viewBox="${f(x0)} ${f(y0)} ${f(w)} ${f(h)}" width="${f(w)}" height="${f(h)}" focusable="false" aria-hidden="true">${a.svg}</svg>`);
     },
     /** Mémorise le nouvel état ; l'applique au prochain micro-temps, ou à la fin des animations en cours. */
     render(game, taskList = [], ledger = []) {

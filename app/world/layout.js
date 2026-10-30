@@ -130,6 +130,12 @@ export const EMPLACEMENTS = {
 };
 
 /**
+ * Grands travaux (lot O) : le phare, sur un rocher du lac au coin gauche de l'île, au bout du rivage du quai (lac :
+ * dessiné au niveau de l'eau). À gauche du coin, rien de l'île n'est derrière lui : il ne cache rien de touchable.
+ */
+export const OUVRAGES_ILE = { phare: { r: 11.75, c: -0.75, h: 1, w: 1, lac: true, sector: 'place' } };
+
+/**
  * Habitants au travail (lot E, world/habitants.js), en grille [u, v] comme FANAL_HOME. PORTES : où un habitant sort de
  * son chalet (devant la porte, face +v). POSTES : où il travaille, un par emplacement, toujours d'un côté visible du
  * bâtiment (une figurine derrière un dessin disparaît). POSTE_PLACE : sans lieu de travail bâti, près de Fanal.

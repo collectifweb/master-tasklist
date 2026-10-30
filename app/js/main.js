@@ -22,6 +22,7 @@ import { initWorld } from './world-bridge.js';
 import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ressourcesText, choisirOffre } from './ui/batiment.js';
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { openQuartier, refreshQuartier, monteText, openRecompense } from './ui/quartier.js';
+import { openTravaux, refreshTravaux } from './ui/travaux.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -97,6 +98,7 @@ function renderAll({ deferHud = false } = {}) {
   if (world) world.render(c.game, c.tasks, c.ledger);
   refreshBatiment(c); // après le monde : la fiche reprend son dessin dans le nouvel état
   refreshQuartier(c);
+  refreshTravaux(c);
   if (world) refreshCatalogue(c, { slots: () => world.batiments(c.game, c.ledger) });
   if (worldPlan && $('#dlg-plan').open) worldPlan.render(c.game, c.tasks, c.ledger);
 }
@@ -472,6 +474,7 @@ function onBulle(info) {
 $('#dlg-fiche').addEventListener('close', () => { if (world) world.clearSelection(); });
 $('#dlg-batiment').addEventListener('close', () => { if (world) world.clearSelection(); });
 $('#dlg-quartier').addEventListener('close', () => { if (world) world.clearSelection(); });
+$('#dlg-travaux').addEventListener('close', () => { if (world) world.clearSelection(); });
 /** Fiche d'un bâtiment (carte, ou carte en liste) : trois lignes et le geste possible, avec le dessin de la carte. */
 function openBatimentSheet(id) {
   openBatiment(ctx(), id, { thumb: world ? (bid) => world.thumb(bid) : null, open: openSheet });
@@ -479,6 +482,11 @@ function openBatimentSheet(id) {
 /** Fiche d'un quartier (carte, catalogue, carte en liste) : ce qu'il fait, le niveau suivant et son prix. */
 function openQuartierSheet(id) {
   if (store.view) openQuartier(ctx(), id, { open: openSheet });
+}
+
+/** Fiche d'un ouvrage des Grands travaux (catalogue) : ses étapes, en dessins, et la prochaine à bâtir. */
+function openTravauxSheet(id) {
+  if (store.view) openTravaux(ctx(), id, { dessin: world ? (oid, v) => world.thumbOuvrage(oid, v) : null, open: openSheet });
 }
 
 /** Fin de visite : « Tout est enregistré, à demain ». Fermée, elle laisse le monde allumer ses lanternes. */
@@ -690,6 +698,13 @@ document.addEventListener('click', (e) => {
       return world && world.focusEntity(bid); // la carte montre le bâtiment neuf (mouvement réduit respecté)
     }
     case 'qrt-ouvrir': return openQuartierSheet(target.dataset.quartier);
+    case 'trv-ouvrir': return openTravauxSheet(target.dataset.ouvrage);
+    case 'trv-batir': {
+      if (spendBlocked(e, target, action)) return;
+      if (disabled(target)) return announce.say(($('#trv-raison') || $('#trv-now') || target).textContent.trim());
+      markSpent(action, target);
+      return run('payerEtape', { ouvrage: target.dataset.ouvrage, etape: Number(target.dataset.etape) });
+    }
     case 'qrt-monter': {
       if (spendBlocked(e, target, action)) return;
       // achat impossible : la raison est écrite dans la fiche ; on la redit au lecteur d'écran

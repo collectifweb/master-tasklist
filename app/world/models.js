@@ -897,6 +897,178 @@ export function quai(etat = '') {
   return r;
 }
 
+// ---------------------------------------------------------------- Grands travaux (lot O)
+
+// Fût à n pans qui s'affine (rayon R0 au pied, R1 en haut), faces de devant seulement, comme Art.prism. hs : hauteur de
+// chaque sommet (une tour écroulée a le haut inégal) ; sans hs, h partout. Renvoie le rayon à une hauteur donnée.
+function fut(a, cu, cv, R0, R1, z, h, m, { n = 8, hs = null, top = true } = {}) {
+  const ang = (k) => (k / n) * Math.PI * 2 + Math.PI / n;
+  const H = (k) => (hs ? hs[k % n] : h);
+  const at = (k, zz) => { const r = R0 + (R1 - R0) * (zz / h); return [cu + Math.cos(ang(k)) * r, cv + Math.sin(ang(k)) * r, z + zz]; };
+  const faces = [];
+  for (let k = 0; k < n; k++) {
+    const t = ang(k) + Math.PI / n;
+    if (Math.cos(t) + Math.sin(t) <= 1e-9) continue; // face tournée vers le fond
+    faces.push({ k, depth: Math.cos(t) + Math.sin(t), shade: Math.sin(t) - Math.cos(t) >= 0 ? 'l' : 'r' });
+  }
+  faces.sort((p, q) => p.depth - q.depth);
+  for (const { k, shade } of faces) a.poly([at(k, 0), at(k + 1, 0), at(k + 1, H(k + 1)), at(k, H(k))], `${m}-${shade}`);
+  if (top) a.poly(Array.from({ length: n }, (_, k) => at(k, H(k))), `${m}-t`);
+  for (let k = 0; k < n; k += 2) { const p = at(k, H(k)); a.cast(p[0], p[1], p[2]); }
+  return (zz) => R0 + (R1 - R0) * ((zz - z) / h);
+}
+
+// Les hauteurs du phare (px au-dessus de l'eau) : rocher, socle, tour, galerie, lanterne, dôme.
+const PH = { roc: 5, socle: 15, tour: 112, galerie: 115, lampe: 127, dome: 136 };
+const PC = 0.5; // centre de l'emprise
+
+// Échafaudage autour du phare jusqu'à la hauteur zt : quatre perches, des lisses tous les 16 px, une écharpe par face de
+// devant. fond : les perches et lisses de derrière (avant le phare) ; sinon celles de devant (après).
+function echafaudage(a, zt, fond) {
+  const lo = 0.17, hi = 0.83;
+  const perche = (u, v) => a.seg([u, v, PH.roc - 1], [u, v, zt + 4], fond ? 'k-woodd-r' : 'k-woodd-l', 1.5);
+  if (fond) {
+    perche(lo, lo); perche(hi, lo); perche(lo, hi);
+    for (let z = PH.roc + 14; z <= zt; z += 16) {
+      a.seg([lo, lo, z], [hi, lo, z], 'k-woodb-r', 1.2);
+      a.seg([lo, lo, z], [lo, hi, z], 'k-woodb-l', 1.2);
+    }
+    return;
+  }
+  for (let z = PH.roc + 14; z <= zt; z += 16) {
+    a.seg([lo, hi, z], [hi, hi, z], 'k-woodb-l', 1.6);
+    a.seg([hi, lo, z], [hi, hi, z], 'k-woodb-r', 1.6);
+  }
+  a.seg([lo, hi, PH.roc + 14], [hi, hi, Math.min(zt, PH.roc + 46)], 'k-woodd-l', 1.1);
+  a.seg([hi, lo, PH.roc + 14], [hi, hi, Math.min(zt, PH.roc + 46)], 'k-woodd-r', 1.1);
+  perche(hi, hi);
+  a.box(hi - 0.04, hi - 0.04, 0.08, 0.08, zt + 4, 1.5, 'woodb', { cast: false }); // la poulie au sommet
+  a.seg([hi, hi, zt + 4], [hi + 0.05, hi + 0.05, zt - 18], 'k-rope-t', 0.8);
+}
+
+// Tour écroulée du vieux phare : huit pans de mur épais, chacun cassé à sa hauteur (hs, par sommet). On voit l'intérieur
+// du mur du fond, plus haut, par-dessus celui de devant ; le sol est couvert de gravats.
+function ruine(a, c, z0, hs) {
+  const n = 8, Ro = 0.27, Ri = 0.2;
+  const ang = (k) => (k / n) * Math.PI * 2 + Math.PI / n;
+  const pt = (k, R, z) => [c + Math.cos(ang(k)) * R, c + Math.sin(ang(k)) * R, z];
+  const H = (k) => z0 + hs[k % n];
+  const devant = (k) => { const t = ang(k) + Math.PI / n; return Math.cos(t) + Math.sin(t) > 1e-9; };
+  const ombre = (k, dedans) => { const t = ang(k) + Math.PI / n; const s = Math.sin(t) - Math.cos(t); return (dedans ? -s : s) >= 0 ? 'l' : 'r'; };
+  const crete = (k) => a.poly([pt(k, Ro, H(k)), pt(k + 1, Ro, H(k + 1)), pt(k + 1, Ri, H(k + 1)), pt(k, Ri, H(k))], 'stone-t');
+  a.poly(Array.from({ length: n }, (_, k) => pt(k, Ri, z0 + 4)), 'stoned-r'); // gravats au fond
+  for (let k = 0; k < n; k++) if (!devant(k)) a.poly([pt(k, Ri, z0 + 4), pt(k + 1, Ri, z0 + 4), pt(k + 1, Ri, H(k + 1)), pt(k, Ri, H(k))], `stoned-${ombre(k, true)}`);
+  for (let k = 0; k < n; k++) if (!devant(k)) crete(k);
+  for (let k = 0; k < n; k++) if (devant(k)) a.poly([pt(k, Ro, z0), pt(k + 1, Ro, z0), pt(k + 1, Ro, H(k + 1)), pt(k, Ro, H(k))], `stone-${ombre(k, false)}`);
+  for (let k = 0; k < n; k++) if (devant(k)) crete(k);
+  for (let k = 0; k < n; k += 2) a.cast(...pt(k, Ro, 0).slice(0, 2), H(k));
+}
+
+/**
+ * Phare (lot O), emprise 1 × 1, sur un rocher du lac au coin gauche de l'île, au bout du rivage du quai (lac). etat :
+ * '0' le vieux phare éteint (tour écroulée, creuse, sans lanterne), '1' à '4' les étapes finies (fondation, tour, galerie,
+ * lanterne) ; '+chantier' : l'étape suivante est payée et les ouvriers la bâtissent (échafaudage, l'étape à moitié
+ * montée, des pierres et des planches sur le rocher). La lanterne reste éteinte (lampg), sauf pendant le moment du phare
+ * debout (world.js).
+ */
+export function phare(etat = '0') {
+  const [n0, suite] = String(etat).split('+');
+  const finies = Math.max(0, Math.min(4, Math.floor(Number(n0) || 0)));
+  const enCours = suite === 'chantier' && finies < 4 ? finies + 1 : 0;
+  const a = new Art();
+  const c = PC;
+  // jusqu'où monte l'échafaudage : le haut de l'étape qu'on bâtit
+  const zEch = [0, PH.socle, PH.tour, PH.galerie + 6, PH.dome][enCours];
+  if (enCours) echafaudage(a, zEch, true);
+  // le rocher, l'écume à son pied
+  fut(a, c, c, 0.5, 0.44, -3, PH.roc + 3, 'rock', { n: 7, hs: [8, 6, 9, 7, 8, 5, 7] });
+  a.poly(Array.from({ length: 12 }, (_, k) => { const t = (k / 12) * Math.PI * 2; return [c + Math.cos(t) * 0.53, c + Math.sin(t) * 0.53, 0]; }), 'k-waterl-t', ' fill="none" stroke-width="1.2" opacity=".8"');
+  // une pierre tombée de l'ancienne tour, toujours là
+  a.spoly((() => { const [x, y] = P(0.86, 0.66, PH.roc); return [[x - 5, y], [x - 3, y - 4], [x + 3, y - 4], [x + 5, y]]; })(), 'stoned-l');
+  const dv = 0.924; // apothème d'un octogone, en part du rayon
+  const porte = (R, z0, m) => { const v = c + R * dv + 0.005; a.poly([[c - 0.05, v, z0], [c + 0.05, v, z0], [c + 0.05, v, z0 + 11], [c, v, z0 + 14], [c - 0.05, v, z0 + 11]], m); };
+  if (!finies && enCours !== 1) {
+    // le vieux phare : son socle usé, une tour écroulée, creuse : le mur du fond resté haut, celui de devant tombé
+    a.prism(c, c, 0.33, PH.roc, 6, 'stoned', 8, { rim: true });
+    ruine(a, c, PH.roc + 6, [22, 17, 25, 33, 40, 44, 37, 29]);
+    porte(0.27, PH.roc + 6, 'wooddk-l');
+    const r = a.done(2);
+    r.shadow = null;
+    return r;
+  }
+  // la fondation : un socle de pierre neuf à huit pans, une marche devant la porte
+  const zs = enCours === 1 ? PH.roc + 5 : PH.socle;
+  a.prism(c, c, 0.36, PH.roc, zs - PH.roc, 'stone', 8, { rim: true });
+  if (enCours === 1) {
+    // la fondation à moitié montée : des blocs de pierre attendent sur le rocher
+    a.box(0.16, 0.7, 0.12, 0.1, PH.roc, 4, 'stone', { rim: true });
+    a.box(0.3, 0.76, 0.1, 0.1, PH.roc, 4, 'stone', { rim: true });
+    a.box(0.2, 0.72, 0.1, 0.1, PH.roc + 4, 4, 'stoned', { rim: true });
+  } else {
+    // deux marches du rocher au seuil
+    a.box(c - 0.07, c + 0.33, 0.14, 0.14, PH.roc, 5, 'stoned', { rim: true });
+    a.box(c - 0.07, c + 0.33, 0.14, 0.07, PH.roc + 5, 5, 'stoned', { rim: true });
+  }
+  if (finies >= 2 || enCours === 2) {
+    // la tour : blanche, une bande vert sauge à mi-hauteur ; à moitié montée tant que les ouvriers la bâtissent
+    const R0 = 0.27, R1 = 0.19, h = PH.tour - PH.socle;
+    const zt = finies >= 2 ? PH.tour : PH.socle + Math.round(h * 0.45);
+    const R = (z) => R0 + (R1 - R0) * ((z - PH.socle) / h);
+    const b0 = PH.socle + 46, b1 = PH.socle + 58;
+    fut(a, c, c, R0, R(Math.min(zt, b0)), PH.socle, Math.min(zt, b0) - PH.socle, 'paper', { top: zt <= b0 });
+    if (zt > b0) fut(a, c, c, R(b0), R(Math.min(zt, b1)), b0, Math.min(zt, b1) - b0, 'roof', { top: zt <= b1 });
+    if (zt > b1) fut(a, c, c, R(b1), R(zt), b1, zt - b1, 'paper');
+    if (finies < 2) a.poly(Array.from({ length: 8 }, (_, k) => { const t = (k / 8) * Math.PI * 2 + Math.PI / 8; return [c + Math.cos(t) * R(zt) * 0.72, c + Math.sin(t) * R(zt) * 0.72, zt]; }), 'stoned-r');
+    porte(R0, PH.socle, 'woodd-l');
+    for (const z of [PH.socle + 30, PH.socle + 74]) if (z + 7 < zt) {
+      const v = c + R(z) * dv + 0.006;
+      a.poly([[c - 0.025, v, z], [c + 0.025, v, z], [c + 0.025, v, z + 7], [c - 0.025, v, z + 7]], 'wooddk-l');
+    }
+  }
+  if (finies >= 2 && enCours !== 0 || finies >= 3) {
+    // la galerie : un plancher de pierre en encorbellement ; son garde-corps, une fois finie
+    a.prism(c, c, 0.25, PH.tour, PH.galerie - PH.tour, 'stoned', 8, { rim: true });
+  }
+  const garde = (devant) => {
+    for (let k = 0; k < 8; k++) {
+      const t = (k / 8) * Math.PI * 2 + Math.PI / 8, t2 = ((k + 1) / 8) * Math.PI * 2 + Math.PI / 8;
+      const p = [c + Math.cos(t) * 0.235, c + Math.sin(t) * 0.235], q = [c + Math.cos(t2) * 0.235, c + Math.sin(t2) * 0.235];
+      const front = Math.cos(t) + Math.sin(t) > 0;
+      if (front !== devant) continue;
+      a.seg([p[0], p[1], PH.galerie], [p[0], p[1], PH.galerie + 6], 'k-roofb-r', 0.9);
+      a.seg([p[0], p[1], PH.galerie + 6], [q[0], q[1], PH.galerie + 6], devant ? 'k-roofb-l' : 'k-roofb-r', 1.1);
+    }
+  };
+  if (finies >= 3) garde(false);
+  if (finies >= 4 || enCours === 4) {
+    // la lanterne : huit vitres entre des montants, une corniche, un dôme vert, l'épi au faîte ; éteinte (lampg)
+    const R = 0.14, z0 = PH.galerie, z1 = PH.lampe;
+    for (let k = 0; k < 8; k++) {
+      const t = (k / 8) * Math.PI * 2 + Math.PI / 8, t2 = ((k + 1) / 8) * Math.PI * 2 + Math.PI / 8, tn = t + Math.PI / 8;
+      if (Math.cos(tn) + Math.sin(tn) <= 1e-9) continue;
+      const p = [c + Math.cos(t) * R, c + Math.sin(t) * R], q = [c + Math.cos(t2) * R, c + Math.sin(t2) * R];
+      a.poly([[p[0], p[1], z0], [q[0], q[1], z0], [q[0], q[1], z1], [p[0], p[1], z1]], 'lampg', Math.sin(tn) - Math.cos(tn) >= 0 ? '' : ' opacity=".78"');
+    }
+    for (let k = 0; k < 8; k++) {
+      const t = (k / 8) * Math.PI * 2 + Math.PI / 8;
+      if (Math.cos(t) + Math.sin(t) < -0.2) continue;
+      a.seg([c + Math.cos(t) * R, c + Math.sin(t) * R, z0], [c + Math.cos(t) * R, c + Math.sin(t) * R, z1], 'k-roofb-r', 0.9);
+    }
+    if (finies >= 4) {
+      a.prism(c, c, 0.17, z1, 2, 'roofb', 8, { rim: true });
+      fut(a, c, c, 0.16, 0.02, z1 + 2, PH.dome - z1 - 2, 'roofb', { top: false });
+      a.seg([c, c, PH.dome], [c, c, PH.dome + 7], 'k-wooddk-l', 1.1);
+      a.prism(c, c, 0.03, PH.dome + 5, 2.4, 'metal', 6);
+    }
+  }
+  if (finies >= 3) garde(true);
+  if (enCours) echafaudage(a, zEch, false);
+  const r = a.done(2);
+  r.shadow = null;
+  r.anchors.light = P(c, c, (PH.galerie + PH.lampe) / 2);
+  return r;
+}
+
 // ---------------------------------------------------------------- imprévus heureux du jour (lot I)
 
 /** Orignal qui traverse la route, emprise 0,9 × 0,9 : il marche vers l'avant (+v), panache clair, pattes grises. */
@@ -1213,6 +1385,7 @@ export function artFor(e) {
     case 'grenier': return grenier();
     case 'quai': return quai(e.variant || '');
     case 'tour': return tour();
+    case 'phare': return phare(e.variant || '0');
     case 'scierie': return scierie();
     case 'poulailler': return poulailler();
     case 'cabane': return cabane(e.variant || '');

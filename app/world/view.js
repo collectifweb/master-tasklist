@@ -14,6 +14,7 @@ import { IMPREVUS, degatDe } from '../core/imprevus.js';
 import { alerteTempete } from '../core/hiver.js';
 import { bandesGagnees } from '../core/village.js';
 import { saisonDe } from '../core/objectifs.js';
+import { etatOuvrage, OUVRAGE_IDS } from '../core/travaux.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
@@ -148,5 +149,7 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   const lundi = weekStart(today);
   if (reg.some((e) => e && e.key === `repas:${lundi}`)) fetes.add('repas');
   if (g.sucres && g.sucres === saisonDe(today).cle && PRODUCTION.cabane.mois.includes(Number(today.slice(5, 7)))) fetes.add(batiments.some((b) => b.type === 'cabane' && b.bati) ? 'tire-cabane' : 'tire');
-  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, fetes, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants) };
+  // Grands travaux (lot O) : les étapes finies de chaque ouvrage, et celle que les ouvriers bâtissent
+  const travaux = Object.fromEntries(OUVRAGE_IDS.map((id) => { const e = etatOuvrage(g, reg, id, now ?? new Date()); return [id, { finies: e.finies, enCours: !!e.enCours }]; }));
+  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, fetes, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants), travaux };
 }
