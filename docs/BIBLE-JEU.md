@@ -52,7 +52,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 | Campement | 0 à 2 | Le départ : chalets, potager, atelier, petite serre |
 | Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; éolienne, grenier, quai |
 | Village | 6 à 10 | Nouvelle bande de terrain (à venir) ; tour de guet, scierie, poulailler, cabane à sucre |
-| Bourg | 11 à 20 | (à venir) Nouvelle bande ; marché, école, centrale solaire, garage à chasse-neige |
+| Bourg | 11 à 20 | Le phare, premier des Grands travaux (§9) ; (à venir) nouvelle bande, marché, école, centrale solaire, garage à chasse-neige |
 | Ville | 21 à 35 | (à venir) Une île voisine reliée par un pont ; gare, musée |
 | Ville +1, +2… | +15 chaque fois | (à venir) Chaque palier : du terrain, un bâtiment, un permis, un nouveau type de visiteur |
 
@@ -322,7 +322,7 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 
 - jusqu'à quatre imprévus par semaine, plus exigeants, mais toujours réparables ;
 - des commandes plus grosses, contre des récompenses plus rares ;
-- des **grands chantiers** sur plusieurs semaines (un phare, une digue, un pont, un monument) qui avalent beaucoup d'Énergie et de Matériaux et laissent une trace permanente sur l'île (à venir) ;
+- les **Grands travaux** (un phare, une digue, un pont, un monument) y étaient réservés ; depuis le lot O, ils sont ouverts à tous dès le rang Bourg, quelle que soit l'allure (voir plus bas) ;
 - les niveaux de quartier, qui coûtent cher (voir §4).
 
 **Ce que l'allure ne change jamais** : le prix des bâtiments et des réparations, le prix d'un niveau de quartier, et ce que rapporte une tâche. Sinon, travailler plus donnerait l'impression de ne servir à rien. L'allure ajoute des façons de dépenser et des défis, elle ne gonfle pas les prix.
@@ -339,6 +339,15 @@ Elle en tire une allure parmi trois : **au ralenti**, **régulier**, **plein ré
 - à l'écran : le bilan de la semaine montre « Allure : au ralenti (3 quêtes en 14 jours) », une marque de trois barres doublée du texte, et ce que l'allure change. Chaque semaine passée garde la sienne ; un bilan figé avant le lot n'en a pas. La semaine où l'allure change d'un cran, Fanal le dit une fois par appareil, sans reproche : le village ralentit avec toi, ou il prend de l'élan (cinq variantes chacune).
 
 Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq joueurs, départs du 1er juillet et du 7 octobre) : au rythme de l'essai, l'allure reste régulière et rien ne change ; à six quêtes par jour, elle passe au plein régime (132 imprévus au lieu de 68 du 1er juillet au 1er mars) ; le joueur à une quête tous les quatre jours atteint l'objectif d'hiver réduit le 29 janvier au lieu du 18 février (départ du 1er juillet), le 20 février au lieu de jamais (départ du 7 octobre).
+
+**Les Grands travaux, tels que construits** (lot O, 29 et 30 octobre 2026, décisions 51 et 52) :
+- pourquoi : tout ce qui s'achète a une fin (bâtiments en nombre limité, 17 niveaux de quartier). Mesuré le 28 octobre (simulations (k) et (l), départ du 1er juillet) : au 1er mars, le joueur à 6 quêtes par jour garde 2 292 Énergie et 6 804 Matériaux sans usage ;
+- ils sont ouverts à tous dès le rang Bourg (11 habitants), quelle que soit l'allure. Le vieux phare, éteint, est sur l'île dès le départ, sur le lac, au coin gauche de l'île : il donne un horizon au joueur lent, et sa fiche dit « Bourg : encore N habitants » ;
+- le phare se relève en quatre étapes (la fondation, la tour, la galerie, la lanterne), à 250 Énergie et 500 Matériaux chacune, sans permis. Payer une étape la lance ; les ouvriers la bâtissent pendant les 2 jours travaillés qui suivent (le jour du paiement ne compte pas), une étape à la fois. Rien ne se perd en cas d'absence : l'étape attend. L'étape finie est notée dans la partie par la quête qui la termine : remballer cette quête ne la fait pas reculer ;
+- fini, il n'a aucun effet de jeu : sa trace sur l'île et un moment de récit. Les textes n'en disent rien : « quand c'est cosmétique, on n'a pas besoin de préciser que ça ne rapporte rien » (Alex, 30 octobre) ;
+- à l'écran : une rangée de l'onglet « Bâtiments » du catalogue, après les bâtiments, ses quatre étapes en crans ; touchable sur l'île à tous ses états, il ouvre sa fiche (l'avant et l'après en dessins, les étapes, le prix). Une étape payée : l'échafaudage monte du rocher. Une étape finie brille ; la dernière allume la lanterne le temps du moment, puis elle reste éteinte. Fanal dit chaque moment ;
+- simulation (s) du 29 octobre : le joueur à 2 ou 3 quêtes par jour parti le 1er juillet le finit le 14 février et garde 333 Énergie et 351 Matériaux au 1er mars ; le rapide parti le 1er juillet le finit le 18 novembre, celui parti le 7 octobre le 27 février. Aucune partie ne change sans le Bourg, aucun niveau n'est perdu ;
+- la suite, dans cet ordre : les décors à placer soi-même (§5), puis le phare allumé et ses escales. L'allumer pour la semaine coûtera de l'Énergie ; allumé, il attirera une escale de plaisanciers, qu'on héberge en Nourriture et qui laissent un décor introuvable ailleurs. On pourra passer son tour sans rien perdre, comme pour les commandes du quai.
 
 **Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes devait en tenir compte en révisant la semaine qui vient (§12, abandonné : décision 44). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
 
@@ -448,9 +457,9 @@ Hermes tourne aussi sur Claude Code : c'est le meilleur choix pour les propositi
 | 3 et 4 | Visiteurs et commandes (le marchand d'abord), catalogue d'imprévus, alertes météo, île vivante (habitants au travail), allure du village et reprise après une absence | Premiers visiteurs au quai |
 | 5 et 6 | L'hiver : serre et Énergie, neige, tempêtes, objectif « garder la serre allumée » ; première bande de terrain gagnée (lot F, 8 octobre) | Prêt avant le 1er décembre |
 | 7 et 8 | ~~La chronique d'Hermes : fichier, vérification, guide ; ses deux premières chroniques d'avance~~ (abandonnée le 9 octobre, décision 44) | Décembre |
-| 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, grands chantiers du plein régime, réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
+| 9 à 12 | Fêtes (trêve, violoneux), rangs village et bourg, Grands travaux (le phare, lot O : ouverts à tous dès le Bourg), réglage des allures selon ton usage réel | Fêtes, puis grands froids de janvier |
 
-## 15. Décisions d'Alex du 5 au 11 octobre 2026
+## 15. Décisions d'Alex du 5 au 30 octobre 2026
 
 1. **Quartiers** : la Place du village pour les tâches sans domaine, la Mairie pour l'Administratif.
 2. **Rappel quotidien** : par l'app gratuite ntfy, à 8 h, heure de Montréal (§10). Raison : le téléphone d'Alex utilise Brave sans services Google. Essayé le 5 octobre au soir avec la version web de ntfy dans Brave : la notification arrive onglet ouvert, mais pas onglet fermé, même avec la permission accordée pour toujours (constat d'Alex sur son téléphone). Le rappel passe donc par l'app ntfy de F-Droid.
@@ -538,3 +547,5 @@ Décisions du 11 octobre 2026 :
 
 49. **L'éolienne réparée en payant tourne aussitôt** (§5, « La visite du jour »). Réparée ou déneigée en payant, elle donne sa part du jour tout de suite, si elle ne l'a pas déjà donnée, comme un producteur bâti dans la journée. Avant, elle attendait le passage du temps suivant, et sans lui la part du jour était perdue. Réparée par une quête, elle tourne au passage du temps qui suit la quête, comme avant.
 50. **La vraie météo, telle que construite** (lot Q, §8). Une tempête vient avec au moins 3 cm de neige prévus chez le joueur : Alex trouvait 1 cm trop peu, et à 3 cm sa ville garde à peu près le rythme du tirage (mesure gardée hors du dépôt). Avec une ville, une neige prévue compte toute l'année, hors de la saison du tirage aussi. La ville se cherche depuis l'appareil, chez Open-Meteo ; la partie ne garde que son nom, sa région, son pays et sa position arrondie à environ 1 km. Open-Meteo est gratuit et sans clé pour un usage non commercial, sous 10 000 appels par jour, et ses données sont sous licence CC BY 4.0 (crédit affiché) ; le serveur l'appelle au plus une fois par jour de jeu et par ville, et une fois l'heure après un échec.
+51. **Les Grands travaux** (29 octobre ; §9). De gros ouvrages payés surtout en Matériaux, par étapes, à son rythme, sans date limite, chaque étape visible sur l'île. Le nom « Grand chantier » reste celui de la carte des longues quêtes du Fil du jour. Ouverts à tous dès le rang Bourg, quelle que soit l'allure (la bible les réservait au plein régime). Un ouvrage fini n'a aucun effet de jeu : un avantage qui fait gagner plus grossirait les réserves à vider. Trois étapes, dans cet ordre : le phare, sans effet ; les décors à placer soi-même ; le phare allumé et ses escales, l'idée d'Alex d'un cadeau qui amène une responsabilité.
+52. **Le phare, tel que construit** (lot O, 29 et 30 octobre ; §9). Payer une étape la lance, et les ouvriers la bâtissent pendant les 2 jours travaillés qui suivent ; le vieux phare éteint est sur l'île dès le départ ; quatre étapes à 250 Énergie et 500 Matériaux. Pas d'onglet à part dans le catalogue : une rangée de « Bâtiments » avec ses étapes en crans, le signe d'un ouvrage bâti en plusieurs temps (idée d'Alex). Il se touche sur l'île, et aucun texte ne dit qu'il ne rapporte rien.
