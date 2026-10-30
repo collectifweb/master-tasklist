@@ -2120,7 +2120,7 @@ Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la 
 - **Une ronde d'ajustements design**, à organiser (demande d'Alex, 28 octobre au soir), avec /impeccable. Il cite d'abord les routes : certaines sont très mal dessinées, ou mènent dans l'eau. Pas encore regardé.
 - **Deux écarts entre la bible (§9) et le code**, relevés le 28 octobre : la lettre de retour part dès 3 jours d'absence, au plus une fois tous les 14 jours (`openApp`, `core/quests.js`), et non à 5 jours ; les dates de l'objectif d'hiver du joueur très lent (29 janvier contre 18 février) datent d'avant la visite du jour : la simulation (k) du 28 octobre donne le 14 décembre contre le 26 décembre (départ du 1er juillet).
 
-## Grands travaux — décisions d'Alex (29 octobre 2026), plan à venir
+## Grands travaux — décisions d'Alex (29 octobre 2026)
 
 **Le problème, mesuré** (simulations (k) et (l) du 28 octobre, sans marchand) : tout ce qui s'achète a une fin (11 bâtiments en nombre limité ; 17 niveaux de quartier, 33 permis, 2 640 Énergie et 1 980 Matériaux en tout ; 15 habitants au plus, donc le rang Bourg, vide). Départ du 1er juillet, au 1er mars : le joueur à 6 quêtes par jour a ses 17 niveaux pendant 118 des soirs simulés et finit avec 2 292 Énergie et 6 804 Matériaux sans usage ; celui à 2 ou 3 par jour, 65 Énergie et 3 136 Matériaux. Des niveaux 4 et plus n'y suffiraient pas : le joueur rapide manque de permis, pas de ressources.
 
@@ -2128,6 +2128,28 @@ Ordre proposé : G0 et son envoi tout de suite, puis G1 et G2 (petits), puis la 
 - Les « Grands travaux » (le nom : « Grand chantier » reste celui de la carte des longues quêtes du Fil du jour, `card.big_project`) : de gros ouvrages payés surtout en Matériaux, par étapes, à son rythme, sans date limite, chaque étape visible sur l'île.
 - Ouverts à tous dès le rang Bourg (11 habitants), quelle que soit l'allure (la bible les réservait au plein régime). Dans la simulation, les deux joueurs lents ne dépassent pas 9 habitants.
 - Un ouvrage fini n'a aucun effet sur le jeu : sa trace sur l'île et un moment de récit (un avantage qui fait gagner plus grossirait les réserves à vider).
-- Premier ouvrage proposé : le phare. Les décors à placer soi-même (bible §5) viennent ensuite, dans un second lot (ordre recommandé, à confirmer).
+- Trois étapes, dans cet ordre (validé par Alex le 29 octobre au soir, « PARFAIT ») : (1) le phare, premier des Grands travaux, sans effet ; (2) les décors à placer soi-même (bible §5) ; (3) le phare allumé et ses escales.
 
-**Idée d'Alex, à trancher** : un cadeau qui amène une responsabilité, donc plus de dépenses (son exemple : le phare attire des touristes qui mangent de la Nourriture et laissent des Matériaux). Contraintes : la Nourriture ne se dépense que par un geste choisi (bible §3), aucune perte en cas d'absence (§8) ; et ce que le cadeau rend ne doit pas être ce qui déborde déjà (les Matériaux), sinon la boucle remplit le grenier au lieu de le vider.
+**L'idée d'Alex, devenue l'étape 3** : un cadeau qui amène une responsabilité, donc plus de dépenses (son exemple : le phare attire des touristes qui mangent de la Nourriture et laissent des Matériaux). Contraintes : la Nourriture ne se dépense que par un geste choisi (bible §3), aucune perte en cas d'absence (§8) ; et ce que le cadeau rend ne doit pas être ce qui déborde déjà (les Matériaux), sinon la boucle remplit le grenier au lieu de le vider. Version retenue : allumer le phare pour la semaine coûte de l'Énergie ; allumé, il attire une escale de plaisanciers ; les héberger coûte de la Nourriture (peut-être après une petite auberge, en Matériaux) ; ils laissent un décor introuvable ailleurs. On peut passer son tour sans rien perdre, comme pour les commandes du quai.
+
+### Lot O — Le phare, premier des Grands travaux (plan proposé le 29 octobre 2026, à valider)
+
+**Le principe.** Au rang Bourg, un troisième onglet du catalogue Construire, « Grands travaux », propose de relever le phare. Il se paie par étapes (quatre : fondation, tour, galerie, lanterne), surtout en Matériaux, un peu d'Énergie, aucun permis. Chaque étape se voit sur l'île. Fini, il n'a aucun effet de jeu : Fanal raconte le moment, le phare reste. Rien ne se perd en cas d'absence, l'allure ne change rien, aucun prix existant ne bouge.
+
+**Deux choix pour Alex :**
+- [ ] (a) Le rythme des travaux. Piste A : payer une étape la fait apparaître aussitôt. Piste B (recommandée) : payer lance l'étape, que les ouvriers bâtissent pendant les jours travaillés qui suivent (2 par étape, à régler), comme les permis et la semaine tenue. Pour B : la bible promet des travaux « sur plusieurs semaines », le joueur rapide ne bâtit pas tout le phare en un soir avec ses réserves, et chaque vraie tâche fait monter la tour. L'avancée se lit dans le registre, comme l'allure : rien de neuf à écrire, la même sur tous les appareils, et une quête remballée ne fait jamais reculer une étape.
+- [ ] (b) Un vieux phare éteint, visible dès le départ (recommandé) : le village abandonné avait son phare, et le relever, c'est « rallumer la lisière ». Sa fiche dit « Au Bourg : encore N habitants », sans pression. Il donne un horizon au joueur lent. Sinon, le phare n'apparaît qu'au Bourg.
+
+**O1 — Mesure d’abord (simulation).** Une mesure (s) dans `tests/core/simulation.test.mjs`, aux cinq joueurs et aux deux départs : le joueur paie une étape avec ce qui dépasse le prix de son prochain niveau (la règle du marchand « avisé »). On mesure : le jour du Bourg, celui du phare fini, les niveaux (inchangés à quelques jours près), les réserves au 1er mars. Cibles proposées : le joueur à 2 ou 3 quêtes par jour finit le phare 4 à 8 semaines après le Bourg ; ceux qui n'atteignent pas le Bourg ne changent pas. Les prix sortent de là et sont montrés à Alex avant l'écran.
+
+**O2 — Cœur (tests écrits d'abord et vus en échec).** `core/travaux.js` : le phare (étapes, prix, rang Bourg), son état dans la partie (`game.travaux`), le refus et sa raison (rang, étape en cours, ce qui manque), le paiement d'une étape (une opération du jeu, comme monter un quartier : `game.set`), l'avancée selon la piste choisie. Branché dans `js/store.js`. Le serveur garde la partie telle quelle : rien à changer dans `api/api.php` (à confirmer par les tests de l'API).
+
+**O3 — Maquette d'abord, vue par Alex avant le code [impeccable].** L'emplacement du phare : au bord du lac ou dans l'eau, comme le quai, mesuré case par case pour qu'il ne cache rien de touchable (leçon de l'éolienne, lot G). Le dessin des quatre étapes (et du vieux phare si (b)), l'onglet « Grands travaux », la fiche du phare. Captures aux trois largeurs.
+
+**O4 — Écran et textes [impeccable].** Le phare sur l'île (`world/models.js`, `layout.js`, `view.js`), l'onglet du catalogue (`js/ui/catalogue.js`), la fiche, l'annonce d'une étape payée ou finie, le moment de la fin (Fanal ; la lanterne s'allume le temps du moment, puis reste éteinte : l'allumer deviendra un geste à l'étape 3), les textes dans `content/fr-CA/`.
+
+**O5 — Vérification.** Tests de logique et de l'API ; un scénario navigateur neuf (`ui-51`) : payer une étape, la voir monter, la fiche, au clavier, en mouvement réduit, aux trois largeurs ; les scénarios touchés (catalogue, carte, bulles) ; la série complète avant l'envoi.
+
+**O6 — Documents.** Bible §4 (le Bourg) et §9 (les Grands travaux, ouverts à tous dès le Bourg, sans effet) ; `docs/FEUILLE-DE-ROUTE.md` ; `app/ARCHITECTURE.md`, `app/DESIGN.md` ; la ligne de version du `CLAUDE.md`.
+
+**O7 — Envoi**, sur l'accord d'Alex : étiquette `v2.19`.
