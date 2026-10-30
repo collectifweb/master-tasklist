@@ -21,3 +21,4 @@ export * from './hiver.js';
 export * from './meteo.js';
 export * from './allure.js';
 export * from './nourriture.js';
+export * from './travaux.js';

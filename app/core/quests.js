@@ -24,6 +24,7 @@ import { figerBilans } from './recycling.js';
 import { produireEolienne, produireBatiments } from './batiments.js';
 import { suivreObjectifs } from './objectifs.js';
 import { suivrePermis, suivreSemaine } from './quartiers.js';
+import { suivreTravaux } from './travaux.js';
 import { suivreImprevus, reparerParQuete, rouvrirParQuete } from './imprevus.js';
 import { suivreTempetes } from './hiver.js';
 import { noterTempetes } from './meteo.js';
@@ -236,6 +237,7 @@ function complete(ctx, task, { alreadyDone = false } = {}) {
   if (entry) reparerParQuete(ctx, t); // une quête payée du bon domaine règle les dégâts en cours (imprevus.js)
   if (entry) suivrePermis(ctx); // le 4e jour travaillé depuis le dernier permis en donne un (une fois par jour)
   if (entry) suivreSemaine(ctx); // le 5e jour travaillé de la semaine (lundi au dimanche) paie la semaine tenue, une fois
+  if (entry) suivreTravaux(ctx); // le 2e jour travaillé depuis le paiement d'une étape des Grands travaux la finit
 
   if (entry && wasTop3) {
     const bonus = buildBonusEntry('bon-fil', ctx.ledger, now, { taskId: t.id });
