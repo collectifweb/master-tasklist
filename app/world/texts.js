@@ -1,5 +1,6 @@
 // Textes du monde. Les clés viennent de content/fr-CA/interface.json (passé par l'hôte dans options.texts) ;
 // celles qui manquent retombent sur les valeurs ci-dessous (démo, tests).
+import { coinDe } from '../core/decors.js';
 
 const DEFAULTS = {
   // repris de interface.json (secours seulement)
@@ -12,6 +13,9 @@ const DEFAULTS = {
   'quartier.place.domain': 'Autres quêtes', 'quartier.champs.domain': 'Terrain', 'quartier.atelier.domain': 'Maison',
   'quartier.mairie.domain': 'Administratif', 'quartier.ecole.domain': 'Enfants', 'quartier.garage.domain': 'Véhicule',
   'a11y.skip_animation': 'Passer l’animation',
+  'monde.coin.one': '{au_secteur}', 'monde.coin.other': '{au_secteur}, coin {n}', 'monde.pose.groupe': 'Coins libres',
+  'decors.pose.annuler': 'Annuler', 'decors.pose.libres.one': '{n} coin libre', 'decors.pose.libres.other': '{n} coins libres',
+  'decors.pose.aide': 'Touche un repère rond sur la carte. Les flèches passent d’un coin à l’autre, Échap annule.',
 
   // propres au monde
   'monde.region': 'Carte de l’Orée',
@@ -122,6 +126,12 @@ function etatDebout(t, b) {
     return `${marchand} · ${c}${b.bulle?.kind === 'commande' ? `, ${t('bat.etat.quai.livrable')}` : ''}`;
   }
   return t('bat.etat.debout');
+}
+
+/** « à la Mairie, coin 2 », « à l’École » (un seul coin dans le quartier) : où est un coin à décorer (lot K). */
+export function coinNom(t, coin) {
+  const { quartier, n, total } = coinDe(coin);
+  return t(`monde.coin.${total > 1 ? 'other' : 'one'}`, { au_secteur: t(`quartier.${quartier}.in`), n });
 }
 
 /** « 7 quêtes Terrain à faire », « 0 quête Maison à faire », « 3 autres quêtes à faire » (Place du village, sans domaine). */

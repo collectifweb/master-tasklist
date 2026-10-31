@@ -504,6 +504,116 @@
 }
 .ow[data-mouvement="reduit"] .ow-bulle-flot { animation: none; }
 
+/* ---------------------------------------------------------------- mode de pose d'un décor (lot K) */
+/* Un repère par coin libre, posé au centre de sa case : un rond de 44 px en papier, cerclé de sauge profonde, une croix
+   sauge. En ambiance, un anneau part du rond toutes les 2,4 s (jamais en mouvement
+   réduit). Pendant la pose, bulles, flèches au bord, plaques et étiquette s'effacent (inertes, world.js) ; la barre du
+   du bas dit ce qu'on pose, les coins libres et « Annuler ». Pas de braise : rien n'y menace. */
+.ow-coins { position: absolute; left: 0; top: 0; z-index: 4; }
+.ow-coins[hidden], .ow-pose[hidden] { display: none; }
+.ow-coin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-sage-deep);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ow-coin-rond {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 3px solid var(--c-sage-deep);
+  border-radius: 50%;
+  background: var(--c-paper);
+  box-shadow: var(--shadow-hud);
+}
+.ow-coin-rond svg { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+.ow-coin-rond::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--c-sage-deep);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) .ow-coin-rond::after {
+  animation: ow-coin-anneau 2.4s var(--ease-out) infinite;
+}
+@keyframes ow-coin-anneau {
+  0% { opacity: 0.55; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(1.45); }
+}
+.ow-coin:active .ow-coin-rond { transform: scale(0.94); }
+.ow-coin:focus { outline: none; }
+.ow-coin:focus-visible .ow-coin-rond { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.ow[data-pose] :is(.ow-bulles, .ow-bords, .ow-plaques, .ow-tag) { display: none; }
+/* la barre : en bas, à gauche de la colonne des commandes (sous le pouce, loin du bandeau du haut, qui grandit avec son
+   texte), centrée dans cette place, 440 px au plus ; elle remonte d'un cran quand la rangée « Vue » se déplie à son niveau */
+.ow-pose {
+  position: absolute;
+  z-index: 6;
+  left: calc(var(--sp-3, 12px) + var(--safe-left, 0px));
+  right: calc(2 * var(--sp-3, 12px) + var(--target, 44px) + var(--safe-right, 0px));
+  bottom: calc(var(--world-ctl-bottom, var(--ow-bottom, 0px)) + max(0px, 100% - 100dvh) + var(--sp-3, 12px));
+  max-width: 440px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--sp-3, 12px);
+  padding: var(--sp-2, 8px) var(--sp-2, 8px) var(--sp-2, 8px) var(--sp-4, 16px);
+  border-radius: var(--r-lg, 16px);
+  background: var(--surface-hud);
+  box-shadow: var(--shadow-hud);
+}
+.ow:has(.ow-zrow:not([hidden])) .ow-pose { translate: 0 calc(-1 * (var(--target, 44px) + var(--sp-3, 12px))); }
+.ow-pose-t {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--text-16);
+  font-weight: var(--w-heavy);
+  line-height: 1.25;
+  color: var(--text);
+}
+.ow-pose-n {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+.ow-pose-x {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: var(--target, 44px);
+  padding: 0 var(--sp-4, 16px);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-paper);
+  box-shadow: 0 var(--face-h, 3px) 0 var(--c-cream-face);
+  font: inherit;
+  font-size: var(--text-15);
+  font-weight: var(--w-bold);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out);
+}
+.ow-pose-x:active { transform: translateY(calc(var(--face-h, 3px) * var(--motion, 1))); box-shadow: none; }
+.ow-pose-x:focus { outline: none; }
+.ow-pose-x:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+
 /* Flèche au bord : ce qui attend hors de la zone libre, de ce côté (chevron, picto, nombre au-delà de un) ; la toucher y
    amène la caméra. Collée au bord de l'écran, de la barre du haut ou du panneau. */
 .ow-bords { position: absolute; inset: 0; z-index: 4; overflow: hidden; pointer-events: none; }

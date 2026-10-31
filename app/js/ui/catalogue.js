@@ -1,4 +1,5 @@
-// Catalogue « Construire » (bouton de la carte ; lot L) : deux onglets, « Bâtiments » et « Quartiers ».
+// Catalogue « Construire » (bouton de la carte ; lot L) : trois onglets, « Bâtiments », « Quartiers » et « Décors »
+// (lot K, js/ui/decors.js).
 // Bâtiments : une rangée par type qu'on peut encore bâtir (un type au complet, un bâtiment unique déjà debout, n'y
 // figure plus). Toute la rangée est le bouton : le dessin, le nom, l'effet en une ligne à picto (« +3 par jour »), le
 // prix en pastilles (en pointillés, avec « il manque N », quand il en manque). Verrouillée par le rang ou un autre
@@ -14,7 +15,7 @@
 // bâtissent (avec les jours qui restent). Il se paie par étapes : la rangée ouvre sa fiche (data-action="trv-ouvrir",
 // js/ui/travaux.js), d'où le chevron. Debout, il n'y figure plus.
 // La feuille est construite une fois, puis mise à jour sur place : le focus ne saute pas pendant une synchronisation.
-// Elle s'ouvre toujours sur « Bâtiments ».
+// Elle s'ouvre sur « Bâtiments », sauf au retour d'une pose de décor annulée : sur « Décors ».
 import { BATIMENTS, BATIMENT_IDS, refusConstruire, QUARTIER_IDS, EFFETS_QUARTIERS, niveauDe, niveauMax, coutNiveau, refusMonter,
   compte, manque, placesParChalet, recolteDe, valeur, EOLIENNE_ENERGIE, GRENIER_STOCKAGE, PRODUCTION, TOUR_ANNONCE, OUVRAGE_IDS } from '../../core/index.js';
 import { t } from '../content.js';
@@ -22,6 +23,7 @@ import { $, $$, esc, icon, setText, setAttr, setHtml } from './dom.js';
 import { coutText, faitText, pastillesDe, pastilleHtml } from './batiment.js';
 import { compareModel, prixText } from './quartier.js';
 import { travauxModel } from './travaux.js';
+import { decorsPanel, fillDecors } from './decors.js';
 
 // La ligne courte d'un type : son picto (la ressource qu'il donne) et ses valeurs, lues au cœur comme dans la fiche
 const EFFET = {
@@ -110,7 +112,7 @@ const travauxRow = (thumb) => (id) => `<li class="cat-trv" data-ouvrage="${id}">
       </button>
     </li>`;
 
-function build(dlg, thumb, thumbOuvrage) {
+function build(dlg, thumb, thumbOuvrage, thumbDecor) {
   const tab = (id, panel, label, on) => `<button class="cat-tab" type="button" role="tab" id="${id}" aria-controls="${panel}"
       aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(label)}</button>`;
   dlg.innerHTML = `
@@ -118,7 +120,7 @@ function build(dlg, thumb, thumbOuvrage) {
       <button class="btn btn--quiet btn--icon" type="button" data-close aria-label="${esc(t('bat.catalogue.fermer'))}">${icon('x')}</button></header>
     <div class="sheet-body cat-body">
       <div class="cat-tabs" role="tablist" aria-label="${esc(t('bat.catalogue.onglets'))}">
-        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}
+        ${tab('cat-bats-t', 'cat-bats', t('bat.catalogue.section'), true)}${tab('cat-qrts-t', 'cat-qrts', t('quartier.catalogue.section'), false)}${tab('cat-decs-t', 'cat-decs', t('decors.catalogue.section'), false)}
       </div>
       <section class="cat-panel" role="tabpanel" id="cat-bats" aria-labelledby="cat-bats-t">
         <ul class="cat-list" role="list">${BATIMENT_IDS.map(row(thumb)).join('')}${OUVRAGE_IDS.map(travauxRow(thumbOuvrage)).join('')}</ul>
@@ -127,6 +129,7 @@ function build(dlg, thumb, thumbOuvrage) {
       <section class="cat-panel" role="tabpanel" id="cat-qrts" aria-labelledby="cat-qrts-t" hidden>
         <ul class="cat-list" role="list">${QUARTIER_IDS.map(quartierRow).join('')}</ul>
       </section>
+      ${decorsPanel(thumbDecor)}
     </div>`;
   dlg.addEventListener('click', (e) => {
     const b = e.target.closest('.cat-tab');
@@ -145,10 +148,11 @@ function build(dlg, thumb, thumbOuvrage) {
     choisir(dlg, next.id);
     next.focus();
   });
+  dlg._thumbDecor = thumbDecor;
   dlg.dataset.built = '1';
 }
 
-/** Affiche l'onglet `id` (cat-bats-t ou cat-qrts-t) et son panneau. */
+/** Affiche l'onglet `id` (cat-bats-t, cat-qrts-t ou cat-decs-t) et son panneau. */
 function choisir(dlg, id) {
   for (const b of $$('.cat-tab', dlg)) {
     const on = b.id === id;
@@ -249,18 +253,20 @@ function remplir(dlg, c, slots) {
   fill(dlg, rows(c, slots()));
   fillQuartiers(dlg, c);
   fillTravaux(dlg, c);
+  fillDecors(dlg, c, { thumb: dlg._thumbDecor, etat });
   $('.cat-vide', dlg).hidden = !!$('#cat-bats .cat-list > li:not([hidden])', dlg);
 }
 
 /**
- * Ouvre le catalogue, sur l'onglet « Bâtiments ». slots() : emplacements de batimentsView ; thumb(type) : dessin SVG
- * d'un type debout (facultatif) ; thumbOuvrage(id) : celui d'un ouvrage debout (facultatif, sinon son picto) ;
+ * Ouvre le catalogue, sur l'onglet « Bâtiments » (onglet : 'decors' pour « Décors », au retour d'une pose annulée).
+ * slots() : emplacements de batimentsView ; thumb(type) : dessin SVG d'un type debout (facultatif) ; thumbOuvrage(id) :
+ * celui d'un ouvrage debout (facultatif, sinon son picto) ; thumbDecor(decor, coin?) : celui d'un décor (facultatif) ;
  * open(dlg) : ouverture de la feuille (sheets.js).
  */
-export function openCatalogue(c, { slots, thumb, thumbOuvrage, open }) {
+export function openCatalogue(c, { slots, thumb, thumbOuvrage, thumbDecor, open, onglet }) {
   const dlg = $('#dlg-construire');
-  if (!dlg.dataset.built) build(dlg, thumb, thumbOuvrage);
-  choisir(dlg, 'cat-bats-t');
+  if (!dlg.dataset.built) build(dlg, thumb, thumbOuvrage, thumbDecor);
+  choisir(dlg, onglet === 'decors' ? 'cat-decs-t' : 'cat-bats-t');
   remplir(dlg, c, slots);
   open(dlg);
 }

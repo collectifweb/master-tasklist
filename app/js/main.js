@@ -23,6 +23,7 @@ import { openBatiment, refreshBatiment, batimentModel, coutText, ressource, ress
 import { openCatalogue, refreshCatalogue } from './ui/catalogue.js';
 import { openQuartier, refreshQuartier, monteText, openRecompense } from './ui/quartier.js';
 import { openTravaux, refreshTravaux } from './ui/travaux.js';
+import { coinNom } from './ui/decors.js';
 import { createStory } from './ui/story.js';
 import { createBandeau } from './ui/bandeau.js';
 
@@ -205,7 +206,7 @@ function objectifsSay(events) {
  * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang (et sa bande de
  * terrain), quartier monté,
  * échange au comptoir du marchand, commande livrée au visiteur de la semaine, repas servi, partie de sucre faite (lot N),
- * étape du phare lancée (lot O).
+ * étape du phare lancée (lot O), décor posé, déplacé ou rangé (lot K).
  */
 function batimentSay(events) {
   const out = [];
@@ -224,6 +225,10 @@ function batimentSay(events) {
     else if (e.type === 'sucres') out.push(t('bat.sr.sucres', { n: numGain(e.nourriture) }));
     else if (e.type === 'reparation' && e.par === 'paiement') out.push(t(`bat.sr.reparation.${e.imprevu}`, { cout: coutText(e.cout) }));
     else if (e.type === 'travaux-etape-payee') out.push(tn(`travaux.${e.ouvrage}.sr.lancee`, JOURS_PAR_ETAPE, { etape: OUVRAGES[e.ouvrage].etapes[e.etape - 1].nom, cout: coutText(e.cout) }));
+    else if (e.type === 'decor-pose' || e.type === 'decor-deplace') {
+      const cout = e.type === 'decor-pose' && e.cout;
+      out.push(t(cout ? 'decors.sr.pose.achat' : 'decors.sr.pose', { le: t(`decors.${e.decor}.le`), coin: coinNom(e.coin || e.vers), cout: cout ? coutText(cout) : '' }));
+    } else if (e.type === 'decor-range') out.push(t('decors.sr.range', { le: t(`decors.${e.decor}.le`) }));
   }
   return out.join(' ');
 }
@@ -516,14 +521,51 @@ function openPlan() {
   openSheet($('#dlg-plan'));
   worldPlan.focus();
 }
-/** Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi. */
-function openConstruire() {
+/**
+ * Catalogue « Construire » (bouton de la carte) : bâtir se fait sur le premier emplacement libre du type choisi.
+ * onglet : 'decors' au retour d'une pose annulée.
+ */
+function openConstruire(onglet) {
   if (!world || !store.view) return;
   const c = ctx();
   openCatalogue(c, {
     slots: () => world.batiments(c.game, c.ledger), thumb: (type) => world.thumbType(type),
-    thumbOuvrage: (id) => world.thumbOuvrage(id, ['4'])[0], open: openSheet,
+    thumbOuvrage: (id) => world.thumbOuvrage(id, ['4'])[0], thumbDecor: (d, coin) => world.thumbDecor(d, coin),
+    open: openSheet, onglet,
   });
+}
+
+/**
+ * Poser un décor (lot K) : le catalogue se range, puis la carte montre les coins libres ; le décor s'achète (ou sort de la
+ * remise, ou change de coin) au toucher d'un repère. « Annuler » et Échap rouvrent le catalogue sur « Décors », le focus
+ * sur la rangée d'où le geste est parti ; une autre commande de la carte le laisse fermé. En compact, le panneau ouvert
+ * se cache : il couvrirait les coins du bas.
+ */
+function poserDecorSurCarte({ decor, de = null, remise = false, doigt = false }) {
+  if (!world) return;
+  const dlg = $('#dlg-construire');
+  const retour = de ? `[data-action="dec-deplacer"][data-cle="${de}"]` : remise ? `[data-action="dec-reposer"][data-cle="${decor}"]`
+    : `.cat-dec-go[data-decor="${decor}"]`;
+  const lancer = () => {
+    if (!LARGE.matches && app.dataset.panel === 'open') setPanel('cache');
+    world.poser({
+      titre: t(de ? 'decors.pose.deplacer' : 'decors.pose.titre', { le: t(`decors.${decor}.le`) }),
+      onChoix: (coin, ev) => {
+        const r = de ? run('deplacerDecor', { de, vers: coin }) : run('poserDecor', { decor, coin, remise });
+        if (r && ev?.detail > 0) range = Date.now(); // le second toucher d'un double toucher ne tombe pas sous le repère
+      },
+      onAnnuler: ({ commande }) => {
+        announce.say(t('decors.pose.annule'));
+        if (commande) return;
+        openConstruire('decors');
+        $(retour, dlg)?.focus();
+      },
+    });
+  };
+  if (doigt) range = Date.now(); // le second toucher sur la rangée ne tombe pas sur un repère (le clavier, lui, passe)
+  if (!dlg.open) return lancer();
+  dlg.addEventListener('close', lancer, { once: true });
+  closeSheet(dlg);
 }
 
 // ───────── Clics ─────────
@@ -706,6 +748,22 @@ document.addEventListener('click', (e) => {
       range = Date.now();
       closeSheet($('#dlg-construire'));
       return world && world.focusEntity(bid); // la carte montre le bâtiment neuf (mouvement réduit respecté)
+    }
+    case 'dec-acheter': case 'dec-reposer': case 'dec-deplacer': {
+      if (spendBlocked(e, target, action)) return;
+      // impossible : la raison de la rangée (rang, ce qui manque), ou la phrase des coins quand tous sont pris
+      if (disabled(target)) return announce.say((action === 'dec-acheter' ? $(`#cat-d-${target.dataset.decor}-etat`) : $('#cat-dec-coins')).textContent.trim());
+      markSpent(action, target);
+      return poserDecorSurCarte({ decor: target.dataset.decor, de: action === 'dec-deplacer' ? target.dataset.coin : null, remise: action === 'dec-reposer', doigt: e.detail > 0 });
+    }
+    case 'dec-ranger': {
+      // un double toucher ne range pas aussi le décor de la rangée qui remonte sous le doigt
+      if (spendBlocked(e, target, action)) return;
+      markSpent(action, target);
+      const decor = target.dataset.decor;
+      if (!run('rangerDecor', { coin: target.dataset.coin })) return;
+      // la rangée passe dans « Dans la remise » : le focus suit le décor
+      return $(`[data-action="dec-reposer"][data-cle="${decor}"]`, $('#dlg-construire'))?.focus();
     }
     case 'qrt-ouvrir': return openQuartierSheet(target.dataset.quartier);
     case 'trv-ouvrir': return openTravauxSheet(target.dataset.ouvrage);

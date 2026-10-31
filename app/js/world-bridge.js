@@ -12,6 +12,8 @@
 //   w.render(game, tasks, ledger); w.play(events, { from }); w.refletEvents(game, tasks, tasksBefore, now); w.clearSelection()
 //   w.thumb(id) → dessin SVG d'un bâtiment pour sa fiche ; w.thumbType(type) → dessin d'un type debout (catalogue)
 //   w.thumbOuvrage(id, variants) → dessins de plusieurs états d'un ouvrage des Grands travaux, dans un même cadre (sa fiche)
+//   w.thumbDecor(decor, coin?) → dessin d'un décor (lot K, onglet « Décors ») ; w.poser({ titre, onChoix, onAnnuler }) : le
+//   mode de pose, des repères sur les coins libres de l'île ; w.finPose() le quitte sans rien appeler
 //   w.batiments(game, ledger) → emplacements de l'île dans l'ordre du cœur ; w.focusEntity(id) cadre l'un d'eux
 //   w.setQuestsShown(bool) → état du bouton « Quêtes »
 //   w.plan(conteneur, { onFocusSector, onQuartier, onBatiment }) → { render, focus, destroy }
@@ -48,6 +50,9 @@ export async function initWorld({ container, slot, content, announce, onImpact, 
       thumb: safe(world.thumb, ''),
       thumbType: safe(world.thumbType, ''),
       thumbOuvrage: safe(world.thumbOuvrage, []),
+      thumbDecor: safe(world.thumbDecor, ''),
+      poser: safe(world.poser),
+      finPose: safe(world.finPose),
       batiments(game, ledger) {
         try { return view.batimentsView(game, ledger, now()); } catch (e) { console.warn('monde\u00a0:', e); return []; }
       },

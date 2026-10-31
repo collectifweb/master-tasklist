@@ -15,8 +15,10 @@ import { logements, manque } from './batiments.js';
 export const DECORS_RANG = 'bourg';
 
 /**
- * Les décors, dans l'ordre du catalogue. Prix à régler par la mesure (t) (tests/core/simulation.test.mjs). La lanterne
- * demande un peu d'Énergie : elle s'allume le soir.
+ * Les décors, dans l'ordre du catalogue. La lanterne demande un peu d'Énergie : elle s'allume le soir. Mesure (t) du 31
+ * octobre 2026 (tests/core/simulation.test.mjs) : le joueur à 2 ou 3 quêtes par jour parti le 1er juillet pose 5 décors
+ * et garde 243 Énergie et 51 Matériaux au 1er mars (333 et 351 sans eux) ; le rapide parti le 1er juillet couvre les
+ * onze coins et garde 2 271 et 3 143 ; aucun niveau perdu, aucun phare retardé.
  */
 export const DECORS = {
   massif: { nom: 'le massif de fleurs', cout: { materials: 40 } },
@@ -56,7 +58,8 @@ export function etatDecors(game) {
   return { poses, remise, libres: COINS.filter((c) => !own(poses, c)) };
 }
 
-function refusRang(game) {
+/** Pourquoi les décors sont encore fermés (« Bourg : encore 3 habitants. »), ou null au rang Bourg et après. */
+export function refusDecors(game) {
   const besoin = RANGS.find((r) => r.id === DECORS_RANG);
   const h = logements(game).habitants;
   return h < besoin.min ? `${besoin.name} : encore ${besoin.min - h} habitant${besoin.min - h > 1 ? 's' : ''}.` : null;
@@ -71,7 +74,7 @@ function refusRang(game) {
 export function refusPoser(game, { decor, coin, remise = false } = {}) {
   if (!own(DECORS, decor)) return 'Décor inconnu.';
   if (coin !== undefined && !estCoin(coin)) return 'Coin inconnu.';
-  const rang = refusRang(game);
+  const rang = refusDecors(game);
   if (rang) return rang;
   const e = etatDecors(game);
   if (coin === undefined ? !e.libres.length : own(e.poses, coin)) return coin === undefined ? 'Tous les coins sont pris.' : 'Ce coin est déjà pris.';

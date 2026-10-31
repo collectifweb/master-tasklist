@@ -958,9 +958,9 @@
       "name": "Onglets",
       "kind": "custom",
       "refersTo": "cat-tabs",
-      "description": "Deux vues d'une même feuille (lot L, catalogue « Construire ») : deux moitiés de 44 px sur papier creusé ; l'onglet choisi en papier neuf, ombre d'une ligne, graisse 800 ; l'autre en encre douce, graisse 700. Les flèches passent de l'un à l'autre.",
-      "html": "<div class=\"ds-onglets\" role=\"tablist\" aria-label=\"Catalogue\"><button type=\"button\" role=\"tab\" aria-selected=\"true\">Bâtiments</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">Quartiers</button></div>",
-      "css": ".ds-onglets{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--c-sunken)}.ds-onglets button{min-height:44px;border:0;border-radius:var(--r-sm);background:transparent;font:inherit;font-size:.9375rem;font-weight:700;color:var(--text-soft)}.ds-onglets [aria-selected=\"true\"]{background:var(--c-paper-raised);box-shadow:0 1px 0 var(--c-line-strong),0 1px 4px rgb(66 43 25 / .10);font-weight:800;color:var(--text)}"
+      "description": "Trois vues d'une même feuille (lot L, catalogue « Construire » ; « Décors » depuis le lot K) : trois tiers de 44 px sur papier creusé ; l'onglet choisi en papier neuf, ombre d'une ligne, graisse 800 ; les autres en encre douce, graisse 700. Les flèches passent de l'un à l'autre.",
+      "html": "<div class=\"ds-onglets\" role=\"tablist\" aria-label=\"Catalogue\"><button type=\"button\" role=\"tab\" aria-selected=\"true\">Bâtiments</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">Quartiers</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">Décors</button></div>",
+      "css": ".ds-onglets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--c-sunken)}.ds-onglets button{min-height:44px;border:0;border-radius:var(--r-sm);background:transparent;font:inherit;font-size:.9375rem;font-weight:700;color:var(--text-soft)}.ds-onglets [aria-selected=\"true\"]{background:var(--c-paper-raised);box-shadow:0 1px 0 var(--c-line-strong),0 1px 4px rgb(66 43 25 / .10);font-weight:800;color:var(--text)}"
     },
     {
       "name": "Rangée du catalogue",
@@ -985,6 +985,22 @@
       "description": "Ce qui attend un geste hors de la zone libre (lot L) : languette de 48 px collée au bord de ce côté, sauge profonde cerclée de papier, chevron, picto et nombre au-delà de un. La toucher amène la caméra dessus. Son nom lu dit quoi, combien et de quel côté.",
       "html": "<span class=\"ds-bord\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m14.5 6-6 6 6 6\"/></svg><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3.5 11.5h17l-2.1 8.3H5.6zM9.4 14.3v2.9M14.6 14.3v2.9M7.8 11.5a4.2 4.2 0 0 1 8.4 0M12 7.3c0-1.3.6-2.5 1.7-3.2\"/></svg>2</span>",
       "css": ".ds-bord{display:inline-flex;align-items:center;gap:4px;height:48px;box-sizing:border-box;padding:0 12px 0 6px;border:3px solid var(--c-paper);border-left:0;border-radius:0 24px 24px 0;background:var(--c-sage-deep);color:var(--c-paper);box-shadow:var(--shadow-hud);font-family:var(--font-num);font-size:1.125rem;font-weight:800}"
+    },
+    {
+      "name": "Repère d'un coin libre",
+      "kind": "custom",
+      "refersTo": "ow-coin",
+      "description": "Le mode de pose d'un décor (lot K) : sur chaque coin libre de l'île, un rond de 44 px en papier, cerclé de 3 px de sauge profonde, une croix sauge de 22 px, ombre douce et chaude. En ambiance, un anneau sauge part du rond toutes les 2,4 s, jamais en mouvement réduit. Le contraire d'une bulle : papier sur sauge plutôt que sauge sur papier, posé au sol plutôt que pointé sur un bâtiment. Pas de braise.",
+      "html": "<span class=\"ds-coin\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></span>",
+      "css": ".ds-coin{display:inline-grid;place-items:center;width:44px;height:44px;box-sizing:border-box;border:3px solid var(--c-sage-deep);border-radius:50%;background:var(--c-paper);color:var(--c-sage-deep);box-shadow:var(--shadow-hud)}.ds-coin svg{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}"
+    },
+    {
+      "name": "Barre de pose",
+      "kind": "custom",
+      "refersTo": "ow-pose",
+      "description": "Pendant la pose d'un décor (lot K) : en bas de la carte, à gauche de la colonne des commandes, sur la surface du HUD (rayon 16 px, 440 px au plus) : ce qu'on pose (16 px, graisse 800), les coins libres (14 px, encre douce), « Annuler » (44 px, papier sur socle crème).",
+      "html": "<div class=\"ds-pose\"><p class=\"ds-pose-t\">Où poser le banc?</p><p class=\"ds-pose-n\">10 coins libres</p><button type=\"button\">Annuler</button></div>",
+      "css": ".ds-pose{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;width:360px;box-sizing:border-box;padding:8px 8px 8px 16px;border-radius:var(--r-lg);background:var(--surface-hud);box-shadow:var(--shadow-hud)}.ds-pose p{grid-column:1;margin:0}.ds-pose-t{font-size:1rem;font-weight:800;color:var(--text)}.ds-pose-n{font-size:.875rem;font-weight:600;color:var(--text-soft)}.ds-pose button{grid-column:2;grid-row:1/span 2;min-height:44px;padding:0 16px;border:1px solid var(--c-line-strong);border-radius:var(--r-md);background:var(--c-paper);box-shadow:0 3px 0 var(--c-cream-face);font:inherit;font-size:.9375rem;font-weight:700}"
     },
     {
       "name": "Carte de récompense",

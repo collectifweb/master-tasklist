@@ -1049,14 +1049,14 @@
   font-weight: var(--w-semibold);
 }
 
-/* Catalogue « Construire » (lot L) : deux onglets sur papier creusé, puis des rangées touchables en entier — le dessin,
+/* Catalogue « Construire » (lot L) : trois onglets sur papier creusé, puis des rangées touchables en entier — le dessin,
    le nom, l'effet en une ligne à picto, le prix en pastilles à droite (sous le texte quand la place manque) */
 .cat-body {
   gap: var(--sp-3);
 }
 .cat-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   border-radius: calc(var(--r-md) + 2px);
@@ -1125,9 +1125,11 @@
 /* verrouillée par le rang ou un autre bâtiment : le dessin passe au gris, sur papier creusé */
 .cat-row[data-etat="verrou"] .cat-thumb,
 .cat-qrt[data-etat="verrou"] .cat-thumb,
-.cat-trv[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
+.cat-trv[data-etat="verrou"] .cat-thumb,
+.cat-dec[data-etat="verrou"] .cat-thumb { background: var(--c-sunken); }
 .cat-row[data-etat="verrou"] .cat-thumb svg,
-.cat-trv[data-etat="verrou"] .cat-thumb svg { filter: grayscale(1); opacity: 0.6; }
+.cat-trv[data-etat="verrou"] .cat-thumb svg,
+.cat-dec[data-etat="verrou"] .cat-thumb svg { filter: grayscale(1); opacity: 0.6; }
 .cat-text {
   flex: 1 1 9rem;
   min-width: 0;
@@ -1211,6 +1213,51 @@
   margin: 0;
   padding: var(--sp-4) 4px;
   color: var(--text-soft);
+}
+/* Décors (lot K) : la phrase d'en tête et les coins libres, les rangées d'achat au gabarit des bâtiments, puis « Sur
+   l'île » et « Dans la remise » : le dessin, le nom et où il est, deux gestes compacts à droite (sous le texte quand la
+   place manque) */
+.cat-dec-intro {
+  margin: 0;
+  padding: 0 4px;
+  font-size: var(--text-15);
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+.cat-dec-coins {
+  margin: 0;
+  padding: 0 4px;
+  font-size: var(--text-14);
+  font-weight: var(--w-bold);
+  color: var(--c-sage-deep);
+}
+.cat-dec-h {
+  margin: var(--sp-3) 0 0;
+  padding: 0 4px;
+  font-size: var(--text-15);
+  font-weight: var(--w-heavy);
+  color: var(--text);
+}
+.cat-dec-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-3);
+  row-gap: var(--sp-2);
+  min-height: 72px;
+  padding: var(--sp-2) 4px;
+  border-bottom: 1px solid var(--c-line);
+}
+.cat-dec-ou {
+  font-size: var(--text-14);
+  font-weight: var(--w-semibold);
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+.cat-dec-gestes {
+  display: flex;
+  gap: var(--sp-2);
+  margin-left: auto;
 }
 
 /* Fiche d'un quartier : le gabarit de la fiche d'un bâtiment, picto du quartier dans la vignette */

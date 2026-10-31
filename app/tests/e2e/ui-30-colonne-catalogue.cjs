@@ -3,7 +3,7 @@
 //     « Passer l'animation » ni sous une plaque (rangée « Vue » dépliée comprise) ;
 //   - « Vue » au clavier : Entrée déplie, Échap replie et rend le focus à « Vue » sans toucher au panneau ; aux limites
 //     du zoom, aria-disabled (le bouton garde le focus) ; « Carte en liste » s'ouvre de la rangée et rend le focus à « Vue » ;
-//   - catalogue (lot L) : deux onglets, ouvert sur « Bâtiments » ; une rangée touchable par type, l'effet en une ligne à
+//   - catalogue (lot L) : trois onglets depuis le lot K (Décors), ouvert sur « Bâtiments » ; une rangée touchable par type, l'effet en une ligne à
 //     picto (« +2 places »), le prix en pastilles, ou le cadenas et la raison du cœur sans prix ; un geste verrouillé redit la raison et
 //     ne bâtit rien ; un double toucher bâtit une seule fois, le catalogue se ferme et la carte montre le bâtiment ;
 //     une synchronisation le met à jour sur place sans perdre le focus ; aucun défilement horizontal.
@@ -121,7 +121,7 @@ L.runScenario('30. Colonne de la carte et catalogue « Construire »', async ({ 
   const row = (t) => cat.find((c) => c.type === t) || {};
   R.check('catalogue : une ligne par type de bâtiment (11, le rang Village compris), avec son dessin', cat.map((c) => c.type).join() === 'chalet,parcelle,atelier,serre,eolienne,grenier,quai,tour,scierie,poulailler,cabane' && cat.every((c) => c.thumb), JSON.stringify(cat.map((c) => c.type)));
   const onglets = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire [role="tab"]')].map((t) => ({ id: t.id, sel: t.getAttribute('aria-selected'), h: t.getBoundingClientRect().height })));
-  R.check('catalogue : deux onglets de 44 px, ouvert sur « Bâtiments »', onglets.map((o) => `${o.id}:${o.sel}`).join() === 'cat-bats-t:true,cat-qrts-t:false' && onglets.every((o) => o.h >= 43.99), JSON.stringify(onglets));
+  R.check('catalogue : trois onglets de 44 px, ouvert sur « Bâtiments »', onglets.map((o) => `${o.id}:${o.sel}`).join() === 'cat-bats-t:true,cat-qrts-t:false,cat-decs-t:false' && onglets.every((o) => o.h >= 43.99), JSON.stringify(onglets));
   R.check('catalogue : aucun type au complet au départ, rien de caché', cat.every((c) => !c.cache), JSON.stringify(cat.filter((c) => c.cache).map((c) => c.type)));
   R.check('catalogue : coût lu (chalet), prix en pastille', row('chalet').cout === 'Coûte 15 Matériaux.' && row('chalet').prix === '15', JSON.stringify(row('chalet')));
   R.check('catalogue : l’effet en une ligne (chalet « +2 places », éolienne « +3 par jour »)', row('chalet').effet === '+2 places' && row('eolienne').effet === '+3 par jour', JSON.stringify([row('chalet').effet, row('eolienne').effet]));

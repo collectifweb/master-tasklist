@@ -52,7 +52,7 @@ Tu relances un petit village du Nord québécois, au bord d'un lac. Chaque vraie
 | Campement | 0 à 2 | Le départ : chalets, potager, atelier, petite serre |
 | Hameau | 3 à 5 | Première bande de terrain gagnée sur la forêt ; éolienne, grenier, quai |
 | Village | 6 à 10 | Nouvelle bande de terrain (à venir) ; tour de guet, scierie, poulailler, cabane à sucre |
-| Bourg | 11 à 20 | Le phare, premier des Grands travaux (§9) ; (à venir) nouvelle bande, marché, école, centrale solaire, garage à chasse-neige |
+| Bourg | 11 à 20 | Le phare, premier des Grands travaux (§9) ; les décors à placer soi-même (§5) ; (à venir) nouvelle bande, marché, école, centrale solaire, garage à chasse-neige |
 | Ville | 21 à 35 | (à venir) Une île voisine reliée par un pont ; gare, musée |
 | Ville +1, +2… | +15 chaque fois | (à venir) Chaque palier : du terrain, un bâtiment, un permis, un nouveau type de visiteur |
 
@@ -157,7 +157,7 @@ plein), que le joueur serve le repas chaque semaine ou seulement quand la réser
 
 D'après la simulation (J), chez les trois joueurs mesurés (très lent, lent, (g) ; départs du 1er juillet et du 7 octobre), ouvrir le jeu plus souvent ne retarde jamais le Hameau et ne retire jamais de niveau au 1er mars. Le rang Village, lui, peut reculer : chez (g) parti en octobre, ouvrir chaque jour le repousse au jour 51, contre 46 quand il n'ouvre que les jours de quête, parce que ses cultures mûrissent toutes le même jour et qu'il manque la commande famille de la semaine (`tasks/todo.md`, lot J).
 
-Les **décors** (érables, clôtures, lanternes, bancs) n'ont aucun effet. Ils sont marqués « décor » et servent au plaisir d'arranger son village (à venir : aujourd'hui, les décors de l'île sont fixes).
+Les **décors** n'ont aucun effet : ils servent au plaisir d'arranger son village. **Tels que construits** (lot K, 31 octobre 2026, choix de Claude à relire par Alex) : on les place soi-même dès le rang Bourg. Neuf décors s'achètent (le massif de fleurs, l'épinette, le nichoir, le bouleau, l'érable, le banc, la chaise Adirondack, la cordée de bois, la lanterne), de 40 à 200 Matériaux ; la lanterne demande aussi 60 Énergie. Ils se posent sur onze coins fixes de l'île, hors des routes, dont quatre à la place d'un arbre du décor d'origine. On choisit le décor dans l'onglet « Décors » du catalogue Construire, puis on touche un coin libre sur la carte : l'achat se fait à ce moment-là, et « Annuler » ne coûte rien. Déplacer un décor et le ranger sont gratuits ; rangé, il attend dans la remise, d'où on le repose sans frais, et rien n'est remboursé. Les décors uniques des escales du phare (§9) iront dans la même remise. Les textes ne disent pas qu'un décor ne rapporte rien (Alex, 30 octobre). Simulation (t) du 31 octobre : le joueur à 2 ou 3 quêtes par jour parti le 1er juillet pose 5 décors et garde 243 Énergie et 51 Matériaux au 1er mars ; le rapide parti le 1er juillet couvre les onze coins et garde encore 2 271 Énergie et 3 143 Matériaux ; aucun niveau perdu, le phare n'est pas retardé.
 
 ## 6. Les saisons : le vrai calendrier du Nord
 
@@ -347,7 +347,7 @@ Valeurs réglées par la simulation (k) (`tests/core/simulation.test.mjs`, cinq 
 - fini, il n'a aucun effet de jeu : sa trace sur l'île et un moment de récit. Les textes n'en disent rien : « quand c'est cosmétique, on n'a pas besoin de préciser que ça ne rapporte rien » (Alex, 30 octobre) ;
 - à l'écran : une rangée de l'onglet « Bâtiments » du catalogue, après les bâtiments, ses quatre étapes en crans ; touchable sur l'île à tous ses états, il ouvre sa fiche (l'avant et l'après en dessins, les étapes, le prix). Une étape payée : l'échafaudage monte du rocher. Une étape finie brille ; la dernière allume la lanterne le temps du moment, puis elle reste éteinte. Fanal dit chaque moment ;
 - simulation (s) du 29 octobre : le joueur à 2 ou 3 quêtes par jour parti le 1er juillet le finit le 14 février et garde 333 Énergie et 351 Matériaux au 1er mars ; le rapide parti le 1er juillet le finit le 18 novembre, celui parti le 7 octobre le 27 février. Aucune partie ne change sans le Bourg, aucun niveau n'est perdu ;
-- la suite, dans cet ordre : les décors à placer soi-même (§5), puis le phare allumé et ses escales. L'allumer pour la semaine coûtera de l'Énergie ; allumé, il attirera une escale de plaisanciers, qu'on héberge en Nourriture et qui laissent un décor introuvable ailleurs. On pourra passer son tour sans rien perdre, comme pour les commandes du quai.
+- la suite, dans cet ordre : les décors à placer soi-même (§5, construits au lot K le 31 octobre), puis le phare allumé et ses escales. L'allumer pour la semaine coûtera de l'Énergie ; allumé, il attirera une escale de plaisanciers, qu'on héberge en Nourriture et qui laissent un décor introuvable ailleurs. On pourra passer son tour sans rien perdre, comme pour les commandes du quai.
 
 **Avec ou sans Hermes.** C'est l'app qui calcule l'allure, donc l'adaptation marche même sans Hermes. Hermes devait en tenir compte en révisant la semaine qui vient (§12, abandonné : décision 44). Mais la chronique propose et l'app ajuste au moment de jouer : pendant une reprise, elle met de côté les imprévus mauvais prévus, et la taille des commandes suit l'allure du jour.
 

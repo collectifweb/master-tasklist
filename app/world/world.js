@@ -10,6 +10,8 @@
 //   world.clearSelection();      // retire la sélection (feuille de l'objet fermée)
 //   world.setQuestsShown(false); // le panneau des quêtes est caché (bouton « Quêtes » : aria-expanded)
 //   world.thumbType('serre');    // dessin d'un bâtiment debout (catalogue « Construire »)
+//   world.thumbDecor('banc', 'mairie-2'); // dessin d'un décor (lot K), avec la graine de son coin s'il est posé
+//   world.poser({ titre, onChoix, onAnnuler }); // mode de pose d'un décor (lot K) : des repères sur les coins libres
 //   world.destroy();
 //
 // Commandes de la carte (colonne en bas à droite) : « Construire », « Quêtes », « Vue ». « Vue » déplie vers la gauche
@@ -50,7 +52,7 @@ import { createTicker, createBus } from './ticker.js';
 import { promeneurs, trajet } from './habitants.js';
 import { Camera, NEAR_SCALE } from './camera.js';
 import { Fx } from './fx.js';
-import { makeTexts, batimentNom, batimentEtat, fmt } from './texts.js';
+import { makeTexts, batimentNom, batimentEtat, fmt, coinNom } from './texts.js';
 import { playEvents, cloneView, MOMENTS } from './moments.js';
 
 export { createWorldPlan } from './plan.js';
@@ -100,6 +102,8 @@ const BULLE_GLYPH = {
 };
 const bulleGlyph = (k, size = 24) => `<svg class="ow-glyph" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" focusable="false">${BULLE_GLYPH[k] || ''}</svg>`;
 const BULLE_W = 48, BULLE_H = 56; // rond de 48 px et sa queue : la pointe touche le haut du bâtiment
+const COIN_W = 44; // repère d'un coin libre, mode de pose (lot K)
+const COIN_GLYPH = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>';
 const COTES = ['gauche', 'droite', 'haut', 'bas'];
 
 function glyph(id, cls = '') {
@@ -312,7 +316,9 @@ export function createWorld(container, options = {}) {
   const bulles = el('div', 'ow-bulles');
   const tag = el('div', 'ow-tag', { 'aria-hidden': 'true' });
   tag.hidden = true;
-  content.append(far, sky, stage, plaques, bulles, tag);
+  const coinsLayer = el('div', 'ow-coins', { role: 'group', 'aria-label': t('monde.pose.groupe') }); // mode de pose (lot K)
+  coinsLayer.hidden = true;
+  content.append(far, sky, stage, plaques, bulles, coinsLayer, tag);
   scroller.append(content);
 
   const fxv = el('div', 'ow-fxv', { 'aria-hidden': 'true' });
@@ -345,7 +351,10 @@ export function createWorld(container, options = {}) {
   let live = null;
   if (!options.announce) { live = el('p', 'ow-sr', { role: 'status', 'aria-live': 'polite' }); }
   const bords = el('div', 'ow-bords'); // flèches au bord : ce qui attend un geste hors de la zone libre (lot L)
-  root.append(scroller, hint, fxv, bords, zoom, skipBtn, ctlProbe);
+  const poseBar = el('div', 'ow-pose', { role: 'group', 'aria-labelledby': `ow-pose-t-${id}` }); // mode de pose (lot K)
+  poseBar.innerHTML = `<p class="ow-pose-t" id="ow-pose-t-${id}"></p><p class="ow-pose-n"></p><button class="ow-pose-x" type="button"></button>`;
+  poseBar.hidden = true;
+  root.append(scroller, hint, fxv, bords, poseBar, zoom, skipBtn, ctlProbe);
   if (live) root.append(live);
   container.appendChild(root);
 
@@ -378,6 +387,8 @@ export function createWorld(container, options = {}) {
   let suppressClick = false;
   const plaqueEls = {};
   const plaqueLast = {};
+  let pose = null;           // mode de pose d'un décor (lot K) : { titre, onChoix, onAnnuler }
+  const coinEls = new Map(); // coin → repère
 
   // ---------------------------------------------------------------------------- textes accessibles
   function sectorName(s) { return t(`quartier.${s}.name`); }
@@ -693,6 +704,108 @@ export function createWorld(container, options = {}) {
     wake();
   }
 
+  // ---- mode de pose (lot K) : choisir le coin d'un décor. Des repères ronds sur les coins libres, dans le contenu comme
+  // les bulles, au centre de leur case ; bulles, flèches au bord, plaques et étiquette s'effacent, et la carte ne
+  // se touche plus qu'aux repères (le reste est inerte). Toucher un repère, ou Entrée, appelle onChoix(coin) ; « Annuler »,
+  // Échap ou une autre commande de la carte, onAnnuler(). Les repères sont un seul arrêt de tabulation, les flèches vont
+  // de l'un à l'autre. La caméra ne s'éloigne pas sous l'échelle proche : plus loin, deux repères voisins se chevauchent.
+  // onAnnuler({ commande }) : commande, la pose cède la place à une autre commande de la carte (rien à rouvrir).
+  function coinPoint(coin) { const { r, c } = COINS_ILE[coin]; return P(c + 0.5, r + 0.5); }
+  function minScale(lv) { return pose ? Math.max(lv[0], Math.min(NEAR_SCALE, lv[lv.length - 1])) : lv[0]; }
+  function syncPose() {
+    if (!pose) return;
+    const libres = (shown?.decors?.libres || []).filter((c) => COINS_ILE[c]);
+    if (!libres.length) { finPose(true, { commande: true }); return; }
+    for (const coin of libres) {
+      if (coinEls.has(coin)) continue;
+      const n = el('button', 'ow-coin', { type: 'button', 'data-coin': coin, tabindex: '-1' });
+      n.innerHTML = `<span class="ow-coin-rond">${COIN_GLYPH}</span>`;
+      const nom = coinNom(t, coin);
+      n.setAttribute('aria-label', nom.charAt(0).toUpperCase() + nom.slice(1));
+      coinsLayer.appendChild(n);
+      coinEls.set(coin, n);
+    }
+    for (const [coin, n] of coinEls) if (!libres.includes(coin)) { n.remove(); coinEls.delete(coin); }
+    poseBar.querySelector('.ow-pose-n').textContent = t(`decors.pose.libres.${libres.length === 1 ? 'one' : 'other'}`, { n: libres.length });
+    placeCoins();
+    syncRoving();
+  }
+  function placeCoins() {
+    if (!pose) return;
+    for (const [coin, n] of coinEls) {
+      const [x, y] = camera.toContent(...coinPoint(coin));
+      n.style.transform = `translate(${f(x - COIN_W / 2)}px, ${f(y - COIN_W / 2)}px)`;
+    }
+  }
+  function poser(p) {
+    if (destroyed || !p) return;
+    if (pose) finPose(false, { quiet: true });
+    pose = p;
+    select(null);
+    setRow(false);
+    clearVeille();
+    root.dataset.pose = '';
+    for (const n of [ents, plaques, bulles, bords]) n.inert = true;
+    poseBar.querySelector('.ow-pose-t').textContent = p.titre || '';
+    poseBar.querySelector('.ow-pose-x').textContent = t('decors.pose.annuler');
+    poseBar.hidden = false;
+    coinsLayer.hidden = false;
+    if (camera.s < NEAR_SCALE - 0.001) camera.setScale(NEAR_SCALE);
+    syncPose();
+    if (!pose) return; // aucun coin libre
+    syncLimits();
+    // aucun repère dans la zone libre : la caméra va au milieu des coins libres
+    const pts = [...coinEls.keys()].map(coinPoint);
+    if (!pts.some(([x, y]) => camera.isVisible(x, y, 30))) {
+      camera.centerOn(pts.reduce((a, q) => a + q[0], 0) / pts.length, pts.reduce((a, q) => a + q[1], 0) / pts.length, !reduced);
+    }
+    // le focus va au repère le plus proche du centre de la zone libre
+    const [x0, y0] = camera.freeCenter();
+    let best = null, d0 = Infinity;
+    for (const [coin, n] of coinEls) {
+      const [x, y] = camera.toView(...coinPoint(coin));
+      const d = Math.hypot(x - x0, y - y0);
+      if (d < d0) { d0 = d; best = n; }
+    }
+    rovingTo(best);
+    best.focus({ preventScroll: true });
+    say(`${p.titre} ${poseBar.querySelector('.ow-pose-n').textContent}. ${t('decors.pose.aide')}`);
+    doc.addEventListener('keydown', onPoseKey, true);
+    wake();
+  }
+  /** Quitte le mode de pose ; annule : onAnnuler({ commande }) est appelé. Le focus revient sur « Construire », d'où le geste part. */
+  function finPose(annule, { quiet = false, commande = false } = {}) {
+    if (!pose) return;
+    const p = pose;
+    pose = null;
+    delete root.dataset.pose;
+    for (const n of [ents, plaques, bulles, bords]) n.inert = false;
+    const avait = coinsLayer.contains(doc.activeElement) || poseBar.contains(doc.activeElement);
+    poseBar.hidden = true;
+    coinsLayer.hidden = true;
+    for (const n of coinEls.values()) n.remove();
+    coinEls.clear();
+    doc.removeEventListener('keydown', onPoseKey, true);
+    syncRoving();
+    syncLimits();
+    if (quiet) return;
+    if (avait || doc.activeElement === doc.body) bBuild.focus({ preventScroll: true });
+    if (annule) p.onAnnuler?.({ commande });
+  }
+  function choisirCoin(coin, ev) {
+    const p = pose;
+    if (!p || !coinEls.has(coin)) return;
+    finPose(false);
+    p.onChoix?.(coin, ev);
+    reveal(...coinPoint(coin));
+  }
+  // Échap annule la pose, où que soit le focus, avant les autres usages d'Échap (le panneau ouvert à côté de la carte)
+  function onPoseKey(ev) {
+    if (ev.key !== 'Escape' || !pose || doc.querySelector('dialog[open]')) return;
+    ev.preventDefault();
+    finPose(true);
+  }
+
   function apply(v, { quiet = false, enter = true } = {}) {
     if (root.hasAttribute('data-neige') !== !!v.neige) root.toggleAttribute('data-neige', !!v.neige); // l'hiver : palette.js
     syncTerrain(v.bandes);
@@ -712,6 +825,7 @@ export function createWorld(container, options = {}) {
     if (selected && !scene.get(selected)) select(null);
     else syncTag();
     syncRoving();
+    syncPose();
     return res;
   }
 
@@ -750,11 +864,15 @@ export function createWorld(container, options = {}) {
     measurePlaques();
     placeBulles();
     placePlaques();
+    placeCoins();
     placeTag();
     placeSkip();
-    // aux limites, aria-disabled plutôt que disabled : le bouton garde le focus et reste lu
+    syncLimits();
+  }
+  // aux limites, aria-disabled plutôt que disabled : le bouton garde le focus et reste lu
+  function syncLimits() {
     const lv = camera.levels();
-    limit(zOut, camera.s <= lv[0] + 0.001);
+    limit(zOut, camera.s <= minScale(lv) + 0.001);
     limit(zIn, camera.s >= lv[lv.length - 1] - 0.001);
   }
   function limit(b, on) {
@@ -780,8 +898,10 @@ export function createWorld(container, options = {}) {
     if (dir === 'fit') s = lv[0];
     else if (dir === 'in') s = lv.find((x) => x > camera.s + 0.01) ?? lv[lv.length - 1];
     else s = [...lv].reverse().find((x) => x < camera.s - 0.01) ?? lv[0];
+    const bas = s < minScale(lv) - 0.001; // mode de pose : pas plus loin que l'échelle proche
+    s = Math.max(s, minScale(lv));
     camera.setScale(s, focusView);
-    if (dir === 'fit') camera.centerOn(0, BOUNDS.y + BOUNDS.h / 2);
+    if (dir === 'fit' && !bas) camera.centerOn(0, BOUNDS.y + BOUNDS.h / 2);
     wake();
   }
 
@@ -816,6 +936,7 @@ export function createWorld(container, options = {}) {
     relayoutControls();
   }
   function control(kind) {
+    if (pose && kind !== 'vue') finPose(true, { commande: true });
     if (kind === 'vue') setRow(row.hidden);
     else if (kind === 'build') ctl.build?.();
     else if (kind === 'quetes') ctl.quests?.();
@@ -867,6 +988,7 @@ export function createWorld(container, options = {}) {
   // Un seul arrêt de tabulation parmi les plaques et les objets (tabindex itinérant), flèches spatiales.
   let rovingId = null;
   function rovingItems() {
+    if (pose) return [...coinEls.values()];
     const items = SECTOR_ORDER.map((s) => plaqueEls[s]).filter(Boolean);
     if (root.dataset.lod !== 'loin') for (const n of scene.nodes.values()) if (n.e.interactive) items.push(n.el);
     return items;
@@ -989,6 +1111,12 @@ export function createWorld(container, options = {}) {
     if (c) { control(c.dataset.ow); return; }
     const z = ev.target.closest('[data-zoom]');
     if (z) { if (z.getAttribute('aria-disabled') !== 'true') zoomTo(z.dataset.zoom); return; }
+    if (pose) {
+      const k = ev.target.closest('.ow-coin');
+      if (k) choisirCoin(k.dataset.coin, ev);
+      else if (ev.target.closest('.ow-pose-x')) finPose(true);
+      return;
+    }
     if (ev.target.closest('.ow-skip')) { skip(); return; }
     // bulle (lot L) : l'hôte récolte d'un coup ou ouvre la fiche (il garde le double toucher). Pendant le vol d'une récolte,
     // une autre bulle se touche (les récoltes s'enchaînent) ; pendant un autre moment, non.
@@ -1045,6 +1173,7 @@ export function createWorld(container, options = {}) {
   }
 
   function onKey(ev) {
+    if (ev.key === 'Escape' && ev.defaultPrevented) return; // la pose annulée (onPoseKey)
     if (ev.key === 'Escape') {
       // Échap dans la colonne, rangée « Vue » dépliée : elle se replie et le focus revient sur « Vue »
       if (!row.hidden && zoom.contains(doc.activeElement)) { setRow(false); bView.focus({ preventScroll: true }); ev.preventDefault(); return; }
@@ -1073,7 +1202,7 @@ export function createWorld(container, options = {}) {
     // gagnée au quai) ne la ramène pas
     if (playing || queued) return;
     const n = ev.target;
-    if (n.classList?.contains('ow-plaque') || n.classList?.contains('ow-ent')) revealEl(n);
+    if (n.classList?.contains('ow-plaque') || n.classList?.contains('ow-ent') || n.classList?.contains('ow-coin')) revealEl(n);
   }
 
   // glisser à la souris pour se déplacer ; pincer à deux doigts pour zoomer
@@ -1095,7 +1224,7 @@ export function createWorld(container, options = {}) {
       return;
     }
     if (ev.pointerType !== 'mouse' || ev.button !== 0) return;
-    if (ev.target.closest('.ow-zoom, .ow-skip')) return;
+    if (ev.target.closest('.ow-zoom, .ow-skip, .ow-pose')) return;
     drag = { x: ev.clientX, y: ev.clientY, sl: scroller.scrollLeft, st: scroller.scrollTop, moved: false };
   }
   function onPointerMove(ev) {
@@ -1104,7 +1233,7 @@ export function createWorld(container, options = {}) {
       if (pinch && touches.size === 2) {
         const [a, b] = [...touches.values()];
         const lv = camera.levels();
-        const s = Math.max(lv[0], Math.min(lv[lv.length - 1], pinch.s * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d));
+        const s = Math.max(minScale(lv), Math.min(lv[lv.length - 1], pinch.s * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d));
         if (Math.abs(s - camera.s) > 0.004) camera.setScale(s, pinch.mid);
       }
       return;
@@ -1125,7 +1254,7 @@ export function createWorld(container, options = {}) {
     ev.preventDefault();
     const R = root.getBoundingClientRect();
     const lv = camera.levels();
-    const s = Math.max(lv[0], Math.min(lv[lv.length - 1], camera.s * Math.exp(-ev.deltaY * 0.0022)));
+    const s = Math.max(minScale(lv), Math.min(lv[lv.length - 1], camera.s * Math.exp(-ev.deltaY * 0.0022)));
     camera.setScale(s, [ev.clientX - R.left, ev.clientY - R.top]);
   }
   function onScroll() {
@@ -1281,6 +1410,21 @@ export function createWorld(container, options = {}) {
       const w = Math.max(...arts.map((a) => a.x + a.w)) - x0, h = Math.max(...arts.map((a) => a.y + a.h)) - y0;
       return arts.map((a) => `<svg class="ow-thumb" viewBox="${f(x0)} ${f(y0)} ${f(w)} ${f(h)}" width="${f(w)}" height="${f(h)}" focusable="false" aria-hidden="true">${a.svg}</svg>`);
     },
+    /** Dessin d'un décor (lot K, catalogue « Décors ») ; coin : celui où il est posé, pour la même forme que sur l'île. */
+    thumbDecor(decor, coin) {
+      const a = artFor({ model: decor, seed: coin ? graineCoin(coin) : 1 });
+      return `<svg class="ow-thumb" viewBox="${a.x} ${a.y} ${a.w} ${a.h}" width="${a.w}" height="${a.h}" focusable="false" aria-hidden="true">${a.svg}</svg>`;
+    },
+    /**
+     * Mode de pose d'un décor (lot K) : repères ronds sur les coins libres et une barre « titre · N coins libres ·
+     * Annuler ». onChoix(coin, ev) : un repère touché (ev : le clic, detail 0 au clavier) ; onAnnuler({ commande }) :
+     * « Annuler », Échap, ou une autre commande de la carte (commande : true).
+     * Le mode finit seul quand plus aucun coin n'est libre (onAnnuler).
+     */
+    poser,
+    /** Quitte le mode de pose sans rien appeler. */
+    finPose() { finPose(false, { quiet: true }); },
+    get pose() { return !!pose; },
     /** Mémorise le nouvel état ; l'applique au prochain micro-temps, ou à la fin des animations en cours. */
     render(game, taskList = [], ledger = []) {
       if (destroyed) return;

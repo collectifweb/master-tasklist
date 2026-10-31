@@ -225,7 +225,7 @@ L.runScenario('31. Niveaux de quartier : fiche, achat par permis, catalogue et c
   await page.waitForSelector('#dlg-construire[open]');
   await page.waitForTimeout(450);
   const onglets0 = await page.evaluate(() => [...document.querySelectorAll('#dlg-construire [role="tab"]')].map((t) => `${t.id}:${t.getAttribute('aria-selected')}`).join());
-  R.check('catalogue : deux onglets, ouvert sur « Bâtiments »', onglets0 === 'cat-bats-t:true,cat-qrts-t:false', onglets0);
+  R.check('catalogue : trois onglets, ouvert sur « Bâtiments »', onglets0 === 'cat-bats-t:true,cat-qrts-t:false,cat-decs-t:false', onglets0);
   await page.focus('#cat-bats-t');
   await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(150);

@@ -2,7 +2,7 @@
 // hors ligne. Les données passent par api/api.php : jamais mises en cache ici (la copie hors ligne des quêtes est
 // celle du magasin, dans localStorage). Chemins relatifs : l'app peut vivre dans un sous-dossier.
 // Changer VERSION à chaque déploiement qui touche la coquille : l'ancien cache est effacé à l'activation.
-const VERSION = 'oree-coquille-v38';
+const VERSION = 'oree-coquille-v39';
 
 const SHELL = [
   './',
@@ -15,10 +15,10 @@ const SHELL = [
   'css/tokens.css', 'css/base.css', 'css/components.css', 'css/world.css', 'css/app.css',
   'js/main.js', 'js/store.js', 'js/content.js', 'js/api-client.js', 'js/world-bridge.js', 'js/horloge.js',
   'js/ui/announce.js', 'js/ui/dom.js', 'js/ui/format.js', 'js/ui/glyphs.js',
-  'js/ui/batiment.js', 'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js', 'js/ui/bandeau.js', 'js/ui/catalogue.js', 'js/ui/quartier.js', 'js/ui/travaux.js',
+  'js/ui/batiment.js', 'js/ui/hud.js', 'js/ui/model.js', 'js/ui/quests.js', 'js/ui/sheets.js', 'js/ui/speech.js', 'js/ui/story.js', 'js/ui/sync.js', 'js/ui/bandeau.js', 'js/ui/catalogue.js', 'js/ui/quartier.js', 'js/ui/travaux.js', 'js/ui/decors.js',
   'core/index.js', 'core/cote.js', 'core/domains.js', 'core/economy.js',
   'core/infer.js', 'core/ledger.js', 'core/letters.js', 'core/migrate.js', 'core/quests.js', 'core/recycling.js',
-  'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js', 'core/batiments.js', 'core/objectifs.js', 'core/quartiers.js', 'core/reglages.js', 'core/visiteurs.js', 'core/imprevus.js', 'core/hiver.js', 'core/allure.js', 'core/nourriture.js', 'core/meteo.js', 'core/travaux.js',
+  'core/reward.js', 'core/state.js', 'core/time.js', 'core/village.js', 'core/batiments.js', 'core/objectifs.js', 'core/quartiers.js', 'core/reglages.js', 'core/visiteurs.js', 'core/imprevus.js', 'core/hiver.js', 'core/allure.js', 'core/nourriture.js', 'core/meteo.js', 'core/travaux.js', 'core/decors.js',
   'world/world.js', 'world/view.js', 'world/camera.js', 'world/fx.js', 'world/iso.js', 'world/layout.js', 'world/models.js',
   'world/moments.js', 'world/palette.js', 'world/habitants.js', 'world/plan.js', 'world/scene.js', 'world/terrain.js', 'world/texts.js', 'world/ticker.js',
   'content/fr-CA/interface.json', 'content/fr-CA/repliques.json', 'content/fr-CA/ancres.json',
