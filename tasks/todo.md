@@ -2250,3 +2250,44 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
   - Envoi `v2.20` sur l'accord d'Alex (« Bien sur », 30 octobre vers 23 h 53), le 30 octobre à 23 h 56 : contrôles de l'envoi comme attendu (app 200, API 401 sans code et 200 avec, données 403, configuration vide, cache v38, pas de bac à sable, `main` sur GitHub = v2.20) ; 5 fichiers servis comparés à l'étiquette (`sw.js`, `world/layout.js`, `world/terrain.js`, `world/models.js`, `world/habitants.js`), identiques ; `DESIGN.md` et les tests absents en ligne (404). Jeu en ligne pas ouvert dans un navigateur : ce serait la visite du jour d'Alex.
 
 **Bilan du lot D.** Les routes sont en ligne : chacune finit sur quelque chose (le quai, la lisière refermée, le garde-fou de droite), celle du fond traverse la bande du Hameau une fois gagnée, et elles se dessinent d'un seul trait, sans croissants aux raccords. Mesuré : tests de logique et de l'API (694 sur 696, aucun échec), scénarios 41, 43, 44 et 12, `world-s3` et `world-perf`, série complète de 48 scénarios (4 152 vérifications), contre-épreuves des nouveaux tests. Effets de bord mesurés et gardés : 5 éléments de décor en plus, aucun perdu ni changé (avec la bande, une épinette devient un arbre feuillu) ; touffes identiques ; 1 trajet d'habitant changé sur 24 villages comparés ; la cinquième caisse d'échéance se pose contre le garde-fou. Reste : l'étape 2 des Grands travaux (les décors), l'étape 3 (le phare allumé et ses escales), les deux écarts entre la bible §9 et le code (lettre de retour, dates de l'objectif d'hiver).
+
+## Lot K — Les décors à placer soi-même (étape 2 des Grands travaux)
+
+**Pourquoi.** Deuxième étape des Grands travaux, dans l'ordre validé par Alex le 29 octobre : donner une autre façon de dépenser les Matériaux et l'Énergie en trop, sans effet de jeu, pour le plaisir d'arranger son village (bible §5 : « érables, clôtures, lanternes, bancs »). Alex, le 31 octobre vers 0 h 10, après l'envoi de la v2.20 : « continue en autonomie avec les étapes 2 et 3. Go ». Ce plan n'a donc pas été validé ligne par ligne : chaque choix ci-dessous est un choix de Claude, réversible, à relire par Alex avant l'envoi.
+
+**Constaté le 31 octobre vers 0 h 30** (script du dossier de la session, hors dépôt) : hors des routes, de la Place, des bâtiments, des repères, des caisses, du décor fixe, des imprévus, des fêtes, des portes et des postes des habitants, l'île garde 24 cases libres (Garage 3, Mairie 8, École 4, Champs 6, Atelier 3).
+
+**Choix de Claude (à relire par Alex) :**
+- (a) Ouverts au rang Bourg, comme les Grands travaux. Avant, l'onglet dit « Bourg : encore N habitants », comme le phare.
+- (b) Des coins à décorer fixes, une quinzaine, plutôt qu'une pose libre case par case : c'est déjà ainsi que se posent les bâtiments (des emplacements), chaque coin se mesure à l'écran pour ne rien cacher de touchable (leçon de l'éolienne, lot G), et un coin se touche facilement au doigt sur téléphone. Une pose libre pourra venir plus tard si Alex la veut.
+- (c) Un troisième onglet « Décors » dans le catalogue Construire : une dizaine de décors ne tiennent pas dans une rangée de « Bâtiments », comme le phare. Toucher un décor ferme le catalogue ; la carte montre les coins libres ; toucher un coin pose le décor et le paie ; « Annuler » ne coûte rien.
+- (d) Un décor posé se touche sur l'île (comme une lanterne) : sa fiche propose « Déplacer » et « Ranger ». Ranger le met dans la remise, sans remboursement ; le reposer est gratuit. La remise est dans l'onglet « Décors » ; elle recevra aussi les décors uniques des escales (lot Y).
+- (e) Prix surtout en Matériaux, ce qui déborde le plus ; un peu d'Énergie pour la lanterne, qui s'allume le soir. Réglés par une mesure de simulation, comme le phare.
+- (f) Aucun effet de jeu. Les coins sont hors des routes : les habitants gardent leurs chemins.
+
+- [ ] **K0 — Cœur, tests écrits d'abord et vus en échec.** `core/decors.js` : le catalogue (décors, prix), les coins (identifiants seulement ; leur place est dans `world/layout.js`), la partie (`game.decors = { poses: { coin: decor }, remise: [decor…] }`), les refus et leur raison (rang, coin pris, coin inconnu, ce qui manque), `poserDecor` (acheter et poser, ou poser depuis la remise), `deplacerDecor`, `rangerDecor`. Branché dans `js/store.js`. Le serveur garde la partie telle quelle (à confirmer par les tests de l'API).
+- [ ] **K1 — Mesure (simulation).** Une mesure (t) dans `tests/core/simulation.test.mjs` : le joueur avisé du phare achète ensuite des décors avec ce qui dépasse le prix de son prochain niveau. Exigé : rien ne change avant le Bourg, aucun niveau perdu, le premier niveau au même jour. Mesuré : ce qui reste au 1er mars.
+- [ ] **K2 — Maquette dans le jeu [impeccable].** Les dessins des nouveaux décors, la place des coins mesurée case par case (rien de touchable caché, rien caché derrière un bâtiment, aux trois largeurs), l'onglet « Décors », le mode de pose sur la carte (repères des coins libres, barre « Annuler »), la fiche d'un décor posé. Captures aux trois largeurs.
+- [ ] **K3 — Interface.** Branchement des gestes (`main.js`), carte (`world/world.js`, entités et repères), carte en liste (les coins libres et les décors posés en boutons), textes (`content/fr-CA/`), phrases lues, Fanal.
+- [ ] **K4 — Vérification.** Tests de logique et de l'API ; un scénario des décors aux trois largeurs (poser, annuler, déplacer, ranger, reposer, double toucher, clavier, carte en liste) ; scénarios qui comptent les onglets du catalogue ou les objets touchables ; `world-s3`, `world-perf` ; série complète.
+- [ ] **K5 — Documents.** Bible §5 et §15, `app/DESIGN.md`, `app/.impeccable/design.json`, `app/ARCHITECTURE.md`, `app/content/README.md` si besoin ; à l'envoi, la feuille de route et la ligne de version du `CLAUDE.md`.
+- [ ] **K6 — Envoi**, sur l'accord d'Alex.
+
+## Lot Y — Le phare allumé et ses escales (étape 3 des Grands travaux)
+
+**Pourquoi.** L'idée d'Alex du 29 octobre : un cadeau qui amène une responsabilité. Version retenue ce jour-là (bible §9) : allumer le phare pour la semaine coûte de l'Énergie ; allumé, il attire une escale de plaisanciers, qu'on héberge en Nourriture, et qui laissent un décor introuvable ailleurs ; on peut passer son tour sans rien perdre. Même accord que le lot K (« continue en autonomie »).
+
+**Choix de Claude (à relire par Alex) :**
+- (a) Le phare debout : sa fiche propose « Allumer le phare », une fois par semaine (du lundi au dimanche), pour de l'Énergie. Sa lanterne brille jusqu'au dimanche.
+- (b) Allumé, un voilier de plaisanciers vient mouiller près du phare, avec une bulle. Sa fiche dit ce qu'ils demandent (de la Nourriture) et ce qu'ils laisseront ; « Les accueillir » paie, leur décor va dans la remise, le voilier repart.
+- (c) Rien ne se perd pendant une absence : l'escale attend qu'on l'accueille, même au-delà du dimanche. Tant qu'elle attend, on ne rallume pas ; une fois accueillie, on rallume dès la semaine suivante. Ne pas allumer ne fait rien perdre.
+- (d) Les familles d'abord, comme pour le repas de la semaine : tant qu'une place est libre au chalet, l'accueil ne prend pas la Nourriture qui accueillerait la prochaine famille.
+- (e) Six décors uniques, donnés dans l'ordre (un par escale), puis ils reviennent dans le même ordre. Aucun ne s'achète.
+- (f) Prix réglés par une mesure de simulation (Énergie pour allumer, Nourriture pour accueillir).
+
+- [ ] **Y0 — Cœur, tests d'abord.** `core/escales.js` (ou dans `core/travaux.js`) : allumer (refus : phare pas debout, déjà allumé cette semaine, escale qui attend, ce qui manque), l'escale qui attend, accueillir (refus : pas d'escale, les familles d'abord, ce qui manque), le décor unique mis dans la remise du lot K. Gestes en file : vérifier au registre ou dans la partie que l'escale n'est pas déjà accueillie (leçon du lot H).
+- [ ] **Y1 — Mesure (simulation).** Mesure (u) : le joueur avisé allume chaque semaine quand il a de quoi et accueille dès qu'il peut. Mêmes exigences que (t) ; mesuré : escales accueillies, réserves au 1er mars, Nourriture.
+- [ ] **Y2 — Maquette dans le jeu [impeccable].** Le phare allumé (faisceau), le voilier et sa place mesurée, les six décors uniques, la fiche des plaisanciers, la fiche du phare debout. Captures aux trois largeurs, le jour et le soir.
+- [ ] **Y3 — Interface.** Gestes, moments (le voilier arrive, repart), bulle, phrases lues, Fanal, lettre du matin si besoin.
+- [ ] **Y4 — Vérification.** Tests ; un scénario des escales aux trois largeurs ; série complète.
+- [ ] **Y5 — Documents**, puis **Y6 — Envoi** sur l'accord d'Alex.
