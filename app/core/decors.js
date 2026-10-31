@@ -30,6 +30,13 @@ export const DECORS = {
   chaise: { nom: 'la chaise Adirondack', cout: { materials: 150 } },
   cordee: { nom: 'la cordée de bois', cout: { materials: 200 } },
   lanterne: { nom: 'la lanterne', cout: { energy: 60, materials: 200 } },
+  // laissés par les plaisanciers des escales du phare (core/escales.js, DECORS_ESCALE), dans cet ordre ; ne s'achètent pas
+  canot: { nom: 'le canot renversé', unique: true },
+  ancre: { nom: 'la vieille ancre', unique: true },
+  cloche: { nom: 'la cloche de brume', unique: true },
+  girouette: { nom: 'la girouette', unique: true },
+  bouee: { nom: 'la bouée', unique: true },
+  filet: { nom: 'le filet de pêche', unique: true },
 };
 export const DECOR_IDS = Object.keys(DECORS);
 

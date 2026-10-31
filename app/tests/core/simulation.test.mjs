@@ -95,6 +95,9 @@
 // (t) (lot K) les décors (core/decors.js) : le joueur de (s), avec le phare, et ensuite des décors, achetés avec ce qui
 //     dépasse le prix de son prochain niveau et de la prochaine étape du phare, le moins représenté sur l'île d'abord,
 //     sur le premier coin libre. Mesure les décors posés, leur jour et les réserves au 1er mars ; règle leurs prix.
+// (u) (lot Y) les escales du phare (core/escales.js) : le joueur de (t), qui ensuite allume le phare chaque semaine avec ce
+//     qui dépasse le prix de son prochain niveau, et accueille les plaisanciers dès qu'il le peut (les familles d'abord,
+//     règle du cœur). Mesure les allumages, les escales accueillies et les réserves au 1er mars ; règle les deux prix.
 // Quêtes fictives génériques, aucune donnée réelle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -109,6 +112,7 @@ import {
   ECHANGE_DU_JOUR, coutNiveau, REPAS, SIROP, PRODUCTION, produitCeJour, servirRepas, refusServirRepas, faireLesSucres,
   refusFaireLesSucres, prixPartieDeSucre, reglerVille, payerEtape, refusTravaux, etatOuvrage, OUVRAGES, niveauMax,
   poserDecor, refusPoser, etatDecors, DECORS, DECOR_IDS, COINS,
+  allumerPhare, accueillirEscale, refusAllumer, refusAccueillirEscale, ESCALE,
 } from '../../core/index.js';
 import { fresh, step } from './helpers.mjs';
 
@@ -136,7 +140,7 @@ const heure = (day, h, m = 0) => `${day}T${String(h).padStart(2, '0')}:${String(
  * les logements possibles sont habités, ou null), pas: { id: n° du jour atteint }, premiereFamille (n° du jour),
  * niveaux: [n° du jour de chaque niveau acheté], objectifs: { clé de saison: jour atteint }, monde }.
  */
-function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null, visite = 'chaque', meteo = null, travaux = null, decors = null } = {}) {
+function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false, profil = quetes, niveaux = true, habitudes = false, marchand = false, imprevus = null, hiver = null, commandes = null, duJour = null, village = false, nourriture = null, visite = 'chaque', meteo = null, travaux = null, decors = null, escales = null } = {}) {
   // habitudes (profil g) : le joueur ajoute chaque quête le jour même, par le chemin d'ajout complet de l'interface (le
   // bonus d'ajout est compté par le cœur), et bâtit aussi l'éolienne, le grenier et le quai dès que le Hameau le permet.
   // marchand (h) : 'avise' ou 'toujours' (voir l'en-tête), ou 'sans' (le quai est bâti, mais le joueur n'échange pas) ;
@@ -150,6 +154,8 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   // jours-là et un jour sans quête sur deux. Un jour où il n'ouvre pas le jeu, il ne fait rien.
   // travaux (s) : 'avise', il paie une étape du phare avec ce qui dépasse le prix de son prochain niveau (etapeAvisee).
   // decors (t) : 'avise', ensuite, un décor avec ce qui dépasse aussi la prochaine étape du phare (decorAvise).
+  // escales (u) : 'avise', ensuite, il accueille les plaisanciers dès qu'il le peut, puis allume le phare avec ce qui
+  // dépasse le prix de son prochain niveau (allumerAvise).
   // meteo (q) : { ville, neiges }, il règle sa ville au départ ; à chaque ouverture, la prévision reçue couvre 16 jours,
   // lue le jour même : 10 cm les jours de `neiges`, rien les autres.
   const liste = profil(jours * 3 + 10);
@@ -171,6 +177,7 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
   log.bourg = null;
   log.travaux = { payees: [], fini: null };
   log.decors = []; // (t) n° du jour de chaque décor posé
+  log.escales = { allumages: [], accueillies: [], nourriture: 0 }; // (u) n° des jours, Nourriture donnée
   if (hiver === 'sans') w.ledger = tempetesDeLHiver(debut).map((j) => ({ key: `tempete:${j}` }));
   // sans imprévus : le temps passe quand même à chaque ouverture, comme dans l'interface (la production du jour, lot J),
   // mais les imprévus, et sans hiver choisi les tempêtes, sont déjà réglés au registre
@@ -342,6 +349,10 @@ function simuler(debut, jours, rythme, { jusquAuHameau = false, bandeau = false,
       if (travaux === 'avise' && etapeAvisee(w.game, w.ledger, soir)) { geste(payerEtape, { ouvrage: 'phare' }, soir); continue; }
       const deco = decors === 'avise' && decorAvise(w.game, w.ledger, soir);
       if (deco) { geste(poserDecor, deco, soir); log.decors.push(i + 1); continue; }
+      if (escales === 'avise' && !refusAccueillirEscale(w.game, w.ledger, {}, soir)) {
+        geste(accueillirEscale, {}, soir); log.escales.accueillies.push(i + 1); log.escales.nourriture += ESCALE.accueillir.food; continue;
+      }
+      if (escales === 'avise' && allumerAvise(w.game, w.ledger, soir)) { geste(allumerPhare, {}, soir); log.escales.allumages.push(i + 1); continue; }
       if (commandes && niveaux) { // (l) ce qui manque ce soir pour le niveau le moins cher : permis, Énergie, Matériaux
         const bas = QUARTIER_IDS.filter((x) => niveauDe(w.game, x) < 3 && !(x === 'garage' && niveauDe(w.game, x) >= 2)).sort((a, b) => niveauDe(w.game, a) - niveauDe(w.game, b))[0];
         const raison = bas ? refusMonter(w.game, w.ledger, { quartier: bas }) || '' : 'tout';
@@ -365,6 +376,13 @@ function moinsCher(game, ledger) {
 
 // (s) Le joueur avisé paie l'étape suivante du phare si, après l'avoir payée, il lui reste de quoi payer son prochain
 // niveau de quartier (le moins cher) ; quand il a tous ses niveaux, il paie dès qu'il le peut.
+// (u) Le joueur avisé allume le phare si, après l'avoir allumé, il lui reste de quoi payer l'Énergie de son prochain niveau.
+function allumerAvise(game, ledger, now) {
+  if (refusAllumer(game, ledger, {}, now)) return false;
+  const bas = QUARTIER_IDS.filter((x) => niveauDe(game, x) < niveauMax(x)).sort((a, b) => niveauDe(game, a) - niveauDe(game, b))[0];
+  return game.resources.energy - ESCALE.allumer.energy >= (bas ? coutNiveau(niveauDe(game, bas) + 1).energy || 0 : 0);
+}
+
 // (t) le décor que le joueur avisé pose ce soir, ou null : le moins représenté sur l'île (puis l'ordre du catalogue), s'il
 // reste de quoi payer son prochain niveau et la prochaine étape du phare ; sur le premier coin libre.
 function decorAvise(game, ledger, now) {
@@ -1131,6 +1149,36 @@ test('(t) les décors : rien ne change avant le Bourg, aucun niveau perdu, le ph
       exiger(avec.niveaux.length >= sans.niveaux.length, `${qui} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
       exiger(avec.niveaux[0] === sans.niveaux[0], `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
       exiger(!sans.travaux.fini || (avec.travaux.fini && avec.travaux.fini - sans.travaux.fini <= 7), `${qui} : phare fini j${avec.travaux.fini} contre j${sans.travaux.fini}`);
+    }
+  }
+  assert.deepEqual(ecarts, []);
+});
+
+// ───────── (u) les escales du phare ─────────
+
+test('(u) les escales : rien ne change sans phare debout, aucun niveau ni famille perdus ; allumages, escales et réserves', (t) => {
+  t.diagnostic(`escales : allumer ${ESCALE.allumer.energy} Énergie, accueillir ${ESCALE.accueillir.food} Nourriture`);
+  const r = (l) => l.monde.game.resources;
+  const resume = (l) => `${l.escales.allumages.length} allumages, ${l.escales.accueillies.length} escales accueillies`
+    + `${l.escales.accueillies.length ? ` (j${l.escales.accueillies[0]} à j${l.escales.accueillies.at(-1)}, ${l.escales.nourriture} Nourriture)` : ''} ; `
+    + `${l.decors.length} décors ; ${l.niveaux.length} niveaux, ${l.familles.length} familles ; fin ${Math.round(r(l).energy)} Énergie, ${Math.round(r(l).materials)} Matériaux, ${Math.round(r(l).food)} Nourriture`;
+  const ecarts = [];
+  const exiger = (ok, msg) => { if (!ok) ecarts.push(msg); };
+  for (const [nom, rythme, profil, habitudes] of JOUEURS_L) {
+    for (const debut of DEPARTS_L) {
+      const jours = daysBetween(debut, '2027-03-01');
+      const options = { profil, habitudes, ...OPTIONS_L, marchand: 'avise', commandes: 'livre', duJour: 'avise', village: true, nourriture: 'avise', travaux: 'avise', decors: 'avise' };
+      const qui = `${nom}, départ ${debut}`;
+      const sans = simuler(debut, jours, rythme, options);
+      const avec = simuler(debut, jours, rythme, { ...options, escales: 'avise' });
+      t.diagnostic(qui);
+      t.diagnostic(`  sans escales : ${resume(sans)}`);
+      t.diagnostic(`  avec escales : ${resume(avec)}`);
+      if (!sans.travaux.fini) exiger(JSON.stringify([avec.niveaux, avec.familles, avec.decors, avec.escales.allumages]) === JSON.stringify([sans.niveaux, sans.familles, sans.decors, []]), `${qui} : la partie change sans phare debout`);
+      exiger(avec.niveaux.length >= sans.niveaux.length, `${qui} : ${avec.niveaux.length} niveaux contre ${sans.niveaux.length}`);
+      exiger(avec.niveaux[0] === sans.niveaux[0], `${qui} : premier niveau au jour ${avec.niveaux[0]} contre ${sans.niveaux[0]}`);
+      exiger(avec.familles.length >= sans.familles.length, `${qui} : ${avec.familles.length} familles contre ${sans.familles.length}`);
+      exiger(avec.travaux.fini === sans.travaux.fini, `${qui} : phare fini j${avec.travaux.fini} contre j${sans.travaux.fini}`);
     }
   }
   assert.deepEqual(ecarts, []);

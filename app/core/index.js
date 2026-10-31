@@ -23,3 +23,4 @@ export * from './allure.js';
 export * from './nourriture.js';
 export * from './travaux.js';
 export * from './decors.js';
+export * from './escales.js';
