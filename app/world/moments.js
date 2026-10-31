@@ -388,10 +388,15 @@ export async function playEvents(ctx, events) {
       await step.run();
     }
   };
-  for (const ev of regrouperProductions(events)) {
+  // une étape d'ouvrage finie se joue en dernier : le reste de la quête (bonus, saison, permis) emmènerait la carte loin du
+  // phare et de sa lanterne allumée (lot O)
+  const finies = (ev) => ev.type === 'travaux-etape-finie';
+  const list = regrouperProductions(events);
+  for (const ev of list.filter((e) => !finies(e))) {
     const quiet = SAID_BY_UI.has(ev.type);
     await runAll(stepsFor(quiet ? Object.create(ctx, { say: { value: () => {} } }) : ctx, ev), quiet);
   }
   await runAll(extraSteps(ctx));
+  for (const ev of list.filter(finies)) await runAll(stepsFor(ctx, ev));
   if (missed.length) ctx.say(missed.join(' '));
 }

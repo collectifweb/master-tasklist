@@ -284,8 +284,13 @@ L.runScenario('51 · le phare, premier des Grands travaux', async ({ R, srv, tag
     await L.said(page, true);
     await page.click('#fil-quest [data-action="complete"]');
     R.check(`la quête finit la lanterne (${tag})`, await L.waitFor(() => srv3.game()?.travaux?.phare?.finies === 4, 6000), JSON.stringify(srv3.game()?.travaux));
-    const allumee = await L.waitFor(() => page.evaluate(() => document.querySelector('.ow-ent[data-id="phare"]')?.hasAttribute('data-allume')), 8000, 50);
+    // Fanal parle dès la quête faite (sa bulle s'efface après 7 s), le phare se joue après les autres moments
+    const t0 = Date.now();
+    const b = await bulle(page);
+    R.check(`Fanal salue le phare debout (${tag})`, variantes('phare.debout').some((v) => b.includes(v)), b);
+    const allumee = await L.waitFor(() => page.evaluate(() => document.querySelector('.ow-ent[data-id="phare"]')?.hasAttribute('data-allume')), 15000, 50);
     const t1 = Date.now();
+    console.log(`  (la lanterne s'allume ${t1 - t0} ms après la quête faite, ${tag})`);
     const vu = allumee ? await ile(page) : null;
     if (allumee) await shot(page, '51-lanterne');
     const eteinte = allumee && await L.waitFor(() => page.evaluate(() => !document.querySelector('.ow-ent[data-id="phare"]')?.hasAttribute('data-allume')), 6000, 50);
@@ -295,10 +300,12 @@ L.runScenario('51 · le phare, premier des Grands travaux', async ({ R, srv, tag
     await page.waitForTimeout(800);
     const i = await ile(page);
     R.check(`le phare debout, éteint, sans halo (${tag})`, (await variante(page)) === '4' && !i.allume && i.halo === null, JSON.stringify({ v: await variante(page), i }));
+    // le phare se joue après les autres moments de la quête (bonus, saison, permis) : la carte finit sur lui
+    await calme(page);
+    const fin = await page.evaluate(() => { const r = document.querySelector('.ow-ent[data-id="phare"] .ow-hit')?.getBoundingClientRect(); return r && { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2), w: innerWidth, h: innerHeight }; });
+    R.check(`les moments finis, le phare est encore à l'écran (${tag})`, fin && fin.x >= 0 && fin.x <= fin.w && fin.y >= 0 && fin.y <= fin.h, JSON.stringify(fin));
     const lu = await dits(page);
     R.check(`la phrase lue : « Phare : les ouvriers ont fini la lanterne. Le phare est debout. » (${tag})`, lu.some((x) => x.includes('Phare : les ouvriers ont fini la lanterne. Le phare est debout.')), JSON.stringify(lu));
-    const b = await bulle(page);
-    R.check(`Fanal salue le phare debout (${tag})`, variantes('phare.debout').some((v) => b.includes(v)), b);
     await dePanneau(page);
     R.check(`le phare debout se touche encore (${tag})`, await toucherPhare(page));
     await page.waitForTimeout(350);
