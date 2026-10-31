@@ -2204,3 +2204,8 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
   - À l'envoi seulement (O7), pour ne rien annoncer de faux dans un dépôt public : `docs/FEUILLE-DE-ROUTE.md` (ligne de la v2.19, « Où en est le jeu », date, « À venir ») et la ligne de version du `CLAUDE.md` ; la durée de la série complète dans `app/ARCHITECTURE.md` et `CLAUDE.md`, une fois mesurée.
 
 **O7 — Envoi**, sur l'accord d'Alex : étiquette `v2.19`.
+
+- [x] Le phare joue après les autres moments de la quête (30 octobre au soir ; Alex : « Le 1 est évident non ? », leçon notée). À 390, la quête qui finissait la lanterne emmenait ensuite la carte vers la Place (bonus, saison, permis) : le phare finissait hors de l'écran (x = −104). `playEvents` (`world/moments.js`) joue désormais les étapes finies en dernier. Scénario 51 : une vérification de plus (« les moments finis, le phare est encore à l'écran »), qui échoue sur l'ancien ordre à 390 et passe sur le nouveau ; la bulle de Fanal se lit dès la quête faite (elle s'efface après 7 s). Réussi aux trois largeurs, 165 vérifications ; la lanterne s'allume environ 3 s après la quête faite (3 014, 3 063 et 3 119 ms). Aucun autre scénario ne produit une étape finie.
+- [x] Tests de logique et de l'API, le 30 octobre vers 21 h 40, avec le phare en dernier : 687 réussis sur 689, aucun échec (les deux « à faire » connus de (g)), 527 s.
+- [x] `docs/FEUILLE-DE-ROUTE.md` (date, « Où en est le jeu », ligne 2.19, la ronde d'ajustements du dessin en attente, « À venir ») et la ligne de version du `CLAUDE.md`.
+- [ ] Envoi `v2.19` sur l'accord d'Alex (« Et oui pour l'envoi », 30 octobre vers 21 h 28), contrôles de l'envoi, fichiers servis comparés à l'étiquette.
