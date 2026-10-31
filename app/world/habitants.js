@@ -11,7 +11,7 @@
 // Le chemin est cherché sur une grille fine (PAS) : les routes coûtent le moins, l'herbe davantage, et une case où la
 // figurine serait cachée derrière un dessin (bâtiment, arbre) coûte cher. Les bâtiments, repères, décors, caisses,
 // imprévus et Fanal bloquent leur pied. Le chemin est ensuite tendu (lignes droites tant que le terrain ne change pas).
-import { N, EMPLACEMENTS, LANDMARKS, DECOR, CRATE_SPOTS, IMPREVU_SPOTS, FETE_SPOTS, FANAL_HOME, PORTES, POSTES, POSTE_PLACE } from './layout.js';
+import { N, EMPLACEMENTS, LANDMARKS, DECOR, CRATE_SPOTS, IMPREVU_SPOTS, FETE_SPOTS, FANAL_HOME, PORTES, POSTES, POSTE_PLACE, surRoute } from './layout.js';
 import { artFor } from './models.js';
 import { P } from './iso.js';
 import { potagerOuvert } from '../core/batiments.js';
@@ -76,10 +76,9 @@ export function cachee(u, v) {
   const prof = u + v + 1.05;
   return obs().dessins.some((d) => d.prof > prof && x + FIGURINE.w / 2 > d.x0 && x - FIGURINE.w / 2 < d.x1 && y > d.y0 && y - FIGURINE.h < d.y1 && y < d.y1);
 }
-const surRoute = (u, v) => Math.abs(u - 6) <= 0.3 || Math.abs(v - 6) <= 0.3;
 const surPlace = (u, v) => u >= 4 && u <= 8 && v >= 4 && v <= 8;
 function cout(u, v) {
-  const base = surRoute(u, v) ? ROUTE : surPlace(u, v) ? PLACE : HERBE;
+  const base = surRoute(u, v, 0.3 + 1e-9) ? ROUTE : surPlace(u, v) ? PLACE : HERBE; // à 0,3 de l'axe ou moins
   return cachee(u, v) ? base + CACHE : base;
 }
 

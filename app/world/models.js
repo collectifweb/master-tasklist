@@ -69,12 +69,17 @@ export function lanterne() {
 
 // ---------------------------------------------------------------- petits objets
 
-export function cloture(end = false) {
+// travers : posée le long de v (en travers d'une route qui suit u, lot D), lisses sur la face +u
+export function cloture(end = false, travers = false) {
   const a = new Art();
   const V = 0.5;
   const posts = end ? [0.06, 0.52, 0.94] : [0.06, 0.52];
-  for (const u of posts) a.box(u, V - 0.04, 0.07, 0.07, 0, 13, 'woodd', { rim: true });
-  for (const z of [5, 10]) a.poly([[0, V + 0.03, z], [1, V + 0.03, z], [1, V + 0.03, z + 1.8], [0, V + 0.03, z + 1.8]], 'woodb-l');
+  for (const t of posts) a.box(travers ? V - 0.04 : t, travers ? t : V - 0.04, 0.07, 0.07, 0, 13, 'woodd', { rim: true });
+  for (const z of [5, 10]) {
+    a.poly(travers
+      ? [[V + 0.03, 0, z], [V + 0.03, 1, z], [V + 0.03, 1, z + 1.8], [V + 0.03, 0, z + 1.8]]
+      : [[0, V + 0.03, z], [1, V + 0.03, z], [1, V + 0.03, z + 1.8], [0, V + 0.03, z + 1.8]], travers ? 'woodb-r' : 'woodb-l');
+  }
   return a.done(1);
 }
 
@@ -1368,7 +1373,7 @@ export function habitantSVG(n = 0, outil = '') {
 export function artFor(e) {
   switch (e.model) {
     case 'lanterne': return lanterne();
-    case 'cloture': return cloture(!!e.end);
+    case 'cloture': return cloture(!!e.end, !!e.travers);
     case 'caisse': return caisse(e.seed || 1);
     case 'glaciere': return glaciere();
     case 'etabli': return etabli();

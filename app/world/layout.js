@@ -210,28 +210,87 @@ export const FETE_SPOTS = {
   'tire-cabane': { model: 'tire', r: 0.12, c: 9.2, h: 0.45, w: 1.0 },
 };
 
+// ---------------------------------------------------------------- routes (lot D)
+/**
+ * Routes, en grille ([u, v] : colonne, rangée), de la Place vers les quatre bords. Aucune ne finit dans le vide : celle
+ * de l'avant descend au quai par l'échelle de la falaise (world/terrain.js) ; celles du fond et des Champs butent sur la
+ * lisière, dont les arbres se referment devant elles (isFree) ; celle de droite s'arrête au garde-fou du bord (DECOR).
+ * bande : la route continue sur cette bande gagnée jusqu'à la lisière replantée.
+ */
+export const ROUTES = [
+  { id: 'quai', de: [6, 6], a: [6, 11.95] },
+  { id: 'fond', de: [6, 6], a: [6, 0.85], bande: { hameau: [6, -1.15] } },
+  { id: 'champs', de: [6, 6], a: [0.85, 6] },
+  { id: 'mairie', de: [6, 6], a: [11.3, 6] },
+];
+const ROUTES_PAR_BANDES = new Map();
+/**
+ * Les routes avec ces bandes gagnées. ile : { seg: [[u0, v0], [u1, v1]], suite } ; une route qui continue sur une bande
+ * va jusqu'au bord de l'île (suite : true, bout carré, que le bout de la bande prolonge). bandes : { id: [seg…] }, du
+ * bord de l'île à la lisière replantée, dessinés avec la bande (world/terrain.js) pour monter avec elle.
+ */
+export function routes(bandes = []) {
+  const k = bandes.join(',');
+  if (!ROUTES_PAR_BANDES.has(k)) {
+    const ile = [], surBandes = {};
+    for (const r of ROUTES) {
+      const id = Object.keys(r.bande || {}).find((b) => bandes.includes(b) && bandeDe(b));
+      if (!id) { ile.push({ seg: [r.de, r.a], suite: false }); continue; }
+      const bord = [r.a[0], bandeDe(id).r + bandeDe(id).h];
+      ile.push({ seg: [r.de, bord], suite: true });
+      (surBandes[id] ||= []).push([bord, r.bande[id]]);
+    }
+    ROUTES_PAR_BANDES.set(k, { ile, bandes: surBandes });
+  }
+  return ROUTES_PAR_BANDES.get(k);
+}
+const distSeg = (u, v, [[u0, v0], [u1, v1]]) => {
+  const du = u1 - u0, dv = v1 - v0, l2 = du * du + dv * dv;
+  const t = l2 ? Math.max(0, Math.min(1, ((u - u0) * du + (v - v0) * dv) / l2)) : 0;
+  return Math.hypot(u - u0 - t * du, v - v0 - t * dv);
+};
+/** (u, v) est-il à moins de m de l'axe d'une route, avec ces bandes gagnées ? */
+export function surRoute(u, v, m, bandes = []) {
+  const r = routes(bandes);
+  return r.ile.some((x) => distSeg(u, v, x.seg) < m) || Object.values(r.bandes).some((l) => l.some((s) => distSeg(u, v, s) < m));
+}
+
 // ---------------------------------------------------------------- décor (arbres, buissons, rochers)
-// Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe.
-function isFree(u, v) {
+// Lisière boréale sur les deux bords du fond, quelques bouquets ailleurs. Déterministe. bandes : les routes qui y
+// continuent vont jusqu'au bord de l'île.
+function isFree(u, v, bandes = []) {
+  return !surRoute(u, v, 0.6, bandes) && libre(u, v);
+}
+// Les routes d'avant le lot D, d'un bord à l'autre ; celles d'aujourd'hui passent toutes dans leur emprise.
+const surAncienneRoute = (u, v) => Math.abs(u - 6) < 0.6 || Math.abs(v - 6) < 0.6;
+// Les touffes d'herbe gardent ces routes-là : aucune ne bouge, et aucune ne pousse sur une route qui avance (bande).
+const libreTouffe = (u, v) => !surAncienneRoute(u, v) && libre(u, v);
+// hors des routes : ni sur la Place, ni sur un repère, un emplacement ou une caisse
+function libre(u, v) {
   const r = Math.floor(v), c = Math.floor(u);
-  if (Math.abs(u - 6) < 0.6 || Math.abs(v - 6) < 0.6) return false; // routes
   if (r >= 4 && r <= 7 && c >= 4 && c <= 7) return false; // place
   for (const e of [...LANDMARKS, ...Object.values(EMPLACEMENTS).flat()]) if (v >= e.r - 0.2 && v < e.r + (e.h || 1) + 0.1 && u >= e.c - 0.2 && u < e.c + (e.w || 1) + 0.1) return false;
   for (const [cu, cv] of CRATE_SPOTS) if (Math.abs(u - cu) < 0.7 && Math.abs(v - cv) < 0.7) return false;
   return true;
 }
 
+// Graine d'un décor posé là où les routes d'avant le lot D allaient jusqu'au bord (u = 6 ou v = 6) : tirée de sa place, pas
+// du tirage commun, pour que les autres décors gardent la leur, donc leur forme.
+const graineLotD = (u, v) => (surAncienneRoute(u, v) ? { seed: Math.floor(rng(Math.round(u * 97 + v * 31) + 5)() * 1e6) } : {});
+
 export const DECOR = (() => {
   const R = rng(77);
   const out = [];
   const add = (type, r, c, extra = {}) => {
     if (r < 0 || c < 0 || r >= N || c >= N) return;
-    out.push({ id: `d-${type}-${r}-${c}`, model: type, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: Math.floor(R() * 1e6), ...extra });
+    extra = { ...graineLotD(c + 0.5, r + 0.5), ...extra };
+    out.push({ id: `d-${type}-${r}-${c}`, model: type, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: extra.seed ?? Math.floor(R() * 1e6), ...extra });
   };
   // bord arrière-gauche (c = 0) et arrière-droit (r = 0) : épinettes et bouleaux dorés
   for (let r = 0; r < N; r++) {
     if (!isFree(0.5, r + 0.5) && r !== 0) continue;
-    if (r >= 6) { if (r % 3 === 1) add('epinette', r, 0, { s: 0.9 }); continue; }
+    // la rangée 6, au bout de la route des Champs, ferme la lisière devant elle (lot D)
+    if (r >= 7) { if (r % 3 === 1) add('epinette', r, 0, { s: 0.9 }); continue; }
     add(r % 2 ? 'arbre' : 'epinette', r, 0, { m: r % 4 === 1 ? 'gold' : 'leaf', s: 1.05 });
   }
   for (let c = 1; c < N; c++) {
@@ -246,6 +305,8 @@ export const DECOR = (() => {
     ['erable', 10, 7, 'maple'], ['erable', 11, 10, 'maple'], ['buisson', 7, 8, 'leafb'], ['rocher', 8, 11],
   ];
   for (const [t, r, c, m] of spots) if (isFree(c + 0.5, r + 0.5)) add(t, r, c, m ? { m } : {});
+  // garde-fou en travers du bout de la route de droite, au bord de la falaise (lot D) ; décor, donc pas touchable
+  add('cloture', 5.5, 11.2, { travers: true, end: true });
   return out;
 })();
 
@@ -280,18 +341,18 @@ export function decorFor(bandes = []) {
     const coupes = out.filter((e) => ARBRES.has(e.model) && Math.floor(e.r) === bord && auDroit(e));
     out = out.filter((e) => !coupes.includes(e));
     const R = rng(b.c * 31 + b.w);
-    const add = (model, r, c, extra = {}) => out.push({ id: `d-${model}-${r}-${c}`, model, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: Math.floor(R() * 1e6), ...extra });
+    const add = (model, r, c, extra = {}) => out.push({ id: `d-${model}-${r}-${c}`, model, sector: sectorAt(Math.floor(r), Math.floor(c)), r, c, h: 1, w: 1, seed: extra.seed ?? Math.floor(R() * 1e6), ...extra });
     for (let c = b.c; c < b.c + b.w; c++) {
-      if (!isFree(c + 0.5, b.r + 0.5)) continue;
+      if (!isFree(c + 0.5, b.r + 0.5, bandes)) continue;
       // l'ombre d'un arbre rond tombe à droite, dans l'eau au-delà du bord : sans voisin pour la couvrir (devant la
       // trouée de la route), c'est une épinette
-      const voisin = c + 1 < b.c + b.w && isFree(c + 1.5, b.r + 0.5);
-      add(c % 2 || !voisin ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1 });
+      const voisin = c + 1 < b.c + b.w && isFree(c + 1.5, b.r + 0.5, bandes);
+      add(c % 2 || !voisin ? 'epinette' : 'arbre', b.r, c, { m: c % 4 === 2 ? 'amber' : 'gold', s: 1, ...graineLotD(c + 0.5, b.r + 0.5) });
     }
-    // une souche sur un arbre coupé sur deux, et deux au milieu de la bande là où rien n'est posé (depuis le lot B, les
-    // emplacements de la tour de guet et du poulailler les recouvrent : isFree les écarte)
-    coupes.filter((_, i) => i % 2 === 0).forEach((e) => add('souche', bord + 0.1, e.c + 0.15));
-    for (const c of [b.c + 2.2, b.c + b.w - 2.6]) if (isFree(c + 0.5, b.r + 1.5)) add('souche', b.r + 1.2, c);
+    // une souche sur un arbre coupé sur deux, hors de la route qui avance, et deux au milieu de la bande là où rien n'est
+    // posé (depuis le lot B, les emplacements de la tour de guet et du poulailler les recouvrent : isFree les écarte)
+    coupes.filter((e, i) => i % 2 === 0 && isFree(e.c + 0.65, bord + 0.6, bandes)).forEach((e) => add('souche', bord + 0.1, e.c + 0.15, graineLotD(e.c + 0.5, e.r + 0.5)));
+    for (const c of [b.c + 2.2, b.c + b.w - 2.6]) if (isFree(c + 0.5, b.r + 1.5, bandes)) add('souche', b.r + 1.2, c);
   }
   return out;
 }
@@ -302,7 +363,7 @@ export function groundDetails(seed = 9, bandes = []) {
   const out = [];
   for (let i = 0; i < 260; i++) {
     const u = 0.3 + R() * 11.4, v = 0.3 + R() * 11.4;
-    if (!isFree(u, v)) continue;
+    if (!libreTouffe(u, v)) continue;
     const flower = R() < 0.22;
     out.push({ u, v, flower, tone: Math.floor(R() * 3), sector: sectorAt(Math.floor(v), Math.floor(u)) });
   }
@@ -314,17 +375,8 @@ export function groundDetails(seed = 9, bandes = []) {
     for (let i = 0; i < Math.round((260 * b.w * b.h) / (N * N)); i++) {
       const u = b.c + 0.3 + Rb() * (b.w - 0.6), v = b.r + 1 + Rb() * (b.h - 1.3);
       const flower = Rb() < 0.22, tone = Math.floor(Rb() * 3);
-      if (isFree(u, v)) out.push({ u, v, flower, tone, sector: sectorAt(Math.floor(v), Math.floor(u)), bande: id });
+      if (libreTouffe(u, v)) out.push({ u, v, flower, tone, sector: sectorAt(Math.floor(v), Math.floor(u)), bande: id });
     }
   }
   return out;
 }
-
-/** Routes (segments en grille), rattachées au secteur qui les dessine. */
-export const ROADS = [
-  { sector: 'atelier', d: 'M6,8.05V11.95' },
-  { sector: 'garage', d: 'M6,.15V3.95' },
-  { sector: 'champs', d: 'M.15,6H3.95' },
-  { sector: 'atelier', d: 'M8.05,6H11.85' },
-  { sector: 'place', d: 'M6,3.95V8.05M3.95,6H8.05' },
-];

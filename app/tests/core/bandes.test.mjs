@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { BANDES, bandesGagnees, rangDuVillage, createInitialState } from '../../core/index.js';
 import { deriveView } from '../../world/view.js';
 import {
-  N, CELLS, DECOR, EMPLACEMENTS, LANDMARKS, ROADS, BANDES_ILE, bandeCells, decorFor, sectorAt,
+  N, CELLS, DECOR, EMPLACEMENTS, LANDMARKS, BANDES_ILE, bandeCells, decorFor, sectorAt, surRoute,
 } from '../../world/layout.js';
 import { P } from '../../world/iso.js';
 import { promeneurs } from '../../world/habitants.js';
@@ -103,9 +103,8 @@ test('décor : rien de neuf sur un emplacement, un repère ou une route', () => 
   for (const e of neufs) {
     const u = e.c + 0.5, v = e.r + 0.5;
     for (const o of occupe) assert.ok(!(v >= o.r - 0.2 && v < o.r + (o.h || 1) + 0.1 && u >= o.c - 0.2 && u < o.c + (o.w || 1) + 0.1), `${e.id} sur ${o.id || o.r + ',' + o.c}`);
-    assert.ok(Math.abs(u - 6) >= 0.6, `${e.id} sur la route du Garage`);
+    assert.ok(!surRoute(u, v, 0.6, ['hameau']), `${e.id} sur la route du Garage`);
   }
-  assert.ok(ROADS.length >= 5);
 });
 
 test('habitants : aucun chemin ne passe sur la bande, l’été comme l’hiver (la grille des trajets s’arrête au bord de départ)', () => {

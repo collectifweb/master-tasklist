@@ -2,7 +2,7 @@
 // grille dans un groupe par secteur (data-sector : la zone de carte d'un quartier), projeté par une matrice
 // affine. Chaque case est un <g class="ow-tile"> de deux triangles (aplats low-poly).
 import { P, f, pts, rng, HW, HH } from './iso.js';
-import { N, CELLS, SECTOR_ORDER, ROADS, BANDES_ILE, bandeCells, groundDetails, sectorOutline } from './layout.js';
+import { N, CELLS, SECTOR_ORDER, BANDES_ILE, bandeCells, groundDetails, sectorOutline, routes } from './layout.js';
 
 export const D = 74; // épaisseur visible du socle
 export const TERRAIN = { x: -560, y: -90, w: 1120, h: 690 };
@@ -88,14 +88,25 @@ function sectorGround(id, details) {
   if (id === 'atelier') g.push('<rect x="8.6" y="8.55" width="2.8" height="1.9" rx=".35" class="path-t" stroke="none" opacity=".75"/><rect x="8.75" y="6.6" width="1.5" height="1.2" rx=".3" class="path-t" stroke="none" opacity=".6"/>');
   if (id === 'mairie') g.push('<rect x="7.8" y="3.1" width="2.6" height=".9" rx=".2" class="cobble-t" stroke="none"/><path d="M8.45,3.1V4M9.1,3.1V4M9.75,3.1V4M7.8,3.55H10.4" class="k-pathe-t" stroke-width=".04"/>');
   if (id === 'ecole') g.push('<ellipse cx="2.9" cy="5.3" rx=".9" ry=".45" class="grassl-t" stroke="none"/><ellipse cx="0.9" cy="2.4" rx=".5" ry=".4" class="grassd-t" stroke="none" opacity=".7"/>');
-  for (const road of ROADS.filter((x) => x.sector === id)) {
-    g.push(`<path d="${road.d}" class="k-pathe-t" stroke-width=".9" stroke-linecap="round"/>`);
-    g.push(`<path d="${road.d}" class="k-path-t" stroke-width=".72" stroke-linecap="round"/>`);
-  }
   g.push('</g>');
   // détails debout (herbes, fleurs) en coordonnées écran
   for (const d of details.filter((x) => x.sector === id && !x.bande)) g.push(detailSVG(d));
   return g.join('');
+}
+
+/**
+ * Routes (lot D), en grille, d'un seul trait : tous les bords d'abord, puis toute la chaussée, pour qu'aucun raccord ne
+ * se voie. segs : [{ seg: [[u0, v0], [u1, v1]], carre }] ; un bout carré est un raccord (bord de l'île, sous une bande).
+ */
+function routesSVG(segs) {
+  const d = (s) => `M${s.seg[0][0]},${s.seg[0][1]}L${s.seg[1][0]},${s.seg[1][1]}`;
+  const trait = (cls, w) => segs.map((s) => `<path d="${d(s)}" class="${cls}" stroke-width="${w}" stroke-linecap="${s.carre ? 'butt' : 'round'}"/>`).join('');
+  return `${trait('k-pathe-t', 0.9)}${trait('k-path-t', 0.72)}`;
+}
+// prolonge un segment de t (grille) au-delà de sa fin (t > 0) ou en deçà de son début (t < 0)
+function allonge([[u0, v0], [u1, v1]], t) {
+  const l = Math.hypot(u1 - u0, v1 - v0), du = (u1 - u0) / l, dv = (v1 - v0) / l;
+  return t > 0 ? [[u0, v0], [u1 + du * t, v1 + dv * t]] : [[u0 + du * t, v0 + dv * t], [u1, v1]];
 }
 
 /**
@@ -112,6 +123,8 @@ function bandeSVG(id, details) {
   const R = rng(b.c * 7 + b.r * 13 + 5);
   o.push(GRID);
   for (const [r, c] of bandeCells([id])) o.push(tileSVG(r, c, R()));
+  // la route qui la traverse part de sous l'île (le sol de l'île, dessiné après, en cache le début et son bout rond)
+  o.push(routesSVG((routes([id]).bandes[id] || []).map((s) => ({ seg: allonge(s, -0.4), carre: false }))));
   o.push('</g>');
   for (const d of details.filter((x) => x.bande === id)) o.push(detailSVG(d));
   return `<g class="ow-ground ow-bande" data-bande="${id}">${o.join('')}</g>`;
@@ -164,6 +177,9 @@ export function terrainSVG(bandes = []) {
   for (const id of SECTOR_ORDER) {
     o.push(`<g class="ow-ground" data-sector="${id}">${(lips[id] || []).join('')}${sectorGround(id, details)}</g>`);
   }
+  // routes de l'île, par-dessus le sol de tous les secteurs ; celle qui continue sur une bande déborde un peu du bord,
+  // pour couvrir le liseré de la dernière case
+  o.push(`<g class="ow-routes">${GRID}${routesSVG(routes(bandes).ile.map((x) => ({ seg: x.suite ? allonge(x.seg, 0.05) : x.seg, carre: x.suite })))}</g></g>`);
   // liserés clairs des arêtes. Une bande du bord du fond côté Mairie (r = 0) : le liseré du fond en fait le tour, et
   // l'arête du haut de sa falaise est une arête avant.
   const path = (list) => `M${pts(list).replace(/ /g, 'L')}`;
