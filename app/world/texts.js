@@ -38,7 +38,7 @@ const DEFAULTS = {
   'monde.plaque.label': '{quartier} : niveau {n}.',
   'monde.plaque.monte': '{quartier} : niveau {n}. Tu peux monter au niveau {m}.',
   'monde.bulle.recolte': '{nom} : récolter +{n} Nourriture', 'monde.bulle.recolte.fiche': '{nom} : récolte mûre, ouvrir la fiche',
-  'monde.bulle.famille': '{nom} : une famille peut venir', 'monde.bulle.commande': '{nom} : une commande est prête',
+  'monde.bulle.famille': '{nom} : une famille peut venir', 'monde.bulle.commande': '{nom} : une commande est prête', 'monde.bulle.escale': 'Phare : des plaisanciers à accueillir',
   'monde.bord.recolte.one': '{n} récolte mûre hors de vue, {cote}', 'monde.bord.recolte.other': '{n} récoltes mûres hors de vue, {cote}',
   'monde.bord.famille': 'Une famille peut venir, hors de vue, {cote}', 'monde.bord.commande': 'Une commande est prête, hors de vue, {cote}',
   'monde.bord.mixte': '{n} choses prêtes hors de vue, {cote}',

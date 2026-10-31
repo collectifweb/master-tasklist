@@ -4,7 +4,8 @@
 // parcelle, atelier, serre, eolienne, grenier, quai, tour (de guet), scierie, poulailler, cabane (à sucre), et piquets
 // (chantier possible). Décor : epinette, arbre, buisson, rocher, et souche (la bande gagnée sur la forêt, lot F). Fêtes
 // (lot N) : tablee (le repas de la semaine), tire (la partie de sucre).
-// Décors posés par le joueur (lot K) : massif, nichoir, bouleau, banc, chaise, cordee (et erable, epinette, lanterne).
+// Décors posés par le joueur (lot K) : massif, nichoir, bouleau, banc, chaise, cordee (et erable, epinette, lanterne) ;
+// laissés aux escales du phare (lot Y) : canot, ancre, cloche, girouette, bouee, filet.
 // Fanal : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
@@ -760,8 +761,8 @@ export const QUAI_BATEAU_W = 1.9;
 // Dessinés avec le quai, après le chaland (ils sont devant lui). Coque : flanc +v à mi-ombre, proue à l'ombre, pont cerné
 // d'un plat-bord, un listel sur le flanc. Zone u 1,12 à 1,84, v 1,1 à 1,44 : à l'écart de la plaque du quartier.
 const B0 = { u: 1.12, v: 1.1, L: 0.72, W: 0.34 };
-function coque(a, H, m, pont, listel) {
-  const { u: u0, v: v0, L, W } = B0;
+function coque(a, H, m, pont, listel, b = B0) {
+  const { u: u0, v: v0, L, W } = b;
   const u1 = u0 + L, ub = u1 - 0.18, v1 = v0 + W, vm = v0 + W / 2, i = 0.035;
   a.poly([[u0, v1, -1], [ub, v1, -1], [ub, v1, H], [u0, v1, H]], `${m}-l`);
   a.poly([[ub, v1, -1], [u1, vm, -1], [u1, vm, H], [ub, v1, H]], `${m}-r`);
@@ -970,17 +971,39 @@ function ruine(a, c, z0, hs) {
   for (let k = 0; k < n; k += 2) a.cast(...pt(k, Ro, 0).slice(0, 2), H(k));
 }
 
+// Le voilier des plaisanciers (lot Y), mouillé devant le phare, la proue vers +u : coque vernie, liston vert sauge,
+// grand-voile et foc hissés (celui de la famille du Sud a sa voile ferlée), une glacière et un fanion doré.
+const B_ESCALE = { u: 0.04, v: 0.94, L: 0.72, W: 0.32 };
+/** Emprise du phare quand des plaisanciers y attendent : leur voilier est dans la zone de toucher (world.js). */
+export const PHARE_ESCALE = { w: 0.8, h: 1.34 };
+function plaisanciers(a) {
+  const b = B_ESCALE, H = 4.5, z = H + 0.3, u = b.u, vm = b.v + b.W / 2;
+  a.raw('<g class="ow-bateau ow-voilier" style="animation-delay:-1.3s">'); // il se balance ; il repart à l'accueil (moments.js)
+  coque(a, H, 'woodb', 'woodd', 'roofb', b);
+  a.box(u + 0.08, b.v + 0.09, 0.1, 0.14, z, 3.5, 'paper', { rim: true, cast: false }); // glacière
+  const mu = u + 0.36;
+  a.seg([mu, vm, z], [mu, vm, 40], 'k-wooddk-r', 1.3);
+  // grand-voile vers la poupe, sur la bôme ; foc vers la proue, jusqu'à l'étrave
+  a.poly([[mu - 0.015, vm + 0.01, z + 6], [u + 0.07, vm + 0.01, z + 7], [mu - 0.015, vm + 0.01, 39]], 'canvas-l rim');
+  a.seg([mu, vm, z + 6], [u + 0.06, vm, z + 7], 'k-wooddk-l', 1.1);
+  a.poly([[mu + 0.02, vm + 0.01, 36], [mu + 0.02, vm + 0.01, z + 3], [u + b.L - 0.05, vm + 0.01, z + 1]], 'canvas-r rim');
+  a.poly([[mu, vm, 40], [mu + 0.15, vm, 38], [mu, vm, 36]], 'gold-l');
+  a.raw('</g>');
+}
+
 /**
  * Phare (lot O), emprise 1 × 1, sur un rocher du lac au coin gauche de l'île, au bout du rivage du quai (lac). etat :
  * '0' le vieux phare éteint (tour écroulée, creuse, sans lanterne), '1' à '4' les étapes finies (fondation, tour, galerie,
  * lanterne) ; '+chantier' : l'étape suivante est payée et les ouvriers la bâtissent (échafaudage, l'étape à moitié
- * montée, des pierres et des planches sur le rocher). La lanterne reste éteinte (lampg), sauf pendant le moment du phare
- * debout (world.js).
+ * montée, des pierres et des planches sur le rocher) ; '+escale' (lot Y, phare debout) : le voilier des plaisanciers
+ * mouillé devant lui (emprise PHARE_ESCALE). La lanterne ne s'allume (lampg sous data-allume) que pendant le moment du
+ * phare debout, puis la semaine où on l'allume (world.js : son faisceau est un halo de la scène).
  */
 export function phare(etat = '0') {
-  const [n0, suite] = String(etat).split('+');
+  const [n0, ...suite] = String(etat).split('+');
   const finies = Math.max(0, Math.min(4, Math.floor(Number(n0) || 0)));
-  const enCours = suite === 'chantier' && finies < 4 ? finies + 1 : 0;
+  const enCours = suite.includes('chantier') && finies < 4 ? finies + 1 : 0;
+  const escale = suite.includes('escale') && finies >= 4;
   const a = new Art();
   const c = PC;
   // jusqu'où monte l'échafaudage : le haut de l'étape qu'on bâtit
@@ -1069,6 +1092,7 @@ export function phare(etat = '0') {
   }
   if (finies >= 3) garde(true);
   if (enCours) echafaudage(a, zEch, false);
+  if (escale) plaisanciers(a);
   const r = a.done(2);
   r.shadow = null;
   r.anchors.light = P(c, c, (PH.galerie + PH.lampe) / 2);
@@ -1394,6 +1418,121 @@ export function cordee() {
   return a.done(2);
 }
 
+// ---------------------------------------------------------------- décors des escales du phare (lot Y)
+// Laissés par les plaisanciers, un par escale, dans l'ordre de core/escales.js (DECORS_ESCALE) ; ils ne s'achètent pas.
+// Même gabarit que les décors du lot K : sur un coin, au centre d'une emprise 1 × 1, plus bas qu'un bâtiment.
+
+/** Canot renversé sur deux chevalets, coque ocre, plat-bord sombre, une pagaie couchée devant. */
+export function canot() {
+  const a = new Art();
+  for (const u of [0.32, 0.68]) {
+    a.seg([u, 0.38, 0], [u, 0.5, 7], 'k-woodd-r', 1.4);
+    a.seg([u, 0.62, 0], [u, 0.5, 7], 'k-woodd-l', 1.4);
+  }
+  const u0 = 0.12, u1 = 0.88, z = 7, zk = 13, lev = 2.5; // plat-bord, quille, relevé des pointes
+  const plat = (v) => [[u0, 0.5, z + lev], [u0 + 0.12, v, z], [u1 - 0.12, v, z], [u1, 0.5, z + lev]];
+  const quille = [[u1, 0.5, zk + lev], [u1 - 0.12, 0.5, zk], [u0 + 0.12, 0.5, zk], [u0, 0.5, zk + lev]];
+  a.poly([...plat(0.38), ...quille], 'amber-t rim');
+  a.poly([...plat(0.62), ...quille], 'amber-l');
+  a.poly([[u1 - 0.12, 0.62, z], [u1, 0.5, z + lev], [u1, 0.5, zk + lev], [u1 - 0.12, 0.5, zk]], 'amber-r');
+  for (let k = 0; k < 3; k++) a.seg(plat(0.62)[k], plat(0.62)[k + 1], 'k-wooddk-l', 1.2);
+  a.seg([0.24, 0.8, 0.6], [0.62, 0.8, 0.6], 'k-woodb-l', 1.4); // pagaie
+  a.poly([[0.62, 0.77, 0.6], [0.76, 0.77, 0.6], [0.78, 0.8, 0.6], [0.76, 0.83, 0.6], [0.62, 0.83, 0.6]], 'woodb-t');
+  for (const [u, v] of [[u0, 0.5], [u1, 0.5], [0.5, 0.38], [0.5, 0.62]]) a.cast(u, v, 0);
+  a.cast(0.5, 0.5, zk);
+  return a.done();
+}
+
+/** Vieille ancre de fer debout sur un socle de pierres, jas en travers, bras recourbés, un rouleau de cordage au pied. */
+export function ancre() {
+  const a = new Art();
+  a.box(0.36, 0.38, 0.28, 0.24, 0, 3, 'stoned', { rim: true });
+  const [bx, by] = P(0.5, 0.5, 3);
+  a.raw(`<ellipse cx="${f(bx + 9)}" cy="${f(by + 5)}" rx="5.5" ry="2.8" class="k-rope-t" fill="none" stroke-width="1.6"/><ellipse cx="${f(bx + 9)}" cy="${f(by + 4)}" rx="3.2" ry="1.6" class="k-rope-l" fill="none" stroke-width="1.4"/>`);
+  a.ext(bx + 15, by + 8);
+  // verge, jas (barre de bois) près de l'organeau, bras en arc et pattes
+  a.seg([0.5, 0.5, 4], [0.5, 0.5, 27], 'k-wooddk-r', 2.2);
+  a.seg([0.5, 0.36, 22], [0.5, 0.64, 22], 'k-woodd-l', 2.6);
+  const [ox, oy] = P(0.5, 0.5, 30);
+  a.raw(`<circle cx="${f(ox)}" cy="${f(oy)}" r="2.6" class="k-wooddk-r" fill="none" stroke-width="1.6"/>`);
+  a.ext(ox - 4, oy - 4);
+  const g = P(0.38, 0.5, 13), d = P(0.62, 0.5, 13), c = P(0.5, 0.5, 4);
+  a.raw(`<path d="M${f(g[0])},${f(g[1])} Q${f(c[0] - 4)},${f(c[1] + 4)} ${f(c[0])},${f(c[1])} Q${f(c[0] + 4)},${f(c[1] + 4)} ${f(d[0])},${f(d[1])}" class="k-wooddk-r" fill="none" stroke-width="2.2"/>`);
+  a.spoly([[g[0] - 3, g[1] - 1], [g[0] + 1, g[1] - 5], [g[0] + 2, g[1] + 1]], 'wooddk-l');
+  a.spoly([[d[0] + 3, d[1] - 1], [d[0] - 1, d[1] - 5], [d[0] - 2, d[1] + 1]], 'wooddk-r');
+  a.cast(0.36, 0.38, 0); a.cast(0.64, 0.62, 0); a.cast(0.5, 0.5, 30);
+  return a.done();
+}
+
+/** Cloche de brume de laiton sous un portique de bois coiffé d'un petit toit, sa corde qui pend. */
+export function cloche() {
+  const a = new Art();
+  for (const u of [0.3, 0.66]) a.box(u, 0.47, 0.04, 0.06, 0, 26, 'woodd');
+  a.box(0.28, 0.46, 0.44, 0.08, 26, 2, 'woodd', { rim: true });
+  roofU(a, 0.28, 0.42, 0.44, 0.16, 28, 5, 'roofb', 'woodd', 0.04);
+  a.seg([0.5, 0.5, 26], [0.5, 0.5, 22], 'k-wooddk-r', 1);
+  fut(a, 0.5, 0.5, 0.1, 0.06, 13, 9, 'gold');
+  a.prism(0.5, 0.5, 0.11, 12, 1.4, 'amber', 8, { cast: false });
+  a.seg([0.5, 0.5, 12], [0.5, 0.52, 4], 'k-rope-t', 0.9);
+  a.cast(0.3, 0.47, 0); a.cast(0.7, 0.53, 0); a.cast(0.5, 0.5, 33);
+  return a.done();
+}
+
+/** Girouette sur un mât de bois : la croix des quatre vents et, en haut, un poisson de laiton qui tourne au vent. */
+export function girouette() {
+  const a = new Art();
+  a.box(0.4, 0.4, 0.2, 0.2, 0, 2.6, 'stoned', { rim: true });
+  a.box(0.47, 0.47, 0.06, 0.06, 2.6, 26, 'woodd');
+  a.seg([0.5, 0.5, 28.6], [0.5, 0.5, 40], 'k-metal-r', 1.1);
+  a.seg([0.4, 0.5, 33], [0.6, 0.5, 33], 'k-wooddk-r', 1);
+  a.seg([0.5, 0.4, 33], [0.5, 0.6, 33], 'k-wooddk-l', 1);
+  // le poisson, dans le plan vertical de u : corps fuselé, queue fourchue vers -u, un œil
+  const pz = 39.5;
+  a.poly([[0.62, 0.5, pz], [0.54, 0.5, pz + 2.6], [0.44, 0.5, pz + 2], [0.39, 0.5, pz], [0.44, 0.5, pz - 2], [0.54, 0.5, pz - 2.4]], 'gold-l rim');
+  a.poly([[0.39, 0.5, pz], [0.33, 0.5, pz + 3], [0.35, 0.5, pz], [0.33, 0.5, pz - 3]], 'gold-r');
+  const [ex, ey] = P(0.57, 0.5, pz + 0.4);
+  a.raw(`<circle cx="${f(ex)}" cy="${f(ey)}" r=".8" class="wooddk-t"/>`);
+  a.cast(0.4, 0.4, 0); a.cast(0.6, 0.6, 0); a.cast(0.5, 0.5, 40);
+  return a.done();
+}
+
+/** Bouée de chenal verte et crème sur son berceau de bois, un feu au sommet, un bout de cordage. */
+export function bouee() {
+  const a = new Art();
+  a.box(0.3, 0.38, 0.4, 0.24, 0, 3, 'woodd', { rim: true });
+  a.prism(0.5, 0.5, 0.15, 3, 8, 'roofb', 10);
+  a.prism(0.5, 0.5, 0.15, 11, 4, 'paper', 10, { cast: false });
+  a.prism(0.5, 0.5, 0.15, 15, 3, 'roofb', 10, { cast: false });
+  fut(a, 0.5, 0.5, 0.13, 0.04, 18, 7, 'roofb', { n: 10 });
+  a.box(0.48, 0.48, 0.04, 0.04, 25, 3, 'metal');
+  const [lx, ly] = P(0.5, 0.5, 30);
+  a.raw(`<circle cx="${f(lx)}" cy="${f(ly)}" r="2.2" class="gold-t"/>`);
+  a.ext(lx - 3, ly - 3);
+  a.seg([0.36, 0.62, 2], [0.24, 0.72, 0.4], 'k-rope-t', 1.2);
+  a.cast(0.3, 0.38, 0); a.cast(0.7, 0.62, 0); a.cast(0.5, 0.5, 30);
+  return a.done();
+}
+
+/** Filet de pêche qui sèche entre deux perches, des flotteurs dorés sur la ralingue, une manne au pied. */
+export function filet() {
+  const a = new Art();
+  const u0 = 0.2, u1 = 0.8, v = 0.5, zh = 20, zb = 5;
+  a.box(u0 - 0.02, v - 0.02, 0.04, 0.04, 0, 24, 'woodd');
+  // les mailles : un losange de fils dans le plan v, ralingue du haut tendue, le bas qui pend un peu
+  const n = 7, uk = (k) => u0 + (u1 - u0) * k / n, bas = (k) => zb - Math.sin((k / n) * Math.PI) * 2;
+  for (let k = 0; k <= n; k++) {
+    if (k < n) a.seg([uk(k), v, zh], [uk(k + 1), v, bas(k + 1)], 'k-rope-l', 0.6, ' opacity=".85"');
+    if (k > 0) a.seg([uk(k), v, zh], [uk(k - 1), v, bas(k - 1)], 'k-rope-l', 0.6, ' opacity=".85"');
+  }
+  a.seg([u0, v, zh], [u1, v, zh], 'k-rope-t', 1.1);
+  a.seg([u0, v, zb], [u1, v, zb - 0.5], 'k-rope-l', 0.9);
+  for (let k = 1; k < 5; k++) { const [x, y] = P(u0 + (u1 - u0) * k / 5, v, zh); a.raw(`<circle cx="${f(x)}" cy="${f(y)}" r="1.6" class="gold-t"/>`); }
+  a.box(u1 - 0.02, v - 0.02, 0.04, 0.04, 0, 24, 'woodd');
+  a.prism(0.62, 0.72, 0.08, 0, 4, 'hay', 8, { rim: true }); // manne
+  a.cast(u0, v, 0); a.cast(u1, v, 0); a.cast(u0, v, 24); a.cast(u1, v, 24);
+  return a.done();
+}
+
 export function characterSVG() {
   return `<svg class="ow-sprite" viewBox="-16 -50 32 54" width="32" height="54" aria-hidden="true">
 <ellipse cx="0" cy="0" rx="8" ry="3.2" class="ow-sprite-shadow"/>
@@ -1499,6 +1638,12 @@ export function artFor(e) {
     case 'banc': return banc();
     case 'chaise': return chaise();
     case 'cordee': return cordee();
+    case 'canot': return canot();
+    case 'ancre': return ancre();
+    case 'cloche': return cloche();
+    case 'girouette': return girouette();
+    case 'bouee': return bouee();
+    case 'filet': return filet();
     default: return caisse(1);
   }
 }

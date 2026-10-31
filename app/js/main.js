@@ -206,7 +206,7 @@ function objectifsSay(events) {
  * Phrase lue après un geste du village : construction, semis, récolte, famille accueillie, nouveau rang (et sa bande de
  * terrain), quartier monté,
  * échange au comptoir du marchand, commande livrée au visiteur de la semaine, repas servi, partie de sucre faite (lot N),
- * étape du phare lancée (lot O), décor posé, déplacé ou rangé (lot K).
+ * étape du phare lancée (lot O), décor posé, déplacé ou rangé (lot K), phare allumé et plaisanciers accueillis (lot Y).
  */
 function batimentSay(events) {
   const out = [];
@@ -229,6 +229,8 @@ function batimentSay(events) {
       const cout = e.type === 'decor-pose' && e.cout;
       out.push(t(cout ? 'decors.sr.pose.achat' : 'decors.sr.pose', { le: t(`decors.${e.decor}.le`), coin: coinNom(e.coin || e.vers), cout: cout ? coutText(cout) : '' }));
     } else if (e.type === 'decor-range') out.push(t('decors.sr.range', { le: t(`decors.${e.decor}.le`) }));
+    else if (e.type === 'phare-allume') out.push(t('escales.sr.allume', { cout: coutText(e.cout) }));
+    else if (e.type === 'escale-accueillie') out.push(t('escales.sr.accueillie', { cout: ressourcesText(e.cout), le: t(`decors.${e.decor}.le`) }));
   }
   return out.join(' ');
 }
@@ -477,6 +479,7 @@ function onBulle(info) {
   const key = `bulle:${info.id}`;
   if (spent.key === key && Date.now() - spent.at < SPEND_AGAIN_MS) return;
   spent = { key, at: Date.now() };
+  if (info.bulle === 'escale') { openTravauxSheet('phare'); return; } // les plaisanciers au phare (lot Y)
   const m = info.bulle === 'recolte' && store.view ? batimentModel(ctx(), info.id) : null;
   if (!m || m.etat.kind !== 'mure' || m.etat.note || m.raison || (m.degat && !m.degat.fini)) { openBatimentSheet(info.id); return; }
   cueillette = info.id;
@@ -498,7 +501,7 @@ function openQuartierSheet(id) {
 
 /** Fiche d'un ouvrage des Grands travaux (carte, catalogue) : ses étapes, en dessins, et la prochaine à bâtir. */
 function openTravauxSheet(id) {
-  if (store.view) openTravaux(ctx(), id, { dessin: world ? (oid, v) => world.thumbOuvrage(oid, v) : null, open: openSheet });
+  if (store.view) openTravaux(ctx(), id, { dessin: world ? (oid, v) => world.thumbOuvrage(oid, v) : null, thumbDecor: world ? (d) => world.thumbDecor(d) : null, open: openSheet });
 }
 
 /** Fin de visite : « Tout est enregistré, à demain ». Fermée, elle laisse le monde allumer ses lanternes. */
@@ -776,6 +779,20 @@ document.addEventListener('click', (e) => {
       // sur la carte, visible
       if (r && r.events.some((x) => x.type === 'travaux-etape-payee')) {
         range = Date.now();
+        for (const d of $$('dialog.sheet[open]').sort((a, b) => (b._z || 0) - (a._z || 0))) closeSheet(d);
+      }
+      return r;
+    }
+    case 'esc-allumer':
+    case 'esc-accueillir': {
+      // le phare allumé pour la semaine, les plaisanciers accueillis (lot Y) : comme une étape du phare, les feuilles se
+      // rangent et le moment se joue sur la carte ; le garde des 800 ms ne vaut que pour un toucher ou un clic
+      if (spendBlocked(e, target, action)) return;
+      if (disabled(target)) return announce.say(($(action === 'esc-allumer' ? '#esc-allumer-raison' : '#esc-raison') || target).textContent.trim());
+      markSpent(action, target);
+      const r = run(action === 'esc-allumer' ? 'allumerPhare' : 'accueillirEscale', {});
+      if (r && r.events.some((x) => x.type === 'phare-allume' || x.type === 'escale-accueillie')) {
+        if (e.detail > 0) range = Date.now();
         for (const d of $$('dialog.sheet[open]').sort((a, b) => (b._z || 0) - (a._z || 0))) closeSheet(d);
       }
       return r;

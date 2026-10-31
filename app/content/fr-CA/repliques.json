@@ -374,7 +374,7 @@
       ]
     },
     "phare.debout": {
-      "quand": "La dernière étape du phare est finie, avec la quête payée qui la termine : il est debout. Sa lanterne s’allume le temps du moment, puis s’éteint (l’allumer sera un geste, plus tard). Passe avant toute autre réplique du geste. Lot O. Aucun effet de jeu : n’en promettre aucun.",
+      "quand": "La dernière étape du phare est finie, avec la quête payée qui la termine : il est debout. Sa lanterne s’allume le temps du moment, puis s’éteint (l’allumer est un geste de sa fiche depuis le lot Y : phare.allume). Passe avant toute autre réplique du geste. Lot O. Aucun effet de jeu : n’en promettre aucun.",
       "frequence": 1,
       "variantes": [
         {"id": "phare.debout.01", "voix": "fanal", "texte": "Le phare est debout. On l’a allumé une fois, pour voir. Ça se voit de loin."},
@@ -382,6 +382,28 @@
         {"id": "phare.debout.03", "voix": "fanal", "texte": "Le phare est relevé. La lisière a son repère, et moi, un collègue plus grand."},
         {"id": "phare.debout.04", "voix": "fanal", "texte": "Le vieux phare tient debout. On l’a allumé pour l’essayer : il a de bons yeux."},
         {"id": "phare.debout.05", "voix": "fanal", "texte": "Fini, le phare. Les ouvriers ont applaudi, puis ils ont éteint pour ne rien gaspiller."}
+      ]
+    },
+    "phare.allume": {
+      "quand": "Le phare debout est allumé pour la semaine (geste « Allumer le phare » de sa fiche). Lot Y. Ni prix ni jour : ils sont dans la phrase lue et la fiche.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "phare.allume.01", "voix": "fanal", "texte": "La lanterne brille sur le lac. Quelqu’un finira bien par la voir."},
+        {"id": "phare.allume.02", "voix": "fanal", "texte": "Phare allumé. Je lui ai dit bonjour, il m’a fait un clin d’œil."},
+        {"id": "phare.allume.03", "voix": "fanal", "texte": "Le phare éclaire le large. Demain, on aura de la visite."},
+        {"id": "phare.allume.04", "voix": "fanal", "texte": "La lanterne tourne au bout du rivage. Ça fait du bien de la revoir."},
+        {"id": "phare.allume.05", "voix": "fanal", "texte": "Le phare veille sur le lac cette semaine. Moi, je veille sur le phare."}
+      ]
+    },
+    "escale.accueillie": {
+      "quand": "Les plaisanciers venus au phare sont accueillis (geste « Accueillir » de la fiche du phare) : ils repartent et laissent un décor dans la remise. Lot Y. Ni prix ni nom du décor : ils sont dans la phrase lue.",
+      "frequence": 1,
+      "variantes": [
+        {"id": "escale.accueillie.01", "voix": "fanal", "texte": "Les plaisanciers repartent contents. Ils ont laissé un souvenir dans la remise."},
+        {"id": "escale.accueillie.02", "voix": "fanal", "texte": "Bonne escale! Ils ont promis de raconter l’Orée plus loin sur le lac."},
+        {"id": "escale.accueillie.03", "voix": "fanal", "texte": "Un repas, une nuit au chaud, et les voilà repartis. La remise a un cadeau."},
+        {"id": "escale.accueillie.04", "voix": "fanal", "texte": "Les plaisanciers ont salué de la main. J’ai salué de la lanterne."},
+        {"id": "escale.accueillie.05", "voix": "fanal", "texte": "Escale réussie. Ils ont laissé quelque chose qu’on ne trouve nulle part ailleurs."}
       ]
     },
     "allure.ralentit": {

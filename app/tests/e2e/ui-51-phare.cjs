@@ -10,7 +10,7 @@
 //     Échap ne ferme qu'elle ; « Bâtir la galerie » : les deux feuilles se rangent, le clavier revient sur « Construire »,
 //     l'échafaudage paraît sans monter ;
 //   - la fin : la quête qui finit la lanterne l'allume le temps du moment (vitres et halo, de 2 à 4,5 secondes), puis
-//     l'éteint ; la fiche dit « Debout », sans bouton ; le phare quitte le catalogue.
+//     l'éteint ; la fiche dit « Debout » et passe aux escales (« Allumer le phare », scénario 53) ; le phare quitte le catalogue.
 // Données fictives seulement.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -103,6 +103,8 @@ const fiche = (page) => page.evaluate(() => {
     prix: sp(d.querySelector('#trv-prix')?.textContent),
     batir: b ? { text: sp(b.textContent), off: b.getAttribute('aria-disabled') === 'true', primaire: b.classList.contains('btn--primary'), desc: b.getAttribute('aria-describedby'), lock: !!b.querySelector('use[href$="#i-lock"]') } : null,
     max: sp(d.querySelector('.qrt-max')?.textContent),
+    lanterne: sp(d.querySelector('.esc-lanterne')?.textContent),
+    allumer: (() => { const a = d.querySelector('[data-action="esc-allumer"]'); return a ? { text: sp(a.textContent), off: a.getAttribute('aria-disabled') === 'true' } : null; })(),
     repli: r ? { open: r.open, resume: sp(r.querySelector('summary').textContent) } : null,
     focus: d.contains(document.activeElement),
     small, wide,
@@ -310,8 +312,9 @@ L.runScenario('51 · le phare, premier des Grands travaux', async ({ R, srv, tag
     R.check(`le phare debout se touche encore (${tag})`, await toucherPhare(page));
     await page.waitForTimeout(350);
     const f = await fiche(page);
-    R.check(`fiche : « Debout », les quatre étapes cochées, « Le phare est debout. », sans bouton (${tag})`, f.ligne === 'Debout' && f.quoi.startsWith('Une tour blanche sur un rocher') && f.scene?.etat === 'debout'
-      && f.etapes === 'Fondation ✓, Tour ✓, Galerie ✓, Lanterne ✓' && f.max === 'Le phare est debout.' && !f.batir && !f.pastilles, JSON.stringify(f));
+    // debout, sa fiche passe aux escales (lot Y, scénario 53) : la lanterne éteinte et « Allumer le phare », plus d'étapes
+    R.check(`fiche : « Debout », la lanterne éteinte, « Allumer le phare », plus d'étapes ni de « Bâtir » (${tag})`, f.ligne === 'Debout' && f.quoi.startsWith('Une tour blanche sur un rocher') && f.scene?.etat === 'debout'
+      && f.lanterne.startsWith('Éteint.') && f.allumer?.text === 'Allumer le phare' && !f.etapes && !f.batir, JSON.stringify(f));
     await shot(page, '51-debout');
     await page.keyboard.press('Escape');
     await fermee(page, 'dlg-travaux');

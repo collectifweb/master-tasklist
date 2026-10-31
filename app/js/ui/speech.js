@@ -54,6 +54,9 @@ export function situationFor(action, params, events, task) {
       const e = events.find((x) => x.type === 'travaux-etape-payee');
       return e ? `${e.ouvrage}.lance` : null;
     }
+    // le phare allumé pour la semaine, les plaisanciers accueillis (lot Y)
+    case 'allumerPhare': return has('phare-allume') ? 'phare.allume' : null;
+    case 'accueillirEscale': return has('escale-accueillie') ? 'escale.accueillie' : null;
     default: return null;
   }
 }

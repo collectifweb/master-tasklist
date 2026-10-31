@@ -140,6 +140,9 @@
 .ow[data-veille] [data-allume] .win { fill: var(--win-night); }
 .ow .lampg { fill: var(--lampg-off); stroke: none; }
 .ow [data-allume] .lampg { fill: var(--lampg-on); }
+/* dans les fiches (lot Y) : la lanterne d'un dessin du phare, éteinte, ou allumée quand sa scène porte data-allume */
+.ow-thumb .lampg { fill: var(--lampg-off); stroke: none; }
+[data-allume] > * > .ow-thumb .lampg { fill: var(--lampg-on); }
 .ow .rune { stroke: var(--stoned-r); fill: none; }
 .ow [data-allume] .rune { stroke: var(--tech-t); }
 .ow .ow-fanal-core { fill: var(--c-lantern-glow); }
@@ -310,6 +313,28 @@
 .ow-halo.h-crystal { background: radial-gradient(closest-side, rgb(214 244 236 / 0.9), rgb(174 224 215 / 0.35) 50%, rgb(174 224 215 / 0)); }
 .ow-halo.h-fanal { left: -34px; top: -34px; width: 68px; height: 68px; }
 .ow[data-veille] .ow-halo[data-on] { opacity: 1; }
+/* phare allumé pour la semaine (lot Y) : le halo de la lanterne, et son faisceau, deux pinceaux opposés en éventail qui
+   tournent dans le plan du lac (aplatis de moitié, comme l'île). Il tourne quand l'île est éveillée ; en mouvement réduit,
+   île endormie ou onglet caché, il reste figé, pointé vers le large. Léger le jour, plein le soir, comme les halos. */
+.ow-halo.h-phare { left: -36px; top: -36px; width: 72px; height: 72px; }
+.ow-halo.h-phare::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - 170px);
+  top: calc(50% - 13px);
+  width: 340px;
+  height: 26px;
+  background: linear-gradient(90deg, rgb(255 230 160 / 0) 0%, rgb(255 230 160 / 0.42) 30%, rgb(255 238 186 / 0.9) 50%, rgb(255 230 160 / 0.42) 70%, rgb(255 230 160 / 0) 100%);
+  clip-path: polygon(0 0, 50% 44%, 100% 0, 100% 100%, 50% 56%, 0 100%);
+  transform: scaleY(0.5) rotate(-24deg);
+  animation: ow-faisceau 12s linear infinite;
+  animation-play-state: paused;
+}
+@keyframes ow-faisceau {
+  from { transform: scaleY(0.5) rotate(-24deg); }
+  to { transform: scaleY(0.5) rotate(336deg); }
+}
+.ow[data-mouvement="reduit"] .ow-halo.h-phare::before { animation: none; }
 
 .ow-dusk {
   position: absolute;
@@ -806,6 +831,8 @@
 .ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) :is(.ow-cloud, .ow-crystal, .ow-smoke i, .ow-char-bob, .ow-rotor, .ow-barge, .ow-bateau, .ow-aurore-r, .ow-hab-pas, .ow-hab-bob, .ow-hab-bras, .ow-bulle-flot) {
   animation-play-state: running;
 }
+/* un pseudo-élément ne tient pas dans :is() */
+.ow[data-ambient="on"]:not([data-mouvement="reduit"]):not([data-cache]):not([data-hors-vue]) .ow-halo.h-phare::before { animation-play-state: running; }
 .ow[data-mouvement="reduit"] .ow-halo { transition-duration: 0s; }
 
 /* ---------------------------------------------------------------- carte en liste */

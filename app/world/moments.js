@@ -8,6 +8,7 @@
 //   la forêt recule : un rang gagne une bande de terrain (rang, lot F)
 //   la récolte d'une bulle s'envole vers son compteur (cueillette, lot L)
 //   une étape du phare payée ou finie, sa lanterne allumée le temps du moment de la fin (travaux-etape-*, lot O)
+//   le phare allumé pour la semaine ; le voilier des plaisanciers accueillis repart (phare-allume, escale-accueillie, lot Y)
 import { P, f } from './iso.js';
 import { SECTOR_CENTER, BANDES_ILE, EMPLACEMENTS, decorFor } from './layout.js';
 import { quartierOfTask } from '../core/domains.js';
@@ -332,7 +333,48 @@ function travauxStep(ctx, ev) {
 
 // ----------------------------------------------------------------------------- chef d'orchestre
 /** Les événements que le monde joue (les autres sont ignorés). */
-export const MOMENTS = new Set(['reward', 'quartier-monte', 'reflet', 'veille', 'etape', 'rang', 'cueillette', 'travaux-etape-payee', 'travaux-etape-finie']);
+// ----------------------------------------------------------------------------- escales du phare (lot Y)
+/**
+ * Le phare allumé pour la semaine (phare-allume) : la carte le cadre de près, sa lanterne s'allume, le halo et son
+ * faisceau éclatent puis se posent ; il reste allumé. Les plaisanciers accueillis (escale-accueillie) : leur voilier
+ * s'éloigne vers le large en pâlissant, puis le phare reste seul. En mouvement réduit, des fondus courts. L'interface dit
+ * la phrase et Fanal la réplique ; le monde dessine.
+ */
+function escaleStep(ctx, ev) {
+  const apply = () => {
+    ctx.shown.travaux = { ...ctx.shown.travaux, phare: ctx.target.travaux?.phare };
+    ctx.shown.escale = ctx.target.escale;
+    ctx.apply({ enter: false });
+  };
+  const run = async () => {
+    const n = ctx.scene.get('phare');
+    if (!n || !ctx.target.travaux?.phare) { apply(); return; }
+    const [x, y] = ctx.scene.pointOf('phare', 0.5);
+    ctx.rapprocher(x, y);
+    if (!ctx.reduced) await ctx.fx.wait(420);
+    if (ev.type === 'escale-accueillie') {
+      const b = n.el.querySelector('.ow-voilier');
+      if (b) {
+        const k = ctx.reduced ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, translate: '0 0' }, { opacity: 0, translate: '-48px 16px' }];
+        await ctx.fx.anim(b, k, { duration: ctx.reduced ? 150 : 1200, easing: 'cubic-bezier(.45,0,.7,.4)', fill: 'forwards' }).finished.catch(() => {});
+      }
+      apply();
+      return;
+    }
+    apply();
+    const m = ctx.scene.get('phare');
+    if (!m?.halo) return;
+    if (ctx.reduced) { await ctx.fx.anim(m.halo, [{ opacity: 0 }, {}], { duration: 150 }).finished.catch(() => {}); return; }
+    // la lumière éclate, puis revient à celle de la journée (ou du soir) : la dernière image est celle de la feuille de style
+    ctx.fx.anim(m.halo, [{ opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1.25, offset: 0.5 }, {}], { duration: 1400, easing: 'cubic-bezier(.16,1,.3,1)' });
+    const a = m.art?.anchors.light;
+    if (a) ctx.fx.twinkle([[m.X + a[0] - 16, m.Y + a[1] - 4], [m.X + a[0] + 14, m.Y + a[1] - 12], [m.X + a[0] + 2, m.Y + a[1] - 26]]);
+    await ctx.fx.wait(1400);
+  };
+  return { apply, run, text: () => '' };
+}
+
+export const MOMENTS = new Set(['reward', 'quartier-monte', 'reflet', 'veille', 'etape', 'rang', 'cueillette', 'travaux-etape-payee', 'travaux-etape-finie', 'phare-allume', 'escale-accueillie']);
 function stepsFor(ctx, ev) {
   switch (ev.type) {
     case 'reward': return [rewardStep(ctx, ev)];
@@ -343,6 +385,7 @@ function stepsFor(ctx, ev) {
     case 'rang': return [bandeStep(ctx)];
     case 'cueillette': return [cueilletteStep(ctx, ev)];
     case 'travaux-etape-payee': case 'travaux-etape-finie': return [travauxStep(ctx, ev)];
+    case 'phare-allume': case 'escale-accueillie': return [escaleStep(ctx, ev)];
     default: return [];
   }
 }

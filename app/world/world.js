@@ -30,14 +30,16 @@
 //   { type: 'ouvrage', id, sector, model }                   ouvrage des Grands travaux (lot O : le phare), à tous ses états
 //   { type: 'object', id, sector, model, taskId }            caisse d'échéance (taskId) ou Fanal (taskId null)
 //   { type: 'bulle', id, sector, batiment, bulle, direct }   bulle au-dessus d'un bâtiment (lot L) : bulle = 'recolte' |
-//                                                            'famille' | 'commande' ; direct : la récolte tient entière
+//                                                            'famille' | 'commande', ou 'escale' sur le phare (id 'phare',
+//                                                            lot Y : on peut accueillir les plaisanciers) ; direct : la récolte tient entière
 //
 // options.compteur(res) : l'élément de la barre du haut où arrive une ressource ('nourriture'), visé par le vol d'une
 // récolte faite sur sa bulle (événement cueillette, ajouté par l'hôte) ; sans lui, le chiffre change sans vol.
 //
 // Événements que play() sait jouer (un type inconnu est ignoré) : reward, quartier-monte, reflet, veille, etape, rang (la
 // forêt recule quand le rang gagne une bande de terrain, lot F), cueillette ({ id } : la récolte d'une bulle s'envole vers
-// son compteur, lot L), travaux-etape-payee et travaux-etape-finie (une étape du phare monte ou se finit, lot O).
+// son compteur, lot L), travaux-etape-payee et travaux-etape-finie (une étape du phare monte ou se finit, lot O),
+// phare-allume et escale-accueillie (le phare s'allume pour la semaine ; les plaisanciers accueillis repartent, lot Y).
 import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
@@ -47,7 +49,7 @@ import {
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
 import { Scene } from './scene.js';
-import { artFor, QUAI_MARCHAND_H, QUAI_BATEAU_W } from './models.js';
+import { artFor, QUAI_MARCHAND_H, QUAI_BATEAU_W, PHARE_ESCALE } from './models.js';
 import { createTicker, createBus } from './ticker.js';
 import { promeneurs, trajet } from './habitants.js';
 import { Camera, NEAR_SCALE } from './camera.js';
@@ -88,12 +90,13 @@ const CTL_GLYPH = {
 
 /**
  * Pictos des bulles (lot L) : la récolte (panier de la Nourriture), la famille (Habitants), la commande (barque du quai),
- * les mêmes tracés que design/icons.svg ; chevrons des flèches au bord.
+ * les plaisanciers au phare (voilier, lot Y), les mêmes tracés que design/icons.svg ; chevrons des flèches au bord.
  */
 const BULLE_GLYPH = {
   recolte: '<path d="M3.5 11.5h17l-2.1 8.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/><path d="M3.5 11.5h17l-2.1 8.3H5.6zM9.4 14.3v2.9M14.6 14.3v2.9M7.8 11.5a4.2 4.2 0 0 1 8.4 0M12 7.3c0-1.3.6-2.5 1.7-3.2"/><path d="M12.6 6c.6-1.4 2-2.1 3.6-1.9-.5 1.5-1.9 2.2-3.6 1.9z" fill="currentColor" stroke-width="1.2"/>',
   famille: '<path d="M3.4 19.8c.4-3.7 2.7-5.9 5.6-5.9s5.2 2.2 5.6 5.9z" fill="currentColor" opacity=".22" stroke="none"/><circle cx="9" cy="8.2" r="3.1"/><circle cx="16.4" cy="8.9" r="2.5"/><path d="M3.4 19.8c.4-3.7 2.7-5.9 5.6-5.9s5.2 2.2 5.6 5.9zM16.4 14c2.4.3 3.9 2.5 4.2 5.8h-3.4"/>',
   commande: '<path d="M2.8 14.6h18.4l-2.4 4.3H5.6z" fill="currentColor" opacity=".22" stroke="none"/><path d="M2.8 14.6h18.4l-2.4 4.3H5.6zM5.2 14.6V9.4M12 14.6V9.4M4 9.4h9.2M18 14.6V4.2l3 1.6-3 1.6"/>',
+  escale: '<path d="M3.6 16.4h16.8l-2.5 3.6H6.1z" fill="currentColor" opacity=".22" stroke="none"/><path d="M3.6 16.4h16.8l-2.5 3.6H6.1zM12.4 16.4V3.6M12.4 4.4l6.2 9.4h-6.2M10.8 6.8l-5 7h5"/>',
   monte: '<path d="m6 14.5 6-6 6 6" stroke-width="2.6"/>',
   gauche: '<path d="m14.5 6-6 6 6 6" stroke-width="2.4"/>',
   droite: '<path d="m9.5 6 6 6-6 6" stroke-width="2.4"/>',
@@ -150,12 +153,15 @@ export function entitiesFor(v, tasks = []) {
     list.push(e);
   }
   // Grands travaux (lot O) : le vieux phare éteint dès le départ, puis ses étapes ; l'échafaudage pendant qu'on bâtit.
-  // Touché, il ouvre sa fiche. Sa lanterne ne s'allume que le temps du moment de la fin (allume, posé par moments.js).
+  // Touché, il ouvre sa fiche. Sa lanterne s'allume le temps du moment de la fin (allume, posé par moments.js), puis la
+  // semaine où on l'allume (lot Y), avec son faisceau ; le voilier des plaisanciers qui attend est dans son emprise,
+  // comme le bateau d'un visiteur au quai (PHARE_ESCALE).
   for (const [id, t] of Object.entries(v.travaux || {})) {
     const slot = OUVRAGES_ILE[id];
     if (!slot) continue;
     const lac = slot.lac ? D / 32 : 0;
-    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, ouvrage: id, light: t.allume ? 'lantern' : null, allume: !!t.allume });
+    const escale = !!t.escale && id === 'phare';
+    list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}${escale ? '+escale' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: escale ? PHARE_ESCALE.h : slot.h, w: escale ? PHARE_ESCALE.w : slot.w, interactive: true, ouvrage: id, light: t.allume ? 'phare' : null, allume: !!t.allume });
   }
   // la lisière recule avec les bandes gagnées (lot F) ; un décor posé remplace le bosquet de son coin (lot K)
   const pris = (v.decors?.poses || []).map(({ coin }) => COINS_ILE[coin]).filter(Boolean).map(({ r, c }) => [r, c]);
@@ -566,13 +572,16 @@ export function createWorld(container, options = {}) {
   // plaques ; elles ne se rangent pas au bord : ce qui sort de la zone libre se compte dans une flèche collée au bord
   const bulleEls = new Map(); // id du bâtiment → bouton
   let bulleList = [];          // [{ id, kind }] de la vue affichée
+  // ce qui attend un geste : les bâtiments à bulle, et le phare quand on peut accueillir ses plaisanciers (lot Y)
+  const bullesDe = (v) => [...(v?.batiments || []).filter((b) => b.bulle), ...(v?.escale?.bulle ? [{ id: 'phare', type: 'phare', bulle: { kind: 'escale' } }] : [])];
   function bulleLabel(b) {
+    if (b.bulle.kind === 'escale') return t('monde.bulle.escale');
     const nom = batimentNom(t, b);
     if (b.bulle.kind === 'recolte') return t(b.bulle.direct ? 'monde.bulle.recolte' : 'monde.bulle.recolte.fiche', { nom, n: fmt(b.bulle.n) });
     return t(`monde.bulle.${b.bulle.kind}`, { nom });
   }
   function applyBulles(v) {
-    const list = (v.batiments || []).filter((b) => b.bulle && scene.get(b.id));
+    const list = bullesDe(v).filter((b) => scene.get(b.id));
     for (const b of list) {
       let n = bulleEls.get(b.id);
       if (!n) {
@@ -1124,7 +1133,7 @@ export function createWorld(container, options = {}) {
     if (bu) {
       if (longs) return;
       clearVeille();
-      const b = shown?.batiments.find((x) => x.id === bu.dataset.de);
+      const b = bullesDe(shown).find((x) => x.id === bu.dataset.de);
       if (!b?.bulle) return;
       const info = { type: 'bulle', id: b.id, sector: scene.get(b.id)?.e.sector, batiment: b.type, bulle: b.bulle.kind, direct: !!b.bulle.direct };
       options.onSelect?.(info);

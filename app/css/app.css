@@ -1362,6 +1362,34 @@
 }
 .trv-chantier-t { margin: 0; font-weight: var(--w-bold); }
 .trv-chantier-v { margin: 0; font-size: var(--text-14); color: var(--text-soft); }
+/* Le phare debout (lot Y) : allumé, son dessin baigne dans la lumière de la lanterne et la ligne d'état la dit en encre de
+   lanterne ; les plaisanciers reprennent la carte de la commande du quai, le décor qu'ils laissent en dessin et en nom. */
+.trv-scene[data-allume] { background: radial-gradient(circle at 50% 22%, var(--c-lantern-wash), var(--surface-card) 62%); }
+.esc-lanterne,
+.esc-route {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  font-weight: var(--w-bold);
+  color: var(--text-soft);
+}
+.esc-lanterne .icon,
+.esc-route .icon { flex: none; width: 22px; height: 22px; color: var(--text-muted); }
+.esc-lanterne[data-allume] { color: var(--c-lantern-ink); }
+.esc-lanterne[data-allume] .icon { color: var(--c-lantern-ink); }
+.esc-route .icon { color: var(--c-sage-deep); }
+.esc-decor {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px var(--sp-3) 4px var(--sp-2);
+  background: var(--c-sage-wash);
+  color: var(--c-sage-deep);
+}
+.esc-decor-dessin { display: grid; place-items: center; width: 40px; height: 44px; }
+.esc-decor-dessin svg { width: auto; height: 44px; max-width: 40px; overflow: visible; }
+.esc-decor-nom { font-size: var(--text-15); font-weight: var(--w-bold); line-height: 1.2; }
 .trv-etapes {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -361,7 +361,7 @@ function etalBarreHtml(o, jour) {
 
 // Une ressource de la commande : picto et nombre demandé sur le lavis de la ressource ; ce que la réserve en a (« 3/8 »)
 // ou une coche quand il y en a assez, et une jauge dessous (muette : le compte écrit la dit). Ce qu'il laisse : « +1 ».
-function commandeResHtml(r) {
+export function commandeResHtml(r) {
   const etat = r.assez ? icon('check', 'commande-ok') : `<small class="commande-a">${esc(r.a)}/${esc(r.n)}</small>`;
   return `<span class="commande-res" data-res="${r.res}"${r.assez ? ' data-assez' : ''}><span class="commande-res-v">${icon(r.res)}<b>${esc(r.n)}</b><span class="sr-only"> ${esc(r.nom)}${
     r.assez ? '' : ` (${esc(t('bat.commande.enReserve', { n: r.a }))})`}</span>${etat}</span><span class="commande-jauge" aria-hidden="true"><span style="width:${r.pct}%"></span></span></span>`;
