@@ -2,13 +2,13 @@
 
 Ce qui est fait, ce qui est en cours et ce qui vient. Cette page se met à jour à chaque envoi en production. Le détail de chaque lot (mesures, essais, décisions) est dans `tasks/todo.md`. Les règles du jeu sont dans `docs/BIBLE-JEU.md`.
 
-*Dernière mise à jour : 30 octobre 2026.*
+*Dernière mise à jour : 31 octobre 2026.*
 
 ## Où en est le jeu
 
-La version 2.20 est en ligne depuis le 30 octobre 2026. Elle redessine les routes de l’île : chacune finit maintenant sur quelque chose, et aucune ne mène plus dans le lac. Celle de l’avant va au quai, celles du fond et des Champs s’arrêtent au pied de la forêt, celle de droite sur un garde-fou en bois. Les croisements autour de la Place n’ont plus de raccords foncés.
+La version 2.21 est en ligne depuis le 31 octobre 2026. Elle ajoute les deux étapes suivantes des Grands travaux, au rang Bourg. D’abord, des décors à placer soi-même : un onglet « Décors » dans le catalogue « Construire », neuf décors à acheter surtout en Matériaux et onze coins de l’île où les poser. Puis le phare relevé s’allume pour la semaine, contre de l’Énergie. Le lendemain, un voilier de plaisanciers vient mouiller à son pied. On les accueille avec un peu de Nourriture, et ils laissent en partant un décor qu’on ne trouve nulle part ailleurs.
 
-La 2.19, plus tôt le même jour, avait ouvert les Grands travaux, des ouvrages où dépenser l’Énergie et les Matériaux en trop, à tous les villages qui ont atteint le rang Bourg. Le premier est le phare : le vieux phare éteint attend sur son rocher, et on le relève en quatre étapes. La quête qui finit la lanterne l’allume le temps d’un moment.
+Les versions 2.19 et 2.20, du 30 octobre, avaient ouvert les Grands travaux avec le vieux phare, qu’on relève en quatre étapes, et redessiné les routes de l’île : chacune finit maintenant sur quelque chose, et aucune ne mène plus dans le lac.
 
 Les versions 2.18 et 2.18.1, du 24 octobre, avaient donné un étal au marchand du quai : ses offres sont des tuiles, qu’on touche avant d’échanger. Au lancement, le panneau du Fil du jour reste caché, et c’est l’icône « Quêtes » qui l’ouvre. Sur téléphone et sur tablette tenue en hauteur, il se cache aussi après le « Fait » du Fil, pour qu’on voie le fil de lumière filer sur la carte. La 2.17, du 23 octobre, avait dégagé la carte : les plaques de quartier en petits ronds, l’éolienne qui ne cache plus la cabane à sucre.
 
@@ -46,6 +46,7 @@ Les versions 2.18 et 2.18.1, du 24 octobre, avaient donné un étal au marchand 
 | 2.18.1 | 24 octobre | Sur téléphone et sur tablette tenue en hauteur, le « Fait » du Fil du jour cache maintenant le panneau, qui couvrait la carte. Le fil de lumière file donc à la vue jusqu’au bâtiment, et les compteurs montent à son arrivée. Les coches de la liste laissent le panneau ouvert, pour en cocher plusieurs à la suite. Sur grand écran, rien ne change. |
 | 2.19 | 30 octobre | Les Grands travaux, ouverts dès le rang Bourg (11 habitants), quelle que soit l’allure du village. Le premier est le phare. Le vieux phare éteint est sur son rocher dès le départ ; on le relève en quatre étapes (la fondation, la tour, la galerie, la lanterne), à 250 Énergie et 500 Matériaux chacune. Une étape payée se bâtit pendant les 2 jours suivants où tu termines une quête, une étape à la fois, et rien ne se perd pendant une absence. La quête qui finit la lanterne l’allume le temps d’un moment. Le phare se touche sur l’île pour ouvrir sa fiche, et il a sa rangée dans le catalogue « Construire », avec ses étapes en crans. |
 | 2.20 | 30 octobre | Le dessin des routes de l’île. Chacune finit maintenant sur quelque chose, au lieu de deux qui menaient dans le lac : celle de l’avant au quai, celles du fond et des Champs au pied de la forêt, dont les arbres se referment devant elles, celle de droite, entre l’Atelier et la Mairie, sur un garde-fou en bois posé en travers. Une fois la bande du Hameau gagnée sur la forêt, la route du fond la traverse jusqu’aux arbres replantés. Les routes se dessinent d’un seul trait : plus de raccords foncés autour de la Place. |
+| 2.21 | 31 octobre | Les décors et le phare allumé, deuxième et troisième étapes des Grands travaux, ouvertes au rang Bourg. Le catalogue « Construire » gagne un onglet « Décors » : neuf décors, du massif de fleurs à la lanterne, de 40 à 200 Matériaux (la lanterne demande aussi 60 Énergie). On touche un décor, puis l’un des onze coins libres que montre la carte, et on paie en le posant. Le déplacer ou le ranger ne coûte rien ; un décor rangé attend dans la remise, d’où on le repose gratuitement. Une fois debout, le phare s’allume pour la semaine contre 100 Énergie, et sa lanterne brille jusqu’au dimanche. Le lendemain, un voilier de plaisanciers attend au pied du phare, et une bulle le signale dès qu’on peut les accueillir. L’accueil coûte 20 Nourriture, mais les familles passent d’abord : tant qu’une place est libre au chalet, il faut garder de quoi recevoir la prochaine. En partant, ils laissent un décor qui ne s’achète pas, dans cet ordre : le canot renversé, la vieille ancre, la cloche de brume, la girouette, la bouée, le filet de pêche. Rien ne se perd pendant une absence, car le voilier attend qu’on revienne. Et laisser le phare éteint ne coûte rien. |
 
 Autour du jeu : la vidéo de présentation de 40 secondes (11 octobre, `docs/captures/video-promo.mp4`).
 
@@ -67,7 +68,7 @@ Décidé dans la bible, pas encore construit. Aucun lot n’est fixé pour ces �
 - Les saisons : le dégel et la crue au printemps ; l’objectif de l’été (accueillir une nouvelle famille) et la Saint-Jean ; chaque année, de nouvelles variantes. Une saison réussie donnera aussi un décor unique ou une famille.
 - Des visiteurs : le colporteur et ses décors, la conteuse et les souvenirs du musée, le violoneux des Fêtes, les améliorations de la scientifique, des décors uniques en échange d’une commande.
 - Des imprévus : les mouches noires de juin, le visiteur surprise.
-- La suite des Grands travaux, dans cet ordre : des décors à placer soi-même sur l’île, puis le phare qu’on allume. L’allumer pour la semaine coûtera de l’Énergie ; allumé, il fera escaler des plaisanciers, qu’on nourrit et qui laissent en partant un décor introuvable ailleurs. On pourra passer son tour sans rien perdre. Plus tard, d’autres ouvrages : une digue, un pont, un monument.
+- La suite des Grands travaux : d’autres ouvrages, une digue, un pont, un monument.
 - Le village plus vivant : des habitants qui font mieux produire leur bâtiment, des panneaux solaires.
 - L’allure, qui regarderait aussi les réserves, pas seulement les quêtes terminées.
 
