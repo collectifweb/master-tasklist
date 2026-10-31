@@ -4,6 +4,7 @@
 // parcelle, atelier, serre, eolienne, grenier, quai, tour (de guet), scierie, poulailler, cabane (à sucre), et piquets
 // (chantier possible). Décor : epinette, arbre, buisson, rocher, et souche (la bande gagnée sur la forêt, lot F). Fêtes
 // (lot N) : tablee (le repas de la semaine), tire (la partie de sucre).
+// Décors posés par le joueur (lot K) : massif, nichoir, bouleau, banc, chaise, cordee (et erable, epinette, lanterne).
 // Fanal : characterSVG().
 import { Art, P, HW, HH, f, pts, rng } from './iso.js';
 
@@ -1302,6 +1303,97 @@ export function rocher(seed = 1) {
 const C = { sage: '#5f8a63', sageR: '#466a4c', brass: '#c99a4a', brassR: '#9c7434', dark: '#3c3a33' };
 
 /** Sprite debout de Fanal. Pieds en (0, 0) ; boîte -16..16 × -50..4. */
+// ---------------------------------------------------------------- décors posés par le joueur (lot K)
+// Sur un coin de l'île (COINS_ILE, world/layout.js), au centre d'une emprise 1 × 1, plus bas qu'un bâtiment : ils se
+// lisent sans cacher ce qui est derrière eux. L'érable, l'épinette et la lanterne reprennent le décor fixe.
+
+/** Massif de fleurs : bordure de pierres basse autour d'un carré de terre, touffes et fleurs des champs. */
+export function massif(seed = 1) {
+  const a = new Art();
+  const R = rng(seed);
+  a.box(0.22, 0.22, 0.56, 0.56, 0, 2.6, 'stoned');
+  a.poly([[0.28, 0.28, 2.6], [0.72, 0.28, 2.6], [0.72, 0.72, 2.6], [0.28, 0.72, 2.6]], 'soilf-t');
+  const [cx, cy] = P(0.5, 0.5, 2.6);
+  ball(a, cx, cy - 6, 4.6, 'leaf', R, 6);
+  ball(a, cx - 7, cy - 2, 4.4, 'leafb', R, 6);
+  ball(a, cx + 7, cy - 2, 4.4, 'leaf', R, 6);
+  ball(a, cx, cy + 2.5, 4.2, 'leafb', R, 6);
+  const fleurs = ['fl1', 'fl2', 'fl3', 'maple'];
+  for (let k = 0; k < 11; k++) a.raw(`<circle cx="${f(cx - 10 + R() * 20)}" cy="${f(cy - 10 + R() * 13)}" r="1.4" class="${fleurs[k % 4]}-t"/>`);
+  a.castS(cx - 12, cy, 3); a.castS(cx + 12, cy, 3); a.castS(cx, cy - 12, 10);
+  return a.done();
+}
+
+/** Nichoir : petite maison d'oiseaux sur un poteau, toit vert, trou rond et perchoir côté +v. */
+export function nichoir() {
+  const a = new Art();
+  a.box(0.47, 0.47, 0.06, 0.06, 0, 21, 'woodd');
+  a.box(0.39, 0.41, 0.22, 0.18, 21, 9, 'woodb');
+  const [hx, hy] = P(0.5, 0.59, 26.5);
+  a.raw(`<ellipse cx="${f(hx)}" cy="${f(hy)}" rx="2" ry="2.1" class="wooddk-t"/>`);
+  a.seg([0.5, 0.59, 23.6], [0.5, 0.67, 23.6], 'k-woodd-l', 1);
+  roofU(a, 0.39, 0.41, 0.22, 0.18, 30, 5.5, 'roofb', 'woodb', 0.05);
+  a.cast(0.47, 0.47, 0); a.cast(0.5, 0.5, 36);
+  return a.done();
+}
+
+/** Bouleau : tronc blanc marqué de noir, feuillage doré et vert tendre. */
+export function bouleau(seed = 1) {
+  const a = new Art();
+  const R = rng(seed);
+  a.box(0.46, 0.46, 0.08, 0.08, 0, 18, 'paper');
+  for (const z of [3.5, 8, 12.5]) a.seg([0.47, 0.54, z], [0.52, 0.54, z + 0.8], 'k-wooddk-l', 1.1);
+  a.seg([0.54, 0.48, 6], [0.54, 0.52, 6.6], 'k-wooddk-r', 1.1);
+  const [cx, cy] = P(0.5, 0.5);
+  const s = 0.94 + R() * 0.14;
+  ball(a, cx - 7 * s, cy - 27 * s, 9 * s, 'leafb', R, 7, 'gold');
+  ball(a, cx + 7 * s, cy - 28 * s, 8.5 * s, 'gold', R, 7, 'leafb');
+  ball(a, cx, cy - 37 * s, 10 * s, 'gold', R, 8, 'leafb');
+  for (let k = 0; k < 8; k++) { const t = (k / 8) * Math.PI * 2; a.castS(cx + Math.cos(t) * 15 * s, cy - 30 * s + Math.sin(t) * 10 * s, 30 * s); }
+  a.cast(0.46, 0.46, 0); a.cast(0.54, 0.54, 0);
+  return a.done();
+}
+
+/** Banc de bois, assise tournée vers l'avant (+v), dossier à deux lattes, pieds sombres. */
+export function banc() {
+  const a = new Art();
+  for (const u of [0.25, 0.71]) a.box(u, 0.4, 0.04, 0.04, 0, 13.5, 'woodd'); // montants du dossier, jusqu'au sol
+  for (const u of [0.25, 0.71]) a.box(u, 0.58, 0.04, 0.04, 0, 5, 'woodd');
+  a.box(0.2, 0.42, 0.6, 0.2, 5, 1.7, 'woodb');
+  a.box(0.2, 0.38, 0.6, 0.03, 8.5, 1.8, 'woodb');
+  a.box(0.2, 0.38, 0.6, 0.03, 11.6, 1.8, 'woodb');
+  for (const [u, v] of [[0.2, 0.38], [0.8, 0.38], [0.8, 0.62], [0.2, 0.62]]) { a.cast(u, v, 0); a.cast(u, v, 13); }
+  return a.done();
+}
+
+/** Chaise Adirondack peinte en vert : lattes du dossier en éventail penchées vers l'arrière, larges accoudoirs. */
+export function chaise() {
+  const a = new Art();
+  // lattes du dossier, du bas de l'assise vers le haut, penchées vers le fond (v plus petit)
+  for (const [u0, u1, top] of [[0.31, 0.41, 17], [0.44, 0.56, 18.5], [0.59, 0.69, 17]]) {
+    a.poly([[u0, 0.45, 4.5], [u1, 0.45, 4.5], [u1, 0.33, top], [u0, 0.33, top]], 'roof-l');
+    a.poly([[u1, 0.45, 4.5], [u1 + 0.012, 0.448, 4.5], [u1 + 0.012, 0.328, top], [u1, 0.33, top]], 'roof-r');
+  }
+  for (const u of [0.29, 0.69]) a.box(u, 0.44, 0.03, 0.03, 0, 5, 'roof');
+  a.poly([[0.3, 0.44, 4.6], [0.7, 0.44, 4.6], [0.7, 0.64, 6.2], [0.3, 0.64, 6.2]], 'roof-t');
+  a.poly([[0.3, 0.64, 6.2], [0.7, 0.64, 6.2], [0.7, 0.64, 4.8], [0.3, 0.64, 4.8]], 'roof-l');
+  for (const u of [0.26, 0.7]) a.box(u, 0.6, 0.035, 0.035, 0, 9, 'roof');
+  for (const u of [0.24, 0.69]) a.box(u, 0.38, 0.07, 0.3, 9, 1.3, 'roof');
+  for (const [u, v] of [[0.24, 0.33], [0.76, 0.33], [0.76, 0.68], [0.24, 0.68]]) { a.cast(u, v, 0); a.cast(u, v, 12); }
+  return a.done();
+}
+
+/** Cordée de bois : bûches empilées entre deux poteaux, bouts tournés vers +u, sous un petit toit de planches. */
+export function cordee() {
+  const a = new Art();
+  a.box(0.17, 0.44, 0.05, 0.06, 0, 21, 'woodd');
+  for (const zc of [3.2, 9.4, 15.6]) for (const vc of [0.4, 0.56]) buche(a, 0.22, 0.76, vc, zc);
+  a.box(0.77, 0.44, 0.05, 0.06, 0, 21, 'woodd');
+  a.box(0.14, 0.3, 0.72, 0.38, 21, 1.6, 'roofb');
+  for (const [u, v] of [[0.14, 0.3], [0.86, 0.3], [0.86, 0.68], [0.14, 0.68]]) { a.cast(u, v, 0); a.cast(u, v, 22); }
+  return a.done(2);
+}
+
 export function characterSVG() {
   return `<svg class="ow-sprite" viewBox="-16 -50 32 54" width="32" height="54" aria-hidden="true">
 <ellipse cx="0" cy="0" rx="8" ry="3.2" class="ow-sprite-shadow"/>
@@ -1401,6 +1493,12 @@ export function artFor(e) {
     case 'buisson': return buisson(e.seed || 1, e.m || 'leaf');
     case 'rocher': return rocher(e.seed || 1);
     case 'souche': return souche(e.seed || 1);
+    case 'massif': return massif(e.seed || 1);
+    case 'nichoir': return nichoir();
+    case 'bouleau': return bouleau(e.seed || 1);
+    case 'banc': return banc();
+    case 'chaise': return chaise();
+    case 'cordee': return cordee();
     default: return caisse(1);
   }
 }

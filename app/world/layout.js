@@ -130,6 +130,31 @@ export const EMPLACEMENTS = {
 };
 
 /**
+ * Coins à décorer (lot K) : où le joueur pose ses décors (core/decors.js, COINS : mêmes identifiants, même ordre). Case
+ * entière (r, c), emprise 1 × 1 comme le décor fixe, hors des routes, de la Place, des emplacements, des repères, des
+ * caisses, des imprévus, des fêtes et des postes des habitants. Quatre sont des bosquets du décor fixe (mairie-1, mairie-3,
+ * atelier-1, atelier-2) : un décor posé y remplace le bosquet, qui revient quand on le range (decorFor). Choisis le 31
+ * octobre 2026 parmi 24 cases libres et ces bosquets, mesurés dans le jeu aux trois largeurs avec un érable, puis une
+ * épinette, sur chaque coin (tasks/todo.md, lot K) : les plus grandes boîtes recouvertes sont celle de la lanterne de la
+ * Place par atelier-1 (42 %) et celle de la parcelle-1 par champs-1 (36 %), des boîtes bien plus larges que les dessins ;
+ * à l'image, rien de touchable n'est masqué. Un décor ne se touche pas : il ne prend jamais le toucher d'un objet. Au
+ * cadrage rapproché du téléphone, deux coins sont à 43 px au moins l'un de l'autre (mairie-1 et mairie-4).
+ */
+export const COINS_ILE = {
+  'ecole-1': { r: 3, c: 2 },
+  'garage-1': { r: 1, c: 4 },
+  'mairie-1': { r: 2, c: 10 },
+  'mairie-2': { r: 1, c: 11 },
+  'mairie-3': { r: 4, c: 8 },
+  'mairie-4': { r: 4, c: 11 },
+  'champs-1': { r: 9, c: 2 },
+  'champs-2': { r: 9, c: 4 },
+  'champs-3': { r: 11, c: 4 },
+  'atelier-1': { r: 7, c: 8 },
+  'atelier-2': { r: 10, c: 7 },
+};
+
+/**
  * Grands travaux (lot O) : le phare, sur un rocher du lac au coin gauche de l'île, au bout du rivage du quai (lac :
  * dessiné au niveau de l'eau). À gauche du coin, rien de l'île n'est derrière lui : il ne cache rien de touchable.
  * Touchable, son emprise de 0,8 × 0,8 (et non 1 × 1, même dessin au même endroit) garde sa zone de toucher hors de celle
@@ -332,9 +357,11 @@ const ARBRES = new Set(['epinette', 'arbre', 'erable']);
 /**
  * Décor avec les bandes gagnées. La lisière recule : les arbres du bord, au droit de la bande, se replantent sur sa
  * rangée du fond (mêmes essences, même trouée pour la route) ; des souches restent sur la terre gagnée. Sans bande : DECOR.
+ * pris : cases [r, c] des coins où le joueur a posé un décor (lot K), dont le bosquet est retiré.
  */
-export function decorFor(bandes = []) {
-  let out = DECOR;
+export function decorFor(bandes = [], pris = []) {
+  // un décor posé par le joueur sur un coin (lot K) remplace le bosquet du décor fixe qui s'y trouvait
+  let out = pris.length ? DECOR.filter((e) => !pris.some(([r, c]) => e.r === r && e.c === c)) : DECOR;
   for (const b of bandes.map(bandeDe).filter(Boolean)) {
     const bord = b.r + b.h; // l'ancien bord de l'île, juste devant la bande
     const auDroit = (e) => e.c >= b.c && e.c < b.c + b.w;

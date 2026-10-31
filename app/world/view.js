@@ -15,6 +15,7 @@ import { alerteTempete } from '../core/hiver.js';
 import { bandesGagnees } from '../core/village.js';
 import { saisonDe } from '../core/objectifs.js';
 import { etatOuvrage, OUVRAGE_IDS } from '../core/travaux.js';
+import { etatDecors } from '../core/decors.js';
 import { CRATE_SPOTS, ANCHOR_OBJECT, SECTOR_LANDMARK, EMPLACEMENTS, TEMPETE_BORD } from './layout.js';
 
 export const MAX_CRATES = CRATE_SPOTS.length;
@@ -151,5 +152,8 @@ export function deriveView(game, tasks = [], { now, anchors, ledger } = {}) {
   if (g.sucres && g.sucres === saisonDe(today).cle && PRODUCTION.cabane.mois.includes(Number(today.slice(5, 7)))) fetes.add(batiments.some((b) => b.type === 'cabane' && b.bati) ? 'tire-cabane' : 'tire');
   // Grands travaux (lot O) : les étapes finies de chaque ouvrage, et celle que les ouvriers bâtissent
   const travaux = Object.fromEntries(OUVRAGE_IDS.map((id) => { const e = etatOuvrage(g, reg, id, now ?? new Date()); return [id, { finies: e.finies, enCours: !!e.enCours }]; }));
-  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, fetes, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants), travaux };
+  // décors posés par le joueur (lot K), dans l'ordre des coins ; les coins libres servent au mode de pose
+  const d = etatDecors(g);
+  const decors = { poses: Object.entries(d.poses).map(([coin, decor]) => ({ coin, decor })), libres: d.libres };
+  return { today, sectors, crates, reflets, refletAnchors, batiments, imprevus, fetes, neige: isSnowSeason(today), tempete, avis, bandes: bandesGagnees(g.habitants), travaux, decors };
 }

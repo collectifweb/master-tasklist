@@ -18,7 +18,7 @@ const ACTIONS = {
   voirAccueil: core.voirAccueil, monterQuartier: core.monterQuartier, reglerQueteDefaut: core.reglerQueteDefaut,
   echanger: core.echanger, reparer: core.reparer, preparer: core.preparer, livrer: core.livrer,
   servirRepas: core.servirRepas, faireLesSucres: core.faireLesSucres, reglerVille: core.reglerVille,
-  payerEtape: core.payerEtape,
+  payerEtape: core.payerEtape, poserDecor: core.poserDecor, deplacerDecor: core.deplacerDecor, rangerDecor: core.rangerDecor,
 };
 
 /** Vrai si l'action est connue (permet à l'écran de cacher un geste que le cœur n'offre pas encore). */

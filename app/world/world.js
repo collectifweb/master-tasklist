@@ -40,7 +40,7 @@ import { P, f } from './iso.js';
 import { ensurePalette, BASE } from './palette.js';
 import {
   SECTOR_ORDER, SECTOR_CENTER, plaqueAnchor, LANDMARKS, CRATE_SPOTS, AVIS_EDGE, FANAL_HOME, sectorAt, EMPLACEMENTS,
-  IMPREVU_SPOTS, FETE_SPOTS, decorFor, OUVRAGES_ILE,
+  IMPREVU_SPOTS, FETE_SPOTS, decorFor, OUVRAGES_ILE, COINS_ILE,
 } from './layout.js';
 import { deriveView } from './view.js';
 import { terrainSVG, TERRAIN, BOUNDS, frontSVG, edgeNormal, D } from './terrain.js';
@@ -153,7 +153,18 @@ export function entitiesFor(v, tasks = []) {
     const lac = slot.lac ? D / 32 : 0;
     list.push({ id, model: id, variant: `${t.finies}${t.enCours ? '+chantier' : ''}`, sector: slot.sector, r: slot.r + lac, c: slot.c + lac, h: slot.h, w: slot.w, interactive: true, ouvrage: id, light: t.allume ? 'lantern' : null, allume: !!t.allume });
   }
-  for (const d of decorFor(v.bandes || [])) list.push(d); // la lisière recule avec les bandes gagnées (lot F)
+  // la lisière recule avec les bandes gagnées (lot F) ; un décor posé remplace le bosquet de son coin (lot K)
+  const pris = (v.decors?.poses || []).map(({ coin }) => COINS_ILE[coin]).filter(Boolean).map(({ r, c }) => [r, c]);
+  for (const d of decorFor(v.bandes || [], pris)) list.push(d);
+  // décors posés par le joueur (lot K) : sans toucher, comme les arbres (un décor devant un bâtiment prendrait le bas de sa
+  // zone de toucher) ; on les déplace et on les range depuis l'onglet « Décors » du catalogue. La lanterne s'allume avec
+  // les autres quand tout est enregistré. Graine tirée du coin : un érable garde sa forme.
+  for (const { coin, decor } of v.decors?.poses || []) {
+    const s = COINS_ILE[coin];
+    if (!s) continue;
+    const allume = decor === 'lanterne' && !!v.veille;
+    list.push({ id: `decor-${coin}`, model: decor, sector: sectorAt(s.r, s.c), r: s.r, c: s.c, h: 1, w: 1, seed: graineCoin(coin), decor: { coin, id: decor }, light: decor === 'lanterne' ? 'lantern' : null, allume });
+  }
   // imprévus heureux du jour : orignal, caisse de poissons, pile de bois (décor, rien à toucher ; l'aurore est dans le ciel)
   for (const id of v.imprevus || []) {
     const s = IMPREVU_SPOTS[id];
@@ -180,6 +191,8 @@ export function entitiesFor(v, tasks = []) {
   }
   return list;
 }
+/** Graine d'un décor posé, tirée de l'identifiant de son coin. */
+const graineCoin = (coin) => [...coin].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 1e6 || 1;
 /** Outil que porte un habitant, selon son lieu de travail (dessins : habitantSVG, world/models.js). */
 const OUTIL = { parcelle: 'panier', serre: 'arrosoir', atelier: 'marteau', grenier: 'sac' };
 
