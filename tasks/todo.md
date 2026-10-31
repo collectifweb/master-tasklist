@@ -2314,8 +2314,8 @@ Ordre changé en route : le cœur (O2) avant la mesure (O1), pour que la simulat
   - Corrigé en route : le jour de l'allumage, la fiche disait deux fois « les plaisanciers arrivent demain » (la ligne du voilier et la raison d'« Allumer »). La raison n'y est plus que lue.
 - [x] **Y3 — Interface.** Gestes, moments (le voilier arrive, repart), bulle, phrases lues, Fanal, lettre du matin si besoin.
   - Fait le 31 octobre : les deux gestes (`main.js`, `esc-allumer` et `esc-accueillir`, avec les gardes du lot K), la bulle `escale` du phare (`world/world.js`), les deux moments (`world/moments.js` : l'éclat de la lanterne, le voilier qui part), les phrases lues (« Phare : allumé jusqu’à dimanche, pour 100 Énergie. »), Fanal (`phare.allume`, `escale.accueillie`). Pas de moment pour l'arrivée du voilier : il est là à la première ouverture du lendemain. Pas de lettre du matin : la bulle et la fiche suffisent.
-- [ ] **Y4 — Vérification.** Tests ; un scénario des escales aux trois largeurs ; série complète.
+- [x] **Y4 — Vérification.** Tests ; un scénario des escales aux trois largeurs ; série complète.
   - Fait le 31 octobre : le scénario 53 (`tests/e2e/ui-53-escales.cjs`, aux trois largeurs : 168 vérifications, réussi) ; le scénario 51 adapté (sa fiche « Debout » montre maintenant « Allumer le phare » : 165 vérifications, réussi). Passés aussi : toute la suite de logique et de l'API (719 tests, 0 échec, les 2 « à faire » connus), `world-s3` (103 vérifications, aucune en échec) et `world-perf` (code de sortie 0, aucune erreur).
-  - [ ] Série complète, avant l'envoi.
+  - [x] Série complète, avant l'envoi : passée le 31 octobre, finie vers 3 h 40, sur une copie de travail au commit `49c4be9` (50 scénarios, « TOUT REUSSI », code de sortie 0).
 - [x] **Y5 — Documents.** Fait le 31 octobre : bible §5 et §9 (tels que construits), `app/ARCHITECTURE.md` (module, partie, fiche, île, version v40 du cache), `app/DESIGN.md` et `app/.impeccable/design.json`, `app/content/README.md`. À l'envoi : la feuille de route et la ligne de version du `CLAUDE.md`.
 - [ ] **Y6 — Envoi**, sur l'accord d'Alex.
